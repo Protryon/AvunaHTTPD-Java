@@ -4,13 +4,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.zip.GZIPOutputStream;
 
 public class ResponsePacket extends Packet {
 	public int statusCode = 200;
 	public String reasonPhrase = "";
 	public boolean isHead = false;
 	
-	public byte[] serialize() {
+	public byte[] serialize(ContentEncoding ce) {
 		try {
 			ByteArrayOutputStream ser = new ByteArrayOutputStream();
 			ser.write((httpVersion + " " + statusCode + " " + reasonPhrase + crlf).getBytes());
@@ -18,17 +19,31 @@ public class ResponsePacket extends Packet {
 				if (headers.hasHeader("Content-Length") && !isHead) {
 					headers.getHeader("Content-Length").value = body.getBody().length + "";
 				}else if (!headers.hasHeader("Transfer-Encoding") || !headers.getHeader("Transfer-Encoding").value.contains("chunked")) {
-					headers.addHeader("Content-Length", body.getBody().length + "");
+					headers.addHeader("Content-Length", body.getBody().length + ""); // TODO: chunked is incredibly broken
 				}
 				if (!headers.hasHeader("Content-Type")) {
 					headers.addHeader("Content-Type", body.getContentType());
 				}
 			}
+			byte[] finalc = new byte[0];
+			if (ce == ContentEncoding.gzip || ce == ContentEncoding.xgzip) {
+				ByteArrayOutputStream bout = new ByteArrayOutputStream();
+				GZIPOutputStream gout = new GZIPOutputStream(bout, true);
+				gout.write(body.getBody(), 0, body.getBody().length);
+				gout.finish();
+				finalc = bout.toByteArray();
+				if (headers.hasHeader("Content-Length")) {
+					headers.getHeader("Content-Length").value = finalc.length + "";
+				}
+			}else if (ce == ContentEncoding.identity) {
+				finalc = body.getBody();
+			}
+			if (ce != ContentEncoding.identity) headers.addHeader("Content-Encoding", ce.name);
 			for (Header header : headers.getHeaders()) {
 				ser.write((header.toLine() + crlf).getBytes());
 			}
 			ser.write(crlf.getBytes());
-			ser.write(body.getBody());
+			ser.write(finalc);
 			return ser.toByteArray();
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -37,11 +52,15 @@ public class ResponsePacket extends Packet {
 	}
 	
 	public String toString() {
-		return new String(serialize());
+		return new String(serialize(ContentEncoding.identity));
 	}
 	
-	public void write(DataOutputStream out) throws IOException {
-		out.write(serialize());
+	public String toString(ContentEncoding ce) {
+		return new String(serialize(ce));
+	}
+	
+	public void write(DataOutputStream out, ContentEncoding ce) throws IOException {
+		out.write(serialize(ce));
 		out.flush();
 	}
 	

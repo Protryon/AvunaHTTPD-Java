@@ -28,8 +28,23 @@ public class Connection extends Thread {
 				System.out.println(incomingRequest.toString());
 				ResponsePacket outgoingResponse = new ResponsePacket();
 				rg.process(incomingRequest, outgoingResponse); // TODO: pipelining queue
-				System.out.println(outgoingResponse.toString());
-				outgoingResponse.write(out);
+				// String[] ces = incomingRequest.headers.getHeader("Accept-Encoding").value.split(", ");
+				// ContentEncoding[] ces2 = new ContentEncoding[ces.length];
+				// for (int i = 0; i < ces.length; i++) {
+				// ces2[i] = ContentEncoding.get(ces[i]);
+				// }
+				ContentEncoding use = ContentEncoding.identity;// TODO: fix gzip
+				// for (ContentEncoding ce : ces2) {
+				// if (ce == ContentEncoding.gzip) {
+				// use = ce;
+				// break;
+				// }else if (ce == ContentEncoding.xgzip) {
+				// use = ce;
+				// break;
+				// }
+				// }
+				System.out.println(outgoingResponse.toString(use));
+				outgoingResponse.write(out, use);
 			}catch (Exception ex) {
 				ex.printStackTrace();
 				try {
