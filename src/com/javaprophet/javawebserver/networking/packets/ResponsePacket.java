@@ -77,6 +77,12 @@ public class ResponsePacket extends Packet {
 	public void write(DataOutputStream out, ContentEncoding ce) throws IOException {
 		out.write(serialize(ce));
 		out.flush();
+		if (headers.hasHeader("Connection")) {
+			String c = headers.getHeader("Connection").value;
+			if (c.equals("Close")) {
+				out.close();
+			}
+		}
 	}
 	
 	public static ResponsePacket read(DataInputStream in) throws IOException {
