@@ -28,9 +28,13 @@ public class ContentEncoding {
 	}
 	
 	public static ContentEncoding get(String name) {
-		if (name.equals("")) return identity;
+		String n = name;
+		if (n.contains(";q=")) {
+			n = n.substring(0, n.indexOf(";q="));
+		}
+		if (n.equals("")) return identity;
 		for (ContentEncoding ce : ces) {
-			if (ce.name.equals(name)) {
+			if (ce.name.equals(n)) {
 				return ce;
 			}
 		}

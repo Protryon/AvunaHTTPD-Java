@@ -13,33 +13,35 @@ public class ResponsePacket extends Packet {
 	
 	public byte[] serialize(ContentEncoding ce) {
 		try {
+			Headers hc = headers.clone();
 			ByteArrayOutputStream ser = new ByteArrayOutputStream();
 			ser.write((httpVersion + " " + statusCode + " " + reasonPhrase + crlf).getBytes());
 			if (body != null) {
-				if (headers.hasHeader("Content-Length") && !isHead) {
-					headers.getHeader("Content-Length").value = body.getBody().length + "";
-				}else if (!headers.hasHeader("Transfer-Encoding") || !headers.getHeader("Transfer-Encoding").value.contains("chunked")) {
-					headers.addHeader("Content-Length", body.getBody().length + ""); // TODO: chunked is incredibly broken
+				if (hc.hasHeader("Content-Length") && !isHead) {
+					hc.getHeader("Content-Length").value = body.getBody().length + "";
+				}else if (!hc.hasHeader("Transfer-Encoding") || !hc.getHeader("Transfer-Encoding").value.contains("chunked")) {
+					hc.addHeader("Content-Length", body.getBody().length + ""); // TODO: chunked is incredibly broken
 				}
-				if (!headers.hasHeader("Content-Type")) {
-					headers.addHeader("Content-Type", body.getContentType());
+				if (!hc.hasHeader("Content-Type")) {
+					hc.addHeader("Content-Type", body.getContentType());
 				}
 			}
 			byte[] finalc = new byte[0];
 			if (ce == ContentEncoding.gzip || ce == ContentEncoding.xgzip) {
 				ByteArrayOutputStream bout = new ByteArrayOutputStream();
-				GZIPOutputStream gout = new GZIPOutputStream(bout, true);
+				GZIPOutputStream gout = new GZIPOutputStream(bout);
 				gout.write(body.getBody(), 0, body.getBody().length);
-				gout.finish();
+				gout.flush();
+				gout.close();
 				finalc = bout.toByteArray();
-				if (headers.hasHeader("Content-Length")) {
-					headers.getHeader("Content-Length").value = finalc.length + "";
+				if (hc.hasHeader("Content-Length")) {
+					hc.getHeader("Content-Length").value = finalc.length + "";
 				}
 			}else if (ce == ContentEncoding.identity) {
 				finalc = body.getBody();
 			}
-			if (ce != ContentEncoding.identity) headers.addHeader("Content-Encoding", ce.name);
-			for (Header header : headers.getHeaders()) {
+			if (ce != ContentEncoding.identity) hc.addHeader("Content-Encoding", ce.name);
+			for (Header header : hc.getHeaders()) {
 				ser.write((header.toLine() + crlf).getBytes());
 			}
 			ser.write(crlf.getBytes());

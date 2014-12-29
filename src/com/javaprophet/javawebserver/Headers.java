@@ -9,6 +9,14 @@ public class Headers {
 		
 	}
 	
+	public Headers clone() {
+		Headers h = new Headers();
+		for (Header hh : headers) {
+			h.addHeader(new Header(hh.name, hh.value));
+		}
+		return h;
+	}
+	
 	public void addHeader(String name, String value) {
 		addHeader(new Header(name, value));
 	}
