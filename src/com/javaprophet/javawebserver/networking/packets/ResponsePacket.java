@@ -1,16 +1,15 @@
 package com.javaprophet.javawebserver.networking.packets;
 
-import com.javaprophet.javawebserver.http.ContentEncoding;
-import com.javaprophet.javawebserver.http.Header;
-import com.javaprophet.javawebserver.http.Headers;
-import com.javaprophet.javawebserver.http.MessageBody;
-import com.javaprophet.javawebserver.networking.Packet;
-
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.zip.GZIPOutputStream;
+import com.javaprophet.javawebserver.http.ContentEncoding;
+import com.javaprophet.javawebserver.http.Header;
+import com.javaprophet.javawebserver.http.Headers;
+import com.javaprophet.javawebserver.http.MessageBody;
+import com.javaprophet.javawebserver.networking.Packet;
 
 public class ResponsePacket extends Packet {
 	public int statusCode = 200;
@@ -18,6 +17,10 @@ public class ResponsePacket extends Packet {
 	public boolean isHead = false;
 	
 	public byte[] serialize(ContentEncoding ce) {
+		return serialize(ce, true);
+	}
+	
+	public byte[] serialize(ContentEncoding ce, boolean data) {
 		try {
 			Headers hc = headers.clone();
 			ByteArrayOutputStream ser = new ByteArrayOutputStream();
@@ -51,7 +54,7 @@ public class ResponsePacket extends Packet {
 				ser.write((header.toLine() + crlf).getBytes());
 			}
 			ser.write(crlf.getBytes());
-			ser.write(finalc);
+			if (data) ser.write(finalc);
 			return ser.toByteArray();
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -65,6 +68,10 @@ public class ResponsePacket extends Packet {
 	
 	public String toString(ContentEncoding ce) {
 		return new String(serialize(ce));
+	}
+	
+	public String toString2(ContentEncoding ce) {
+		return new String(serialize(ce, false));
 	}
 	
 	public void write(DataOutputStream out, ContentEncoding ce) throws IOException {

@@ -1,15 +1,14 @@
 package com.javaprophet.javawebserver.networking;
 
-import com.javaprophet.javawebserver.*;
-import com.javaprophet.javawebserver.http.ContentEncoding;
-import com.javaprophet.javawebserver.http.ResponseGenerator;
-import com.javaprophet.javawebserver.networking.packets.RequestPacket;
-import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import com.javaprophet.javawebserver.JavaWebServer;
+import com.javaprophet.javawebserver.http.ContentEncoding;
+import com.javaprophet.javawebserver.http.ResponseGenerator;
+import com.javaprophet.javawebserver.networking.packets.RequestPacket;
+import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 
 public class Connection extends Thread {
 	public final Socket s;
@@ -52,7 +51,7 @@ public class Connection extends Thread {
 						}
 					}
 				}
-				System.out.println(outgoingResponse.toString(use));
+				System.out.println(outgoingResponse.toString2(use));
 				outgoingResponse.write(out, use);
 			}catch (Exception ex) {
 				ex.printStackTrace();
