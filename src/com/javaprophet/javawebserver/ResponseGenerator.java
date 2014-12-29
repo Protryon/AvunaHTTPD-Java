@@ -30,13 +30,15 @@ public class ResponseGenerator {
 			response.headers.addHeader("Server", "JWS/" + JavaWebServer.VERSION);
 			if (request.method == Method.OPTIONS) {
 				
-			}else if (request.method == Method.GET) {
+			}else if (request.method == Method.GET || request.method == Method.HEAD) {
 				Resource resource = getResource(request.target);
 				if (resource == null || resource.data == null) {
 					response.statusCode = 404;
 					response.reasonPhrase = "Not Found";
 					response.httpVersion = "HTTP/1.1";
 					getErrorPage(response.body, request.target, 404, "Not Found", "The requested URL " + request.target + " was not found on this server.");
+					response.headers.addHeader("Content-Length", response.body.getBody().length + "");
+					response.body.setBody(new byte[0]);
 					return;
 				}else {
 					response.statusCode = 200;
@@ -44,11 +46,10 @@ public class ResponseGenerator {
 					response.httpVersion = "HTTP/1.1";
 					response.body.setBody(resource.data);
 					response.body.setContentType(resource.type);
+					response.headers.addHeader("Content-Length", response.body.getBody().length + "");
+					response.body.setBody(new byte[0]);
 					return;
 				}
-				
-			}else if (request.method == Method.HEAD) {
-				
 			}else if (request.method == Method.POST) {
 				
 			}else if (request.method == Method.PUT) {
@@ -122,6 +123,7 @@ public class ResponseGenerator {
 					bout.write(buf, 0, i);
 				}
 			}
+			fin.close();
 			byte[] resource = bout.toByteArray();
 			Resource r = new Resource(resource, Files.probeContentType(Paths.get(abs.getAbsolutePath())));
 			return r;

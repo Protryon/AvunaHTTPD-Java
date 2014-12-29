@@ -8,13 +8,14 @@ import java.io.IOException;
 public class ResponsePacket extends Packet {
 	public int statusCode = 200;
 	public String reasonPhrase = "";
+	public boolean isHead = false;
 	
 	public byte[] serialize() {
 		try {
 			ByteArrayOutputStream ser = new ByteArrayOutputStream();
 			ser.write((httpVersion + " " + statusCode + " " + reasonPhrase + crlf).getBytes());
 			if (body != null) {
-				if (headers.hasHeader("Content-Length")) {
+				if (headers.hasHeader("Content-Length") && !isHead) {
 					headers.getHeader("Content-Length").value = body.getBody().length + "";
 				}else if (!headers.hasHeader("Transfer-Encoding") || !headers.getHeader("Transfer-Encoding").value.contains("chunked")) {
 					headers.addHeader("Content-Length", body.getBody().length + "");
