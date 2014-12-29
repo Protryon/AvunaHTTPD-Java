@@ -3,6 +3,15 @@ package com.javaprophet.javawebserver;
 public class MessageBody {
 	private byte[] body = new byte[0];
 	private Packet superPacket = null;
+	private String contentType = "text/html";
+	
+	public String getContentType() {
+		return contentType;
+	}
+	
+	public void setContentType(String ct) {
+		this.contentType = ct;
+	}
 	
 	public ContentEncoding getContentEncoding() {
 		return ContentEncoding.get(superPacket.headers.hasHeader("Content-Encoding") ? superPacket.headers.getHeader("Content-Encoding").value : "");
@@ -35,11 +44,6 @@ public class MessageBody {
 	
 	public void setBody(byte[] body) {
 		this.body = body;
-		if (superPacket.headers.hasHeader("Content-Length")) {
-			superPacket.headers.getHeader("Content-Length").value = body.length + "";
-		}else {
-			superPacket.headers.addHeader("Content-Length", body.length + "");
-		}
 	}
 	
 	public String toString() {

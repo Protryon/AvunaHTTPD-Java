@@ -16,10 +16,10 @@ public class JavaWebServer {
 	public static void main(String[] args) {
 		try {
 			System.out.println("Loading Configs");
-			mainConfig = new Config(new File("config/http.cfg"));
+			mainConfig = new Config(new File("C:\\temp.cfg"));
 			mainConfig.load();
 			System.out.println("Starting Server");
-			ServerSocket server = new ServerSocket((int)mainConfig.get("bindport"));
+			ServerSocket server = new ServerSocket((int)(long)mainConfig.get("bindport"));
 			while (!server.isClosed()) {
 				Socket s = server.accept();
 				DataOutputStream out = new DataOutputStream(s.getOutputStream());

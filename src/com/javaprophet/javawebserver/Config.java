@@ -34,6 +34,8 @@ public class Config {
 		if (!json.containsKey("version")) json.put("version", JavaWebServer.VERSION);
 		if (!json.containsKey("htdocs")) json.put("htdocs", "C:\\jhtdocs");
 		if (!json.containsKey("bindport")) json.put("bindport", 80);
+		if (!json.containsKey("errorpages")) json.put("errorpages", new JSONObject());
+		if (!json.containsKey("index")) json.put("index", "index.html");
 	}
 	
 	public void load() throws IOException, ParseException {
@@ -58,6 +60,9 @@ public class Config {
 	
 	public void save() throws IOException {
 		format();
+		if (!cfg.exists() || !cfg.isFile()) {
+			cfg.createNewFile();
+		}
 		DataOutputStream out = new DataOutputStream(new FileOutputStream(cfg));
 		out.write(json.toJSONString().getBytes());
 		out.flush();

@@ -13,6 +13,16 @@ public class ResponsePacket extends Packet {
 		try {
 			ByteArrayOutputStream ser = new ByteArrayOutputStream();
 			ser.write((httpVersion + " " + statusCode + " " + reasonPhrase + crlf).getBytes());
+			if (body != null) {
+				if (headers.hasHeader("Content-Length")) {
+					headers.getHeader("Content-Length").value = body.getBody().length + "";
+				}else if (!headers.hasHeader("Transfer-Encoding") || !headers.getHeader("Transfer-Encoding").value.contains("chunked")) {
+					headers.addHeader("Content-Length", body.getBody().length + "");
+				}
+				if (!headers.hasHeader("Content-Type")) {
+					headers.addHeader("Content-Type", body.getContentType());
+				}
+			}
 			for (Header header : headers.getHeaders()) {
 				ser.write((header.toLine() + crlf).getBytes());
 			}

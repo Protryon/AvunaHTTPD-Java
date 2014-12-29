@@ -25,6 +25,7 @@ public class Connection extends Thread {
 					s.close();
 					return;
 				}
+				System.out.println(incomingRequest.toString());
 				ResponsePacket outgoingResponse = new ResponsePacket();
 				rg.process(incomingRequest, outgoingResponse); // TODO: pipelining queue
 				System.out.println(outgoingResponse.toString());
