@@ -19,7 +19,7 @@ public class JavaWebServer {
 			mainConfig = new Config(new File("C:\\temp.cfg"));
 			mainConfig.load();
 			System.out.println("Starting Server");
-			ServerSocket server = new ServerSocket((int)(long)mainConfig.get("bindport"));
+			ServerSocket server = new ServerSocket((int)((long)mainConfig.get("bindport")));
 			while (!server.isClosed()) {
 				Socket s = server.accept();
 				DataOutputStream out = new DataOutputStream(s.getOutputStream());
