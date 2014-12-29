@@ -20,11 +20,11 @@ import org.json.simple.JSONObject;
 
 public class ResponseGenerator {
 	public ResponseGenerator() {
-		
+
 	}
-	
+
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
-	
+
 	public void process(RequestPacket request, ResponsePacket response) {
 		if (!request.httpVersion.equals("HTTP/1.1")) {
 			response.statusCode = 505;
@@ -35,6 +35,9 @@ public class ResponseGenerator {
 		try {
 			response.headers.addHeader("Date", sdf.format(new Date()));
 			response.headers.addHeader("Server", "JWS/" + JavaWebServer.VERSION);
+			if (request.headers.hasHeader("Connection")) {
+				response.headers.addHeader("Connection", request.headers.getHeader("Connection").value);
+			}
 			if (request.method == Method.OPTIONS) {
 				response.statusCode = 501;
 				response.reasonPhrase = "Not Yet Implemented";
@@ -66,11 +69,32 @@ public class ResponseGenerator {
 					return;
 				}
 			}else if (request.method == Method.POST) {
-				response.statusCode = 501;
-				response.reasonPhrase = "Not Yet Implemented";
-				response.httpVersion = "HTTP/1.1";
-				getErrorPage(response.body, request.target, 501, "Not Yet Implemented", "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
-				return;
+				while(request.target.endsWith("#")) {
+					request.target = request.target.substring(0, request.target.length() - 1);
+				}
+				Resource resource = getResource(request.target);
+				if (resource == null || resource.data == null) {
+					response.statusCode = 404;
+					response.reasonPhrase = "Not Found";
+					response.httpVersion = "HTTP/1.1";
+					getErrorPage(response.body, request.target, 404, "Not Found", "The requested URL " + request.target + " was not found on this server.");
+					if (request.method == Method.HEAD) {
+						response.headers.addHeader("Content-Length", response.body.getBody().length + "");
+						response.body.setBody(new byte[0]);
+					}
+					return;
+				}else {
+					response.statusCode = 200;
+					response.reasonPhrase = "OK";
+					response.httpVersion = "HTTP/1.1";
+					response.body.setBody(resource.data);
+					response.body.setContentType(resource.type);
+					if (request.method == Method.HEAD) {
+						response.headers.addHeader("Content-Length", response.body.getBody().length + "");
+						response.body.setBody(new byte[0]);
+					}
+					return;
+				}
 			}else if (request.method == Method.PUT) {
 				response.statusCode = 501;
 				response.reasonPhrase = "Not Yet Implemented";
@@ -105,9 +129,9 @@ public class ResponseGenerator {
 			return;
 		}
 	}
-	
+
 	public static final String crlf = System.getProperty("line.separator");
-	
+
 	public void getErrorPage(MessageBody body, String reqTarget, int statusCode, String reason, String info) {
 		JSONObject errorPages = (JSONObject)JavaWebServer.mainConfig.get("errorpages");
 		if (errorPages.containsKey(statusCode)) {
@@ -132,7 +156,7 @@ public class ResponseGenerator {
 		body.setBody(("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">" + crlf + "<html><head>" + crlf + "<title>" + statusCode + " " + reason + "</title>" + crlf + "</head><body>" + crlf + "<h1>" + reason + "</h1>" + crlf + "<p>" + info + "</p>" + crlf + "</body></html>").getBytes());
 		return;
 	}
-	
+
 	public File getAbsolutePath(String reqTarget) {
 		String rt = reqTarget;
 		if (rt.contains("?")) {
@@ -144,7 +168,7 @@ public class ResponseGenerator {
 		}
 		return abs;
 	}
-	
+
 	public Resource getResource(String reqTarget) throws IOException {
 		try {
 			File abs = getAbsolutePath(reqTarget);
