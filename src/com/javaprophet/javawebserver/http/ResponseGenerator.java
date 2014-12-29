@@ -9,22 +9,18 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
+import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.http.MessageBody;
-import com.javaprophet.javawebserver.http.Method;
-import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
-import org.json.simple.JSONObject;
 
 public class ResponseGenerator {
 	public ResponseGenerator() {
-
+		
 	}
-
+	
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
-
+	
 	public void process(RequestPacket request, ResponsePacket response) {
 		if (!request.httpVersion.equals("HTTP/1.1")) {
 			response.statusCode = 505;
@@ -69,9 +65,6 @@ public class ResponseGenerator {
 					return;
 				}
 			}else if (request.method == Method.POST) {
-				while(request.target.endsWith("#")) {
-					request.target = request.target.substring(0, request.target.length() - 1);
-				}
 				Resource resource = getResource(request.target);
 				if (resource == null || resource.data == null) {
 					response.statusCode = 404;
@@ -129,9 +122,9 @@ public class ResponseGenerator {
 			return;
 		}
 	}
-
+	
 	public static final String crlf = System.getProperty("line.separator");
-
+	
 	public void getErrorPage(MessageBody body, String reqTarget, int statusCode, String reason, String info) {
 		JSONObject errorPages = (JSONObject)JavaWebServer.mainConfig.get("errorpages");
 		if (errorPages.containsKey(statusCode)) {
@@ -156,11 +149,14 @@ public class ResponseGenerator {
 		body.setBody(("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">" + crlf + "<html><head>" + crlf + "<title>" + statusCode + " " + reason + "</title>" + crlf + "</head><body>" + crlf + "<h1>" + reason + "</h1>" + crlf + "<p>" + info + "</p>" + crlf + "</body></html>").getBytes());
 		return;
 	}
-
+	
 	public File getAbsolutePath(String reqTarget) {
 		String rt = reqTarget;
 		if (rt.contains("?")) {
 			rt = rt.substring(0, rt.indexOf("?"));
+		}
+		if (rt.contains("#")) {
+			rt = rt.substring(0, rt.indexOf("#"));
 		}
 		File abs = new File(new File((String)JavaWebServer.mainConfig.get("htdocs")), rt);
 		if (abs.isDirectory()) {
@@ -168,7 +164,7 @@ public class ResponseGenerator {
 		}
 		return abs;
 	}
-
+	
 	public Resource getResource(String reqTarget) throws IOException {
 		try {
 			File abs = getAbsolutePath(reqTarget);
