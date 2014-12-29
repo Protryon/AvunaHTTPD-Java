@@ -158,16 +158,7 @@ public class ResponsePacket extends Packet {
 			headers.addHeader("Content-Length", bbody.length + "");
 		}else if (hcl) {
 			bbody = new byte[Integer.parseInt(headers.getHeader("Content-Length").value)];
-			byte[] buf = new byte[4096];
-			int i = 1;
-			ByteArrayOutputStream bout = new ByteArrayOutputStream();
-			while (i > 0) {
-				i = in.read(buf);
-				if (i > 0) {
-					bout.write(buf, 0, i);
-				}
-			}
-			bbody = bout.toByteArray();
+			in.readFully(bbody);
 		}
 		MessageBody body = new MessageBody(incomingResponse, bbody);
 		incomingResponse.body = body;

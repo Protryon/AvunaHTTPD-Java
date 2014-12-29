@@ -40,40 +40,7 @@ public class ResponseGenerator {
 				response.httpVersion = "HTTP/1.1";
 				getErrorPage(response.body, request.target, 501, "Not Yet Implemented", "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
 				return;
-			}else if (request.method == Method.GET || request.method == Method.HEAD) {
-				Resource resource = getResource(request.target);
-				if (resource == null || resource.data == null) {
-					response.statusCode = 404;
-					response.reasonPhrase = "Not Found";
-					response.httpVersion = "HTTP/1.1";
-					getErrorPage(response.body, request.target, 404, "Not Found", "The requested URL " + request.target + " was not found on this server.");
-					if (request.method == Method.HEAD) {
-						response.headers.addHeader("Content-Length", response.body.getBody().length + "");
-						response.body.setBody(new byte[0]);
-					}
-					return;
-				}else {
-					response.statusCode = 200;
-					response.reasonPhrase = "OK";
-					response.httpVersion = "HTTP/1.1";
-					response.body.setBody(resource.data);
-					response.body.setContentType(resource.type);
-					if (request.method == Method.HEAD) {
-						response.headers.addHeader("Content-Length", response.body.getBody().length + "");
-						response.body.setBody(new byte[0]);
-					}
-					return;
-				}
-			}else if (request.method == Method.POST) {
-				/*
-				################ READ ME ###################
-				Post kinda works but it executes the code below AFTER the browser quit. I had to go so didnt have time to find out what it was.
-				 */
-				if(request.target.endsWith("#"))
-					request.target = request.target.substring(0, request.target.length() - 1);
-
-				//SUM DEBUG
-				System.err.println("POST DETECTED!!!");
+			}else if (request.method == Method.GET || request.method == Method.HEAD || request.method == Method.POST) {
 				Resource resource = getResource(request.target);
 				if (resource == null || resource.data == null) {
 					response.statusCode = 404;

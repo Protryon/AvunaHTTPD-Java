@@ -33,7 +33,7 @@ public class Connection extends Thread {
 				System.out.println(incomingRequest.toString());
 				ResponsePacket outgoingResponse = new ResponsePacket();
 				rg.process(incomingRequest, outgoingResponse); // TODO: pipelining queue
-				ContentEncoding use = ContentEncoding.identity;// TODO: fix gzip
+				ContentEncoding use = ContentEncoding.identity;
 				if (incomingRequest.headers.hasHeader("Accept-Encoding")) {
 					String[] ces = incomingRequest.headers.getHeader("Accept-Encoding").value.split(",");
 					ContentEncoding[] ces2 = new ContentEncoding[ces.length];

@@ -1,15 +1,14 @@
 package com.javaprophet.javawebserver.networking.packets;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import com.javaprophet.javawebserver.http.Header;
 import com.javaprophet.javawebserver.http.Headers;
 import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.networking.Packet;
-
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 
 public class RequestPacket extends Packet {
 	public String target = "/";
@@ -88,16 +87,7 @@ public class RequestPacket extends Packet {
 			}
 		}else if (hcl) {
 			bbody = new byte[Integer.parseInt(headers.getHeader("Content-Length").value)];
-			byte[] buf = new byte[4096];
-			int i = 1;
-			ByteArrayOutputStream bout = new ByteArrayOutputStream();
-			while (i > 0) {
-				i = in.read(buf);
-				if (i > 0) {
-					bout.write(buf, 0, i);
-				}
-			}
-			bbody = bout.toByteArray();
+			in.readFully(bbody);
 		}
 		MessageBody body = new MessageBody(incomingRequest, bbody);
 		incomingRequest.body = body;
