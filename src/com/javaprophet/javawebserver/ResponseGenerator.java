@@ -29,7 +29,11 @@ public class ResponseGenerator {
 			response.headers.addHeader("Date", sdf.format(new Date()));
 			response.headers.addHeader("Server", "JWS/" + JavaWebServer.VERSION);
 			if (request.method == Method.OPTIONS) {
-				
+				response.statusCode = 501;
+				response.reasonPhrase = "Not Yet Implemented";
+				response.httpVersion = "HTTP/1.1";
+				getErrorPage(response.body, request.target, 501, "Not Yet Implemented", "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
+				return;
 			}else if (request.method == Method.GET || request.method == Method.HEAD) {
 				Resource resource = getResource(request.target);
 				if (resource == null || resource.data == null) {
@@ -37,8 +41,10 @@ public class ResponseGenerator {
 					response.reasonPhrase = "Not Found";
 					response.httpVersion = "HTTP/1.1";
 					getErrorPage(response.body, request.target, 404, "Not Found", "The requested URL " + request.target + " was not found on this server.");
-					response.headers.addHeader("Content-Length", response.body.getBody().length + "");
-					response.body.setBody(new byte[0]);
+					if (request.method == Method.HEAD) {
+						response.headers.addHeader("Content-Length", response.body.getBody().length + "");
+						response.body.setBody(new byte[0]);
+					}
 					return;
 				}else {
 					response.statusCode = 200;
@@ -46,20 +52,42 @@ public class ResponseGenerator {
 					response.httpVersion = "HTTP/1.1";
 					response.body.setBody(resource.data);
 					response.body.setContentType(resource.type);
-					response.headers.addHeader("Content-Length", response.body.getBody().length + "");
-					response.body.setBody(new byte[0]);
+					if (request.method == Method.HEAD) {
+						response.headers.addHeader("Content-Length", response.body.getBody().length + "");
+						response.body.setBody(new byte[0]);
+					}
 					return;
 				}
 			}else if (request.method == Method.POST) {
-				
+				response.statusCode = 501;
+				response.reasonPhrase = "Not Yet Implemented";
+				response.httpVersion = "HTTP/1.1";
+				getErrorPage(response.body, request.target, 501, "Not Yet Implemented", "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
+				return;
 			}else if (request.method == Method.PUT) {
-				
+				response.statusCode = 501;
+				response.reasonPhrase = "Not Yet Implemented";
+				response.httpVersion = "HTTP/1.1";
+				getErrorPage(response.body, request.target, 501, "Not Yet Implemented", "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
+				return;
 			}else if (request.method == Method.DELETE) {
-				
+				response.statusCode = 501;
+				response.reasonPhrase = "Not Yet Implemented";
+				response.httpVersion = "HTTP/1.1";
+				getErrorPage(response.body, request.target, 501, "Not Yet Implemented", "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
+				return;
 			}else if (request.method == Method.TRACE) {
-				
+				response.statusCode = 501;
+				response.reasonPhrase = "Not Yet Implemented";
+				response.httpVersion = "HTTP/1.1";
+				getErrorPage(response.body, request.target, 501, "Not Yet Implemented", "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
+				return;
 			}else if (request.method == Method.CONNECT) {
-				
+				response.statusCode = 501;
+				response.reasonPhrase = "Not Yet Implemented";
+				response.httpVersion = "HTTP/1.1";
+				getErrorPage(response.body, request.target, 501, "Not Yet Implemented", "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
+				return;
 			}
 		}catch (Exception e) {
 			e.printStackTrace();
