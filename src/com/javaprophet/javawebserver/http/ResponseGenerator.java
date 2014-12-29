@@ -65,6 +65,15 @@ public class ResponseGenerator {
 					return;
 				}
 			}else if (request.method == Method.POST) {
+				/*
+				################ READ ME ###################
+				Post kinda works but it executes the code below AFTER the browser quit. I had to go so didnt have time to find out what it was.
+				 */
+				if(request.target.endsWith("#"))
+					request.target = request.target.substring(0, request.target.length() - 1);
+
+				//SUM DEBUG
+				System.err.println("POST DETECTED!!!");
 				Resource resource = getResource(request.target);
 				if (resource == null || resource.data == null) {
 					response.statusCode = 404;
