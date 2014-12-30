@@ -16,7 +16,7 @@ public class ResponseGenerator {
 		
 	}
 	
-	private static final SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
+	public static final SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
 	
 	public void process(RequestPacket request, ResponsePacket response) {
 		if (!request.httpVersion.equals("HTTP/1.1")) {
@@ -45,19 +45,18 @@ public class ResponseGenerator {
 					response.httpVersion = "HTTP/1.1";
 					getErrorPage(response.body, request.target, 404, "Not Found", "The requested URL " + request.target + " was not found on this server.");
 					if (request.method == Method.HEAD) {
-						response.headers.addHeader("Content-Length", response.body.getBody().length + "");
-						response.body.setBody(new byte[0]);
+						response.headers.addHeader("Content-Length", response.body.getBody().data.length + "");
+						response.body.setBody(null);
 					}
 					return;
 				}else {
 					response.statusCode = 200;
 					response.reasonPhrase = "OK";
 					response.httpVersion = "HTTP/1.1";
-					response.body.setBody(resource.data);
-					response.body.setContentType(resource.type);
+					response.body.setBody(resource);
 					if (request.method == Method.HEAD) {
-						response.headers.addHeader("Content-Length", response.body.getBody().length + "");
-						response.body.setBody(new byte[0]);
+						response.headers.addHeader("Content-Length", response.body.getBody().data.length + "");
+						response.body.setBody(null);
 					}
 					return;
 				}
@@ -105,33 +104,25 @@ public class ResponseGenerator {
 				String path = (String)errorPages.get(statusCode);
 				Resource resource = getResource(path);
 				if (resource != null) {
-					body.setContentType(resource.type);
 					if (resource.type.startsWith("text")) {
 						String res = new String(resource.data);
 						res = res.replace("$_statusCode_$", statusCode + "").replace("$_reason_$", reason).replace("$_info_$", info).replace("$_reqTarget_$", reqTarget);
 						resource.data = res.getBytes();
 					}
-					body.setBody(resource.data);
+					body.setBody(resource);
 					return;
 				}
 			}catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
-		body.setContentType("text/html");
-		body.setBody(("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">" + crlf + "<html><head>" + crlf + "<title>" + statusCode + " " + reason + "</title>" + crlf + "</head><body>" + crlf + "<h1>" + reason + "</h1>" + crlf + "<p>" + info + "</p>" + crlf + "</body></html>").getBytes());
+		Resource error = new Resource(("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">" + crlf + "<html><head>" + crlf + "<title>" + statusCode + " " + reason + "</title>" + crlf + "</head><body>" + crlf + "<h1>" + reason + "</h1>" + crlf + "<p>" + info + "</p>" + crlf + "</body></html>").getBytes(), "text/html");
+		body.setBody(error);
 		return;
 	}
 	
 	public File getAbsolutePath(String reqTarget) {
-		String rt = reqTarget;
-		if (rt.contains("?")) {
-			rt = rt.substring(0, rt.indexOf("?"));
-		}
-		if (rt.contains("#")) {
-			rt = rt.substring(0, rt.indexOf("#"));
-		}
-		File abs = new File(JavaWebServer.fileManager.getHTDocs(), rt);
+		File abs = new File(JavaWebServer.fileManager.getHTDocs(), reqTarget);
 		if (abs.isDirectory()) {
 			String[] index = ((String)JavaWebServer.mainConfig.get("index")).split(",");
 			for (String i : index) {
@@ -147,7 +138,14 @@ public class ResponseGenerator {
 	
 	public Resource getResource(String reqTarget) {
 		try {
-			File abs = getAbsolutePath(reqTarget);
+			String rt = reqTarget;
+			if (rt.contains("#")) {
+				rt = rt.substring(0, rt.indexOf("#"));
+			}
+			if (rt.contains("?")) {
+				rt = rt.substring(0, rt.indexOf("?"));
+			}
+			File abs = getAbsolutePath(rt);
 			FileInputStream fin = new FileInputStream(abs);
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 			int i = 1;
@@ -161,7 +159,7 @@ public class ResponseGenerator {
 			fin.close();
 			byte[] resource = bout.toByteArray();
 			String ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
-			Resource r = new Resource(resource, JavaWebServer.extensionToMime.containsKey(ext) ? JavaWebServer.extensionToMime.get(ext) : "application/octet-stream");
+			Resource r = new Resource(resource, JavaWebServer.extensionToMime.containsKey(ext) ? JavaWebServer.extensionToMime.get(ext) : "application/octet-stream", rt);
 			return r;
 		}catch (IOException e) {
 			e.printStackTrace();

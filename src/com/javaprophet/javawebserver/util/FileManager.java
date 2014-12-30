@@ -21,6 +21,10 @@ public class FileManager {
 		return new File(getMainDir(), (String)JavaWebServer.mainConfig.get("plugins"));
 	}
 	
+	public File getTemp() {
+		return new File(getMainDir(), (String)JavaWebServer.mainConfig.get("temp"));
+	}
+	
 	public File getPlugin(Patch p) {
 		return new File(getPlugins(), p.name);
 	}

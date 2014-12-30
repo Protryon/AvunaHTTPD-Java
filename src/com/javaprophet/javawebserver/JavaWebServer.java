@@ -33,6 +33,7 @@ public class JavaWebServer {
 		fileManager.getMainDir().mkdirs();
 		fileManager.getHTDocs().mkdirs();
 		fileManager.getPlugins().mkdirs();
+		fileManager.getTemp().mkdirs();
 		pluginBus.setupFolders();
 	}
 	
@@ -92,6 +93,7 @@ public class JavaWebServer {
 					if (!json.containsKey("dir")) json.put("dir", "C:\\jws");
 					if (!json.containsKey("htdocs")) json.put("htdocs", "htdocs");
 					if (!json.containsKey("plugins")) json.put("plugins", "plugins");
+					if (!json.containsKey("temp")) json.put("temp", "temp");
 					if (!json.containsKey("bindport")) json.put("bindport", 80);
 					if (!json.containsKey("errorpages")) json.put("errorpages", new JSONObject());
 					if (!json.containsKey("index")) json.put("index", "index.html,index.php");

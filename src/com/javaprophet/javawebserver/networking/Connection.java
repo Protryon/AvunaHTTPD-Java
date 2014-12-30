@@ -30,8 +30,11 @@ public class Connection extends Thread {
 					s.close();
 					return;
 				}
+				incomingRequest.userIP = s.getInetAddress().getHostAddress();
+				incomingRequest.userPort = s.getPort();
 				System.out.println(incomingRequest.toString());
 				ResponsePacket outgoingResponse = new ResponsePacket();
+				outgoingResponse.request = incomingRequest;
 				JavaWebServer.pluginBus.processPacket(incomingRequest);
 				rg.process(incomingRequest, outgoingResponse); // TODO: pipelining queue
 				JavaWebServer.pluginBus.processPacket(outgoingResponse);

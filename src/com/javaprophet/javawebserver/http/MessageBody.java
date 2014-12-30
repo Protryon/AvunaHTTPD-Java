@@ -1,20 +1,10 @@
 package com.javaprophet.javawebserver.http;
 
-import com.javaprophet.javawebserver.http.ContentEncoding;
 import com.javaprophet.javawebserver.networking.Packet;
 
 public class MessageBody {
-	private byte[] body = new byte[0];
+	private Resource body = null;
 	private Packet superPacket = null;
-	private String contentType = "text/html";
-	
-	public String getContentType() {
-		return contentType;
-	}
-	
-	public void setContentType(String ct) {
-		this.contentType = ct;
-	}
 	
 	public ContentEncoding getContentEncoding() {
 		return ContentEncoding.get(superPacket.headers.hasHeader("Content-Encoding") ? superPacket.headers.getHeader("Content-Encoding").value : "");
@@ -32,7 +22,7 @@ public class MessageBody {
 		}
 	}
 	
-	public MessageBody(Packet superPacket, byte[] body) {
+	public MessageBody(Packet superPacket, Resource body) {
 		this(superPacket);
 		this.body = body;
 	}
@@ -41,15 +31,15 @@ public class MessageBody {
 		this.superPacket = superPacket;
 	}
 	
-	public byte[] getBody() {
+	public Resource getBody() {
 		return body;
 	}
 	
-	public void setBody(byte[] body) {
+	public void setBody(Resource body) {
 		this.body = body;
 	}
 	
 	public String toString() {
-		return new String(body);
+		return new String(body.data);
 	}
 }

@@ -7,6 +7,8 @@ import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.ContentEncoding;
 import com.javaprophet.javawebserver.http.Headers;
 import com.javaprophet.javawebserver.networking.Packet;
+import com.javaprophet.javawebserver.networking.packets.RequestPacket;
+import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.util.Config;
 import com.javaprophet.javawebserver.util.ConfigFormat;
 
@@ -15,9 +17,7 @@ public abstract class Patch {
 	
 	public final String name;
 	
-	public void formatConfig(JSONObject json) {
-		
-	}
+	public abstract void formatConfig(JSONObject json);
 	
 	public boolean enabled = true;
 	
@@ -28,6 +28,11 @@ public abstract class Patch {
 				formatConfig(json);
 			}
 		});
+		try {
+			pcfg.load();
+		}catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public final Config pcfg;
@@ -44,7 +49,7 @@ public abstract class Patch {
 	
 	public abstract void processPacket(Packet packet);
 	
-	public abstract boolean shouldProcessResponse(Headers headers, ContentEncoding ce, boolean data, byte[] response);
+	public abstract boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, Headers headers, ContentEncoding ce, byte[] data);
 	
-	public abstract byte[] processResponse(Headers headers, ContentEncoding ce, boolean data, byte[] response);
+	public abstract byte[] processResponse(ResponsePacket response, RequestPacket request, Headers headers, ContentEncoding ce, byte[] data);
 }

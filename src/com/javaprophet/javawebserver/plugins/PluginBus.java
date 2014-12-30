@@ -4,6 +4,8 @@ import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.ContentEncoding;
 import com.javaprophet.javawebserver.http.Headers;
 import com.javaprophet.javawebserver.networking.Packet;
+import com.javaprophet.javawebserver.networking.packets.RequestPacket;
+import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 
 public class PluginBus {
 	public PluginBus() {
@@ -26,11 +28,11 @@ public class PluginBus {
 		}
 	}
 	
-	public byte[] processResponse(Headers headers, ContentEncoding ce, boolean data, byte[] response) {
-		byte[] rres = response;
+	public byte[] processResponse(ResponsePacket response, RequestPacket request, Headers headers, ContentEncoding ce, byte[] data) {
+		byte[] rres = data;
 		for (Patch patch : Patch.patchs) {
-			if (patch.enabled && patch.shouldProcessResponse(headers, ce, data, rres)) {
-				rres = patch.processResponse(headers, ce, data, rres);
+			if (patch.enabled && patch.shouldProcessResponse(response, request, headers, ce, data)) {
+				rres = patch.processResponse(response, request, headers, ce, data);
 			}
 		}
 		return rres;

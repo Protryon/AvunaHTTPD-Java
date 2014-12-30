@@ -10,12 +10,14 @@ import com.javaprophet.javawebserver.http.ContentEncoding;
 import com.javaprophet.javawebserver.http.Header;
 import com.javaprophet.javawebserver.http.Headers;
 import com.javaprophet.javawebserver.http.MessageBody;
+import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.networking.Packet;
 
 public class ResponsePacket extends Packet {
 	public int statusCode = 200;
 	public String reasonPhrase = "";
 	public boolean isHead = false;
+	public RequestPacket request;
 	
 	public byte[] serialize(ContentEncoding ce) {
 		return serialize(ce, true);
@@ -28,33 +30,35 @@ public class ResponsePacket extends Packet {
 			ser.write((httpVersion + " " + statusCode + " " + reasonPhrase + crlf).getBytes());
 			if (body != null) {
 				if (hc.hasHeader("Content-Length") && !isHead) {
-					hc.getHeader("Content-Length").value = body.getBody().length + "";
+					hc.getHeader("Content-Length").value = body.getBody().data.length + "";
 				}else if (!hc.hasHeader("Transfer-Encoding") || !hc.getHeader("Transfer-Encoding").value.contains("chunked")) {
-					hc.addHeader("Content-Length", body.getBody().length + ""); // TODO: chunked is incredibly broken
+					hc.addHeader("Content-Length", body.getBody().data.length + ""); // TODO: chunked is incredibly broken
 				}
 				if (!hc.hasHeader("Content-Type")) {
-					hc.addHeader("Content-Type", body.getContentType());
+					hc.addHeader("Content-Type", body.getBody().type);
 				}
 			}
-			byte[] finalc = body.getBody();
-			finalc = JavaWebServer.pluginBus.processResponse(hc, ce, data, finalc);
-			if (ce == ContentEncoding.gzip || ce == ContentEncoding.xgzip) {
-				ByteArrayOutputStream bout = new ByteArrayOutputStream();
-				GZIPOutputStream gout = new GZIPOutputStream(bout);
-				gout.write(finalc, 0, finalc.length);
-				gout.flush();
-				gout.close();
-				finalc = bout.toByteArray();
-				if (hc.hasHeader("Content-Length")) {
-					hc.getHeader("Content-Length").value = finalc.length + "";
+			byte[] finalc = body.getBody().data;
+			finalc = JavaWebServer.pluginBus.processResponse(this, request, hc, ce, finalc);
+			if (finalc != null) {
+				if (ce == ContentEncoding.gzip || ce == ContentEncoding.xgzip) {
+					ByteArrayOutputStream bout = new ByteArrayOutputStream();
+					GZIPOutputStream gout = new GZIPOutputStream(bout);
+					gout.write(finalc, 0, finalc.length);
+					gout.flush();
+					gout.close();
+					finalc = bout.toByteArray();
+					if (hc.hasHeader("Content-Length")) {
+						hc.getHeader("Content-Length").value = finalc.length + "";
+					}
 				}
-			}
-			if (ce != ContentEncoding.identity) hc.addHeader("Content-Encoding", ce.name);
-			for (Header header : hc.getHeaders()) {
-				ser.write((header.toLine() + crlf).getBytes());
+				if (ce != ContentEncoding.identity) hc.addHeader("Content-Encoding", ce.name);
+				for (Header header : hc.getHeaders()) {
+					ser.write((header.toLine() + crlf).getBytes());
+				}
 			}
 			ser.write(crlf.getBytes());
-			if (data) ser.write(finalc);
+			if (data && finalc != null) ser.write(finalc);
 			return ser.toByteArray();
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -160,7 +164,7 @@ public class ResponsePacket extends Packet {
 			bbody = new byte[Integer.parseInt(headers.getHeader("Content-Length").value)];
 			in.readFully(bbody);
 		}
-		MessageBody body = new MessageBody(incomingResponse, bbody);
+		MessageBody body = new MessageBody(incomingResponse, new Resource(bbody, headers.hasHeader("Content-Type") ? headers.getHeader("Content-Type").value : "application/octet-stream"));
 		incomingResponse.body = body;
 		return incomingResponse;
 	}

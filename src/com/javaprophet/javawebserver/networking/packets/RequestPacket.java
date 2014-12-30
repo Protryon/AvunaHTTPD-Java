@@ -8,11 +8,14 @@ import com.javaprophet.javawebserver.http.Header;
 import com.javaprophet.javawebserver.http.Headers;
 import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Method;
+import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.networking.Packet;
 
 public class RequestPacket extends Packet {
 	public String target = "/";
 	public Method method = Method.GET;
+	public String userIP = "";
+	public int userPort = 80;
 	
 	public void write(DataOutputStream out) throws IOException {
 		out.write(serialize());
@@ -89,7 +92,7 @@ public class RequestPacket extends Packet {
 			bbody = new byte[Integer.parseInt(headers.getHeader("Content-Length").value)];
 			in.readFully(bbody);
 		}
-		MessageBody body = new MessageBody(incomingRequest, bbody);
+		MessageBody body = new MessageBody(incomingRequest, new Resource(bbody, headers.hasHeader("Content-Type") ? headers.getHeader("Content-Type").value : "application/octet-stream"));
 		incomingRequest.body = body;
 		return incomingRequest;
 	}
@@ -102,7 +105,7 @@ public class RequestPacket extends Packet {
 				ser.write((header.toLine() + crlf).getBytes());
 			}
 			ser.write(crlf.getBytes());
-			ser.write(body.getBody());
+			ser.write(body.getBody().data);
 			return ser.toByteArray();
 		}catch (Exception e) {
 			e.printStackTrace();
