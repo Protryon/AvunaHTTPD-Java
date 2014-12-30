@@ -43,6 +43,74 @@ public class PatchPHP extends Patch {
 	
 	private static final String crlf = System.getProperty("line.separator");
 	
+	public HashMap<String, Object> postProcess(HashMap<String, Object> prev) {
+		String[] keySet = new String[prev.size()];
+		int i = 0;
+		for (String key : prev.keySet()) {
+			keySet[i++] = key;
+		}
+		HashMap<String, Object> keyArray = new HashMap<String, Object>();
+		for (int o = 0; o < keySet.length; o++) {
+			String key = keySet[o];
+			int ac = 1;
+			for (int o2 = 0; o2 < key.length(); o2++) {
+				if (key.charAt(o2) == '[') {
+					ac++;
+				}
+			}
+			String[] keyArray2 = new String[ac];
+			if (!key.contains("[")) {
+				keyArray2[0] = key;
+			}else {
+				String[] bspl = key.split("\\[");
+				for (int o2 = 0; o2 < bspl.length; o2++) {
+					keyArray2[o2] = bspl[o2].trim(); // TODO: o2 != ac?
+					if (keyArray2[o2].endsWith("]")) {
+						keyArray2[o2] = keyArray2[o2].substring(0, keyArray2[o2].length() - 1);
+					}
+				}
+			}
+			if (keyArray2.length == 1) {
+				keyArray.put(keyArray2[0], prev.get(keyArray2[0]));
+			}else {
+				HashMap<String, Object> last = keyArray;
+				for (int o2 = 0; o2 < keyArray2.length - 1; o2++) {
+					if (last.containsKey(keyArray2[o2])) {
+						Object obj = last.get(keyArray2[o2]);
+						if (obj instanceof HashMap) {
+							HashMap<String, Object> objh = (HashMap<String, Object>)obj;
+							last = objh;
+						}
+					}else {
+						HashMap<String, Object> sub = new HashMap<String, Object>();
+						last.put(keyArray2[o2], sub);
+						last = sub;
+					}
+				}
+				last.put(keyArray2[keyArray2.length - 1], prev.get(key));
+			}
+		}
+		return keyArray;
+	}
+	
+	public String postProcess2(HashMap<String, Object> pos) {
+		String prepend = "";
+		for (String key : pos.keySet()) {
+			Object value = pos.get(key);
+			String fd = "";
+			if (value instanceof String) {
+				fd += "\"" + (String)value + "\"";
+			}else if (value instanceof HashMap) {
+				HashMap<String, Object> tpos = (HashMap<String, Object>)value;
+				fd += "array(" + crlf;
+				fd += postProcess2(tpos);
+				fd += ")" + crlf;
+			}
+			prepend += "\"" + key + "\" => " + fd + "," + crlf;
+		}
+		return prepend;
+	}
+	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, Headers headers, ContentEncoding ce, byte[] data) {
 		try {
@@ -95,21 +163,39 @@ public class PatchPHP extends Patch {
 			_SERVER.put("ORIG_PATH_INFO", "");
 			prepend += "$_SERVER = array(" + crlf;
 			for (String key : _SERVER.keySet()) {
-				prepend += "\"" + key + "\" => \"" + _SERVER.get(key) + "\",";
+				prepend += "\"" + key + "\" => \"" + _SERVER.get(key) + "\"," + crlf;
 			}
 			prepend += crlf + ");" + crlf + "$_GET = array(" + crlf;
-			if (get.length() > 0) for (String key : get.split("&")) {
-				String[] spl = key.split("=");
-				prepend += "\"" + URLDecoder.decode(spl[0]) + "\" => \"" + URLDecoder.decode(spl[1]) + "\",";
+			if (get.length() > 0) {
+				String[] posts = get.split("&");
+				HashMap<String, Object> pos = new HashMap<String, Object>();
+				for (String key : posts) {
+					String[] spl = key.split("=");
+					String pn = URLDecoder.decode(spl[0]);
+					String pd = URLDecoder.decode(spl[1]);
+					pos.put(pn, pd);
+				}
+				pos = postProcess(pos);
+				get = postProcess2(pos);
+				prepend += get;
 			}
 			prepend += crlf + ");" + crlf + "$_POST = array(" + crlf;
 			String post = "";
 			if (request.method == Method.POST && request.body.getBody().type.equals("application/x-www-form-urlencoded")) {
 				post = new String(request.body.getBody().data);
 			}
-			if (post.length() > 0) for (String key : post.split("&")) {
-				String[] spl = key.split("=");
-				prepend += "\"" + URLDecoder.decode(spl[0]) + "\" => \"" + URLDecoder.decode(spl[1]) + "\",";
+			if (post.length() > 0) {
+				String[] posts = post.split("&");
+				HashMap<String, Object> pos = new HashMap<String, Object>();
+				for (String key : posts) {
+					String[] spl = key.split("=");
+					String pn = URLDecoder.decode(spl[0]);
+					String pd = URLDecoder.decode(spl[1]);
+					pos.put(pn, pd);
+				}
+				pos = postProcess(pos);
+				post = postProcess2(pos);
+				prepend += post;
 			}
 			prepend += crlf + ");" + crlf + "$_COOKIE = array(" + crlf;
 			// TODO: $_FILES
@@ -122,16 +208,9 @@ public class PatchPHP extends Patch {
 			}
 			// TODO: Session?
 			prepend += crlf + ");" + crlf + "$_REQUEST = array(" + crlf;
-			if (get.length() > 0) for (String key : get.split("&")) {
-				String[] spl = key.split("=");
-				prepend += "\"" + URLDecoder.decode(spl[0]) + "\" => \"" + URLDecoder.decode(spl[1]) + "\",";
-			}
-			if (post.length() > 0) for (String key : post.split("&")) {
-				String[] spl = key.split("=");
-				prepend += "\"" + URLDecoder.decode(spl[0]) + "\" => \"" + URLDecoder.decode(spl[1]) + "\",";
-			}
+			prepend += get + post;
 			if (cookie.length() > 0) for (String key : cookie.split(";")) {
-				prepend += "\"" + key.substring(0, key.indexOf("=")).trim() + "\" => \"" + key.substring(key.indexOf("=") + 1).trim() + "\",";
+				prepend += "\"" + key.substring(0, key.indexOf("=")).trim() + "\" => \"" + key.substring(key.indexOf("=") + 1).trim() + "\"," + crlf;
 			}
 			prepend += crlf + ");" + crlf;
 			prepend += "chdir('" + __FILE__.substring(0, __FILE__.lastIndexOf("/")) + "');" + crlf;
