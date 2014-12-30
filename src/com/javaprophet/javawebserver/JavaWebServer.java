@@ -38,7 +38,7 @@ public class JavaWebServer {
 					if (!json.containsKey("plugins")) json.put("plugins", "plugins");
 					if (!json.containsKey("bindport")) json.put("bindport", 80);
 					if (!json.containsKey("errorpages")) json.put("errorpages", new JSONObject());
-					if (!json.containsKey("index")) json.put("index", "index.html");
+					if (!json.containsKey("index")) json.put("index", "index.html,index.php");
 				}
 			});
 			mainConfig.load();

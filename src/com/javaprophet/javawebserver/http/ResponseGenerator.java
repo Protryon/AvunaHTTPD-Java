@@ -136,7 +136,14 @@ public class ResponseGenerator {
 		}
 		File abs = new File(JavaWebServer.fileManager.getHTDocs(), rt);
 		if (abs.isDirectory()) {
-			abs = new File(abs, (String)JavaWebServer.mainConfig.get("index"));
+			String[] index = ((String)JavaWebServer.mainConfig.get("index")).split(",");
+			for (String i : index) {
+				File f = new File(abs, i.trim());
+				if (f.exists()) {
+					abs = f;
+					break;
+				}
+			}
 		}
 		return abs;
 	}
