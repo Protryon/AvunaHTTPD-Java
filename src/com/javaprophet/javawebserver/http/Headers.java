@@ -21,6 +21,14 @@ public class Headers {
 		addHeader(new Header(name, value));
 	}
 	
+	public void updateHeader(String name, String value) {
+		if (hasHeader(name)) {
+			getHeader(name).value = value;
+		}else {
+			addHeader(new Header(name, value));
+		}
+	}
+	
 	public void addHeader(Header header) {
 		this.headers.add(header);
 	}
