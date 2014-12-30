@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.networking.Connection;
 import com.javaprophet.javawebserver.plugins.PluginBus;
+import com.javaprophet.javawebserver.plugins.base.BaseLoader;
 import com.javaprophet.javawebserver.util.Config;
 import com.javaprophet.javawebserver.util.ConfigFormat;
 import com.javaprophet.javawebserver.util.FileManager;
@@ -43,6 +44,8 @@ public class JavaWebServer {
 			});
 			mainConfig.load();
 			setupFolders();
+			System.out.println("Loading Base Plugins");
+			BaseLoader.loadBases();
 			System.out.println("Starting Server");
 			ServerSocket server = new ServerSocket(Integer.parseInt(mainConfig.get("bindport").toString()));
 			while (!server.isClosed()) {
