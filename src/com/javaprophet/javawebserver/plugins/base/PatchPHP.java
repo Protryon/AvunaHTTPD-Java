@@ -161,6 +161,7 @@ public class PatchPHP extends Patch {
 				}
 			}
 			s.close();
+			temp.delete();
 			return bout.toByteArray();
 		}catch (IOException e) {
 			e.printStackTrace(); // TODO: throws HTMLException?
