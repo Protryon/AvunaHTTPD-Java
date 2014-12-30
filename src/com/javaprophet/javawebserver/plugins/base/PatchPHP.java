@@ -48,7 +48,9 @@ public class PatchPHP extends Patch {
 		try {
 			String prepend = "<?php" + crlf;
 			HashMap<String, String> _SERVER = new HashMap<String, String>();
-			_SERVER.put("PHP_SELF", response.body.getBody().loc);
+			String __FILE__ = response.body.getBody().loc.replace("\\", "/");
+			_SERVER.put("PHP_SELF", __FILE__);
+			__FILE__ = Connection.rg.getAbsolutePath(__FILE__).getAbsolutePath().replace("\\", "/");
 			String get = request.target;
 			if (get.contains("#")) {
 				get = get.substring(0, get.indexOf("#"));
@@ -71,7 +73,7 @@ public class PatchPHP extends Patch {
 			_SERVER.put("REQUEST_TIME", request.headers.hasHeader("Date") ? request.headers.getHeader("Date").value : ResponseGenerator.sdf.format(new Date()));
 			_SERVER.put("REQUEST_TIME_FLOAT", System.currentTimeMillis() + "");
 			_SERVER.put("QUERY_STRING", get); // TODO: post?
-			_SERVER.put("DOCUMENT_ROOT", JavaWebServer.fileManager.getHTDocs().getAbsolutePath());
+			_SERVER.put("DOCUMENT_ROOT", JavaWebServer.fileManager.getHTDocs().getAbsolutePath().replace("\\", "/"));
 			if (request.headers.hasHeader("Accept")) _SERVER.put("HTTP_ACCEPT", request.headers.getHeader("Accept").value);
 			if (request.headers.hasHeader("Accept-Charset")) _SERVER.put("HTTP_ACCEPT_CHARSET", request.headers.getHeader("Accept-Charset").value);
 			if (request.headers.hasHeader("Accept-Encoding")) _SERVER.put("HTTP_ACCEPT_ENCODING", request.headers.getHeader("Accept-Encoding").value);
@@ -85,7 +87,7 @@ public class PatchPHP extends Patch {
 			_SERVER.put("REMOTE_PORT", request.userPort + "");
 			// _SERVER.put("REMOTE_USER", "");
 			// _SERVER.put("REDIRECT_REMOTE_USER", ""); TODO: auths + htaccess
-			_SERVER.put("SCRIPT_FILENAME", Connection.rg.getAbsolutePath(rq).getAbsolutePath());
+			_SERVER.put("SCRIPT_FILENAME", Connection.rg.getAbsolutePath(rq).getAbsolutePath().replace("\\", "/"));
 			_SERVER.put("SERVER_PORT", JavaWebServer.mainConfig.get("bindport").toString());
 			_SERVER.put("SCRIPT_NAME", rq.substring(rq.lastIndexOf("/") + 1));
 			_SERVER.put("REQUEST_URI", rq);
@@ -132,6 +134,7 @@ public class PatchPHP extends Patch {
 				prepend += "\"" + key.substring(0, key.indexOf("=")).trim() + "\" => \"" + key.substring(key.indexOf("=") + 1).trim() + "\",";
 			}
 			prepend += crlf + ");" + crlf;
+			prepend += "require_once '" + __FILE__ + "';";
 			prepend += "?>" + crlf;
 			System.out.println(prepend);
 			// ^^^^^prepend
@@ -139,7 +142,6 @@ public class PatchPHP extends Patch {
 			temp.createNewFile();
 			FileOutputStream fout = new FileOutputStream(temp);
 			fout.write(prepend.getBytes());
-			fout.write(data);
 			fout.flush();
 			fout.close();
 			Process proc = Runtime.getRuntime().exec(pcfg.get("cmd") + " \"" + temp.getAbsolutePath() + "\"");
@@ -162,7 +164,7 @@ public class PatchPHP extends Patch {
 				}
 			}
 			s.close();
-			temp.delete();
+			// temp.delete();
 			return bout.toByteArray();
 		}catch (IOException e) {
 			e.printStackTrace(); // TODO: throws HTMLException?
