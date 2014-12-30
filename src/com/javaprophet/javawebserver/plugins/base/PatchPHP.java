@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -97,7 +98,7 @@ public class PatchPHP extends Patch {
 			prepend += crlf + ");" + crlf + "$_GET = array(" + crlf;
 			if (get.length() > 0) for (String key : get.split("&")) {
 				String[] spl = key.split("=");
-				prepend += "\"" + spl[0] + "\" => \"" + spl[1] + "\",";
+				prepend += "\"" + URLDecoder.decode(spl[0]) + "\" => \"" + URLDecoder.decode(spl[1]) + "\",";
 			}
 			prepend += crlf + ");" + crlf + "$_POST = array(" + crlf;
 			String post = "";
@@ -106,7 +107,7 @@ public class PatchPHP extends Patch {
 			}
 			if (post.length() > 0) for (String key : post.split("&")) {
 				String[] spl = key.split("=");
-				prepend += "\"" + spl[0] + "\" => \"" + spl[1] + "\",";
+				prepend += "\"" + URLDecoder.decode(spl[0]) + "\" => \"" + URLDecoder.decode(spl[1]) + "\",";
 			}
 			prepend += crlf + ");" + crlf + "$_COOKIE = array(" + crlf;
 			// TODO: $_FILES
@@ -121,11 +122,11 @@ public class PatchPHP extends Patch {
 			prepend += crlf + ");" + crlf + "$_REQUEST = array(" + crlf;
 			if (get.length() > 0) for (String key : get.split("&")) {
 				String[] spl = key.split("=");
-				prepend += "\"" + spl[0] + "\" => \"" + spl[1] + "\",";
+				prepend += "\"" + URLDecoder.decode(spl[0]) + "\" => \"" + URLDecoder.decode(spl[1]) + "\",";
 			}
 			if (post.length() > 0) for (String key : post.split("&")) {
 				String[] spl = key.split("=");
-				prepend += "\"" + spl[0] + "\" => \"" + spl[1] + "\",";
+				prepend += "\"" + URLDecoder.decode(spl[0]) + "\" => \"" + URLDecoder.decode(spl[1]) + "\",";
 			}
 			if (cookie.length() > 0) for (String key : cookie.split(";")) {
 				prepend += "\"" + key.substring(0, key.indexOf("=")).trim() + "\" => \"" + key.substring(key.indexOf("=") + 1).trim() + "\",";
