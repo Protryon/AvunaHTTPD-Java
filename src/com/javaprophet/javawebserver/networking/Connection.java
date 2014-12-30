@@ -32,7 +32,9 @@ public class Connection extends Thread {
 				}
 				System.out.println(incomingRequest.toString());
 				ResponsePacket outgoingResponse = new ResponsePacket();
+				JavaWebServer.pluginBus.processPacket(incomingRequest);
 				rg.process(incomingRequest, outgoingResponse); // TODO: pipelining queue
+				JavaWebServer.pluginBus.processPacket(outgoingResponse);
 				ContentEncoding use = ContentEncoding.identity;
 				if (incomingRequest.headers.hasHeader("Accept-Encoding")) {
 					String[] ces = incomingRequest.headers.getHeader("Accept-Encoding").value.split(",");

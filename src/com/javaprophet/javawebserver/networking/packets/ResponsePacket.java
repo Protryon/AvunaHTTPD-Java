@@ -5,6 +5,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.zip.GZIPOutputStream;
+import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.ContentEncoding;
 import com.javaprophet.javawebserver.http.Header;
 import com.javaprophet.javawebserver.http.Headers;
@@ -35,19 +36,18 @@ public class ResponsePacket extends Packet {
 					hc.addHeader("Content-Type", body.getContentType());
 				}
 			}
-			byte[] finalc = new byte[0];
+			byte[] finalc = body.getBody();
+			finalc = JavaWebServer.pluginBus.processResponse(hc, ce, data, finalc);
 			if (ce == ContentEncoding.gzip || ce == ContentEncoding.xgzip) {
 				ByteArrayOutputStream bout = new ByteArrayOutputStream();
 				GZIPOutputStream gout = new GZIPOutputStream(bout);
-				gout.write(body.getBody(), 0, body.getBody().length);
+				gout.write(finalc, 0, finalc.length);
 				gout.flush();
 				gout.close();
 				finalc = bout.toByteArray();
 				if (hc.hasHeader("Content-Length")) {
 					hc.getHeader("Content-Length").value = finalc.length + "";
 				}
-			}else if (ce == ContentEncoding.identity) {
-				finalc = body.getBody();
 			}
 			if (ce != ContentEncoding.identity) hc.addHeader("Content-Encoding", ce.name);
 			for (Header header : hc.getHeaders()) {

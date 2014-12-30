@@ -7,8 +7,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
-import com.javaprophet.javawebserver.JavaWebServer;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -16,9 +14,11 @@ import org.json.simple.parser.ParseException;
 public class Config {
 	private final File cfg;
 	private JSONObject json = new JSONObject();
+	private ConfigFormat format = null;
 	
-	public Config(File cfg) throws IOException {
+	public Config(File cfg, ConfigFormat format) {
 		this.cfg = cfg;
+		this.format = format;
 		if (!cfg.exists()) {
 			save();
 		}
@@ -33,11 +33,9 @@ public class Config {
 	}
 	
 	private void format() {
-		if (!json.containsKey("version")) json.put("version", JavaWebServer.VERSION);
-		if (!json.containsKey("htdocs")) json.put("htdocs", "C:\\jhtdocs");
-		if (!json.containsKey("bindport")) json.put("bindport", 80);
-		if (!json.containsKey("errorpages")) json.put("errorpages", new JSONObject());
-		if (!json.containsKey("index")) json.put("index", "index.html");
+		if (format != null) {
+			format.format(json);
+		}
 	}
 	
 	public void load() throws IOException, ParseException {
@@ -60,14 +58,18 @@ public class Config {
 		format();
 	}
 	
-	public void save() throws IOException {
+	public void save() {
 		format();
-		if (!cfg.exists() || !cfg.isFile()) {
-			cfg.createNewFile();
+		try {
+			if (!cfg.exists() || !cfg.isFile()) {
+				cfg.createNewFile();
+			}
+			DataOutputStream out = new DataOutputStream(new FileOutputStream(cfg));
+			out.write(json.toJSONString().getBytes());
+			out.flush();
+			out.close();
+		}catch (IOException e) {
+			e.printStackTrace();
 		}
-		DataOutputStream out = new DataOutputStream(new FileOutputStream(cfg));
-		out.write(json.toJSONString().getBytes());
-		out.flush();
-		out.close();
 	}
 }
