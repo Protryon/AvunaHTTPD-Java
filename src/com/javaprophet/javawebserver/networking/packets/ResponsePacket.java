@@ -29,8 +29,6 @@ public class ResponsePacket extends Packet {
 	public byte[] serialize(ContentEncoding ce, boolean data) {
 		try {
 			Headers hc = headers.clone();
-			ByteArrayOutputStream ser = new ByteArrayOutputStream();
-			ser.write((httpVersion + " " + statusCode + " " + reasonPhrase + crlf).getBytes());
 			if (body != null) {
 				if (hc.hasHeader("Content-Length") && !isHead) {
 					hc.getHeader("Content-Length").value = body.getBody().data.length + "";
@@ -43,6 +41,8 @@ public class ResponsePacket extends Packet {
 			}
 			byte[] finalc = body.getBody().data;
 			finalc = JavaWebServer.pluginBus.processResponse(this, request, hc, ce, finalc);
+			ByteArrayOutputStream ser = new ByteArrayOutputStream();
+			ser.write((httpVersion + " " + statusCode + " " + reasonPhrase + crlf).getBytes());
 			if (finalc != null) {
 				if (ce == ContentEncoding.gzip || ce == ContentEncoding.xgzip) {
 					ByteArrayOutputStream bout = new ByteArrayOutputStream();

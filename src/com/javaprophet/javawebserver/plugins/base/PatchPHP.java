@@ -134,7 +134,8 @@ public class PatchPHP extends Patch {
 				prepend += "\"" + key.substring(0, key.indexOf("=")).trim() + "\" => \"" + key.substring(key.indexOf("=") + 1).trim() + "\",";
 			}
 			prepend += crlf + ");" + crlf;
-			prepend += "require_once '" + __FILE__ + "';";
+			prepend += "chdir('" + __FILE__.substring(0, __FILE__.lastIndexOf("/")) + "');" + crlf;
+			prepend += "require_once '" + __FILE__ + "';" + crlf;
 			prepend += "?>" + crlf;
 			System.out.println(prepend);
 			// ^^^^^prepend
@@ -153,7 +154,14 @@ public class PatchPHP extends Patch {
 				if (line.length() > 0) {
 					if (tt && line.contains(":")) {
 						String[] lt = line.split(":");
-						headers.updateHeader(lt[0].trim(), lt[1].trim());
+						String hn = lt[0].trim();
+						String hd = lt[1].trim();
+						if (hn.equals("Status")) {
+							response.statusCode = Integer.parseInt(hd.substring(0, hd.indexOf(" ")));
+							response.reasonPhrase = hd.substring(hd.indexOf(" ") + 1);
+						}else {
+							headers.updateHeader(hn, hd);
+						}
 					}else if (tt) {
 						tt = false;
 					}else {
@@ -164,7 +172,7 @@ public class PatchPHP extends Patch {
 				}
 			}
 			s.close();
-			// temp.delete();
+			temp.delete();
 			return bout.toByteArray();
 		}catch (IOException e) {
 			e.printStackTrace(); // TODO: throws HTMLException?
