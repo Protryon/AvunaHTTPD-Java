@@ -10,6 +10,9 @@ import com.javaprophet.javawebserver.http.ResponseGenerator;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 
+/**
+ * Handles a single connection.
+ */
 public class Connection extends Thread {
 	public final Socket s;
 	public final DataInputStream in;

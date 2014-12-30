@@ -13,6 +13,9 @@ import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.networking.Packet;
 
+/**
+ * This is for responeses to the client.
+ */
 public class ResponsePacket extends Packet {
 	public int statusCode = 200;
 	public String reasonPhrase = "";

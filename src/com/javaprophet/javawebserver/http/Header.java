@@ -1,5 +1,8 @@
 package com.javaprophet.javawebserver.http;
 
+/**
+ * Header/key-value thing.
+ */
 public class Header {
 	public String name = "";
 	public String value = "";
