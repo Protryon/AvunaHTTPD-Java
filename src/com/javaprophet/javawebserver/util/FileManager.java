@@ -24,4 +24,8 @@ public class FileManager {
 	public File getPlugin(Patch p) {
 		return new File(getPlugins(), p.name);
 	}
+	
+	public File getBaseFile(String name) {
+		return new File(getMainDir(), name);
+	}
 }
