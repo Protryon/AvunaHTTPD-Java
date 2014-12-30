@@ -11,6 +11,9 @@ import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 
+/**
+ * Creates a http response coming from the server.
+ */
 public class ResponseGenerator {
 	public ResponseGenerator() {
 		

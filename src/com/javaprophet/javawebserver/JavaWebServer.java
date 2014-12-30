@@ -42,7 +42,7 @@ public class JavaWebServer {
 			File mime = fileManager.getBaseFile("mime.txt");
 			if (!mime.exists()) {
 				System.out.println("Unpacking mime.txt...");
-				InputStream in = JavaWebServer.class.getResourceAsStream("unpack/mime.txt");
+				InputStream in = JavaWebServer.class.getResourceAsStream("/unpack/mime.txt");
 				int i = 1;
 				byte[] buf = new byte[4096];
 				ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -96,7 +96,7 @@ public class JavaWebServer {
 					if (!json.containsKey("temp")) json.put("temp", "temp");
 					if (!json.containsKey("bindport")) json.put("bindport", 80);
 					if (!json.containsKey("errorpages")) json.put("errorpages", new JSONObject());
-					if (!json.containsKey("index")) json.put("index", "index.html,index.php");
+					if (!json.containsKey("index")) json.put("index", "index.php,index.php");
 				}
 			});
 			mainConfig.load();

@@ -2,6 +2,9 @@ package com.javaprophet.javawebserver.http;
 
 import java.util.ArrayList;
 
+/**
+ * The method thats used by the current http thing
+ */
 public class Method {
 	
 	private static final ArrayList<Method> methods = new ArrayList<Method>();
