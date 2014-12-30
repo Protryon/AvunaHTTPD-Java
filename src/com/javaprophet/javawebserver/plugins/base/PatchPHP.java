@@ -23,7 +23,7 @@ public class PatchPHP extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(Headers headers, ContentEncoding ce, boolean data, byte[] response) {
-		return false;
+		return headers.hasHeader("Content-Type") && headers.getHeader("Content-Type").equals("application/x-php");
 	}
 	
 	@Override
