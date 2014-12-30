@@ -35,17 +35,13 @@ public class ResponseGenerator {
 				response.headers.addHeader("Connection", request.headers.getHeader("Connection").value);
 			}
 			if (request.method == Method.OPTIONS) {
-				response.statusCode = 501;
-				response.reasonPhrase = "Not Yet Implemented";
-				response.httpVersion = "HTTP/1.1";
+				generateDefaultResponse(response, StatusCode.NOT_YET_IMPLEMENTED);
 				getErrorPage(response.body, request.target, 501, "Not Yet Implemented", "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
 				return;
 			}else if (request.method == Method.GET || request.method == Method.HEAD || request.method == Method.POST) {
 				Resource resource = getResource(request.target);
 				if (resource == null || resource.data == null) {
-					response.statusCode = 404;
-					response.reasonPhrase = "Not Found";
-					response.httpVersion = "HTTP/1.1";
+					generateDefaultResponse(response, StatusCode.NOT_FOUND);
 					getErrorPage(response.body, request.target, 404, "Not Found", "The requested URL " + request.target + " was not found on this server.");
 					if (request.method == Method.HEAD) {
 						response.headers.addHeader("Content-Length", response.body.getBody().data.length + "");
@@ -53,9 +49,7 @@ public class ResponseGenerator {
 					}
 					return;
 				}else {
-					response.statusCode = 200;
-					response.reasonPhrase = "OK";
-					response.httpVersion = "HTTP/1.1";
+					generateDefaultResponse(response, StatusCode.OK);
 					response.body.setBody(resource);
 					if (request.method == Method.HEAD) {
 						response.headers.addHeader("Content-Length", response.body.getBody().data.length + "");
@@ -64,38 +58,36 @@ public class ResponseGenerator {
 					return;
 				}
 			}else if (request.method == Method.PUT) {
-				response.statusCode = 501;
-				response.reasonPhrase = "Not Yet Implemented";
-				response.httpVersion = "HTTP/1.1";
+				generateDefaultResponse(response, StatusCode.NOT_YET_IMPLEMENTED);
 				getErrorPage(response.body, request.target, 501, "Not Yet Implemented", "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
 				return;
 			}else if (request.method == Method.DELETE) {
-				response.statusCode = 501;
-				response.reasonPhrase = "Not Yet Implemented";
-				response.httpVersion = "HTTP/1.1";
+				generateDefaultResponse(response, StatusCode.NOT_YET_IMPLEMENTED);
 				getErrorPage(response.body, request.target, 501, "Not Yet Implemented", "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
 				return;
 			}else if (request.method == Method.TRACE) {
-				response.statusCode = 501;
-				response.reasonPhrase = "Not Yet Implemented";
-				response.httpVersion = "HTTP/1.1";
+				generateDefaultResponse(response, StatusCode.NOT_YET_IMPLEMENTED);
 				getErrorPage(response.body, request.target, 501, "Not Yet Implemented", "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
 				return;
 			}else if (request.method == Method.CONNECT) {
-				response.statusCode = 501;
-				response.reasonPhrase = "Not Yet Implemented";
-				response.httpVersion = "HTTP/1.1";
+				generateDefaultResponse(response, StatusCode.NOT_YET_IMPLEMENTED);
 				getErrorPage(response.body, request.target, 501, "Not Yet Implemented", "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
 				return;
 			}
 		}catch (Exception e) {
 			e.printStackTrace();
-			response.statusCode = 500;
-			response.reasonPhrase = "Server Error";
+			response.statusCode = 501;
 			response.httpVersion = "HTTP/1.1";
+			response.reasonPhrase = "Server Error";
 			getErrorPage(response.body, request.target, 500, "Server Error", "The requested URL " + request.target + " caused a server failure.");
 			return;
 		}
+	}
+
+	public void generateDefaultResponse(ResponsePacket response, StatusCode status) {
+		response.statusCode = status.getStatus();
+		response.httpVersion = "HTTP/1.1";
+		response.reasonPhrase = status.getPhrase();
 	}
 	
 	public static final String crlf = System.getProperty("line.separator");
