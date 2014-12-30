@@ -3,10 +3,7 @@ package com.javaprophet.javawebserver.http;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import org.json.simple.JSONObject;
@@ -148,7 +145,7 @@ public class ResponseGenerator {
 		return abs;
 	}
 	
-	public Resource getResource(String reqTarget) throws IOException {
+	public Resource getResource(String reqTarget) {
 		try {
 			File abs = getAbsolutePath(reqTarget);
 			FileInputStream fin = new FileInputStream(abs);
@@ -163,9 +160,10 @@ public class ResponseGenerator {
 			}
 			fin.close();
 			byte[] resource = bout.toByteArray();
-			Resource r = new Resource(resource, Files.probeContentType(Paths.get(abs.getAbsolutePath())));
+			String ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
+			Resource r = new Resource(resource, JavaWebServer.extensionToMime.containsKey(ext) ? JavaWebServer.extensionToMime.get(ext) : "application/octet-stream");
 			return r;
-		}catch (FileNotFoundException e) {
+		}catch (IOException e) {
 			e.printStackTrace();
 			return null;
 		}
