@@ -1,5 +1,6 @@
 package com.javaprophet.javawebserver.plugins;
 
+import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.ContentEncoding;
 import com.javaprophet.javawebserver.http.Headers;
 import com.javaprophet.javawebserver.networking.Packet;
@@ -7,6 +8,14 @@ import com.javaprophet.javawebserver.networking.Packet;
 public class PluginBus {
 	public PluginBus() {
 		
+	}
+	
+	public void setupFolders() {
+		for (Patch patch : Patch.patchs) {
+			if (patch.enabled) {
+				JavaWebServer.fileManager.getPlugin(patch).mkdirs();
+			}
+		}
 	}
 	
 	public void processPacket(Packet p) {

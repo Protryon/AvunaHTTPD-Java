@@ -134,7 +134,7 @@ public class ResponseGenerator {
 		if (rt.contains("#")) {
 			rt = rt.substring(0, rt.indexOf("#"));
 		}
-		File abs = new File(new File((String)JavaWebServer.mainConfig.get("htdocs")), rt);
+		File abs = new File(JavaWebServer.fileManager.getHTDocs(), rt);
 		if (abs.isDirectory()) {
 			abs = new File(abs, (String)JavaWebServer.mainConfig.get("index"));
 		}

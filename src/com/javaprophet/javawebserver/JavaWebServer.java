@@ -20,21 +20,29 @@ public class JavaWebServer {
 	public static final FileManager fileManager = new FileManager();
 	public static final PluginBus pluginBus = new PluginBus();
 	
+	public static void setupFolders() {
+		fileManager.getMainDir().mkdirs();
+		fileManager.getHTDocs().mkdirs();
+		fileManager.getPlugins().mkdirs();
+		pluginBus.setupFolders();
+	}
+	
 	public static void main(String[] args) {
 		try {
 			System.out.println("Loading Configs");
 			mainConfig = new Config(new File("C:\\jws\\main.cfg"), new ConfigFormat() {
 				public void format(JSONObject json) {
 					if (!json.containsKey("version")) json.put("version", JavaWebServer.VERSION);
-					if (!json.containsKey("dir")) json.put("htdocs", "C:\\jws");
+					if (!json.containsKey("dir")) json.put("dir", "C:\\jws");
 					if (!json.containsKey("htdocs")) json.put("htdocs", "htdocs");
-					if (!json.containsKey("plugins")) json.put("htdocs", "plugins");
+					if (!json.containsKey("plugins")) json.put("plugins", "plugins");
 					if (!json.containsKey("bindport")) json.put("bindport", 80);
 					if (!json.containsKey("errorpages")) json.put("errorpages", new JSONObject());
 					if (!json.containsKey("index")) json.put("index", "index.html");
 				}
 			});
 			mainConfig.load();
+			setupFolders();
 			System.out.println("Starting Server");
 			ServerSocket server = new ServerSocket(Integer.parseInt(mainConfig.get("bindport").toString()));
 			while (!server.isClosed()) {
