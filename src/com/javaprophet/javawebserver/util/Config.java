@@ -61,6 +61,9 @@ public class Config {
 	public void save() {
 		format();
 		try {
+			if (!cfg.getParentFile().exists()) {
+				cfg.getParentFile().mkdirs();
+			}
 			if (!cfg.exists() || !cfg.isFile()) {
 				cfg.createNewFile();
 			}
