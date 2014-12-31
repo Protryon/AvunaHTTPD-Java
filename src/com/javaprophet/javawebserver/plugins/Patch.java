@@ -21,6 +21,7 @@ public abstract class Patch {
 		this.name = name;
 		pcfg = new Config(new File(JavaWebServer.fileManager.getPlugin(this), "plugin.cfg"), new ConfigFormat() {
 			public void format(JSONObject json) {
+				if (!json.containsKey("enabled")) json.put("enabled", enabled);
 				formatConfig(json);
 			}
 		});
@@ -29,6 +30,7 @@ public abstract class Patch {
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
+		enabled = (boolean)pcfg.get("enabled");
 	}
 	
 	public final Config pcfg;
