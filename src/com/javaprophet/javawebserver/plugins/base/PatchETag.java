@@ -3,7 +3,6 @@ package com.javaprophet.javawebserver.plugins.base;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.json.simple.JSONObject;
-import com.javaprophet.javawebserver.http.ContentEncoding;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.StatusCode;
 import com.javaprophet.javawebserver.networking.Connection;
@@ -51,14 +50,14 @@ public class PatchETag extends Patch {
 	}
 	
 	@Override
-	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, ContentEncoding ce, byte[] data) {
+	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		return response.statusCode == 200 && (request.method == Method.GET || request.method == Method.HEAD) && response.body != null && data != null && data.length > 0;
 	}
 	
 	public static MessageDigest sha256 = null;
 	
 	@Override
-	public byte[] processResponse(ResponsePacket response, RequestPacket request, ContentEncoding ce, byte[] data) {
+	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		if (sha256 == null) return data;
 		String etag = bytesToHex(sha256.digest(data));
 		if (request.headers.hasHeader("If-None-Match")) {

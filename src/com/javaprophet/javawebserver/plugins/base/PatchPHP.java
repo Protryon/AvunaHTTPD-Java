@@ -10,7 +10,6 @@ import java.util.HashMap;
 import java.util.Scanner;
 import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.http.ContentEncoding;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.ResponseGenerator;
 import com.javaprophet.javawebserver.networking.Connection;
@@ -36,7 +35,7 @@ public class PatchPHP extends Patch {
 	}
 	
 	@Override
-	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, ContentEncoding ce, byte[] data) {
+	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		return response.headers.hasHeader("Content-Type") && response.headers.getHeader("Content-Type").value.equals("application/x-php") && response.body != null && data != null && data.length > 0;
 	}
 	
@@ -111,7 +110,7 @@ public class PatchPHP extends Patch {
 	}
 	
 	@Override
-	public byte[] processResponse(ResponsePacket response, RequestPacket request, ContentEncoding ce, byte[] data) {
+	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		try {
 			String prepend = "<?php" + crlf;
 			HashMap<String, String> _SERVER = new HashMap<String, String>();

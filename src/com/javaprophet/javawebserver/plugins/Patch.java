@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.http.ContentEncoding;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
@@ -48,7 +47,7 @@ public abstract class Patch {
 	
 	public abstract void processPacket(Packet packet);
 	
-	public abstract boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, ContentEncoding ce, byte[] data);
+	public abstract boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data);
 	
-	public abstract byte[] processResponse(ResponsePacket response, RequestPacket request, ContentEncoding ce, byte[] data);
+	public abstract byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data);
 }

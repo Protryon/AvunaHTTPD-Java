@@ -41,10 +41,6 @@ public class ResponseGenerator {
 				if (resource == null || resource.data == null) {
 					generateDefaultResponse(response, StatusCode.NOT_FOUND);
 					getErrorPage(response.body, request.target, 404, "Not Found", "The requested URL " + request.target + " was not found on this server.");
-					if (request.method == Method.HEAD) {
-						response.headers.addHeader("Content-Length", response.body.getBody().data.length + "");
-						response.body.setBody(null);
-					}
 					return;
 				}else {
 					File f = new File(JavaWebServer.fileManager.getHTDocs(), request.target);
@@ -57,10 +53,6 @@ public class ResponseGenerator {
 						generateDefaultResponse(response, StatusCode.OK);
 						response.headers.addHeader("Vary", "Accept-Encoding");
 						response.body.setBody(resource);
-						if (request.method == Method.HEAD) {
-							response.headers.addHeader("Content-Length", response.body.getBody().data.length + "");
-							response.body.setBody(null);
-						}
 					}
 					return;
 				}

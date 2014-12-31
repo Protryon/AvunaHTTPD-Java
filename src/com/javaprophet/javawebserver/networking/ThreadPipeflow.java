@@ -21,7 +21,7 @@ public class ThreadPipeflow extends Thread {
 			if (pipeline != null && pipeline.finished) {
 				c.pipeQueue.poll();
 				try {
-					pipeline.response.write(c.out, pipeline.use);
+					pipeline.response.write(c.out);
 				}catch (IOException e) {
 					e.printStackTrace();
 				}
