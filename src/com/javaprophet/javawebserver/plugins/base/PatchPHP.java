@@ -173,7 +173,7 @@ public class PatchPHP extends Patch {
 				for (String key : posts) {
 					String[] spl = key.split("=");
 					String pn = URLDecoder.decode(spl[0]);
-					String pd = URLDecoder.decode(spl[1]);
+					String pd = URLDecoder.decode(spl.length > 1 ? spl[1] : "");
 					pos.put(pn, pd);
 				}
 				pos = postProcess(pos);
@@ -191,7 +191,7 @@ public class PatchPHP extends Patch {
 				for (String key : posts) {
 					String[] spl = key.split("=");
 					String pn = URLDecoder.decode(spl[0]);
-					String pd = URLDecoder.decode(spl[1]);
+					String pd = URLDecoder.decode(spl.length > 1 ? spl[1] : "");
 					pos.put(pn, pd);
 				}
 				pos = postProcess(pos);
