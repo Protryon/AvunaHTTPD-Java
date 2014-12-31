@@ -29,7 +29,9 @@ public class ResponsePacket extends Packet {
 	public byte[] serialize(ContentEncoding ce, boolean data) {
 		try {
 			Headers hc = headers.clone();
-			if (body != null) {
+			byte[] finalc = new byte[0];
+			if (body != null && body.getBody() != null) {
+				finalc = body.getBody().data;
 				if (hc.hasHeader("Content-Length") && !isHead) {
 					hc.getHeader("Content-Length").value = body.getBody().data.length + "";
 				}else if (!hc.hasHeader("Transfer-Encoding") || !hc.getHeader("Transfer-Encoding").value.contains("chunked")) {
@@ -38,8 +40,9 @@ public class ResponsePacket extends Packet {
 				if (!hc.hasHeader("Content-Type")) {
 					hc.addHeader("Content-Type", body.getBody().type);
 				}
+			}else {
+				hc.updateHeader("Content-Length", "0");
 			}
-			byte[] finalc = body.getBody().data;
 			finalc = JavaWebServer.pluginBus.processResponse(this, request, hc, ce, finalc);
 			ByteArrayOutputStream ser = new ByteArrayOutputStream();
 			ser.write((httpVersion + " " + statusCode + " " + reasonPhrase + crlf).getBytes());

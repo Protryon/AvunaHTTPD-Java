@@ -23,9 +23,7 @@ public class ResponseGenerator {
 	
 	public void process(RequestPacket request, ResponsePacket response) {
 		if (!request.httpVersion.equals("HTTP/1.1")) {
-			response.statusCode = 505;
-			response.reasonPhrase = "NEEDS HTTP/1.1";
-			response.httpVersion = request.httpVersion;
+			generateDefaultResponse(response, StatusCode.NEEDS_HTTP_1_1);
 			return;
 		}
 		try {
@@ -49,11 +47,19 @@ public class ResponseGenerator {
 					}
 					return;
 				}else {
-					generateDefaultResponse(response, StatusCode.OK);
-					response.body.setBody(resource);
-					if (request.method == Method.HEAD) {
-						response.headers.addHeader("Content-Length", response.body.getBody().data.length + "");
+					File f = new File(JavaWebServer.fileManager.getHTDocs(), request.target);
+					if (f.isDirectory() && !request.target.endsWith("/")) {
+						generateDefaultResponse(response, StatusCode.PERM_REDIRECT);
+						response.headers.addHeader("Location", resource.loc + "/");
+						response.headers.addHeader("Content-Length", "0");
 						response.body.setBody(null);
+					}else {
+						generateDefaultResponse(response, StatusCode.OK);
+						response.body.setBody(resource);
+						if (request.method == Method.HEAD) {
+							response.headers.addHeader("Content-Length", response.body.getBody().data.length + "");
+							response.body.setBody(null);
+						}
 					}
 					return;
 				}
@@ -83,7 +89,7 @@ public class ResponseGenerator {
 			return;
 		}
 	}
-
+	
 	public void generateDefaultResponse(ResponsePacket response, StatusCode status) {
 		response.statusCode = status.getStatus();
 		response.httpVersion = "HTTP/1.1";
@@ -129,6 +135,11 @@ public class ResponseGenerator {
 			}
 		}
 		return abs;
+	}
+	
+	public String correctForIndex(String reqTarget) {
+		String p = getAbsolutePath(reqTarget).getAbsolutePath().replace("\\", "/");
+		return p.substring(JavaWebServer.fileManager.getHTDocs().getAbsolutePath().replace("\\", "/").length());
 	}
 	
 	public Resource getResource(String reqTarget) {

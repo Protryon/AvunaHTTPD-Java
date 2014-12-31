@@ -130,6 +130,7 @@ public class PatchPHP extends Patch {
 			}else {
 				get = "";
 			}
+			rq = Connection.rg.correctForIndex(rq);
 			_SERVER.put("argv", get);
 			_SERVER.put("argc", "");
 			_SERVER.put("GATEWAY_INTERFACE", "N/I");
