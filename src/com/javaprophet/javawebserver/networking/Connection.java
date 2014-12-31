@@ -18,11 +18,13 @@ public class Connection extends Thread {
 	public final DataInputStream in;
 	public final DataOutputStream out;
 	public static final ResponseGenerator rg = new ResponseGenerator();
+	public final boolean ssl;
 	
-	public Connection(Socket s, DataInputStream in, DataOutputStream out) {
+	public Connection(Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
 		this.s = s;
 		this.in = in;
 		this.out = out;
+		this.ssl = ssl;
 	}
 	
 	private boolean closeWanted = false;

@@ -1,6 +1,7 @@
 package com.javaprophet.javawebserver.util;
 
 import java.io.File;
+import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.plugins.Patch;
 
@@ -15,6 +16,14 @@ public class FileManager {
 	
 	public File getHTDocs() {
 		return new File(getMainDir(), (String)JavaWebServer.mainConfig.get("htdocs"));
+	}
+	
+	public File getSSL() {
+		return new File(getMainDir(), (String)(((JSONObject)JavaWebServer.mainConfig.get("ssl")).get("folder")));
+	}
+	
+	public File getSSLKeystore() {
+		return new File(getSSL(), (String)(((JSONObject)JavaWebServer.mainConfig.get("ssl")).get("keyFile")));
 	}
 	
 	public File getPlugins() {
