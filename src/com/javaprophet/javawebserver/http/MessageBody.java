@@ -7,7 +7,7 @@ public class MessageBody {
 	private Packet superPacket = null;
 	
 	public MessageBody clone(Packet newSuper) {
-		MessageBody n = new MessageBody(newSuper, body.clone());
+		MessageBody n = new MessageBody(newSuper, body != null ? body.clone() : null);
 		return n;
 	}
 	
