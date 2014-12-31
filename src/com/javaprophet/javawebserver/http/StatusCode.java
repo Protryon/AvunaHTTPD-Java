@@ -11,6 +11,7 @@ public class StatusCode {
 	public static final StatusCode NEEDS_HTTP_1_1 = new StatusCode(505, "HTTP Version Not Supported");
 	public static final StatusCode PERM_REDIRECT = new StatusCode(301, "Moved Permanently");
 	public static final StatusCode NOT_MODIFIED = new StatusCode(304, "Not Modified");
+	public static final StatusCode INTERNAL_SERVER_ERROR = new StatusCode(500, "Internal Server Error");
 	
 	private String phrase;
 	private int status;

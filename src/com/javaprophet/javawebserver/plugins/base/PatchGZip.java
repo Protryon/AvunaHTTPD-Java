@@ -52,4 +52,9 @@ public class PatchGZip extends Patch {
 		return data2;
 	}
 	
+	@Override
+	public void processMethod(RequestPacket request, ResponsePacket response) {
+		
+	}
+	
 }

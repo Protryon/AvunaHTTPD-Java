@@ -1,7 +1,6 @@
 package com.javaprophet.javawebserver.plugins;
 
 import java.io.File;
-import java.util.ArrayList;
 import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.Packet;
@@ -11,7 +10,6 @@ import com.javaprophet.javawebserver.util.Config;
 import com.javaprophet.javawebserver.util.ConfigFormat;
 
 public abstract class Patch {
-	protected static final ArrayList<Patch> patchs = new ArrayList<Patch>();
 	
 	public final String name;
 	
@@ -46,6 +44,8 @@ public abstract class Patch {
 	public abstract boolean shouldProcessPacket(Packet packet);
 	
 	public abstract void processPacket(Packet packet);
+	
+	public abstract void processMethod(RequestPacket request, ResponsePacket response);
 	
 	public abstract boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data);
 	

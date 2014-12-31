@@ -72,4 +72,9 @@ public class PatchETag extends Patch {
 		return data;
 	}
 	
+	@Override
+	public void processMethod(RequestPacket request, ResponsePacket response) {
+		
+	}
+	
 }

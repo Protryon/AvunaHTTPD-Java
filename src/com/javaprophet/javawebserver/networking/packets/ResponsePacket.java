@@ -35,7 +35,7 @@ public class ResponsePacket extends Packet {
 		try {
 			ResponsePacket thisClone = clone();
 			byte[] finalc = thisClone.body == null ? null : (thisClone.body.getBody() == null ? null : (thisClone.body.getBody().data));
-			finalc = JavaWebServer.pluginBus.processResponse(thisClone, thisClone.request, finalc);
+			finalc = JavaWebServer.patchBus.processResponse(thisClone, thisClone.request, finalc);
 			ByteArrayOutputStream ser = new ByteArrayOutputStream();
 			ser.write((thisClone.httpVersion + " " + thisClone.statusCode + " " + thisClone.reasonPhrase + crlf).getBytes());
 			for (Header header : thisClone.headers.getHeaders()) {

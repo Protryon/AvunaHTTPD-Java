@@ -22,7 +22,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.networking.Connection;
-import com.javaprophet.javawebserver.plugins.PluginBus;
+import com.javaprophet.javawebserver.plugins.PatchBus;
 import com.javaprophet.javawebserver.plugins.base.BaseLoader;
 import com.javaprophet.javawebserver.util.Config;
 import com.javaprophet.javawebserver.util.ConfigFormat;
@@ -33,7 +33,7 @@ public class JavaWebServer {
 	public static Config mainConfig;
 	public static ArrayList<Connection> runningThreads = new ArrayList<Connection>();
 	public static final FileManager fileManager = new FileManager();
-	public static final PluginBus pluginBus = new PluginBus();
+	public static final PatchBus patchBus = new PatchBus();
 	public static final HashMap<String, String> extensionToMime = new HashMap<String, String>();
 	
 	public static void setupFolders() {
@@ -42,7 +42,7 @@ public class JavaWebServer {
 		fileManager.getPlugins().mkdirs();
 		fileManager.getTemp().mkdirs();
 		fileManager.getSSL().mkdirs();
-		pluginBus.setupFolders();
+		patchBus.setupFolders();
 	}
 	
 	public static void unpack() {
@@ -194,7 +194,7 @@ public class JavaWebServer {
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
-		pluginBus.preExit();
+		patchBus.preExit();
 		if (mainConfig != null) {
 			mainConfig.save();
 		}

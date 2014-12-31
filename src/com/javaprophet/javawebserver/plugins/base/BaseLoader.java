@@ -1,17 +1,24 @@
 package com.javaprophet.javawebserver.plugins.base;
 
-import com.javaprophet.javawebserver.plugins.PluginRegistry;
+import com.javaprophet.javawebserver.http.Method;
+import com.javaprophet.javawebserver.plugins.PatchRegistry;
 
 public class BaseLoader {
 	public static void loadBases() {
+		// methods
+		PatchGetPostHead getposthead = new PatchGetPostHead("getposthead");
+		PatchRegistry.registerPatch(getposthead);
+		PatchRegistry.registerMethod(Method.GET, getposthead);
+		PatchRegistry.registerMethod(Method.POST, getposthead);
+		PatchRegistry.registerMethod(Method.HEAD, getposthead);
 		// server side languages
-		PluginRegistry.registerPatch(new PatchPHP("PHP"));
+		PatchRegistry.registerPatch(new PatchPHP("PHP"));
 		// header manipulation
-		PluginRegistry.registerPatch(new PatchETag("ETag"));
+		PatchRegistry.registerPatch(new PatchETag("ETag"));
 		// transfer/encoding
-		PluginRegistry.registerPatch(new PatchGZip("GZip"));
+		PatchRegistry.registerPatch(new PatchGZip("GZip"));
 		
 		// special
-		PluginRegistry.registerPatch(new PatchContentLength("ContentLength"));
+		PatchRegistry.registerPatch(new PatchContentLength("ContentLength"));
 	}
 }

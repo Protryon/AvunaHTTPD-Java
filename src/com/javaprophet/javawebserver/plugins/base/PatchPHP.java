@@ -12,7 +12,6 @@ import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.ResponseGenerator;
-import com.javaprophet.javawebserver.networking.Connection;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
@@ -110,13 +109,18 @@ public class PatchPHP extends Patch {
 	}
 	
 	@Override
+	public void processMethod(RequestPacket request, ResponsePacket response) {
+		
+	}
+	
+	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		try {
 			String prepend = "<?php" + crlf;
 			HashMap<String, String> _SERVER = new HashMap<String, String>();
 			String __FILE__ = response.body.getBody().loc.replace("\\", "/");
 			_SERVER.put("PHP_SELF", __FILE__);
-			__FILE__ = Connection.rg.getAbsolutePath(__FILE__).getAbsolutePath().replace("\\", "/");
+			__FILE__ = JavaWebServer.fileManager.getAbsolutePath(__FILE__).getAbsolutePath().replace("\\", "/");
 			String get = request.target;
 			if (get.contains("#")) {
 				get = get.substring(0, get.indexOf("#"));
@@ -128,7 +132,7 @@ public class PatchPHP extends Patch {
 			}else {
 				get = "";
 			}
-			rq = Connection.rg.correctForIndex(rq);
+			rq = JavaWebServer.fileManager.correctForIndex(rq);
 			_SERVER.put("argv", get);
 			_SERVER.put("argc", "");
 			_SERVER.put("GATEWAY_INTERFACE", "N/I");
@@ -154,7 +158,7 @@ public class PatchPHP extends Patch {
 			_SERVER.put("REMOTE_PORT", request.userPort + "");
 			// _SERVER.put("REMOTE_USER", "");
 			// _SERVER.put("REDIRECT_REMOTE_USER", ""); TODO: auths + htaccess
-			_SERVER.put("SCRIPT_FILENAME", Connection.rg.getAbsolutePath(rq).getAbsolutePath().replace("\\", "/"));
+			_SERVER.put("SCRIPT_FILENAME", JavaWebServer.fileManager.getAbsolutePath(rq).getAbsolutePath().replace("\\", "/"));
 			_SERVER.put("SERVER_PORT", JavaWebServer.mainConfig.get("bindport").toString());
 			_SERVER.put("SCRIPT_NAME", rq.substring(rq.lastIndexOf("/") + 1));
 			_SERVER.put("REQUEST_URI", rq);

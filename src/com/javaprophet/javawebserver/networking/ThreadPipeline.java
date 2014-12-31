@@ -18,9 +18,9 @@ public class ThreadPipeline extends Thread {
 	
 	public void run() {
 		System.out.println(request.toString());
-		JavaWebServer.pluginBus.processPacket(request);
+		JavaWebServer.patchBus.processPacket(request);
 		Connection.rg.process(request, response);
-		JavaWebServer.pluginBus.processPacket(response);
+		JavaWebServer.patchBus.processPacket(response);
 		finished = true;
 		ThreadPipeline pl;
 		while ((pl = c.pipeQueue.poll()) != null && pl.finished) {

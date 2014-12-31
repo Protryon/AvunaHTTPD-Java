@@ -42,4 +42,9 @@ public class PatchContentLength extends Patch {
 		if (data != null) response.headers.addHeader("Content-Length", data.length + "");
 		return data;
 	}
+	
+	@Override
+	public void processMethod(RequestPacket request, ResponsePacket response) {
+		
+	}
 }
