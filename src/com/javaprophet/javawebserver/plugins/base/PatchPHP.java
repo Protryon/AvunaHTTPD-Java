@@ -11,7 +11,6 @@ import java.util.Scanner;
 import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.ContentEncoding;
-import com.javaprophet.javawebserver.http.Headers;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.ResponseGenerator;
 import com.javaprophet.javawebserver.networking.Connection;
@@ -37,8 +36,8 @@ public class PatchPHP extends Patch {
 	}
 	
 	@Override
-	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, Headers headers, ContentEncoding ce, byte[] data) {
-		return headers.hasHeader("Content-Type") && headers.getHeader("Content-Type").value.equals("application/x-php") && data.length > 0;
+	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, ContentEncoding ce, byte[] data) {
+		return response.headers.hasHeader("Content-Type") && response.headers.getHeader("Content-Type").value.equals("application/x-php") && response.body != null && data != null && data.length > 0;
 	}
 	
 	private static final String crlf = System.getProperty("line.separator");
@@ -112,7 +111,7 @@ public class PatchPHP extends Patch {
 	}
 	
 	@Override
-	public byte[] processResponse(ResponsePacket response, RequestPacket request, Headers headers, ContentEncoding ce, byte[] data) {
+	public byte[] processResponse(ResponsePacket response, RequestPacket request, ContentEncoding ce, byte[] data) {
 		try {
 			String prepend = "<?php" + crlf;
 			HashMap<String, String> _SERVER = new HashMap<String, String>();
@@ -217,7 +216,6 @@ public class PatchPHP extends Patch {
 			prepend += "chdir('" + __FILE__.substring(0, __FILE__.lastIndexOf("/")) + "');" + crlf;
 			prepend += "require_once '" + __FILE__ + "';" + crlf;
 			prepend += "?>" + crlf;
-			System.out.println(prepend);
 			// ^^^^^prepend
 			File temp = new File(JavaWebServer.fileManager.getTemp(), System.nanoTime() + data.length + ".php");
 			temp.createNewFile();
@@ -240,7 +238,7 @@ public class PatchPHP extends Patch {
 							response.statusCode = Integer.parseInt(hd.substring(0, hd.indexOf(" ")));
 							response.reasonPhrase = hd.substring(hd.indexOf(" ") + 1);
 						}else {
-							headers.updateHeader(hn, hd);
+							response.headers.updateHeader(hn, hd);
 						}
 					}else if (tt) {
 						tt = false;

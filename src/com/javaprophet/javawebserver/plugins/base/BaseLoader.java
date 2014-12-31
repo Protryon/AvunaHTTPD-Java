@@ -5,5 +5,6 @@ import com.javaprophet.javawebserver.plugins.PluginRegistry;
 public class BaseLoader {
 	public static void loadBases() {
 		PluginRegistry.registerPatch(new PatchPHP("PHP"));
+		PluginRegistry.registerPatch(new PatchETag("ETag"));
 	}
 }

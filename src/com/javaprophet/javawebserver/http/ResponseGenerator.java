@@ -55,6 +55,7 @@ public class ResponseGenerator {
 						response.body.setBody(null);
 					}else {
 						generateDefaultResponse(response, StatusCode.OK);
+						response.headers.addHeader("Vary", "Accept-Encoding");
 						response.body.setBody(resource);
 						if (request.method == Method.HEAD) {
 							response.headers.addHeader("Content-Length", response.body.getBody().data.length + "");

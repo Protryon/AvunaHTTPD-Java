@@ -26,26 +26,38 @@ public class ResponsePacket extends Packet {
 		return serialize(ce, true);
 	}
 	
+	public ResponsePacket clone() {
+		ResponsePacket n = new ResponsePacket();
+		n.statusCode = statusCode;
+		n.reasonPhrase = reasonPhrase;
+		n.isHead = isHead;
+		n.request = request;
+		n.httpVersion = httpVersion;
+		n.headers = headers.clone();
+		n.body = body.clone(n);
+		return n;
+	}
+	
 	public byte[] serialize(ContentEncoding ce, boolean data) {
 		try {
-			Headers hc = headers.clone();
+			ResponsePacket thisClone = clone();
 			byte[] finalc = new byte[0];
-			if (body != null && body.getBody() != null) {
-				finalc = body.getBody().data;
-				if (hc.hasHeader("Content-Length") && !isHead) {
-					hc.getHeader("Content-Length").value = body.getBody().data.length + "";
-				}else if (!hc.hasHeader("Transfer-Encoding") || !hc.getHeader("Transfer-Encoding").value.contains("chunked")) {
-					hc.addHeader("Content-Length", body.getBody().data.length + ""); // TODO: chunked is incredibly broken
+			if (thisClone.body != null && thisClone.body.getBody() != null) {
+				finalc = thisClone.body.getBody().data;
+				if (thisClone.headers.hasHeader("Content-Length") && !thisClone.isHead) {
+					thisClone.headers.getHeader("Content-Length").value = thisClone.body.getBody().data.length + "";
+				}else if (!thisClone.headers.hasHeader("Transfer-Encoding") || !thisClone.headers.getHeader("Transfer-Encoding").value.contains("chunked")) {
+					thisClone.headers.addHeader("Content-Length", thisClone.body.getBody().data.length + ""); // TODO: chunked is incredibly broken
 				}
-				if (!hc.hasHeader("Content-Type")) {
-					hc.addHeader("Content-Type", body.getBody().type);
+				if (!thisClone.headers.hasHeader("Content-Type")) {
+					thisClone.headers.addHeader("Content-Type", thisClone.body.getBody().type);
 				}
 			}else {
-				hc.updateHeader("Content-Length", "0");
+				thisClone.headers.updateHeader("Content-Length", "0");
 			}
-			finalc = JavaWebServer.pluginBus.processResponse(this, request, hc, ce, finalc);
+			finalc = JavaWebServer.pluginBus.processResponse(thisClone, request, ce, finalc);
 			ByteArrayOutputStream ser = new ByteArrayOutputStream();
-			ser.write((httpVersion + " " + statusCode + " " + reasonPhrase + crlf).getBytes());
+			ser.write((thisClone.httpVersion + " " + thisClone.statusCode + " " + thisClone.reasonPhrase + crlf).getBytes());
 			if (finalc != null) {
 				if (ce == ContentEncoding.gzip || ce == ContentEncoding.xgzip) {
 					ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -54,14 +66,14 @@ public class ResponsePacket extends Packet {
 					gout.flush();
 					gout.close();
 					finalc = bout.toByteArray();
-					if (hc.hasHeader("Content-Length")) {
-						hc.getHeader("Content-Length").value = finalc.length + "";
+					if (thisClone.headers.hasHeader("Content-Length")) {
+						thisClone.headers.getHeader("Content-Length").value = finalc.length + "";
 					}
 				}
-				if (ce != ContentEncoding.identity) hc.addHeader("Content-Encoding", ce.name);
-				for (Header header : hc.getHeaders()) {
-					ser.write((header.toLine() + crlf).getBytes());
-				}
+				if (ce != ContentEncoding.identity) thisClone.headers.addHeader("Content-Encoding", ce.name);
+			}
+			for (Header header : thisClone.headers.getHeaders()) {
+				ser.write((header.toLine() + crlf).getBytes());
 			}
 			ser.write(crlf.getBytes());
 			if (data && finalc != null) ser.write(finalc);

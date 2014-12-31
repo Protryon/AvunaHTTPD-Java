@@ -5,6 +5,10 @@ public class Resource {
 	public String type = "text/html";
 	public String loc = "/";
 	
+	public Resource clone() {
+		return new Resource(data, type, loc);
+	}
+	
 	public Resource(byte[] data, String type) {
 		this.data = data;
 		this.type = type;

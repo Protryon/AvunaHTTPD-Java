@@ -6,10 +6,11 @@ package com.javaprophet.javawebserver.http;
 public class StatusCode {
 	
 	public static final StatusCode OK = new StatusCode(200, "OK");
-	public static final StatusCode NOT_FOUND = new StatusCode(404, "File Not Found");
-	public static final StatusCode NOT_YET_IMPLEMENTED = new StatusCode(501, "Not Yet Implemented");
-	public static final StatusCode NEEDS_HTTP_1_1 = new StatusCode(505, "Needs HTTP/1.1");
+	public static final StatusCode NOT_FOUND = new StatusCode(404, "Not Found");
+	public static final StatusCode NOT_YET_IMPLEMENTED = new StatusCode(501, "Not Implemented");
+	public static final StatusCode NEEDS_HTTP_1_1 = new StatusCode(505, "HTTP Version Not Supported");
 	public static final StatusCode PERM_REDIRECT = new StatusCode(301, "Moved Permanently");
+	public static final StatusCode NOT_MODIFIED = new StatusCode(304, "Not Modified");
 	
 	private String phrase;
 	private int status;

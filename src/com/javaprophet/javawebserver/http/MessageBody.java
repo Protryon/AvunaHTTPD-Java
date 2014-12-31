@@ -6,6 +6,11 @@ public class MessageBody {
 	private Resource body = null;
 	private Packet superPacket = null;
 	
+	public MessageBody clone(Packet newSuper) {
+		MessageBody n = new MessageBody(newSuper, body.clone());
+		return n;
+	}
+	
 	public ContentEncoding getContentEncoding() {
 		return ContentEncoding.get(superPacket.headers.hasHeader("Content-Encoding") ? superPacket.headers.getHeader("Content-Encoding").value : "");
 	}
