@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyStore;
+import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -102,7 +103,7 @@ public class JavaWebServer {
 	public static void main(String[] args) {
 		try {
 			System.out.println("Loading Configs");
-			File cfg = new File(args.length > 0 ? args[0] : "C:\\jws\\main.cfg");
+			final File cfg = new File(args.length > 0 ? args[0] : "C:\\jws\\main.cfg");
 			mainConfig = new Config(cfg, new ConfigFormat() {
 				public void format(JSONObject json) {
 					if (!json.containsKey("version")) json.put("version", JavaWebServer.VERSION);
@@ -133,13 +134,13 @@ public class JavaWebServer {
 			cons.put(0, ConnectionJWS.class);
 			cons.put(1, ConnectionApache.class);
 			cons.put(2, ConnectionNGINX.class);
-			Class<? extends Connection> handlerType = cons.get(((Long)mainConfig.get("threadType")).intValue());
+			final Class<? extends Connection> handlerType = cons.get(((Long)mainConfig.get("threadType")).intValue());
 			if (handlerType == ConnectionNGINX.class) {
 				ConnectionNGINX.init();
 			}
 			System.out.println("Loading Base Plugins");
 			BaseLoader.loadBases();
-			int bindport = Integer.parseInt(mainConfig.get("bindport").toString());
+			final int bindport = Integer.parseInt(mainConfig.get("bindport").toString());
 			System.out.println("Starting Server on " + bindport);
 			Thread tnssl = new Thread() {
 				public void run() {
@@ -160,7 +161,7 @@ public class JavaWebServer {
 				}
 			};
 			tnssl.start();
-			if ((boolean)((JSONObject)mainConfig.get("ssl")).get("enabled")) {
+			if ((Boolean)((JSONObject)mainConfig.get("ssl")).get("enabled")) {
 				Thread tssl = new Thread() {
 					public void run() {
 						try {
@@ -186,12 +187,26 @@ public class JavaWebServer {
 									return null;
 								}
 							}};
-							SSLContext sc = SSLContext.getInstance("TLSv1.2");
+							SSLContext sc = null;
+							String[] possibleProtocols = new String[]{"TLSv1.2", "TLSv1.1", "TLSv1", "TLSv1.0"};
+							String fp = "";
+							for (String protocol : possibleProtocols) {
+								try {
+									sc = SSLContext.getInstance(protocol);
+									fp = protocol;
+								}catch (NoSuchAlgorithmException e) {
+									continue;
+								}
+							}
+							if (sc == null) {
+								System.out.println("No suitable TLS protocols found, please upgrade Java! SSL disabled.");
+								return;
+							}
 							sc.init(kmf.getKeyManagers(), trustAllCerts, new SecureRandom());
 							int sslport = Integer.parseInt(((JSONObject)mainConfig.get("ssl")).get("bindport").toString());
 							System.out.println("Starting SSLServer on " + sslport);
 							SSLServerSocket sslserver = (SSLServerSocket)sc.getServerSocketFactory().createServerSocket(sslport);
-							sslserver.setEnabledProtocols(new String[]{"TLSv1", "TLSv1.1", "TLSv1.2"});
+							sslserver.setEnabledProtocols(new String[]{fp});
 							while (!sslserver.isClosed()) {
 								Socket s = sslserver.accept();
 								DataOutputStream out = new DataOutputStream(s.getOutputStream());

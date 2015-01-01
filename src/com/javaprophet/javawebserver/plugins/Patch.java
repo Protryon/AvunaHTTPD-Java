@@ -30,7 +30,7 @@ public abstract class Patch {
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
-		enabled = (boolean)pcfg.get("enabled");
+		enabled = (Boolean)pcfg.get("enabled");
 	}
 	
 	public final Config pcfg;
