@@ -3,6 +3,7 @@ package com.javaprophet.javawebserver.util;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import org.json.simple.JSONObject;
@@ -138,7 +139,7 @@ public class FileManager {
 			Resource r = new Resource(resource, JavaWebServer.extensionToMime.containsKey(ext) ? JavaWebServer.extensionToMime.get(ext) : "application/octet-stream", rt);
 			return r;
 		}catch (IOException e) {
-			e.printStackTrace();
+			if (!(e instanceof FileNotFoundException)) e.printStackTrace();
 			return null;
 		}
 	}
