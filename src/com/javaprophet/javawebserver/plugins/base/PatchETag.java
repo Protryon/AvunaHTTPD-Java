@@ -37,7 +37,7 @@ public class PatchETag extends Patch {
 		
 	}
 	
-	final protected static char[] hexArray = "0123456789ABCDEF".toCharArray();
+	private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
 	
 	public static String bytesToHex(byte[] bytes) {
 		char[] hexChars = new char[bytes.length * 2];

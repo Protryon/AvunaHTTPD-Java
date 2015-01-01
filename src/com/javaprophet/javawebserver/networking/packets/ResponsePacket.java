@@ -31,6 +31,8 @@ public class ResponsePacket extends Packet {
 		return n;
 	}
 	
+	public byte[] cachedSerialize = null;
+	
 	public byte[] serialize(boolean data) {
 		try {
 			ResponsePacket thisClone = clone();
@@ -43,10 +45,12 @@ public class ResponsePacket extends Packet {
 			}
 			ser.write(crlf.getBytes());
 			if (data && finalc != null) ser.write(finalc);
+			cachedSerialize = ser.toByteArray();
 			return ser.toByteArray();
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
+		cachedSerialize = new byte[0];
 		return new byte[0];
 	}
 	
@@ -55,7 +59,7 @@ public class ResponsePacket extends Packet {
 	}
 	
 	public String toString2() {
-		return new String(serialize(false));
+		return new String(cachedSerialize);
 	}
 	
 	public void write(DataOutputStream out) throws IOException {

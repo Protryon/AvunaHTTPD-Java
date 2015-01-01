@@ -22,6 +22,7 @@ public class ThreadPipeflow extends Thread {
 				c.pipeQueue.poll();
 				try {
 					pipeline.response.write(c.out);
+					System.out.println(pipeline.response.toString2());
 				}catch (IOException e) {
 					e.printStackTrace();
 				}
