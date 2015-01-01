@@ -258,6 +258,13 @@ public class JavaWebServer {
 					e.printStackTrace();
 				}
 				System.out.println("Loaded Config! Some entries will require a restart.");
+			}else if (command.equals("help")) {
+				System.out.println("Commands:");
+				System.out.println("exit/stop");
+				System.out.println("reload");
+				System.out.println("help");
+				System.out.println("");
+				System.out.println("Java Web Server(JWS) version " + VERSION);
 			}else {
 				System.out.println("Unknown Command: " + command);
 			}
