@@ -99,6 +99,9 @@ public class JavaWebServer {
 	}
 	
 	public static final HashMap<Integer, Class<? extends Connection>> cons = new HashMap<Integer, Class<? extends Connection>>();
+	private static boolean nsslr = false;
+	private static boolean sslr = false;
+	private static boolean ap = false;
 	
 	public static void main(String[] args) {
 		try {
@@ -146,6 +149,8 @@ public class JavaWebServer {
 				public void run() {
 					try {
 						ServerSocket server = new ServerSocket(bindport);
+						nsslr = true;
+						ap = true;
 						while (!server.isClosed()) {
 							Socket s = server.accept();
 							DataOutputStream out = new DataOutputStream(s.getOutputStream());
@@ -157,7 +162,9 @@ public class JavaWebServer {
 						}
 					}catch (Exception e) {
 						e.printStackTrace();
+						ap = true;
 					}
+					nsslr = false;
 				}
 			};
 			tnssl.start();
@@ -207,6 +214,8 @@ public class JavaWebServer {
 							System.out.println("Starting SSLServer on " + sslport);
 							SSLServerSocket sslserver = (SSLServerSocket)sc.getServerSocketFactory().createServerSocket(sslport);
 							sslserver.setEnabledProtocols(new String[]{fp});
+							sslr = true;
+							ap = true;
 							while (!sslserver.isClosed()) {
 								Socket s = sslserver.accept();
 								DataOutputStream out = new DataOutputStream(s.getOutputStream());
@@ -218,13 +227,40 @@ public class JavaWebServer {
 							}
 						}catch (Exception e) {
 							e.printStackTrace();
+							ap = true;
 						}
+						sslr = false;
 					}
 				};
 				tssl.start();
 			}
 		}catch (Exception e) {
 			e.printStackTrace();
+			ap = true;
+		}
+		while (!ap) {
+			try {
+				Thread.sleep(100L);
+			}catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		Scanner scan = new Scanner(System.in);
+		while (sslr || nsslr) {
+			String command = scan.nextLine();
+			if (command.equals("exit") || command.equals("stop")) {
+				System.exit(0);
+			}else if (command.equals("reload config")) {
+				try {
+					mainConfig.load();
+					patchBus.preExit();
+				}catch (Exception e) {
+					e.printStackTrace();
+				}
+				System.out.println("Loaded Config! Some entries will require a restart.");
+			}else {
+				System.out.println("Unknown Command: " + command);
+			}
 		}
 		patchBus.preExit();
 		if (mainConfig != null) {
