@@ -3,6 +3,7 @@ package com.javaprophet.javawebserver.plugins.base;
 import java.io.File;
 import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
+import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.http.ResponseGenerator;
 import com.javaprophet.javawebserver.http.StatusCode;
@@ -10,11 +11,15 @@ import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
+import com.javaprophet.javawebserver.plugins.PatchRegistry;
 
 public class PatchGetPostHead extends Patch {
 	
 	public PatchGetPostHead(String name) {
 		super(name);
+		PatchRegistry.registerMethod(Method.GET, this);
+		PatchRegistry.registerMethod(Method.POST, this);
+		PatchRegistry.registerMethod(Method.HEAD, this);
 	}
 	
 	@Override
