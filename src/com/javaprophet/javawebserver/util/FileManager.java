@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.MessageBody;
@@ -94,6 +95,9 @@ public class FileManager {
 		return p.substring(JavaWebServer.fileManager.getHTDocs().getAbsolutePath().replace("\\", "/").length());
 	}
 	
+	private static final HashMap<String, byte[]> cache = new HashMap<String, byte[]>();
+	private static long cacheClock = 0L;
+	
 	public Resource getResource(String reqTarget) {
 		try {
 			String rt = reqTarget;
@@ -104,18 +108,33 @@ public class FileManager {
 				rt = rt.substring(0, rt.indexOf("?"));
 			}
 			File abs = getAbsolutePath(rt);
-			FileInputStream fin = new FileInputStream(abs);
-			ByteArrayOutputStream bout = new ByteArrayOutputStream();
-			int i = 1;
-			byte[] buf = new byte[4096];
-			while (i > 0) {
-				i = fin.read(buf);
-				if (i > 0) {
-					bout.write(buf, 0, i);
+			byte[] resource = null;
+			String p = abs.getAbsolutePath();
+			if (cache.containsKey(p)) {
+				long t = System.currentTimeMillis();
+				if (t - 1000L < cacheClock) {
+					resource = cache.get(p);
+					System.out.println("cache used");
+				}else {
+					cacheClock = t;
+					cache.clear();
 				}
 			}
-			fin.close();
-			byte[] resource = bout.toByteArray();
+			if (resource == null) {
+				FileInputStream fin = new FileInputStream(abs);
+				ByteArrayOutputStream bout = new ByteArrayOutputStream();
+				int i = 1;
+				byte[] buf = new byte[4096];
+				while (i > 0) {
+					i = fin.read(buf);
+					if (i > 0) {
+						bout.write(buf, 0, i);
+					}
+				}
+				fin.close();
+				resource = bout.toByteArray();
+				cache.put(p, resource);
+			}
 			String ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
 			Resource r = new Resource(resource, JavaWebServer.extensionToMime.containsKey(ext) ? JavaWebServer.extensionToMime.get(ext) : "application/octet-stream", rt);
 			return r;
