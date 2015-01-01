@@ -102,10 +102,11 @@ public class JavaWebServer {
 	public static void main(String[] args) {
 		try {
 			System.out.println("Loading Configs");
-			mainConfig = new Config(new File(args.length > 0 ? args[0] : "C:\\jws\\main.cfg"), new ConfigFormat() {
+			File cfg = new File(args.length > 0 ? args[0] : "C:\\jws\\main.cfg");
+			mainConfig = new Config(cfg, new ConfigFormat() {
 				public void format(JSONObject json) {
 					if (!json.containsKey("version")) json.put("version", JavaWebServer.VERSION);
-					if (!json.containsKey("dir")) json.put("dir", "C:\\jws");
+					if (!json.containsKey("dir")) json.put("dir", cfg.getParentFile().getAbsolutePath());
 					if (!json.containsKey("htdocs")) json.put("htdocs", "htdocs");
 					if (!json.containsKey("plugins")) json.put("plugins", "plugins");
 					if (!json.containsKey("temp")) json.put("temp", "temp");
@@ -116,7 +117,7 @@ public class JavaWebServer {
 					if (!json.containsKey("ssl")) json.put("ssl", new JSONObject());
 					JSONObject ssl = (JSONObject)json.get("ssl");
 					if (!ssl.containsKey("enabled")) ssl.put("enabled", false);
-					if (!ssl.containsKey("forceSSL")) ssl.put("forceSSL", false);
+					if (!ssl.containsKey("forceSSL")) ssl.put("forceSSL", false); // TODO: implement
 					if (!ssl.containsKey("bindport")) ssl.put("bindport", 443);
 					if (!ssl.containsKey("folder")) ssl.put("folder", "ssl");
 					if (!ssl.containsKey("keyFile")) ssl.put("keyFile", "keystore");
