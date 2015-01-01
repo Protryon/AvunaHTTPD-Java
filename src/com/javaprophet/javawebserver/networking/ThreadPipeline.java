@@ -27,6 +27,6 @@ public class ThreadPipeline extends Thread {
 			c.finishedPipeQueue.add(pl);
 			if (pl == this) break;
 		}
-		// System.out.println(response.toString2());
+		System.out.println(response.toString2()); // TODO: resource intensive
 	}
 }

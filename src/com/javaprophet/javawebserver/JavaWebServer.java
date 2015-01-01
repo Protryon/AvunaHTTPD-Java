@@ -104,7 +104,7 @@ public class JavaWebServer {
 					if (!json.containsKey("temp")) json.put("temp", "temp");
 					if (!json.containsKey("bindport")) json.put("bindport", 80);
 					if (!json.containsKey("errorpages")) json.put("errorpages", new JSONObject());
-					if (!json.containsKey("index")) json.put("index", "index.jwsl,index.php,index.html");
+					if (!json.containsKey("index")) json.put("index", "Index.class,index.jwsl,index.php,index.html");
 					if (!json.containsKey("ssl")) json.put("ssl", new JSONObject());
 					JSONObject ssl = (JSONObject)json.get("ssl");
 					if (!ssl.containsKey("enabled")) ssl.put("enabled", false);
