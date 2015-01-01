@@ -14,7 +14,7 @@ public class PatchClassLoader extends ClassLoader {
 		for (File f : dir.listFiles()) {
 			if (f.isDirectory()) {
 				loadPlugins(f);
-			}else {
+			}else if (f.getName().endsWith(".class")) {
 				try {
 					FileInputStream fin = new FileInputStream(f);
 					ByteArrayOutputStream bout = new ByteArrayOutputStream();
