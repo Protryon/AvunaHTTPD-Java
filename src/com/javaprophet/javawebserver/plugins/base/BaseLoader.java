@@ -9,7 +9,7 @@ public class BaseLoader {
 		// special
 		PatchRegistry.registerPatch(new PatchContentType("ContentType"));
 		// methods
-		PatchGetPostHead getposthead = new PatchGetPostHead("getposthead");
+		PatchGetPostHead getposthead = new PatchGetPostHead("GetPostHead");
 		PatchRegistry.registerPatch(getposthead);
 		PatchRegistry.registerMethod(Method.GET, getposthead);
 		PatchRegistry.registerMethod(Method.POST, getposthead);
