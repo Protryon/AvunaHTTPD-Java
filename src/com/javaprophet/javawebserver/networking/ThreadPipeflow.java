@@ -1,6 +1,8 @@
 package com.javaprophet.javawebserver.networking;
 
 import java.io.IOException;
+import java.util.Date;
+import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 
 public class ThreadPipeflow extends Thread {
 	private final ConnectionJWS c;
@@ -21,8 +23,8 @@ public class ThreadPipeflow extends Thread {
 			if (pipeline != null && pipeline.finished) {
 				c.pipeQueue.poll();
 				try {
-					pipeline.response.write(c.out);
-					System.out.println(pipeline.response.toString());
+					ResponsePacket fp = pipeline.response.write(c.out);
+					System.out.println("[" + Connection.timestamp.format(new Date()) + "]" + fp.request.userIP + " requested " + pipeline.request.target + " returned " + fp.statusCode + " " + fp.reasonPhrase);
 				}catch (IOException e) {
 					e.printStackTrace();
 				}

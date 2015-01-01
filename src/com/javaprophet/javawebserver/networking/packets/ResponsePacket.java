@@ -5,7 +5,9 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.Header;
+import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Method;
+import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.networking.Packet;
 
 /**
@@ -32,6 +34,7 @@ public class ResponsePacket extends Packet {
 	}
 	
 	public byte[] cachedSerialize = null;
+	public ResponsePacket cachedPacket = null;
 	
 	public byte[] serialize(boolean data) {
 		try {
@@ -45,7 +48,14 @@ public class ResponsePacket extends Packet {
 			}
 			ser.write(crlf.getBytes());
 			cachedSerialize = ser.toByteArray();
-			if (data && finalc != null) ser.write(finalc);
+			if (data && finalc != null) {
+				ser.write(finalc);
+				if (thisClone.body == null) {
+					thisClone.body = new MessageBody(thisClone);
+				}
+				thisClone.body.setBody(new Resource(finalc, thisClone.request.target, thisClone.headers.hasHeader("Content-Type") ? thisClone.headers.getHeader("Content-Type").value : "text/html"));
+			}
+			cachedPacket = thisClone;
 			return ser.toByteArray();
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -58,7 +68,7 @@ public class ResponsePacket extends Packet {
 		return new String(cachedSerialize);
 	}
 	
-	public void write(DataOutputStream out) throws IOException {
+	public ResponsePacket write(DataOutputStream out) throws IOException {
 		out.write(serialize(request.method != Method.HEAD));
 		out.flush();
 		if (headers.hasHeader("Connection")) {
@@ -67,5 +77,6 @@ public class ResponsePacket extends Packet {
 				out.close();
 			}
 		}
+		return cachedPacket;
 	}
 }

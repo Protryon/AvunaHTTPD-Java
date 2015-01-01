@@ -114,7 +114,6 @@ public class FileManager {
 				long t = System.currentTimeMillis();
 				if (t - 1000L < cacheClock) {
 					resource = cache.get(p);
-					System.out.println("cache used");
 				}else {
 					cacheClock = t;
 					cache.clear();

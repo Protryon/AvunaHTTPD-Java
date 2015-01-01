@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Date;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
@@ -38,12 +39,11 @@ public class ConnectionApache extends Connection {
 				incomingRequest.userPort = s.getPort();
 				ResponsePacket outgoingResponse = new ResponsePacket();
 				outgoingResponse.request = incomingRequest;
-				System.out.println(incomingRequest.toString());
 				JavaWebServer.patchBus.processPacket(incomingRequest);
 				JavaWebServer.rg.process(incomingRequest, outgoingResponse);
 				JavaWebServer.patchBus.processPacket(outgoingResponse);
 				outgoingResponse.write(out);
-				System.out.println(outgoingResponse.toString());
+				System.out.println("[" + Connection.timestamp.format(new Date()) + "]" + incomingRequest.userIP + " requested " + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase);
 			}catch (Exception ex) {
 				ex.printStackTrace();
 				try {

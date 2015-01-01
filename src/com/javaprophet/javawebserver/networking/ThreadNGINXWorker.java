@@ -3,6 +3,7 @@ package com.javaprophet.javawebserver.networking;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
+import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
@@ -66,13 +67,12 @@ public class ThreadNGINXWorker extends Thread {
 					incomingRequest.userPort = focus.s.getPort();
 					ResponsePacket outgoingResponse = new ResponsePacket();
 					outgoingResponse.request = incomingRequest;
-					System.out.println(incomingRequest.toString());
 					JavaWebServer.patchBus.processPacket(incomingRequest);
 					JavaWebServer.rg.process(incomingRequest, outgoingResponse);
 					JavaWebServer.patchBus.processPacket(outgoingResponse);
 					outgoingResponse.write(focus.out);
 					workQueue.add(focus);
-					System.out.println(outgoingResponse.toString());
+					System.out.println("[" + Connection.timestamp.format(new Date()) + "]" + incomingRequest.userIP + " requested " + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase);
 				}
 			}catch (Exception e) {
 				e.printStackTrace();

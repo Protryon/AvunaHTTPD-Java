@@ -17,7 +17,6 @@ public class ThreadPipeline extends Thread {
 	}
 	
 	public void run() {
-		System.out.println(request.toString());
 		JavaWebServer.patchBus.processPacket(request);
 		JavaWebServer.rg.process(request, response);
 		JavaWebServer.patchBus.processPacket(response);
