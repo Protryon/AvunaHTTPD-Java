@@ -7,6 +7,7 @@ import com.javaprophet.javawebserver.http.Method;
 public class PatchRegistry {
 	
 	public static void registerPatch(Patch p) {
+		System.out.println("Loading patch " + p.name);
 		patchs.add(p);
 	}
 	

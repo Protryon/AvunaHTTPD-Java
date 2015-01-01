@@ -38,8 +38,8 @@ public class PatchBus {
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		byte[] rres = data;
 		for (Patch patch : PatchRegistry.patchs) {
-			if (patch.enabled && patch.shouldProcessResponse(response, request, data)) {
-				rres = patch.processResponse(response, request, data);
+			if (patch.enabled && patch.shouldProcessResponse(response, request, rres)) {
+				rres = patch.processResponse(response, request, rres);
 			}
 		}
 		return rres;

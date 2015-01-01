@@ -5,6 +5,8 @@ import com.javaprophet.javawebserver.plugins.PatchRegistry;
 
 public class BaseLoader {
 	public static void loadBases() {
+		// special
+		PatchRegistry.registerPatch(new PatchContentType("ContentType"));
 		// methods
 		PatchGetPostHead getposthead = new PatchGetPostHead("getposthead");
 		PatchRegistry.registerPatch(getposthead);
@@ -12,6 +14,7 @@ public class BaseLoader {
 		PatchRegistry.registerMethod(Method.POST, getposthead);
 		PatchRegistry.registerMethod(Method.HEAD, getposthead);
 		// server side languages
+		PatchRegistry.registerPatch(new PatchJWSL("JWSL"));
 		PatchRegistry.registerPatch(new PatchPHP("PHP"));
 		// header manipulation
 		PatchRegistry.registerPatch(new PatchETag("ETag"));

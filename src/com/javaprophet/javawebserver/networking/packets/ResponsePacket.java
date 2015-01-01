@@ -51,7 +51,7 @@ public class ResponsePacket extends Packet {
 	}
 	
 	public String toString() {
-		return new String(serialize());
+		return "";// new String(serialize());
 	}
 	
 	public String toString2() {

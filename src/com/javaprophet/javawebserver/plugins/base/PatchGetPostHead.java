@@ -58,7 +58,6 @@ public class PatchGetPostHead extends Patch {
 				response.body.setBody(null);
 			}else {
 				ResponseGenerator.generateDefaultResponse(response, StatusCode.OK);
-				response.headers.addHeader("Vary", "Accept-Encoding");
 				response.body.setBody(resource);
 			}
 			return;

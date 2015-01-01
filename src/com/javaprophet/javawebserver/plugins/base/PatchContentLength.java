@@ -39,7 +39,10 @@ public class PatchContentLength extends Patch {
 			// do we even need this?
 			response.headers.removeHeaders("Transfer-Encoding");
 		}
-		if (data != null) response.headers.addHeader("Content-Length", data.length + "");
+		if (data != null) {
+			response.headers.addHeader("Content-Length", data.length + "");
+			if (!response.headers.hasHeader("Content-Type")) response.headers.addHeader("Content-Type", response.body.getBody().type);
+		}
 		return data;
 	}
 	

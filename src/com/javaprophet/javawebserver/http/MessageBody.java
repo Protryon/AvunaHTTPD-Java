@@ -11,22 +11,6 @@ public class MessageBody {
 		return n;
 	}
 	
-	public ContentEncoding getContentEncoding() {
-		return ContentEncoding.get(superPacket.headers.hasHeader("Content-Encoding") ? superPacket.headers.getHeader("Content-Encoding").value : "");
-	}
-	
-	public void setContentEncoding(ContentEncoding ce) {
-		if (superPacket.headers.hasHeader("Content-Encoding")) {
-			if (ce == ContentEncoding.identity) {
-				superPacket.headers.removeHeaders("Content-Encoding");
-			}else {
-				superPacket.headers.getHeader("Content-Encoding").value = ce.name;
-			}
-		}else {
-			superPacket.headers.addHeader("Content-Encoding", ce.name);
-		}
-	}
-	
 	public MessageBody(Packet superPacket, Resource body) {
 		this(superPacket);
 		this.body = body;
