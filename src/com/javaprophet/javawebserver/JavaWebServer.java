@@ -250,7 +250,7 @@ public class JavaWebServer {
 			String command = scan.nextLine();
 			if (command.equals("exit") || command.equals("stop")) {
 				System.exit(0);
-			}else if (command.equals("reload config")) {
+			}else if (command.equals("reload")) {
 				try {
 					mainConfig.load();
 					patchBus.preExit();
