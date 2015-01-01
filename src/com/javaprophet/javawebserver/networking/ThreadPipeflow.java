@@ -3,9 +3,9 @@ package com.javaprophet.javawebserver.networking;
 import java.io.IOException;
 
 public class ThreadPipeflow extends Thread {
-	private final Connection c;
+	private final ConnectionJWS c;
 	
-	public ThreadPipeflow(Connection c) {
+	public ThreadPipeflow(ConnectionJWS c) {
 		this.c = c;
 	}
 	
@@ -22,7 +22,7 @@ public class ThreadPipeflow extends Thread {
 				c.pipeQueue.poll();
 				try {
 					pipeline.response.write(c.out);
-					System.out.println(pipeline.response.toString2());
+					System.out.println(pipeline.response.toString());
 				}catch (IOException e) {
 					e.printStackTrace();
 				}

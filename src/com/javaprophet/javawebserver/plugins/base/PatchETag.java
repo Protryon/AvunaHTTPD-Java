@@ -3,9 +3,9 @@ package com.javaprophet.javawebserver.plugins.base;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.json.simple.JSONObject;
+import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.StatusCode;
-import com.javaprophet.javawebserver.networking.Connection;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
@@ -62,7 +62,7 @@ public class PatchETag extends Patch {
 		String etag = bytesToHex(sha256.digest(data));
 		if (request.headers.hasHeader("If-None-Match")) {
 			if (request.headers.getHeader("If-None-Match").value.replace("\"", "").equals(etag)) {
-				Connection.rg.generateDefaultResponse(response, StatusCode.NOT_MODIFIED);
+				JavaWebServer.rg.generateDefaultResponse(response, StatusCode.NOT_MODIFIED);
 				response.body = null;
 				return null;
 			}

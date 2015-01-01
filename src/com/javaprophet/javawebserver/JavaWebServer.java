@@ -21,7 +21,11 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import org.json.simple.JSONObject;
+import com.javaprophet.javawebserver.http.ResponseGenerator;
 import com.javaprophet.javawebserver.networking.Connection;
+import com.javaprophet.javawebserver.networking.ConnectionApache;
+import com.javaprophet.javawebserver.networking.ConnectionJWS;
+import com.javaprophet.javawebserver.networking.ConnectionNGINX;
 import com.javaprophet.javawebserver.plugins.PatchBus;
 import com.javaprophet.javawebserver.plugins.base.BaseLoader;
 import com.javaprophet.javawebserver.util.Config;
@@ -35,6 +39,7 @@ public class JavaWebServer {
 	public static final FileManager fileManager = new FileManager();
 	public static final PatchBus patchBus = new PatchBus();
 	public static final HashMap<String, String> extensionToMime = new HashMap<String, String>();
+	public static final ResponseGenerator rg = new ResponseGenerator();
 	
 	public static void setupFolders() {
 		fileManager.getMainDir().mkdirs();
@@ -92,6 +97,8 @@ public class JavaWebServer {
 		}
 	}
 	
+	public static final HashMap<Integer, Class<? extends Connection>> cons = new HashMap<Integer, Class<? extends Connection>>();
+	
 	public static void main(String[] args) {
 		try {
 			System.out.println("Loading Configs");
@@ -103,6 +110,7 @@ public class JavaWebServer {
 					if (!json.containsKey("plugins")) json.put("plugins", "plugins");
 					if (!json.containsKey("temp")) json.put("temp", "temp");
 					if (!json.containsKey("bindport")) json.put("bindport", 80);
+					if (!json.containsKey("threadType")) json.put("threadType", 0);
 					if (!json.containsKey("errorpages")) json.put("errorpages", new JSONObject());
 					if (!json.containsKey("index")) json.put("index", "Index.class,index.jwsl,index.php,index.html");
 					if (!json.containsKey("ssl")) json.put("ssl", new JSONObject());
@@ -120,6 +128,14 @@ public class JavaWebServer {
 			setupFolders();
 			unpack();
 			loadUnpacked();
+			System.out.println("Loading Connection Handling");
+			cons.put(0, ConnectionJWS.class);
+			cons.put(1, ConnectionApache.class);
+			cons.put(2, ConnectionNGINX.class);
+			Class<? extends Connection> handlerType = cons.get(((Long)mainConfig.get("threadType")).intValue());
+			if (handlerType == ConnectionNGINX.class) {
+				ConnectionNGINX.init();
+			}
 			System.out.println("Loading Base Plugins");
 			BaseLoader.loadBases();
 			int bindport = Integer.parseInt(mainConfig.get("bindport").toString());
@@ -133,8 +149,8 @@ public class JavaWebServer {
 							DataOutputStream out = new DataOutputStream(s.getOutputStream());
 							out.flush();
 							DataInputStream in = new DataInputStream(s.getInputStream());
-							Connection c = new Connection(s, in, out, false);
-							c.start();
+							Connection c = (Connection)handlerType.getDeclaredConstructors()[0].newInstance(s, in, out, false);
+							c.handleConnection();
 							runningThreads.add(c);
 						}
 					}catch (Exception e) {
@@ -180,8 +196,8 @@ public class JavaWebServer {
 								DataOutputStream out = new DataOutputStream(s.getOutputStream());
 								out.flush();
 								DataInputStream in = new DataInputStream(s.getInputStream());
-								Connection c = new Connection(s, in, out, true);
-								c.start();
+								Connection c = handlerType.getDeclaredConstructor(Socket.class, DataInputStream.class, DataOutputStream.class, boolean.class).newInstance(s, in, out, false);
+								c.handleConnection();
 								runningThreads.add(c);
 							}
 						}catch (Exception e) {

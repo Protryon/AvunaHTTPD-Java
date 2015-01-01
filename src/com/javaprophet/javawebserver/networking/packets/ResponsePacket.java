@@ -44,8 +44,8 @@ public class ResponsePacket extends Packet {
 				ser.write((header.toLine() + crlf).getBytes());
 			}
 			ser.write(crlf.getBytes());
-			if (data && finalc != null) ser.write(finalc);
 			cachedSerialize = ser.toByteArray();
+			if (data && finalc != null) ser.write(finalc);
 			return ser.toByteArray();
 		}catch (Exception e) {
 			e.printStackTrace();
@@ -55,10 +55,6 @@ public class ResponsePacket extends Packet {
 	}
 	
 	public String toString() {
-		return "";// new String(serialize());
-	}
-	
-	public String toString2() {
 		return new String(cachedSerialize);
 	}
 	

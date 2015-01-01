@@ -5,12 +5,12 @@ import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 
 public class ThreadPipeline extends Thread {
-	private final Connection c;
+	private final ConnectionJWS c;
 	public final RequestPacket request;
 	public final ResponsePacket response;
 	public boolean finished = false;
 	
-	public ThreadPipeline(Connection c, RequestPacket request, ResponsePacket response) {
+	public ThreadPipeline(ConnectionJWS c, RequestPacket request, ResponsePacket response) {
 		this.c = c;
 		this.request = request;
 		this.response = response;
@@ -19,7 +19,7 @@ public class ThreadPipeline extends Thread {
 	public void run() {
 		System.out.println(request.toString());
 		JavaWebServer.patchBus.processPacket(request);
-		Connection.rg.process(request, response);
+		JavaWebServer.rg.process(request, response);
 		JavaWebServer.patchBus.processPacket(response);
 		finished = true;
 		ThreadPipeline pl;
