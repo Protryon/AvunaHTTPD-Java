@@ -95,7 +95,7 @@ public class JavaWebServer {
 	public static void main(String[] args) {
 		try {
 			System.out.println("Loading Configs");
-			mainConfig = new Config(new File("C:\\jws\\main.cfg"), new ConfigFormat() {
+			mainConfig = new Config(new File(args.length > 0 ? args[0] : "C:\\jws\\main.cfg"), new ConfigFormat() {
 				public void format(JSONObject json) {
 					if (!json.containsKey("version")) json.put("version", JavaWebServer.VERSION);
 					if (!json.containsKey("dir")) json.put("dir", "C:\\jws");
