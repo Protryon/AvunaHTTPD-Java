@@ -1,6 +1,7 @@
 package com.javaprophet.javawebserver.networking;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.Date;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 
@@ -26,7 +27,7 @@ public class ThreadPipeflow extends Thread {
 					ResponsePacket fp = pipeline.response.write(c.out);
 					System.out.println("[" + Connection.timestamp.format(new Date()) + "]" + fp.request.userIP + " requested " + pipeline.request.target + " returned " + fp.statusCode + " " + fp.reasonPhrase);
 				}catch (IOException e) {
-					e.printStackTrace();
+					if (!(e instanceof SocketException)) e.printStackTrace();
 				}
 			}
 		}

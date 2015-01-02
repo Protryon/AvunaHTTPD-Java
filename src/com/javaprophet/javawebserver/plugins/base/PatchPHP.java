@@ -35,7 +35,7 @@ public class PatchPHP extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return response.headers.hasHeader("Content-Type") && response.headers.getHeader("Content-Type").value.equals("application/x-php") && response.body != null && data != null && data.length > 0;
+		return response.headers.hasHeader("Content-Type") && response.headers.getHeader("Content-Type").value.equals("application/x-php") && response.body != null && data != null;
 	}
 	
 	private static final String crlf = System.getProperty("line.separator");

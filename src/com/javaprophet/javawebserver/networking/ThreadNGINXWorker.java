@@ -2,7 +2,9 @@ package com.javaprophet.javawebserver.networking;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 import com.javaprophet.javawebserver.JavaWebServer;
@@ -74,8 +76,8 @@ public class ThreadNGINXWorker extends Thread {
 					workQueue.add(focus);
 					System.out.println("[" + Connection.timestamp.format(new Date()) + "]" + incomingRequest.userIP + " requested " + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase);
 				}
-			}catch (Exception e) {
-				e.printStackTrace();
+			}catch (IOException e) {
+				if (!(e instanceof SocketException)) e.printStackTrace();
 			}
 		}
 	}
