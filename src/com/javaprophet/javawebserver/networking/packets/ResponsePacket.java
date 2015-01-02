@@ -54,6 +54,8 @@ public class ResponsePacket extends Packet {
 					thisClone.body = new MessageBody(thisClone);
 				}
 				thisClone.body.setBody(new Resource(finalc, thisClone.request.target, thisClone.headers.hasHeader("Content-Type") ? thisClone.headers.getHeader("Content-Type").value : "text/html"));
+			}else {
+				ser.write(crlf.getBytes());
 			}
 			cachedPacket = thisClone;
 			return ser.toByteArray();

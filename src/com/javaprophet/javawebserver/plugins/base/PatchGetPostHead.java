@@ -58,7 +58,7 @@ public class PatchGetPostHead extends Patch {
 			File f = new File(JavaWebServer.fileManager.getHTDocs(), request.target);
 			if (f.isDirectory() && !request.target.endsWith("/")) {
 				ResponseGenerator.generateDefaultResponse(response, StatusCode.PERM_REDIRECT); // TODO: not relative
-				response.headers.addHeader("Location", resource.loc + "/");
+				response.headers.addHeader("Location", request.target + "/");
 				response.headers.addHeader("Content-Length", "0");
 				response.body.setBody(null);
 			}else {
