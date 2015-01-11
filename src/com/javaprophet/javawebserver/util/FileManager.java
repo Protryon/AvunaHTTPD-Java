@@ -81,7 +81,15 @@ public class FileManager {
 		if (abs.isDirectory()) {
 			String[] index = ((String)JavaWebServer.mainConfig.get("index")).split(",");
 			for (String i : index) {
-				File f = new File(abs, i.trim());
+				i = i.trim();
+				if (i.startsWith("/")) {
+					i = i.substring(1);
+				}
+				String abst = abs.toString().replace("\\", "/");
+				if (!abst.endsWith("/")) {
+					abst += "/";
+				}
+				File f = new File(abst + i);
 				if (f.exists()) {
 					abs = f;
 					break;

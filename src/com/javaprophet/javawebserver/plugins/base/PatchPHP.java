@@ -226,6 +226,16 @@ public class PatchPHP extends Patch {
 			fout.write(prepend.getBytes());
 			fout.flush();
 			fout.close();
+			if (System.getProperty("os.name").contains("nix") || System.getProperty("os.name").contains("nux")) {
+				try {
+					Class<?> fspClass = Class.forName("java.util.prefs.FileSystemPreferences");
+					java.lang.reflect.Method chmodMethod = fspClass.getDeclaredMethod("chmod", String.class, Integer.TYPE);
+					chmodMethod.setAccessible(true);
+					int i = (Integer)chmodMethod.invoke(null, temp.getAbsolutePath(), 0777);
+				}catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
 			Process proc = Runtime.getRuntime().exec(pcfg.get("cmd") + " \"" + temp.getAbsolutePath() + "\"");
 			Scanner s = new Scanner(proc.getInputStream());
 			boolean tt = true;
@@ -253,7 +263,7 @@ public class PatchPHP extends Patch {
 				}
 			}
 			s.close();
-			temp.delete();
+			// temp.delete();
 			return bout.toByteArray();
 		}catch (IOException e) {
 			e.printStackTrace(); // TODO: throws HTMLException?
