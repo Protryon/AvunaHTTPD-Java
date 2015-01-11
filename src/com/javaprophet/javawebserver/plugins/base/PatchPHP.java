@@ -236,7 +236,11 @@ public class PatchPHP extends Patch {
 					e.printStackTrace();
 				}
 			}
-			Process proc = Runtime.getRuntime().exec(pcfg.get("cmd") + " \"" + temp.getAbsolutePath() + "\"");
+			ProcessBuilder pb = new ProcessBuilder((String)pcfg.get("cmd"), JavaWebServer.mainConfig.get("temp") + "/" + temp.getName());
+			pb.directory(JavaWebServer.fileManager.getMainDir());
+			pb.redirectErrorStream(true);
+			Process proc = pb.start();
+			// Runtime.getRuntime().exec(pcfg.get("cmd") + " \"" + temp.getAbsolutePath() + "\"");
 			Scanner s = new Scanner(proc.getInputStream());
 			boolean tt = true;
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
