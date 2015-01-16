@@ -29,9 +29,12 @@ public class PatchMultiHost extends Patch {
 		String host = request.headers.getHeader("Host").value;
 		JSONObject forward = (JSONObject)pcfg.get("forward");
 		for (Object key : forward.keySet()) {
-			if (((String)key).equals(host)) {
-				request.target = forward.get(key) + request.target;
-				return;
+			String[] spl = ((String)key).split(",");
+			for (String c : spl) {
+				if (c.equals(host)) {
+					request.target = forward.get(key) + request.target;
+					return;
+				}
 			}
 		}
 		request.target = ((String)pcfg.get("default")) + request.target;
