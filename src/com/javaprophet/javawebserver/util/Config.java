@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Set;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -26,6 +27,10 @@ public class Config {
 	
 	public Object get(String name) {
 		return json.get(name);
+	}
+	
+	public Set keySet() {
+		return json.keySet();
 	}
 	
 	public void set(String name, String value) {
