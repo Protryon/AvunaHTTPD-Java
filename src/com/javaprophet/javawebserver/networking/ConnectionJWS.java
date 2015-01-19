@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.concurrent.LinkedBlockingQueue;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
@@ -32,6 +33,11 @@ public class ConnectionJWS extends Connection {
 	}
 	
 	private void process() {
+		try {
+			s.setSoTimeout(10000);
+		}catch (SocketException e1) {
+			e1.printStackTrace();
+		}
 		if (!s.isClosed() && !closeWanted) {
 			pipeflow.start();
 		}

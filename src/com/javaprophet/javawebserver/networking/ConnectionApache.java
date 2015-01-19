@@ -29,6 +29,11 @@ public class ConnectionApache extends Connection {
 	}
 	
 	public void process() {
+		try {
+			s.setSoTimeout(10000);
+		}catch (SocketException e1) {
+			e1.printStackTrace();
+		}
 		while (!s.isClosed() && !closeWanted) {
 			try {
 				RequestPacket incomingRequest = RequestPacket.read(in);
