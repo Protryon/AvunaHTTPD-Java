@@ -35,6 +35,7 @@ public class PatchEnforceRedirect extends Patch {
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		String host = request.headers.getHeader("Host").value;
 		for (Object key : pcfg.keySet()) {
+			if (key.equals("enabled")) continue;
 			String regex = ((String)key);
 			if (host.matches(regex)) {
 				response.headers.updateHeader("Location", (String)pcfg.get((String)key));
