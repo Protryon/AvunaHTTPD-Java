@@ -16,6 +16,7 @@ public class RequestPacket extends Packet {
 	public Method method = Method.GET;
 	public String userIP = "";
 	public int userPort = 80;
+	public boolean ssl = false;
 	
 	public void write(DataOutputStream out) throws IOException {
 		out.write(serialize());

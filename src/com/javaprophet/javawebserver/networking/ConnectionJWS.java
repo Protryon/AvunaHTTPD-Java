@@ -51,6 +51,7 @@ public class ConnectionJWS extends Connection {
 					closeWanted = true;
 					continue;
 				}
+				incomingRequest.ssl = ssl;
 				incomingRequest.userIP = s.getInetAddress().getHostAddress();
 				incomingRequest.userPort = s.getPort();
 				ResponsePacket outgoingResponse = new ResponsePacket();

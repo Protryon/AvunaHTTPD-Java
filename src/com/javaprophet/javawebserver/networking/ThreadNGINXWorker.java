@@ -67,6 +67,7 @@ public class ThreadNGINXWorker extends Thread {
 						focus.s.close();
 						continue;
 					}
+					incomingRequest.ssl = focus.ssl;
 					focus.tos = 0;
 					incomingRequest.userIP = focus.s.getInetAddress().getHostAddress();
 					incomingRequest.userPort = focus.s.getPort();
