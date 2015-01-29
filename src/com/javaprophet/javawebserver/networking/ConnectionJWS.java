@@ -10,6 +10,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
+import com.javaprophet.javawebserver.util.Logger;
 
 /**
  * Handles a single connection.
@@ -62,7 +63,7 @@ public class ConnectionJWS extends Connection {
 			}catch (SocketTimeoutException e) {
 				tos++;
 				if (tos >= 6) {
-					e.printStackTrace();
+					// e.printStackTrace();
 					try {
 						s.close();
 					}catch (IOException ex) {
@@ -86,5 +87,6 @@ public class ConnectionJWS extends Connection {
 			}
 		}
 		JavaWebServer.runningThreads.remove(this);
+		Logger.INSTANCE.log(s.getInetAddress().getHostAddress() + " closed.");
 	}
 }

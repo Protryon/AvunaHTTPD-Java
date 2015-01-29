@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
+import com.javaprophet.javawebserver.util.Logger;
 
 public abstract class Connection {
 	public final Socket s;
@@ -18,6 +19,7 @@ public abstract class Connection {
 		this.in = in;
 		this.out = out;
 		this.ssl = ssl;
+		Logger.INSTANCE.log(s.getInetAddress().getHostAddress() + " connected.");
 	}
 	
 	public void handleConnection() {

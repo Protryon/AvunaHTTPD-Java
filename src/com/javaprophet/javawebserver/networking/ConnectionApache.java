@@ -6,10 +6,10 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.util.Date;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
+import com.javaprophet.javawebserver.util.Logger;
 
 /**
  * Handles a single connection.
@@ -53,11 +53,11 @@ public class ConnectionApache extends Connection {
 				JavaWebServer.rg.process(incomingRequest, outgoingResponse);
 				JavaWebServer.patchBus.processPacket(outgoingResponse);
 				outgoingResponse.write(out);
-				System.out.println("[" + Connection.timestamp.format(new Date()) + "]" + incomingRequest.userIP + " requested " + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase);
+				Logger.INSTANCE.log(incomingRequest.userIP + " requested " + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase);
 			}catch (SocketTimeoutException e) {
 				tos++;
 				if (tos >= 6) {
-					e.printStackTrace();
+					// e.printStackTrace();
 					try {
 						s.close();
 					}catch (IOException ex) {
@@ -81,5 +81,6 @@ public class ConnectionApache extends Connection {
 			}
 		}
 		JavaWebServer.runningThreads.remove(this);
+		Logger.INSTANCE.log(s.getInetAddress().getHostAddress() + " closed.");
 	}
 }

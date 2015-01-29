@@ -6,11 +6,11 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
+import com.javaprophet.javawebserver.util.Logger;
 
 public class ThreadNGINXWorker extends Thread {
 	
@@ -78,22 +78,26 @@ public class ThreadNGINXWorker extends Thread {
 					JavaWebServer.patchBus.processPacket(outgoingResponse);
 					outgoingResponse.write(focus.out);
 					workQueue.add(focus);
-					System.out.println("[" + Connection.timestamp.format(new Date()) + "]" + incomingRequest.userIP + " requested " + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase);
+					Logger.INSTANCE.log(incomingRequest.userIP + " requested " + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase);
+				}else {
+					Logger.INSTANCE.log(focus.s.getInetAddress().getHostAddress() + " closed.");
 				}
 			}catch (SocketTimeoutException e) {
 				focus.tos++;
 				if (focus.tos < 10) {
 					workQueue.add(focus);
 				}else {
-					e.printStackTrace();
+					// e.printStackTrace();
 					try {
 						focus.s.close();
 					}catch (IOException ex) {
 						ex.printStackTrace();
 					}
+					Logger.INSTANCE.log(focus.s.getInetAddress().getHostAddress() + " closed.");
 				}
 			}catch (IOException e) {
 				if (!(e instanceof SocketException)) e.printStackTrace();
+				Logger.INSTANCE.log(focus.s.getInetAddress().getHostAddress() + " closed.");
 			}
 		}
 	}
