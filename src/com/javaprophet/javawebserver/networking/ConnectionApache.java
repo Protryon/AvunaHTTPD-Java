@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.Date;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
@@ -34,9 +35,11 @@ public class ConnectionApache extends Connection {
 		}catch (SocketException e1) {
 			e1.printStackTrace();
 		}
+		int tos = 0;
 		while (!s.isClosed() && !closeWanted) {
 			try {
 				RequestPacket incomingRequest = RequestPacket.read(in);
+				tos = 0;
 				if (incomingRequest == null) {
 					closeWanted = true;
 					continue;
@@ -50,6 +53,16 @@ public class ConnectionApache extends Connection {
 				JavaWebServer.patchBus.processPacket(outgoingResponse);
 				outgoingResponse.write(out);
 				System.out.println("[" + Connection.timestamp.format(new Date()) + "]" + incomingRequest.userIP + " requested " + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase);
+			}catch (SocketTimeoutException e) {
+				tos++;
+				if (tos >= 6) {
+					e.printStackTrace();
+					try {
+						s.close();
+					}catch (IOException ex) {
+						ex.printStackTrace();
+					}
+				}
 			}catch (IOException ex) {
 				if (!(ex instanceof SocketException)) ex.printStackTrace();
 				try {

@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.Date;
 import java.util.concurrent.LinkedBlockingQueue;
 import com.javaprophet.javawebserver.JavaWebServer;
@@ -22,6 +23,7 @@ public class ThreadNGINXWorker extends Thread {
 		public final DataInputStream in;
 		public final DataOutputStream out;
 		public final boolean ssl;
+		public int tos = 0;
 		
 		public Work(Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
 			this.s = s;
@@ -65,6 +67,7 @@ public class ThreadNGINXWorker extends Thread {
 						focus.s.close();
 						continue;
 					}
+					focus.tos = 0;
 					incomingRequest.userIP = focus.s.getInetAddress().getHostAddress();
 					incomingRequest.userPort = focus.s.getPort();
 					ResponsePacket outgoingResponse = new ResponsePacket();
@@ -75,6 +78,18 @@ public class ThreadNGINXWorker extends Thread {
 					outgoingResponse.write(focus.out);
 					workQueue.add(focus);
 					System.out.println("[" + Connection.timestamp.format(new Date()) + "]" + incomingRequest.userIP + " requested " + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase);
+				}
+			}catch (SocketTimeoutException e) {
+				focus.tos++;
+				if (focus.tos < 10) {
+					workQueue.add(focus);
+				}else {
+					e.printStackTrace();
+					try {
+						focus.s.close();
+					}catch (IOException ex) {
+						ex.printStackTrace();
+					}
 				}
 			}catch (IOException e) {
 				if (!(e instanceof SocketException)) e.printStackTrace();

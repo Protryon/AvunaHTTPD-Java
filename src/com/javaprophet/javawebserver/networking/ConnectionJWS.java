@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.LinkedBlockingQueue;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
@@ -41,9 +42,11 @@ public class ConnectionJWS extends Connection {
 		if (!s.isClosed() && !closeWanted) {
 			pipeflow.start();
 		}
+		int tos = 0;
 		while (!s.isClosed() && !closeWanted) {
 			try {
 				RequestPacket incomingRequest = RequestPacket.read(in);
+				tos = 0;
 				if (incomingRequest == null) {
 					closeWanted = true;
 					continue;
@@ -55,6 +58,16 @@ public class ConnectionJWS extends Connection {
 				ThreadPipeline pipe = new ThreadPipeline(this, incomingRequest, outgoingResponse);
 				pipe.start();
 				pipeQueue.add(pipe);
+			}catch (SocketTimeoutException e) {
+				tos++;
+				if (tos >= 6) {
+					e.printStackTrace();
+					try {
+						s.close();
+					}catch (IOException ex) {
+						ex.printStackTrace();
+					}
+				}
 			}catch (Exception ex) {
 				ex.printStackTrace();
 				try {
