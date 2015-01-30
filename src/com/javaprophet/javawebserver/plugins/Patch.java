@@ -33,6 +33,10 @@ public abstract class Patch {
 		enabled = (Boolean)pcfg.get("enabled");
 	}
 	
+	public void log(String line) {
+		System.out.println(name + ": " + line);
+	}
+	
 	public final Config pcfg;
 	
 	public String toString() {

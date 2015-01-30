@@ -1,9 +1,18 @@
 package com.javaprophet.javawebserver.plugins.javaloader;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 import org.json.simple.JSONObject;
+import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
@@ -24,9 +33,62 @@ public class PatchJavaLoader extends Patch {
 		}
 	}
 	
+	private File lib = null;
+	
 	@Override
 	public void formatConfig(JSONObject json) {
-		
+		if (!json.containsKey("lib")) json.put("lib", "lib");
+		log("Loading JavaLoader Libs");
+		lib = new File(JavaWebServer.fileManager.getMainDir(), (String)json.get("lib"));
+		if (!lib.exists() || !lib.isDirectory()) {
+			lib.mkdirs();
+		}
+		loadDir(lib);
+	}
+	
+	private void loadDir(File dir) {
+		try {
+			for (File f : dir.listFiles()) {
+				if (f.isDirectory()) {
+					loadDir(f);
+				}else {
+					if (f.getName().endsWith(".class")) {
+						FileInputStream fin = new FileInputStream(f);
+						ByteArrayOutputStream bout = new ByteArrayOutputStream();
+						byte[] buf = new byte[1024];
+						int i = 1;
+						while (i > 0) {
+							i = fin.read(buf);
+							if (i > 0) {
+								bout.write(buf, 0, i);
+							}
+						}
+						fin.close();
+						jlcl.addClass(bout.toByteArray());
+					}else if (f.getName().endsWith(".jar")) {
+						JarFile jf = new JarFile(f);
+						for (JarEntry entry : Collections.list(jf.entries())) {
+							if (!entry.isDirectory() && entry.getName().endsWith(".class")) {
+								InputStream fin = jf.getInputStream(entry);
+								ByteArrayOutputStream bout = new ByteArrayOutputStream();
+								byte[] buf = new byte[1024];
+								int i = 1;
+								while (i > 0) {
+									i = fin.read(buf);
+									if (i > 0) {
+										bout.write(buf, 0, i);
+									}
+								}
+								fin.close();
+								jlcl.addClass(bout.toByteArray());
+							}
+						}
+					}
+				}
+			}
+		}catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	@Override
