@@ -131,6 +131,7 @@ public class JavaWebServer {
 				}
 			});
 			mainConfig.load();
+			mainConfig.save();
 			setupFolders();
 			unpack();
 			loadUnpacked();
@@ -265,11 +266,12 @@ public class JavaWebServer {
 				}catch (Exception e) {
 					e.printStackTrace();
 				}
-				System.out.println("Loaded Config! Some entries will require a restart.");
+				System.out.println("Cache Flushed! This is not necessary for PHP files, as JWS has no control via CGI for caching.");
 			}else if (command.equals("help")) {
 				System.out.println("Commands:");
 				System.out.println("exit/stop");
 				System.out.println("reload");
+				System.out.println("flushcache");
 				System.out.println("help");
 				System.out.println("");
 				System.out.println("Java Web Server(JWS) version " + VERSION);

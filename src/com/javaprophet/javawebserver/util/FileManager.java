@@ -121,7 +121,7 @@ public class FileManager {
 			String p = abs.getAbsolutePath();
 			if (cache.containsKey(p)) {
 				long t = System.currentTimeMillis();
-				long cc = ((Integer)JavaWebServer.mainConfig.get("cacheClock")).intValue();
+				long cc = ((Long)JavaWebServer.mainConfig.get("cacheClock")).longValue();
 				if ((cc > 0 && t - cc < cacheClock) || (cc == -1)) {
 					resource = cache.get(p);
 				}else {
