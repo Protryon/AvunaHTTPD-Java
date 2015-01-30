@@ -16,7 +16,7 @@ public class PatchETag extends Patch {
 	public PatchETag(String name) {
 		super(name);
 		try {
-			sha256 = MessageDigest.getInstance("SHA-256");
+			md5 = MessageDigest.getInstance("MD5");
 		}catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
@@ -54,12 +54,12 @@ public class PatchETag extends Patch {
 		return response.statusCode == 200 && (request.method == Method.GET || request.method == Method.HEAD) && response.body != null && data != null && data.length > 0;
 	}
 	
-	public static MessageDigest sha256 = null;
+	public static MessageDigest md5 = null;
 	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		if (sha256 == null) return data;
-		String etag = bytesToHex(sha256.digest(data));
+		if (md5 == null) return data;
+		String etag = bytesToHex(md5.digest(data));
 		if (request.headers.hasHeader("If-None-Match")) {
 			if (request.headers.getHeader("If-None-Match").value.replace("\"", "").equals(etag)) {
 				JavaWebServer.rg.generateDefaultResponse(response, StatusCode.NOT_MODIFIED);

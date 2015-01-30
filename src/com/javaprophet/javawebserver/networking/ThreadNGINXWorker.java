@@ -85,7 +85,7 @@ public class ThreadNGINXWorker extends Thread {
 					long write = System.nanoTime();
 					workQueue.add(focus);
 					long cur = System.nanoTime();
-					Logger.INSTANCE.log(incomingRequest.userIP + " requested " + incomingRequest.target + " returned " + wrp.statusCode + " " + wrp.reasonPhrase + " took: " + (cur - benchStart) / 1000000D);
+					Logger.INSTANCE.log(incomingRequest.userIP + " requested " + incomingRequest.target + " returned " + wrp.statusCode + " " + wrp.reasonPhrase + " took: " + (cur - benchStart) / 1000000D + " ms");
 				}else {
 					Logger.INSTANCE.log(focus.s.getInetAddress().getHostAddress() + " closed.");
 				}
