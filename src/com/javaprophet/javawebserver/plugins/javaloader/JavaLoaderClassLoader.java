@@ -16,10 +16,9 @@ public class JavaLoaderClassLoader extends ClassLoader {
 	}
 	
 	public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+		if (javaLoaders.containsKey(name)) return javaLoaders.get(name);
 		Class<?> see = super.loadClass(name, resolve);
 		if (see != null) return see;
-		System.out.println(name);
-		if (javaLoaders.containsKey(name)) return javaLoaders.get(name);
 		return null;
 	}
 }
