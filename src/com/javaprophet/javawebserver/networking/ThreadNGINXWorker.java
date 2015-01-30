@@ -63,6 +63,7 @@ public class ThreadNGINXWorker extends Thread {
 			try {
 				if (!focus.s.isClosed()) {
 					RequestPacket incomingRequest = RequestPacket.read(focus.in);
+					long benchStart = System.nanoTime();
 					if (incomingRequest == null) {
 						focus.s.close();
 						continue;
@@ -71,14 +72,20 @@ public class ThreadNGINXWorker extends Thread {
 					focus.tos = 0;
 					incomingRequest.userIP = focus.s.getInetAddress().getHostAddress();
 					incomingRequest.userPort = focus.s.getPort();
+					long set = System.nanoTime();
 					ResponsePacket outgoingResponse = new ResponsePacket();
 					outgoingResponse.request = incomingRequest;
 					JavaWebServer.patchBus.processPacket(incomingRequest);
+					long proc1 = System.nanoTime();
 					JavaWebServer.rg.process(incomingRequest, outgoingResponse);
+					long resp = System.nanoTime();
 					JavaWebServer.patchBus.processPacket(outgoingResponse);
+					long proc2 = System.nanoTime();
 					outgoingResponse.write(focus.out);
+					long write = System.nanoTime();
 					workQueue.add(focus);
-					Logger.INSTANCE.log(incomingRequest.userIP + " requested " + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase);
+					long cur = System.nanoTime();
+					Logger.INSTANCE.log(incomingRequest.userIP + " requested " + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase + " took: " + (cur - benchStart) / 1000000D);
 				}else {
 					Logger.INSTANCE.log(focus.s.getInetAddress().getHostAddress() + " closed.");
 				}

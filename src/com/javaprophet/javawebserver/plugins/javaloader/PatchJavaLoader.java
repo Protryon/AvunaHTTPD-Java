@@ -15,10 +15,10 @@ public class PatchJavaLoader extends Patch {
 		super(name);
 	}
 	
-	private static MessageDigest sha256 = null;
+	private static MessageDigest md5 = null;
 	static {
 		try {
-			sha256 = MessageDigest.getInstance("SHA-256");
+			md5 = MessageDigest.getInstance("MD5");
 		}catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
@@ -64,15 +64,13 @@ public class PatchJavaLoader extends Patch {
 		try {
 			response.headers.updateHeader("Content-Type", "text/html");
 			String name = "";
-			String sha = bytesToHex(sha256.digest(data));
-			for (String osha : loadedClasses.keySet()) {
-				if (osha.equals(sha)) {
-					name = loadedClasses.get(osha);
+			synchronized (loadedClasses) {
+				String sha = bytesToHex(md5.digest(data));
+				name = loadedClasses.get(sha);
+				if (name == null || name.equals("")) {
+					name = jlcl.addClass(data);
+					loadedClasses.put(sha, name);
 				}
-			}
-			if (name.equals("")) {
-				name = jlcl.addClass(data);
-				loadedClasses.put(sha, name);
 			}
 			Class<? extends JavaLoader> loaderClass = (Class<? extends JavaLoader>)jlcl.loadClass(name);
 			if (loaderClass == null) {

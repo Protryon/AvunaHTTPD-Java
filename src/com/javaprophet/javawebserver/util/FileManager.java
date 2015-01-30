@@ -104,7 +104,7 @@ public class FileManager {
 		return p.substring(JavaWebServer.fileManager.getHTDocs().getAbsolutePath().replace("\\", "/").length());
 	}
 	
-	private static final HashMap<String, byte[]> cache = new HashMap<String, byte[]>();
+	public static final HashMap<String, byte[]> cache = new HashMap<String, byte[]>();
 	private static long cacheClock = 0L;
 	
 	public Resource getResource(String reqTarget) {
@@ -121,7 +121,8 @@ public class FileManager {
 			String p = abs.getAbsolutePath();
 			if (cache.containsKey(p)) {
 				long t = System.currentTimeMillis();
-				if (t - 1000L < cacheClock) {
+				long cc = ((Integer)JavaWebServer.mainConfig.get("cacheClock")).intValue();
+				if ((cc > 0 && t - cc < cacheClock) || (cc == -1)) {
 					resource = cache.get(p);
 				}else {
 					cacheClock = t;

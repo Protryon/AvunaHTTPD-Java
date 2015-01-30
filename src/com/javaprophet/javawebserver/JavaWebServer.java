@@ -118,6 +118,7 @@ public class JavaWebServer {
 					if (!json.containsKey("threadType")) json.put("threadType", 2);
 					if (!json.containsKey("errorpages")) json.put("errorpages", new JSONObject());
 					if (!json.containsKey("index")) json.put("index", "Index.class,index.jwsl,index.php,index.html");
+					if (!json.containsKey("cacheClock")) json.put("cacheClock", -1);
 					if (!json.containsKey("ssl")) json.put("ssl", new JSONObject());
 					JSONObject ssl = (JSONObject)json.get("ssl");
 					if (!ssl.containsKey("enabled")) ssl.put("enabled", false);
@@ -254,6 +255,13 @@ public class JavaWebServer {
 				try {
 					mainConfig.load();
 					patchBus.preExit();
+				}catch (Exception e) {
+					e.printStackTrace();
+				}
+				System.out.println("Loaded Config! Some entries will require a restart.");
+			}else if (command.equals("flushcache")) {
+				try {
+					fileManager.cache.clear();
 				}catch (Exception e) {
 					e.printStackTrace();
 				}
