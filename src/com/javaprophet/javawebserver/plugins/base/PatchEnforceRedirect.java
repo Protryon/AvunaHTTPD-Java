@@ -38,7 +38,7 @@ public class PatchEnforceRedirect extends Patch {
 			if (key.equals("enabled")) continue;
 			String regex = ((String)key);
 			if (host.matches(regex)) {
-				response.headers.updateHeader("Location", (String)pcfg.get((String)key));
+				response.headers.updateHeader("Location", (request.ssl ? "https" : "http") + "://" + (String)pcfg.get((String)key) + request.target);
 				response.statusCode = 301;
 				response.reasonPhrase = "Moved Permanently";
 				response.body = null;

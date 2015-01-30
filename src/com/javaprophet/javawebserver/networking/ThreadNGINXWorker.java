@@ -81,11 +81,11 @@ public class ThreadNGINXWorker extends Thread {
 					long resp = System.nanoTime();
 					JavaWebServer.patchBus.processPacket(outgoingResponse);
 					long proc2 = System.nanoTime();
-					outgoingResponse.write(focus.out);
+					ResponsePacket wrp = outgoingResponse.write(focus.out);
 					long write = System.nanoTime();
 					workQueue.add(focus);
 					long cur = System.nanoTime();
-					Logger.INSTANCE.log(incomingRequest.userIP + " requested " + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase + " took: " + (cur - benchStart) / 1000000D);
+					Logger.INSTANCE.log(incomingRequest.userIP + " requested " + incomingRequest.target + " returned " + wrp.statusCode + " " + wrp.reasonPhrase + " took: " + (cur - benchStart) / 1000000D);
 				}else {
 					Logger.INSTANCE.log(focus.s.getInetAddress().getHostAddress() + " closed.");
 				}
