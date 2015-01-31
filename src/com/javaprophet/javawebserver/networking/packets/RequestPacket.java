@@ -4,6 +4,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.URLDecoder;
+import java.util.HashMap;
 import com.javaprophet.javawebserver.http.Header;
 import com.javaprophet.javawebserver.http.Headers;
 import com.javaprophet.javawebserver.http.MessageBody;
@@ -17,6 +19,42 @@ public class RequestPacket extends Packet {
 	public String userIP = "";
 	public int userPort = 80;
 	public boolean ssl = false;
+	
+	// javaloader vars
+	public HashMap<String, String> get = new HashMap<String, String>();
+	public HashMap<String, String> post = new HashMap<String, String>();
+	public HashMap<String, String> cookie = new HashMap<String, String>();
+	
+	public void procJL() {
+		String get = target.contains("?") ? target.substring(target.indexOf("?") + 1) : "";
+		for (String kd : get.split("&")) {
+			if (kd.contains("=")) {
+				this.get.put(URLDecoder.decode(kd.substring(0, kd.indexOf("="))), URLDecoder.decode(kd.substring(kd.indexOf("=") + 1)));
+			}else {
+				this.get.put(URLDecoder.decode(kd), "");
+			}
+		}
+		if (method == Method.POST && headers.getHeader("Content-Type").value.equals("x-www-form-urlencoded") && body != null && body.getBody() != null) {
+			String post = new String(body.getBody().data);
+			for (String kd : post.split("&")) {
+				if (kd.contains("=")) {
+					this.post.put(URLDecoder.decode(kd.substring(0, kd.indexOf("="))), URLDecoder.decode(kd.substring(kd.indexOf("=") + 1)));
+				}else {
+					this.post.put(URLDecoder.decode(kd), "");
+				}
+			}
+		}
+		if (headers.hasHeader("Cookie")) {
+			String cookie = headers.getHeader("Cookie").value;
+			for (String kd : cookie.split(";")) {
+				if (kd.contains("=")) {
+					this.cookie.put(URLDecoder.decode(kd.substring(0, kd.indexOf("="))), URLDecoder.decode(kd.substring(kd.indexOf("=") + 1)));
+				}else {
+					this.cookie.put(URLDecoder.decode(kd), "");
+				}
+			}
+		}
+	}
 	
 	public void write(DataOutputStream out) throws IOException {
 		out.write(serialize());

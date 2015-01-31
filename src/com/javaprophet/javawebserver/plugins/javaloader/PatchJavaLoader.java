@@ -121,6 +121,8 @@ public class PatchJavaLoader extends Patch {
 	private static final HashMap<String, String> loadedClasses = new HashMap<String, String>();
 	private static final JavaLoaderClassLoader jlcl = new JavaLoaderClassLoader();
 	
+	private final HashMap<String, JavaLoader> jls = new HashMap<String, JavaLoader>();
+	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		try {
@@ -134,11 +136,19 @@ public class PatchJavaLoader extends Patch {
 					loadedClasses.put(sha, name);
 				}
 			}
-			Class<? extends JavaLoader> loaderClass = (Class<? extends JavaLoader>)jlcl.loadClass(name);
-			if (loaderClass == null) {
-				return null;
+			JavaLoader loader = null;
+			if (!jls.containsKey(name)) {
+				Class<? extends JavaLoader> loaderClass = (Class<? extends JavaLoader>)jlcl.loadClass(name);
+				if (loaderClass == null) {
+					return null;
+				}
+				loader = loaderClass.newInstance();
+				jls.put(name, loader);
+			}else {
+				loader = jls.get(name);
 			}
-			JavaLoader loader = loaderClass.newInstance();
+			if (loader == null) return null;
+			request.procJL();
 			byte[] ndata = loader.generate(response, request);
 			return ndata;
 		}catch (Exception e) {
