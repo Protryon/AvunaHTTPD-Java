@@ -7,18 +7,27 @@ public class JavaLoaderClassLoader extends ClassLoader {
 		super();
 	}
 	
-	HashMap<String, Class<? extends JavaLoader>> javaLoaders = new HashMap<String, Class<? extends JavaLoader>>();
+	HashMap<String, Class<?>> javaLoaders = new HashMap<String, Class<?>>();
 	
 	public String addClass(byte[] data) {
-		Class<?> cls = defineClass(data, 0, data.length);
-		javaLoaders.put(cls.getName(), (Class<? extends JavaLoader>)cls);
-		return cls.getName();
+		try {
+			Class<?> cls = defineClass(data, 0, data.length);
+			javaLoaders.put(cls.getName(), cls);
+			return cls.getName();
+		}catch (NoClassDefFoundError e) {
+			e.printStackTrace();
+		}
+		return "";
 	}
 	
-	public Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+	public Class<?> loadClass(String name, boolean resolve) {
 		if (javaLoaders.containsKey(name)) return javaLoaders.get(name);
-		Class<?> see = super.loadClass(name, resolve);
-		if (see != null) return see;
+		try {
+			Class<?> see = super.loadClass(name, resolve);
+			if (see != null) return see;
+		}catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
 		return null;
 	}
 }

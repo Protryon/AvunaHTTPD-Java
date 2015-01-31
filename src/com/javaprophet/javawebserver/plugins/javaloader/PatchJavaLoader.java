@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
@@ -43,7 +46,21 @@ public class PatchJavaLoader extends Patch {
 		if (!lib.exists() || !lib.isDirectory()) {
 			lib.mkdirs();
 		}
-		loadDir(lib);
+		URLClassLoader sysloader = (URLClassLoader)ClassLoader.getSystemClassLoader();
+		Class<?> sysclass = URLClassLoader.class;
+		try {
+			Method method = sysclass.getDeclaredMethod("addURL", URL.class);
+			method.setAccessible(true);
+			method.invoke(sysloader, new Object[]{lib.toURI().toURL()});
+			for (File f : lib.listFiles()) {
+				if (!f.isDirectory() && f.getName().endsWith(".jar")) {
+					method.invoke(sysloader, new Object[]{f.toURI().toURL()});
+				}
+			}
+		}catch (Throwable t) {
+			t.printStackTrace();
+		}
+		// loadDir(lib);
 	}
 	
 	private void loadDir(File dir) {

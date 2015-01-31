@@ -116,6 +116,7 @@ public class JavaWebServer {
 					if (!json.containsKey("temp")) json.put("temp", "temp");
 					if (!json.containsKey("bindport")) json.put("bindport", 80);
 					if (!json.containsKey("threadType")) json.put("threadType", 2);
+					if (!json.containsKey("nginxThreadCount")) json.put("nginxThreadCount", Runtime.getRuntime().availableProcessors());
 					if (!json.containsKey("errorpages")) json.put("errorpages", new JSONObject());
 					if (!json.containsKey("index")) json.put("index", "Index.class,index.jwsl,index.php,index.html");
 					if (!json.containsKey("cacheClock")) json.put("cacheClock", -1);

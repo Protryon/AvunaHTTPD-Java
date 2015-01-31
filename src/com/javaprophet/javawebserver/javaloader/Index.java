@@ -1,7 +1,7 @@
 package com.javaprophet.javawebserver.javaloader;
 
 import java.io.ByteArrayOutputStream;
-import java.io.PrintWriter;
+import java.io.PrintStream;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.javaloader.JavaLoader;
@@ -11,7 +11,7 @@ public class Index extends JavaLoader {
 	@Override
 	public byte[] generate(ResponsePacket response, RequestPacket request) {
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
-		PrintWriter write = new PrintWriter(bout);
+		PrintStream write = new PrintStream(bout);
 		if (request.get.containsKey("data")) {
 			write.println(request.get.get("data"));
 		}else {
