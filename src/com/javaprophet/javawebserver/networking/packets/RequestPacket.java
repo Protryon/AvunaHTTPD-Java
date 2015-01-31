@@ -5,8 +5,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 import java.util.HashMap;
-import com.javaprophet.javawebserver.http.Header;
 import com.javaprophet.javawebserver.http.Headers;
 import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Method;
@@ -34,7 +34,7 @@ public class RequestPacket extends Packet {
 				this.get.put(URLDecoder.decode(kd), "");
 			}
 		}
-		if (method == Method.POST && headers.getHeader("Content-Type").value.equals("x-www-form-urlencoded") && body != null && body.getBody() != null) {
+		if (method == Method.POST && headers.getHeader("Content-Type").equals("x-www-form-urlencoded") && body != null && body.getBody() != null) {
 			String post = new String(body.getBody().data);
 			for (String kd : post.split("&")) {
 				if (kd.contains("=")) {
@@ -45,7 +45,7 @@ public class RequestPacket extends Packet {
 			}
 		}
 		if (headers.hasHeader("Cookie")) {
-			String cookie = headers.getHeader("Cookie").value;
+			String cookie = headers.getHeader("Cookie");
 			for (String kd : cookie.split(";")) {
 				if (kd.contains("=")) {
 					this.cookie.put(URLDecoder.decode(kd.substring(0, kd.indexOf("="))), URLDecoder.decode(kd.substring(kd.indexOf("=") + 1)));
@@ -86,14 +86,14 @@ public class RequestPacket extends Packet {
 		boolean htc = headers.hasHeader("Transfer-Encoding");
 		boolean hcl = headers.hasHeader("Content-Length");
 		if (htc) {
-			String[] tenc = headers.getHeader("Transfer-Encoding").value.split(", ");
+			String[] tenc = headers.getHeader("Transfer-Encoding").split(", ");
 			if (tenc[tenc.length - 1].equals("chunked")) {
 				chunked = true;
 			}
 		}
 		byte[] bbody = new byte[0];
 		if (chunked && htc) {
-			Header te = headers.getHeader("Transfer-Encoding");
+			String te = headers.getHeader("Transfer-Encoding");
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 			boolean lwl = false;
 			int length = 1;
@@ -113,11 +113,11 @@ public class RequestPacket extends Packet {
 				}
 			}
 			bbody = bout.toByteArray();
-			if (te.value.equals("chunked")) {
+			if (te.equals("chunked")) {
 				headers.removeHeaders("Transfer-Encoding");
 			}else {
 				String ntev = "";
-				for (String sp : te.value.split(",")) {
+				for (String sp : te.split(",")) {
 					if (!sp.equals("chunked")) {
 						ntev = sp + ", ";
 					}
@@ -125,13 +125,13 @@ public class RequestPacket extends Packet {
 				if (ntev.length() > 0) {
 					ntev = ntev.substring(0, ntev.length() - 2);
 				}
-				te.value = ntev;
+				te = ntev;
 			}
 		}else if (hcl) {
-			bbody = new byte[Integer.parseInt(headers.getHeader("Content-Length").value)];
+			bbody = new byte[Integer.parseInt(headers.getHeader("Content-Length"))];
 			in.readFully(bbody);
 		}
-		MessageBody body = new MessageBody(incomingRequest, new Resource(bbody, headers.hasHeader("Content-Type") ? headers.getHeader("Content-Type").value : "application/octet-stream"));
+		MessageBody body = new MessageBody(incomingRequest, new Resource(bbody, headers.hasHeader("Content-Type") ? headers.getHeader("Content-Type") : "application/octet-stream"));
 		incomingRequest.body = body;
 		return incomingRequest;
 	}
@@ -140,8 +140,11 @@ public class RequestPacket extends Packet {
 		try {
 			ByteArrayOutputStream ser = new ByteArrayOutputStream();
 			ser.write((method.name + " " + target + " " + httpVersion + crlf).getBytes());
-			for (Header header : headers.getHeaders()) {
-				ser.write((header.toLine() + crlf).getBytes());
+			HashMap<String, ArrayList<String>> hdrs = headers.getHeaders();
+			for (String key : hdrs.keySet()) {
+				for (String val : hdrs.get(key)) {
+					ser.write((key + ": " + val + crlf).getBytes());
+				}
 			}
 			ser.write(crlf.getBytes());
 			ser.write(body.getBody().data);

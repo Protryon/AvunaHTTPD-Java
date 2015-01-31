@@ -35,7 +35,7 @@ public class PatchLEGACYPHP extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return response.headers.hasHeader("Content-Type") && response.headers.getHeader("Content-Type").value.equals("application/x-php") && response.body != null && data != null;
+		return response.headers.hasHeader("Content-Type") && response.headers.getHeader("Content-Type").equals("application/x-php") && response.body != null && data != null;
 	}
 	
 	private static final String crlf = System.getProperty("line.separator");
@@ -141,18 +141,18 @@ public class PatchLEGACYPHP extends Patch {
 			_SERVER.put("SERVER_SOFTWARE", "JWS/1.0");
 			_SERVER.put("SERVER_PROTOCOL", request.httpVersion);
 			_SERVER.put("REQUEST_METHOD", request.method.name);
-			_SERVER.put("REQUEST_TIME", request.headers.hasHeader("Date") ? request.headers.getHeader("Date").value : ResponseGenerator.sdf.format(new Date()));
+			_SERVER.put("REQUEST_TIME", request.headers.hasHeader("Date") ? request.headers.getHeader("Date") : ResponseGenerator.sdf.format(new Date()));
 			_SERVER.put("REQUEST_TIME_FLOAT", System.currentTimeMillis() + "");
 			_SERVER.put("QUERY_STRING", get); // TODO: post?
 			_SERVER.put("DOCUMENT_ROOT", JavaWebServer.fileManager.getHTDocs().getAbsolutePath().replace("\\", "/"));
-			if (request.headers.hasHeader("Accept")) _SERVER.put("HTTP_ACCEPT", request.headers.getHeader("Accept").value);
-			if (request.headers.hasHeader("Accept-Charset")) _SERVER.put("HTTP_ACCEPT_CHARSET", request.headers.getHeader("Accept-Charset").value);
-			if (request.headers.hasHeader("Accept-Encoding")) _SERVER.put("HTTP_ACCEPT_ENCODING", request.headers.getHeader("Accept-Encoding").value);
-			if (request.headers.hasHeader("Accept-Language")) _SERVER.put("HTTP_ACCEPT_LANGUAGE", request.headers.getHeader("Accept-Language").value);
-			if (request.headers.hasHeader("Connection")) _SERVER.put("HTTP_CONNECTION", request.headers.getHeader("Connection").value);
-			if (request.headers.hasHeader("Host")) _SERVER.put("HTTP_HOST", request.headers.getHeader("Host").value);
-			if (request.headers.hasHeader("Referer")) _SERVER.put("HTTP_REFERER", request.headers.getHeader("Referer").value);
-			if (request.headers.hasHeader("User-Agent")) _SERVER.put("HTTP_USER_AGENT", request.headers.getHeader("User-Agent").value);
+			if (request.headers.hasHeader("Accept")) _SERVER.put("HTTP_ACCEPT", request.headers.getHeader("Accept"));
+			if (request.headers.hasHeader("Accept-Charset")) _SERVER.put("HTTP_ACCEPT_CHARSET", request.headers.getHeader("Accept-Charset"));
+			if (request.headers.hasHeader("Accept-Encoding")) _SERVER.put("HTTP_ACCEPT_ENCODING", request.headers.getHeader("Accept-Encoding"));
+			if (request.headers.hasHeader("Accept-Language")) _SERVER.put("HTTP_ACCEPT_LANGUAGE", request.headers.getHeader("Accept-Language"));
+			if (request.headers.hasHeader("Connection")) _SERVER.put("HTTP_CONNECTION", request.headers.getHeader("Connection"));
+			if (request.headers.hasHeader("Host")) _SERVER.put("HTTP_HOST", request.headers.getHeader("Host"));
+			if (request.headers.hasHeader("Referer")) _SERVER.put("HTTP_REFERER", request.headers.getHeader("Referer"));
+			if (request.headers.hasHeader("User-Agent")) _SERVER.put("HTTP_USER_AGENT", request.headers.getHeader("User-Agent"));
 			// if https then _SERVER.put("HTTPS", "true");
 			_SERVER.put("REMOTE_ADDR", request.userIP);
 			_SERVER.put("REMOTE_PORT", request.userPort + "");
@@ -204,7 +204,7 @@ public class PatchLEGACYPHP extends Patch {
 			// TODO: $_FILES
 			String cookie = "";
 			if (request.headers.hasHeader("Cookie")) {
-				cookie = request.headers.getHeader("Cookie").value;
+				cookie = request.headers.getHeader("Cookie");
 			}
 			if (cookie.length() > 0) for (String key : cookie.split(";")) {
 				prepend += "\"" + key.substring(0, key.indexOf("=")).trim() + "\" => \"" + key.substring(key.indexOf("=") + 1).trim() + "\",";

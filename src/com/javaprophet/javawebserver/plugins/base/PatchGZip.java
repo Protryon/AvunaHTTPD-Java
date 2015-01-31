@@ -32,7 +32,7 @@ public class PatchGZip extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return request.headers.hasHeader("Accept-Encoding") && request.headers.getHeader("Accept-Encoding").value.contains("gzip") && !response.headers.hasHeader("Content-Encoding") && data != null && data.length > 0;
+		return request.headers.hasHeader("Accept-Encoding") && request.headers.getHeader("Accept-Encoding").contains("gzip") && !response.headers.hasHeader("Content-Encoding") && data != null && data.length > 0;
 	}
 	
 	@Override

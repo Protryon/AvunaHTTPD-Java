@@ -26,7 +26,7 @@ public class PatchMultiHost extends Patch {
 	@Override
 	public void processPacket(Packet packet) {
 		RequestPacket request = (RequestPacket)packet;
-		String host = request.headers.getHeader("Host").value;
+		String host = request.headers.getHeader("Host");
 		JSONObject forward = (JSONObject)pcfg.get("forward");
 		for (Object key : forward.keySet()) {
 			String[] spl = ((String)key).split(",");

@@ -1,9 +1,10 @@
 package com.javaprophet.javawebserver.http;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class Headers {
-	private ArrayList<Header> headers = new ArrayList<Header>();
+	private HashMap<String, ArrayList<String>> headers = new HashMap<String, ArrayList<String>>();
 	
 	public Headers() {
 		
@@ -11,70 +12,66 @@ public class Headers {
 	
 	public Headers clone() {
 		Headers h = new Headers();
-		for (Header hh : headers) {
-			h.addHeader(new Header(hh.name, hh.value));
-		}
+		h.headers = (HashMap<String, ArrayList<String>>)headers.clone();
 		return h;
 	}
 	
 	public void addHeader(String name, String value) {
-		addHeader(new Header(name, value));
+		if (!headers.containsKey(name)) {
+			headers.put(name, new ArrayList<String>());
+		}
+		headers.get(name).add(value);
 	}
 	
 	public void updateHeader(String name, String value) {
 		if (hasHeader(name)) {
-			getHeader(name).value = value;
+			ArrayList<String> hdrs = getHeaders(name);
+			hdrs.clear();
+			hdrs.add(value);
 		}else {
-			addHeader(new Header(name, value));
+			addHeader(name, value);
 		}
-	}
-	
-	public void addHeader(Header header) {
-		this.headers.add(header);
 	}
 	
 	public void addHeader(String header) {
-		this.headers.add(Header.fromLine(header));
-	}
-	
-	public ArrayList<Header> getHeaders(String name) {
-		ArrayList<Header> mheaders = new ArrayList<Header>();
-		for (Header header : headers) {
-			if (header.name.equalsIgnoreCase(name)) {
-				mheaders.add(header);
-			}
+		if (header.contains(":")) {
+			addHeader(header.substring(0, header.indexOf(":")).trim(), header.substring(header.indexOf(":") + 1).trim());
 		}
-		return mheaders;
 	}
 	
-	public Header getHeader(String name) {
-		for (Header header : headers) {
-			if (header.name.equalsIgnoreCase(name)) {
-				return header;
+	public ArrayList<String> getHeaders(String name) {
+		return headers.get(name);
+	}
+	
+	public String getHeader(String name) {
+		for (String key : headers.keySet()) {
+			if (key.equals(name) && headers.get(key).size() > 0) {
+				return headers.get(key).get(0);
 			}
 		}
 		return null;
 	}
 	
 	public void removeHeaders(String name) {
-		for (int i = 0; i < headers.size(); i++) {
-			if (headers.get(i).name.equalsIgnoreCase(name)) {
-				headers.remove(headers.get(i));
+		String[] keys = headers.keySet().toArray(new String[]{});
+		for (int i = 0; i < keys.length; i++) {
+			if (keys[i].equals(name)) {
+				headers.remove(headers.get(keys[i]));
 				i--;
 			}
 		}
 	}
 	
 	public boolean hasHeader(String name) {
-		for (Header header : headers) {
-			if (header.name.equalsIgnoreCase(name)) {
+		for (String header : headers.keySet()) {
+			if (header.equals(name)) {
 				return true;
 			}
 		}
 		return false;
 	}
 	
-	public ArrayList<Header> getHeaders() {
+	public HashMap<String, ArrayList<String>> getHeaders() {
 		return headers;
 	}
 }

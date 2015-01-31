@@ -7,10 +7,11 @@ package com.javaprophet.javawebserver.plugins.base;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.http.Header;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
@@ -34,7 +35,7 @@ public class PatchPHP extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return response.headers.hasHeader("Content-Type") && response.headers.getHeader("Content-Type").value.equals("application/x-php") && response.body != null && data != null;
+		return response.headers.hasHeader("Content-Type") && response.headers.getHeader("Content-Type").equals("application/x-php") && response.body != null && data != null;
 	}
 	
 	private static final String crlf = System.getProperty("line.separator");
@@ -71,7 +72,7 @@ public class PatchPHP extends Patch {
 			pb.environment().put("REQUEST_METHOD", request.method.name);
 			rq = JavaWebServer.fileManager.correctForIndex(rq);
 			pb.environment().put("SCRIPT_NAME", rq.substring(rq.lastIndexOf("/") + 1));
-			pb.environment().put("SERVER_NAME", request.headers.getHeader("Host").value);
+			pb.environment().put("SERVER_NAME", request.headers.getHeader("Host"));
 			int port = 80;
 			if (request.ssl) {
 				port = ((Long)((JSONObject)JavaWebServer.mainConfig.get("ssl")).get("bindport")).intValue();
@@ -84,8 +85,11 @@ public class PatchPHP extends Patch {
 			pb.environment().put("DOCUMENT_ROOT", JavaWebServer.fileManager.getHTDocs().getAbsolutePath().replace("\\", "/"));
 			pb.environment().put("SCRIPT_FILENAME", JavaWebServer.fileManager.getAbsolutePath(rq).getAbsolutePath().replace("\\", "/"));
 			pb.environment().put("REQUEST_URI", rq);
-			for (Header header : request.headers.getHeaders()) {
-				pb.environment().put("HTTP_" + header.name.toUpperCase().replace("-", "_"), header.value); // TODO: will break if multiple same-nameed headers are received
+			HashMap<String, ArrayList<String>> hdrs = request.headers.getHeaders();
+			for (String key : hdrs.keySet()) {
+				for (String val : hdrs.get(key)) {
+					pb.environment().put("HTTP_" + key.toUpperCase().replace("-", "_"), val); // TODO: will break if multiple same-nameed headers are received
+				}
 			}
 			Process pbr = pb.start();
 			OutputStream pbout = pbr.getOutputStream();
@@ -117,7 +121,7 @@ public class PatchPHP extends Patch {
 					tt = false;
 				}
 			}
-			if (response.headers.getHeader("Content-Type").value.equals("application/x-php")) {
+			if (response.headers.getHeader("Content-Type").equals("application/x-php")) {
 				response.headers.updateHeader("Content-Type", "text/html");
 			}
 			s.close();

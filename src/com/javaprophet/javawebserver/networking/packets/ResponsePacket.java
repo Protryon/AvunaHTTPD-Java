@@ -3,8 +3,9 @@ package com.javaprophet.javawebserver.networking.packets;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.http.Header;
 import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.Resource;
@@ -43,8 +44,11 @@ public class ResponsePacket extends Packet {
 			finalc = JavaWebServer.patchBus.processResponse(thisClone, thisClone.request, finalc);
 			ByteArrayOutputStream ser = new ByteArrayOutputStream();
 			ser.write((thisClone.httpVersion + " " + thisClone.statusCode + " " + thisClone.reasonPhrase + crlf).getBytes());
-			for (Header header : thisClone.headers.getHeaders()) {
-				ser.write((header.toLine() + crlf).getBytes());
+			HashMap<String, ArrayList<String>> hdrs = thisClone.headers.getHeaders();
+			for (String key : hdrs.keySet()) {
+				for (String val : hdrs.get(key)) {
+					ser.write((key + ": " + val + crlf).getBytes());
+				}
 			}
 			ser.write(crlf.getBytes());
 			cachedSerialize = ser.toByteArray();
@@ -53,7 +57,7 @@ public class ResponsePacket extends Packet {
 				if (thisClone.body == null) {
 					thisClone.body = new MessageBody(thisClone);
 				}
-				thisClone.body.setBody(new Resource(finalc, thisClone.request.target, thisClone.headers.hasHeader("Content-Type") ? thisClone.headers.getHeader("Content-Type").value : "text/html"));
+				thisClone.body.setBody(new Resource(finalc, thisClone.request.target, thisClone.headers.hasHeader("Content-Type") ? thisClone.headers.getHeader("Content-Type") : "text/html"));
 			}else {
 				ser.write(crlf.getBytes());
 			}
@@ -74,7 +78,7 @@ public class ResponsePacket extends Packet {
 		out.write(serialize(request.method != Method.HEAD));
 		out.flush();
 		if (headers.hasHeader("Connection")) {
-			String c = headers.getHeader("Connection").value;
+			String c = headers.getHeader("Connection");
 			if (c.equals("Close")) {
 				out.close();
 			}

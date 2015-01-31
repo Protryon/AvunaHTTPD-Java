@@ -27,7 +27,7 @@ public class ResponseGenerator {
 			response.headers.addHeader("Date", sdf.format(new Date()));
 			response.headers.addHeader("Server", "JWS/" + JavaWebServer.VERSION);
 			if (request.headers.hasHeader("Connection")) {
-				response.headers.addHeader("Connection", request.headers.getHeader("Connection").value);
+				response.headers.addHeader("Connection", request.headers.getHeader("Connection"));
 			}
 			long ah = System.nanoTime();
 			if (!JavaWebServer.patchBus.processMethod(request, response)) {

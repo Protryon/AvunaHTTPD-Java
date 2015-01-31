@@ -61,7 +61,7 @@ public class PatchETag extends Patch {
 		if (md5 == null) return data;
 		String etag = bytesToHex(md5.digest(data));
 		if (request.headers.hasHeader("If-None-Match")) {
-			if (request.headers.getHeader("If-None-Match").value.replace("\"", "").equals(etag)) {
+			if (request.headers.getHeader("If-None-Match").replace("\"", "").equals(etag)) {
 				JavaWebServer.rg.generateDefaultResponse(response, StatusCode.NOT_MODIFIED);
 				response.body = null;
 				return null;

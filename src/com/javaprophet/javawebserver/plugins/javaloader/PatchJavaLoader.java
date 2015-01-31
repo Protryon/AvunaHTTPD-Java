@@ -132,7 +132,7 @@ public class PatchJavaLoader extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return response.headers.hasHeader("Content-Type") && response.headers.getHeader("Content-Type").value.equals("application/x-java") && response.body != null && data != null && data.length > 0;
+		return response.headers.hasHeader("Content-Type") && response.headers.getHeader("Content-Type").equals("application/x-java") && response.body != null && data != null && data.length > 0;
 	}
 	
 	private static final HashMap<String, String> loadedClasses = new HashMap<String, String>();

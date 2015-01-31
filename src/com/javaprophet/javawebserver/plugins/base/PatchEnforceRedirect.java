@@ -33,7 +33,7 @@ public class PatchEnforceRedirect extends Patch {
 	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		String host = request.headers.getHeader("Host").value;
+		String host = request.headers.getHeader("Host");
 		for (Object key : pcfg.keySet()) {
 			if (key.equals("enabled")) continue;
 			String regex = ((String)key);
