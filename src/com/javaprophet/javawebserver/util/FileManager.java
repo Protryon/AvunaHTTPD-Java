@@ -105,6 +105,7 @@ public class FileManager {
 	}
 	
 	public static final HashMap<String, byte[]> cache = new HashMap<String, byte[]>();
+	public static final HashMap<String, String> extCache = new HashMap<String, String>();
 	private static long cacheClock = 0L;
 	
 	public Resource getResource(String reqTarget) {
@@ -116,20 +117,22 @@ public class FileManager {
 			if (rt.contains("?")) {
 				rt = rt.substring(0, rt.indexOf("?"));
 			}
-			File abs = getAbsolutePath(rt);
 			byte[] resource = null;
-			String p = abs.getAbsolutePath();
-			if (cache.containsKey(p)) {
+			String ext = "";
+			if (cache.containsKey(rt)) {
 				long t = System.currentTimeMillis();
 				long cc = ((Number)JavaWebServer.mainConfig.get("cacheClock")).longValue();
 				if ((cc > 0 && t - cc < cacheClock) || (cc == -1)) {
-					resource = cache.get(p);
+					resource = cache.get(rt);
+					ext = extCache.get(rt);
 				}else {
 					cacheClock = t;
 					cache.clear();
+					extCache.clear();
 				}
 			}
 			if (resource == null) {
+				File abs = getAbsolutePath(rt);
 				FileInputStream fin = new FileInputStream(abs);
 				ByteArrayOutputStream bout = new ByteArrayOutputStream();
 				int i = 1;
@@ -142,10 +145,12 @@ public class FileManager {
 				}
 				fin.close();
 				resource = bout.toByteArray();
-				cache.put(p, resource);
+				cache.put(rt, resource);
+				ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
+				ext = JavaWebServer.extensionToMime.containsKey(ext) ? JavaWebServer.extensionToMime.get(ext) : "application/octet-stream";
+				extCache.put(rt, ext);
 			}
-			String ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
-			Resource r = new Resource(resource, JavaWebServer.extensionToMime.containsKey(ext) ? JavaWebServer.extensionToMime.get(ext) : "application/octet-stream", rt);
+			Resource r = new Resource(resource, ext, rt);
 			return r;
 		}catch (IOException e) {
 			if (!(e instanceof FileNotFoundException)) e.printStackTrace();
