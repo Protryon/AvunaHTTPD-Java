@@ -50,6 +50,20 @@ public class FileManager {
 		return new File(getMainDir(), name);
 	}
 	
+	public void clearCache() {
+		String[] delKeys = new String[cache.size()];
+		int delSize = 0;
+		for (String file : cache.keySet()) {
+			if (!extCache.get(file).equals("application/x-java")) {
+				delKeys[delSize++] = file;
+			}
+		}
+		for (int i = 0; i < delSize; i++) {
+			cache.remove(delKeys[i]);
+			extCache.remove(delKeys[i]);
+		}
+	}
+	
 	public static final String crlf = System.getProperty("line.separator");
 	
 	public void getErrorPage(MessageBody body, String reqTarget, StatusCode status, String info) {
@@ -127,8 +141,7 @@ public class FileManager {
 					ext = extCache.get(rt);
 				}else {
 					cacheClock = t;
-					cache.clear();
-					extCache.clear();
+					clearCache();
 				}
 			}
 			if (resource == null) {

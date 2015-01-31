@@ -263,11 +263,11 @@ public class JavaWebServer {
 				System.out.println("Loaded Config! Some entries will require a restart.");
 			}else if (command.equals("flushcache")) {
 				try {
-					fileManager.cache.clear();
+					fileManager.clearCache();
 				}catch (Exception e) {
 					e.printStackTrace();
 				}
-				System.out.println("Cache Flushed! This is not necessary for PHP files, as JWS has no control via CGI for caching.");
+				System.out.println("Cache Flushed! This is not necessary for php files, and does not work for .class files(restart jws for those).");
 			}else if (command.equals("help")) {
 				System.out.println("Commands:");
 				System.out.println("exit/stop");

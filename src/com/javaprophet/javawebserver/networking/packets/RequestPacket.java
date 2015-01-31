@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,22 +26,22 @@ public class RequestPacket extends Packet {
 	public HashMap<String, String> post = new HashMap<String, String>();
 	public HashMap<String, String> cookie = new HashMap<String, String>();
 	
-	public void procJL() {
+	public void procJL() throws UnsupportedEncodingException {
 		String get = target.contains("?") ? target.substring(target.indexOf("?") + 1) : "";
 		for (String kd : get.split("&")) {
 			if (kd.contains("=")) {
-				this.get.put(URLDecoder.decode(kd.substring(0, kd.indexOf("="))), URLDecoder.decode(kd.substring(kd.indexOf("=") + 1)));
+				this.get.put(URLDecoder.decode(kd.substring(0, kd.indexOf("=")), "UTF-8"), URLDecoder.decode(kd.substring(kd.indexOf("=") + 1), "UTF-8"));
 			}else {
-				this.get.put(URLDecoder.decode(kd), "");
+				this.get.put(URLDecoder.decode(kd, "UTF-8"), "");
 			}
 		}
 		if (method == Method.POST && headers.getHeader("Content-Type").equals("x-www-form-urlencoded") && body != null && body.getBody() != null) {
 			String post = new String(body.getBody().data);
 			for (String kd : post.split("&")) {
 				if (kd.contains("=")) {
-					this.post.put(URLDecoder.decode(kd.substring(0, kd.indexOf("="))), URLDecoder.decode(kd.substring(kd.indexOf("=") + 1)));
+					this.post.put(URLDecoder.decode(kd.substring(0, kd.indexOf("=")), "UTF-8"), URLDecoder.decode(kd.substring(kd.indexOf("=") + 1), "UTF-8"));
 				}else {
-					this.post.put(URLDecoder.decode(kd), "");
+					this.post.put(URLDecoder.decode(kd, "UTF-8"), "");
 				}
 			}
 		}
@@ -48,9 +49,9 @@ public class RequestPacket extends Packet {
 			String cookie = headers.getHeader("Cookie");
 			for (String kd : cookie.split(";")) {
 				if (kd.contains("=")) {
-					this.cookie.put(URLDecoder.decode(kd.substring(0, kd.indexOf("="))), URLDecoder.decode(kd.substring(kd.indexOf("=") + 1)));
+					this.cookie.put(URLDecoder.decode(kd.substring(0, kd.indexOf("=")), "UTF-8"), URLDecoder.decode(kd.substring(kd.indexOf("=") + 1), "UTF-8"));
 				}else {
-					this.cookie.put(URLDecoder.decode(kd), "");
+					this.cookie.put(URLDecoder.decode(kd, "UTF-8"), "");
 				}
 			}
 		}

@@ -79,7 +79,7 @@ public class ThreadNGINXWorker extends Thread {
 					long proc1 = System.nanoTime();
 					boolean cont = JavaWebServer.rg.process(incomingRequest, outgoingResponse);
 					long resp = System.nanoTime();
-					if (!cont) JavaWebServer.patchBus.processPacket(outgoingResponse);
+					if (cont) JavaWebServer.patchBus.processPacket(outgoingResponse);
 					long proc2 = System.nanoTime();
 					ResponsePacket wrp = outgoingResponse.write(focus.out);
 					long write = System.nanoTime();
