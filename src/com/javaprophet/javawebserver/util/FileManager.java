@@ -90,7 +90,10 @@ public class FileManager {
 		return;
 	}
 	
+	private boolean lwi = false;
+	
 	public File getAbsolutePath(String reqTarget) {
+		lwi = false;
 		File abs = new File(JavaWebServer.fileManager.getHTDocs(), reqTarget);
 		if (abs.isDirectory()) {
 			String[] index = ((String)JavaWebServer.mainConfig.get("index")).split(",");
@@ -106,6 +109,7 @@ public class FileManager {
 				File f = new File(abst + i);
 				if (f.exists()) {
 					abs = f;
+					lwi = true;
 					break;
 				}
 			}
@@ -120,6 +124,7 @@ public class FileManager {
 	
 	public static final HashMap<String, byte[]> cache = new HashMap<String, byte[]>();
 	public static final HashMap<String, String> extCache = new HashMap<String, String>();
+	public static final HashMap<String, Boolean> lwiCache = new HashMap<String, Boolean>();
 	private static long cacheClock = 0L;
 	
 	public Resource getResource(String reqTarget) {
@@ -133,12 +138,14 @@ public class FileManager {
 			}
 			byte[] resource = null;
 			String ext = "";
+			boolean lwi = false;
 			if (cache.containsKey(rt)) {
 				long t = System.currentTimeMillis();
 				long cc = ((Number)JavaWebServer.mainConfig.get("cacheClock")).longValue();
 				if ((cc > 0 && t - cc < cacheClock) || (cc == -1)) {
 					resource = cache.get(rt);
 					ext = extCache.get(rt);
+					lwi = lwiCache.get(rt);
 				}else {
 					cacheClock = t;
 					clearCache();
@@ -162,8 +169,11 @@ public class FileManager {
 				ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
 				ext = JavaWebServer.extensionToMime.containsKey(ext) ? JavaWebServer.extensionToMime.get(ext) : "application/octet-stream";
 				extCache.put(rt, ext);
+				lwi = this.lwi;
+				lwiCache.put(rt, lwi);
 			}
 			Resource r = new Resource(resource, ext, rt);
+			r.wasDir = lwi;
 			return r;
 		}catch (IOException e) {
 			if (!(e instanceof FileNotFoundException)) e.printStackTrace();

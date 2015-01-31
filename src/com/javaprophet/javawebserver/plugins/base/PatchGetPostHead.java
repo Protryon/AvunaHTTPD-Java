@@ -1,6 +1,5 @@
 package com.javaprophet.javawebserver.plugins.base;
 
-import java.io.File;
 import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.Method;
@@ -55,8 +54,7 @@ public class PatchGetPostHead extends Patch {
 			JavaWebServer.fileManager.getErrorPage(response.body, request.target, StatusCode.NOT_FOUND, "The requested URL " + request.target + " was not found on this server.");
 			return;
 		}else {
-			File f = new File(JavaWebServer.fileManager.getHTDocs(), request.target);
-			if (f.isDirectory() && !request.target.endsWith("/")) {
+			if (resource.wasDir && !request.target.endsWith("/")) {
 				ResponseGenerator.generateDefaultResponse(response, StatusCode.PERM_REDIRECT); // TODO: not relative
 				response.headers.addHeader("Location", request.target + "/");
 				response.headers.addHeader("Content-Length", "0");

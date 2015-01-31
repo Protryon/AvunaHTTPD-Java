@@ -1,6 +1,5 @@
 package com.javaprophet.javawebserver.networking.packets;
 
-import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -39,30 +38,39 @@ public class ResponsePacket extends Packet {
 	
 	public byte[] serialize(boolean data) {
 		try {
+			long ps1 = System.nanoTime();
 			ResponsePacket thisClone = clone();
 			byte[] finalc = thisClone.body == null ? null : (thisClone.body.getBody() == null ? null : (thisClone.body.getBody().data));
+			long ps2 = System.nanoTime();
 			finalc = JavaWebServer.patchBus.processResponse(thisClone, thisClone.request, finalc);
-			ByteArrayOutputStream ser = new ByteArrayOutputStream();
-			ser.write((thisClone.httpVersion + " " + thisClone.statusCode + " " + thisClone.reasonPhrase + crlf).getBytes());
+			long start = System.nanoTime();
+			StringBuilder ser = new StringBuilder();
+			ser.append((thisClone.httpVersion + " " + thisClone.statusCode + " " + thisClone.reasonPhrase + crlf));
 			HashMap<String, ArrayList<String>> hdrs = thisClone.headers.getHeaders();
 			for (String key : hdrs.keySet()) {
 				for (String val : hdrs.get(key)) {
-					ser.write((key + ": " + val + crlf).getBytes());
+					ser.append((key + ": " + val + crlf));
 				}
 			}
-			ser.write(crlf.getBytes());
-			cachedSerialize = ser.toByteArray();
+			ser.append(crlf);
+			cachedSerialize = ser.toString().getBytes();
+			byte[] add = null;
 			if (data && finalc != null) {
-				ser.write(finalc);
+				add = finalc;
 				if (thisClone.body == null) {
 					thisClone.body = new MessageBody(thisClone);
 				}
 				thisClone.body.setBody(new Resource(finalc, thisClone.request.target, thisClone.headers.hasHeader("Content-Type") ? thisClone.headers.getHeader("Content-Type") : "text/html"));
 			}else {
-				ser.write(crlf.getBytes());
+				add = crlf.getBytes();
 			}
+			byte[] total = new byte[cachedSerialize.length + add.length];
+			System.arraycopy(cachedSerialize, 0, total, 0, cachedSerialize.length);
+			System.arraycopy(add, 0, total, cachedSerialize.length, add.length);
 			cachedPacket = thisClone;
-			return ser.toByteArray();
+			long end = System.nanoTime();
+			// System.out.println("serialize: " + ((end - start) / 1000000D) + ", " + ((start - ps2) / 1000000D) + ", " + ((ps2 - ps1) / 1000000D) + " ms");
+			return total;
 		}catch (Exception e) {
 			e.printStackTrace();
 		}

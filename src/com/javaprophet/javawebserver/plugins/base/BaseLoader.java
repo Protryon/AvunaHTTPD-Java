@@ -18,8 +18,10 @@ public class BaseLoader {
 		PatchRegistry.registerPatch(new PatchJavaLoader("JavaLoader"));
 		PatchRegistry.registerPatch(new PatchJWSL("JWSL"));
 		PatchRegistry.registerPatch(new PatchPHP("PHP"));
-		// header manipulation
+		
+		// caching
 		PatchRegistry.registerPatch(new PatchETag("ETag"));
+		
 		// transfer/encoding
 		PatchRegistry.registerPatch(new PatchGZip("GZip"));
 		

@@ -2,6 +2,7 @@ package com.javaprophet.javawebserver.plugins.base;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.zip.CRC32;
 import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.Method;
@@ -59,7 +60,9 @@ public class PatchETag extends Patch {
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		if (md5 == null) return data;
-		String etag = bytesToHex(md5.digest(data));
+		CRC32 crc = new CRC32();
+		crc.update(data);
+		String etag = crc.getValue() + "";// bytesToHex(md5.digest(data));
 		if (request.headers.hasHeader("If-None-Match")) {
 			if (request.headers.getHeader("If-None-Match").replace("\"", "").equals(etag)) {
 				JavaWebServer.rg.generateDefaultResponse(response, StatusCode.NOT_MODIFIED);

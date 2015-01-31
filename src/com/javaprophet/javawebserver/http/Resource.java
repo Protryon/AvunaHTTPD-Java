@@ -4,6 +4,7 @@ public class Resource {
 	public byte[] data = new byte[0];
 	public String type = "text/html";
 	public String loc = "/";
+	public boolean wasDir = false;
 	
 	public Resource clone() {
 		return new Resource(data, type, loc);
