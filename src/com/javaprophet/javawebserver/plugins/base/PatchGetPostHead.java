@@ -54,9 +54,18 @@ public class PatchGetPostHead extends Patch {
 			JavaWebServer.fileManager.getErrorPage(response.body, request.target, StatusCode.NOT_FOUND, "The requested URL " + request.target + " was not found on this server.");
 			return;
 		}else {
-			if (resource.wasDir && !request.target.endsWith("/")) {
+			String rt = request.target;
+			String get = "";
+			if (rt.contains("#")) {
+				rt = rt.substring(0, rt.indexOf("#"));
+			}
+			if (rt.contains("?")) {
+				get = rt.substring(rt.indexOf("?"));
+				rt = rt.substring(0, rt.indexOf("?"));
+			}
+			if (resource.wasDir && !rt.endsWith("/")) {
 				ResponseGenerator.generateDefaultResponse(response, StatusCode.PERM_REDIRECT); // TODO: not relative
-				response.headers.addHeader("Location", request.target + "/");
+				response.headers.addHeader("Location", rt + "/" + get);
 				response.headers.addHeader("Content-Length", "0");
 				response.body.setBody(null);
 			}else {
