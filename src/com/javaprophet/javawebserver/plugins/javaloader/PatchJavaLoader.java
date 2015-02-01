@@ -35,7 +35,7 @@ public class PatchJavaLoader extends Patch {
 		}
 	}
 	
-	private File lib = null;
+	public static File lib = null;
 	
 	@Override
 	public void formatConfig(HashMap<String, Object> json) {
