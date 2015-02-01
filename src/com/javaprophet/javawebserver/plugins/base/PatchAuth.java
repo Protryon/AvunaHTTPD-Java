@@ -86,6 +86,8 @@ public class PatchAuth extends Patch {
 				}catch (IOException e) {
 					e.printStackTrace();
 				}
+			}else {
+				return ull.contains(up);
 			}
 			return false;
 		}
