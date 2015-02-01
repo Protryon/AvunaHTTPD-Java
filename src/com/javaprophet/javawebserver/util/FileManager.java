@@ -22,11 +22,11 @@ public class FileManager {
 	}
 	
 	public File getHTDocs() {
-		return new File(getMainDir(), (String)JavaWebServer.mainConfig.get("htdocs"));
+		return new File((String)JavaWebServer.mainConfig.get("htdocs"));
 	}
 	
 	public File getSSL() {
-		return new File(getMainDir(), (String)(((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl")).get("folder")));
+		return new File((String)(((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl")).get("folder")));
 	}
 	
 	public File getSSLKeystore() {
@@ -34,11 +34,11 @@ public class FileManager {
 	}
 	
 	public File getPlugins() {
-		return new File(getMainDir(), (String)JavaWebServer.mainConfig.get("plugins"));
+		return new File((String)JavaWebServer.mainConfig.get("plugins"));
 	}
 	
 	public File getTemp() {
-		return new File(getMainDir(), (String)JavaWebServer.mainConfig.get("temp"));
+		return new File((String)JavaWebServer.mainConfig.get("temp"));
 	}
 	
 	public File getPlugin(Patch p) {

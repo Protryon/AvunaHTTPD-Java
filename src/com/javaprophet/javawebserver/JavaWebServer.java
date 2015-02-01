@@ -111,11 +111,16 @@ public class JavaWebServer {
 			mainConfig = new Config(cfg, new ConfigFormat() {
 				public void format(HashMap<String, Object> map) {
 					if (!map.containsKey("version")) map.put("version", JavaWebServer.VERSION);
-					if (!map.containsKey("dir")) map.put("dir", cfg.getParentFile().getAbsolutePath());
-					if (!map.containsKey("htdocs")) map.put("htdocs", "htdocs");
-					if (!map.containsKey("plugins")) map.put("plugins", "plugins");
+					File dir = null;
+					if (!map.containsKey("dir")) {
+						map.put("dir", (dir = cfg.getParentFile()).getAbsolutePath());
+					}else {
+						dir = new File((String)map.get("dir"));
+					}
+					if (!map.containsKey("htdocs")) map.put("htdocs", new File(dir, "htdocs").toString());
+					if (!map.containsKey("plugins")) map.put("plugins", new File(dir, "plugins").toString());
 					if (!map.containsKey("javac")) map.put("javac", "javac");
-					if (!map.containsKey("temp")) map.put("temp", "temp");
+					if (!map.containsKey("temp")) map.put("temp", new File(dir, "temp").toString());
 					if (!map.containsKey("bindport")) map.put("bindport", 80);
 					if (!map.containsKey("threadType")) map.put("threadType", 2);
 					if (!map.containsKey("nginxThreadCount")) map.put("nginxThreadCount", Runtime.getRuntime().availableProcessors());
@@ -127,7 +132,7 @@ public class JavaWebServer {
 					if (!ssl.containsKey("enabled")) ssl.put("enabled", false);
 					if (!ssl.containsKey("forceSSL")) ssl.put("forceSSL", false); // TODO: implement
 					if (!ssl.containsKey("bindport")) ssl.put("bindport", 443);
-					if (!ssl.containsKey("folder")) ssl.put("folder", "ssl");
+					if (!ssl.containsKey("folder")) ssl.put("folder", new File(dir, "ssl").toString());
 					if (!ssl.containsKey("keyFile")) ssl.put("keyFile", "keystore");
 					if (!ssl.containsKey("keystorePassword")) ssl.put("keystorePassword", "password");
 					if (!ssl.containsKey("keyPassword")) ssl.put("keyPassword", "password");
@@ -329,7 +334,6 @@ public class JavaWebServer {
 						}
 					}
 					cp = cp.substring(0, cp.length() - 1);
-					// com += "" + (String)mainConfig.get("dir") + " " + + "\"";
 					ProcessBuilder pb = new ProcessBuilder((String)mainConfig.get("javac"), "-cp", cp, "-d", fileManager.getHTDocs().toString(), new File(fileManager.getHTDocs(), cargs[0]).toString());
 					pb.redirectErrorStream(true);
 					Process proc = pb.start();
