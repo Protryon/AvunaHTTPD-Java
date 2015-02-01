@@ -9,6 +9,7 @@ import java.util.zip.GZIPOutputStream;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
+import com.javaprophet.javawebserver.util.Logger;
 
 public class ThreadStreamWorker extends Thread {
 	private final Work work;
@@ -88,6 +89,7 @@ public class ThreadStreamWorker extends Thread {
 			}catch (IOException e) {
 				e.printStackTrace();
 			}
+			Logger.INSTANCE.log(work.s.getInetAddress().getHostAddress() + " closed.");
 		}
 	}
 }
