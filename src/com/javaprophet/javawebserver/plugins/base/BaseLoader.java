@@ -14,6 +14,9 @@ public class BaseLoader {
 		// methods
 		PatchGetPostHead getposthead = new PatchGetPostHead("GetPostHead");
 		PatchRegistry.registerPatch(getposthead);
+		
+		PatchRegistry.registerPatch(new PatchAuth("Auth"));
+		
 		// server side languages
 		PatchRegistry.registerPatch(new PatchJavaLoader("JavaLoader"));
 		PatchRegistry.registerPatch(new PatchJWSL("JWSL"));
