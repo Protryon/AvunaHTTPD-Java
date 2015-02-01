@@ -35,7 +35,6 @@ public class ThreadStreamWorker extends Thread {
 				bout = new ByteArrayOutputStream();
 				gout = new GZIPOutputStream(bout);
 			}
-			int ii = 0;
 			while (!work.s.isClosed()) {
 				i = fin.read(buf);
 				if (i == -1) {
@@ -50,7 +49,6 @@ public class ThreadStreamWorker extends Thread {
 					bb.position(0);
 					bb.get(bas);
 					ps.println(JavaWebServer.fileManager.bytesToHex(bas));
-					System.out.println(JavaWebServer.fileManager.bytesToHex(bas));
 					ps.write(bout.toByteArray());
 					bout.reset();
 				}else {
@@ -64,7 +62,6 @@ public class ThreadStreamWorker extends Thread {
 				}
 				ps.println();
 				ps.flush();
-				if (ii++ == 1) break;
 			}
 			if (gzip) {
 				gout.flush();
