@@ -15,7 +15,7 @@ public class ConnectionNGINX extends Connection {
 	private static ArrayList<ThreadNGINXWorker> workers = new ArrayList<ThreadNGINXWorker>();
 	
 	public static void init() {
-		for (int i = 0; i < ((Number)JavaWebServer.mainConfig.get("nginxThreadCount")).intValue(); i++) {
+		for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("nginxThreadCount")); i++) {
 			ThreadNGINXWorker worker = new ThreadNGINXWorker();
 			workers.add(worker);
 			worker.start();

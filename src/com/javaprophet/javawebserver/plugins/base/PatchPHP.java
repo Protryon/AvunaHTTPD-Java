@@ -10,7 +10,6 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
-import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
@@ -75,7 +74,7 @@ public class PatchPHP extends Patch {
 			pb.environment().put("SERVER_NAME", request.headers.getHeader("Host"));
 			int port = 80;
 			if (request.ssl) {
-				port = ((Long)((JSONObject)JavaWebServer.mainConfig.get("ssl")).get("bindport")).intValue();
+				port = ((Long)((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl")).get("bindport")).intValue();
 			}else {
 				port = ((Long)JavaWebServer.mainConfig.get("bindport")).intValue();
 			}
@@ -133,7 +132,7 @@ public class PatchPHP extends Patch {
 	}
 	
 	@Override
-	public void formatConfig(JSONObject json) {
+	public void formatConfig(HashMap<String, Object> json) {
 		if (!json.containsKey("cmd")) json.put("cmd", "php-cgi");
 	}
 	

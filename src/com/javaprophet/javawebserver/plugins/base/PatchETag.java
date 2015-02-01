@@ -2,8 +2,8 @@ package com.javaprophet.javawebserver.plugins.base;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.zip.CRC32;
-import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.StatusCode;
@@ -24,7 +24,7 @@ public class PatchETag extends Patch {
 	}
 	
 	@Override
-	public void formatConfig(JSONObject json) {
+	public void formatConfig(HashMap<String, Object> json) {
 		
 	}
 	

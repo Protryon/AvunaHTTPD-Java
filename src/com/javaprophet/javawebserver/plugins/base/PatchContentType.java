@@ -1,6 +1,6 @@
 package com.javaprophet.javawebserver.plugins.base;
 
-import org.json.simple.JSONObject;
+import java.util.HashMap;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
@@ -13,7 +13,7 @@ public class PatchContentType extends Patch {
 	}
 	
 	@Override
-	public void formatConfig(JSONObject json) {
+	public void formatConfig(HashMap<String, Object> json) {
 		
 	}
 	

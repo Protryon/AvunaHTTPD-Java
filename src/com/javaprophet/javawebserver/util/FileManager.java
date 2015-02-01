@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
-import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Resource;
@@ -27,11 +26,11 @@ public class FileManager {
 	}
 	
 	public File getSSL() {
-		return new File(getMainDir(), (String)(((JSONObject)JavaWebServer.mainConfig.get("ssl")).get("folder")));
+		return new File(getMainDir(), (String)(((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl")).get("folder")));
 	}
 	
 	public File getSSLKeystore() {
-		return new File(getSSL(), (String)(((JSONObject)JavaWebServer.mainConfig.get("ssl")).get("keyFile")));
+		return new File(getSSL(), (String)(((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl")).get("keyFile")));
 	}
 	
 	public File getPlugins() {
@@ -67,7 +66,7 @@ public class FileManager {
 	public static final String crlf = System.getProperty("line.separator");
 	
 	public void getErrorPage(MessageBody body, String reqTarget, StatusCode status, String info) {
-		JSONObject errorPages = (JSONObject)JavaWebServer.mainConfig.get("errorpages");
+		HashMap<String, Object> errorPages = (HashMap<String, Object>)JavaWebServer.mainConfig.get("errorpages");
 		if (errorPages.containsKey(status.getStatus())) {
 			try {
 				String path = (String)errorPages.get(status.getStatus());
@@ -141,7 +140,7 @@ public class FileManager {
 			boolean lwi = false;
 			if (cache.containsKey(rt)) {
 				long t = System.currentTimeMillis();
-				long cc = ((Number)JavaWebServer.mainConfig.get("cacheClock")).longValue();
+				long cc = Integer.parseInt(((String)JavaWebServer.mainConfig.get("cacheClock")));
 				if ((cc > 0 && t - cc < cacheClock) || (cc == -1)) {
 					resource = cache.get(rt);
 					ext = extCache.get(rt);

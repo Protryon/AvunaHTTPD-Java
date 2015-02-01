@@ -22,7 +22,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.http.ResponseGenerator;
 import com.javaprophet.javawebserver.networking.Connection;
 import com.javaprophet.javawebserver.networking.ConnectionApache;
@@ -109,20 +108,20 @@ public class JavaWebServer {
 			System.out.println("Loading Configs");
 			final File cfg = new File(args.length > 0 ? args[0] : "C:\\jws\\main.cfg");
 			mainConfig = new Config(cfg, new ConfigFormat() {
-				public void format(JSONObject json) {
-					if (!json.containsKey("version")) json.put("version", JavaWebServer.VERSION);
-					if (!json.containsKey("dir")) json.put("dir", cfg.getParentFile().getAbsolutePath());
-					if (!json.containsKey("htdocs")) json.put("htdocs", "htdocs");
-					if (!json.containsKey("plugins")) json.put("plugins", "plugins");
-					if (!json.containsKey("temp")) json.put("temp", "temp");
-					if (!json.containsKey("bindport")) json.put("bindport", 80);
-					if (!json.containsKey("threadType")) json.put("threadType", 2);
-					if (!json.containsKey("nginxThreadCount")) json.put("nginxThreadCount", Runtime.getRuntime().availableProcessors());
-					if (!json.containsKey("errorpages")) json.put("errorpages", new JSONObject());
-					if (!json.containsKey("index")) json.put("index", "Index.class,index.jwsl,index.php,index.html");
-					if (!json.containsKey("cacheClock")) json.put("cacheClock", -1);
-					if (!json.containsKey("ssl")) json.put("ssl", new JSONObject());
-					JSONObject ssl = (JSONObject)json.get("ssl");
+				public void format(HashMap<String, Object> map) {
+					if (!map.containsKey("version")) map.put("version", JavaWebServer.VERSION);
+					if (!map.containsKey("dir")) map.put("dir", cfg.getParentFile().getAbsolutePath());
+					if (!map.containsKey("htdocs")) map.put("htdocs", "htdocs");
+					if (!map.containsKey("plugins")) map.put("plugins", "plugins");
+					if (!map.containsKey("temp")) map.put("temp", "temp");
+					if (!map.containsKey("bindport")) map.put("bindport", 80);
+					if (!map.containsKey("threadType")) map.put("threadType", 2);
+					if (!map.containsKey("nginxThreadCount")) map.put("nginxThreadCount", Runtime.getRuntime().availableProcessors());
+					if (!map.containsKey("errorpages")) map.put("errorpages", new HashMap<String, Object>());
+					if (!map.containsKey("index")) map.put("index", "Index.class,index.jwsl,index.php,index.html");
+					if (!map.containsKey("cacheClock")) map.put("cacheClock", -1);
+					if (!map.containsKey("ssl")) map.put("ssl", new HashMap<String, Object>());
+					HashMap<String, Object> ssl = (HashMap<String, Object>)map.get("ssl");
 					if (!ssl.containsKey("enabled")) ssl.put("enabled", false);
 					if (!ssl.containsKey("forceSSL")) ssl.put("forceSSL", false); // TODO: implement
 					if (!ssl.containsKey("bindport")) ssl.put("bindport", 443);
@@ -141,13 +140,13 @@ public class JavaWebServer {
 			cons.put(0, ConnectionJWS.class);
 			cons.put(1, ConnectionApache.class);
 			cons.put(2, ConnectionNGINX.class);
-			final Class<? extends Connection> handlerType = cons.get(((Long)mainConfig.get("threadType")).intValue());
+			final Class<? extends Connection> handlerType = cons.get(Integer.parseInt((String)mainConfig.get("threadType")));
 			if (handlerType == ConnectionNGINX.class) {
 				ConnectionNGINX.init();
 			}
 			System.out.println("Loading Base Plugins");
 			BaseLoader.loadBases();
-			final int bindport = Integer.parseInt(mainConfig.get("bindport").toString());
+			final int bindport = Integer.parseInt((String)mainConfig.get("bindport"));
 			System.out.println("Starting Server on " + bindport);
 			Thread tnssl = new Thread() {
 				public void run() {
@@ -172,21 +171,22 @@ public class JavaWebServer {
 				}
 			};
 			tnssl.start();
-			if ((Boolean)((JSONObject)mainConfig.get("ssl")).get("enabled")) {
+			final HashMap<String, Object> ssl = (HashMap<String, Object>)mainConfig.get("ssl");
+			if (((String)ssl.get("enabled")).equals("true")) {
 				Thread tssl = new Thread() {
 					public void run() {
 						try {
 							KeyStore ks = KeyStore.getInstance("JKS");
 							InputStream ksIs = new FileInputStream(fileManager.getSSLKeystore());
 							try {
-								ks.load(ksIs, ((JSONObject)mainConfig.get("ssl")).get("keystorePassword").toString().toCharArray());
+								ks.load(ksIs, ssl.get("keystorePassword").toString().toCharArray());
 							}finally {
 								if (ksIs != null) {
 									ksIs.close();
 								}
 							}
 							KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-							kmf.init(ks, ((JSONObject)mainConfig.get("ssl")).get("keyPassword").toString().toCharArray());
+							kmf.init(ks, ssl.get("keyPassword").toString().toCharArray());
 							TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
 								public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
 								}
@@ -214,7 +214,7 @@ public class JavaWebServer {
 								return;
 							}
 							sc.init(kmf.getKeyManagers(), trustAllCerts, new SecureRandom());
-							int sslport = Integer.parseInt(((JSONObject)mainConfig.get("ssl")).get("bindport").toString());
+							int sslport = Integer.parseInt((String)ssl.get("bindport"));
 							System.out.println("Starting SSLServer on " + sslport);
 							SSLServerSocket sslserver = (SSLServerSocket)sc.getServerSocketFactory().createServerSocket(sslport);
 							sslserver.setEnabledProtocols(new String[]{fp});

@@ -1,6 +1,6 @@
 package com.javaprophet.javawebserver.plugins.base;
 
-import org.json.simple.JSONObject;
+import java.util.HashMap;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
@@ -13,9 +13,9 @@ public class PatchMultiHost extends Patch {
 	}
 	
 	@Override
-	public void formatConfig(JSONObject json) {
+	public void formatConfig(HashMap<String, Object> json) {
 		if (!json.containsKey("default")) json.put("default", "");
-		if (!json.containsKey("forward")) json.put("forward", new JSONObject());
+		if (!json.containsKey("forward")) json.put("forward", new HashMap<String, Object>());
 	}
 	
 	@Override
@@ -27,7 +27,7 @@ public class PatchMultiHost extends Patch {
 	public void processPacket(Packet packet) {
 		RequestPacket request = (RequestPacket)packet;
 		String host = request.headers.getHeader("Host");
-		JSONObject forward = (JSONObject)pcfg.get("forward");
+		HashMap<String, Object> forward = (HashMap<String, Object>)pcfg.get("forward");
 		for (Object key : forward.keySet()) {
 			String[] spl = ((String)key).split(",");
 			for (String c : spl) {

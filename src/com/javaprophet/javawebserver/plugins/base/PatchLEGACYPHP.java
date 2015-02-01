@@ -8,7 +8,6 @@ import java.net.URLDecoder;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Scanner;
-import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.ResponseGenerator;
@@ -276,7 +275,7 @@ public class PatchLEGACYPHP extends Patch {
 	}
 	
 	@Override
-	public void formatConfig(JSONObject json) {
+	public void formatConfig(HashMap<String, Object> json) {
 		if (!json.containsKey("cmd")) json.put("cmd", "php-cgi");
 	}
 	

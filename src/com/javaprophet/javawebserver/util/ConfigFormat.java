@@ -1,11 +1,11 @@
 package com.javaprophet.javawebserver.util;
 
-import org.json.simple.JSONObject;
+import java.util.HashMap;
 
 public abstract class ConfigFormat {
 	public ConfigFormat() {
 		
 	}
 	
-	public abstract void format(JSONObject json);
+	public abstract void format(HashMap<String, Object> map);
 }

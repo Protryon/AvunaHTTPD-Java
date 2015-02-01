@@ -1,7 +1,7 @@
 package com.javaprophet.javawebserver.plugins;
 
 import java.io.File;
-import org.json.simple.JSONObject;
+import java.util.HashMap;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
@@ -13,16 +13,16 @@ public abstract class Patch {
 	
 	public final String name;
 	
-	public abstract void formatConfig(JSONObject json);
+	public abstract void formatConfig(HashMap<String, Object> json);
 	
 	public boolean enabled = true;
 	
 	public Patch(String name) {
 		this.name = name;
 		pcfg = new Config(new File(JavaWebServer.fileManager.getPlugin(this), "plugin.cfg"), new ConfigFormat() {
-			public void format(JSONObject json) {
-				if (!json.containsKey("enabled")) json.put("enabled", enabled);
-				formatConfig(json);
+			public void format(HashMap<String, Object> map) {
+				if (!map.containsKey("enabled")) map.put("enabled", enabled);
+				formatConfig(map);
 			}
 		});
 		try {
@@ -30,7 +30,7 @@ public abstract class Patch {
 		}catch (Exception e) {
 			e.printStackTrace();
 		}
-		enabled = (Boolean)pcfg.get("enabled");
+		enabled = ((String)pcfg.get("enabled")).equals("true");
 	}
 	
 	public void log(String line) {

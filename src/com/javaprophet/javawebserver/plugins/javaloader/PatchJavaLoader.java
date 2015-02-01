@@ -14,7 +14,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import org.json.simple.JSONObject;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
@@ -39,7 +38,7 @@ public class PatchJavaLoader extends Patch {
 	private File lib = null;
 	
 	@Override
-	public void formatConfig(JSONObject json) {
+	public void formatConfig(HashMap<String, Object> json) {
 		if (!json.containsKey("lib")) json.put("lib", "lib");
 		log("Loading JavaLoader Libs");
 		lib = new File(JavaWebServer.fileManager.getMainDir(), (String)json.get("lib"));
