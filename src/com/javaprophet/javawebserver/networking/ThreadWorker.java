@@ -6,31 +6,17 @@ import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.util.Logger;
 
-public class ThreadNGINXWorker extends Thread {
+public class ThreadWorker extends Thread {
 	
-	public ThreadNGINXWorker() {
+	public ThreadWorker() {
 		
-	}
-	
-	private static class Work {
-		public final Socket s;
-		public final DataInputStream in;
-		public final DataOutputStream out;
-		public final boolean ssl;
-		public int tos = 0;
-		
-		public Work(Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
-			this.s = s;
-			this.in = in;
-			this.out = out;
-			this.ssl = ssl;
-		}
 	}
 	
 	public static void clearWork() {
@@ -43,11 +29,17 @@ public class ThreadNGINXWorker extends Thread {
 		workQueue.add(new Work(s, in, out, ssl));
 	}
 	
+	public static void readdWork(Work work) {
+		workQueue.add(work);
+	}
+	
 	private boolean keepRunning = true;
 	
 	public void close() {
 		keepRunning = false;
 	}
+	
+	public static final ArrayList<ThreadStreamWorker> subworkers = new ArrayList<ThreadStreamWorker>();
 	
 	public void run() {
 		while (keepRunning) {
@@ -82,8 +74,15 @@ public class ThreadNGINXWorker extends Thread {
 					if (cont) JavaWebServer.patchBus.processPacket(outgoingResponse);
 					long proc2 = System.nanoTime();
 					ResponsePacket wrp = outgoingResponse.write(focus.out);
+					boolean t = wrp.reqTransfer;
 					long write = System.nanoTime();
-					workQueue.add(focus);
+					if (t && wrp.body != null && wrp.body.getBody() != null) {
+						ThreadStreamWorker sw = new ThreadStreamWorker(focus, incomingRequest, outgoingResponse);
+						subworkers.add(sw);
+						sw.start();
+					}else {
+						workQueue.add(focus);
+					}
 					long cur = System.nanoTime();
 					// System.out.println((set - benchStart) / 1000000D + " start-set");
 					// System.out.println((proc1 - set) / 1000000D + " set-proc1");

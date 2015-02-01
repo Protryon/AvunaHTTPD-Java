@@ -24,9 +24,6 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import com.javaprophet.javawebserver.http.ResponseGenerator;
 import com.javaprophet.javawebserver.networking.Connection;
-import com.javaprophet.javawebserver.networking.ConnectionApache;
-import com.javaprophet.javawebserver.networking.ConnectionJWS;
-import com.javaprophet.javawebserver.networking.ConnectionNGINX;
 import com.javaprophet.javawebserver.plugins.PatchBus;
 import com.javaprophet.javawebserver.plugins.base.BaseLoader;
 import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
@@ -99,7 +96,6 @@ public class JavaWebServer {
 		}
 	}
 	
-	public static final HashMap<Integer, Class<? extends Connection>> cons = new HashMap<Integer, Class<? extends Connection>>();
 	private static boolean nsslr = false;
 	private static boolean sslr = false;
 	private static boolean ap = false;
@@ -122,7 +118,6 @@ public class JavaWebServer {
 					if (!map.containsKey("javac")) map.put("javac", "javac");
 					if (!map.containsKey("temp")) map.put("temp", new File(dir, "temp").toString());
 					if (!map.containsKey("bindport")) map.put("bindport", 80);
-					if (!map.containsKey("threadType")) map.put("threadType", 2);
 					if (!map.containsKey("nginxThreadCount")) map.put("nginxThreadCount", Runtime.getRuntime().availableProcessors());
 					if (!map.containsKey("errorpages")) map.put("errorpages", new HashMap<String, Object>());
 					if (!map.containsKey("index")) map.put("index", "Index.class,index.jwsl,index.php,index.html");
@@ -144,13 +139,7 @@ public class JavaWebServer {
 			unpack();
 			loadUnpacked();
 			System.out.println("Loading Connection Handling");
-			cons.put(0, ConnectionJWS.class);
-			cons.put(1, ConnectionApache.class);
-			cons.put(2, ConnectionNGINX.class);
-			final Class<? extends Connection> handlerType = cons.get(Integer.parseInt((String)mainConfig.get("threadType")));
-			if (handlerType == ConnectionNGINX.class) {
-				ConnectionNGINX.init();
-			}
+			Connection.init();
 			System.out.println("Loading Base Plugins");
 			BaseLoader.loadBases();
 			final int bindport = Integer.parseInt((String)mainConfig.get("bindport"));
@@ -166,7 +155,7 @@ public class JavaWebServer {
 							DataOutputStream out = new DataOutputStream(s.getOutputStream());
 							out.flush();
 							DataInputStream in = new DataInputStream(s.getInputStream());
-							Connection c = (Connection)handlerType.getDeclaredConstructors()[0].newInstance(s, in, out, false);
+							Connection c = new Connection(s, in, out, false);
 							c.handleConnection();
 							runningThreads.add(c);
 						}
@@ -232,7 +221,7 @@ public class JavaWebServer {
 								DataOutputStream out = new DataOutputStream(s.getOutputStream());
 								out.flush();
 								DataInputStream in = new DataInputStream(s.getInputStream());
-								Connection c = handlerType.getDeclaredConstructor(Socket.class, DataInputStream.class, DataOutputStream.class, boolean.class).newInstance(s, in, out, false);
+								Connection c = new Connection(s, in, out, false);
 								c.handleConnection();
 								runningThreads.add(c);
 							}

@@ -30,6 +30,7 @@ public class ResponsePacket extends Packet {
 		n.httpVersion = httpVersion;
 		n.headers = headers.clone();
 		n.body = body.clone(n);
+		n.reqTransfer = reqTransfer;
 		return n;
 	}
 	
@@ -56,7 +57,11 @@ public class ResponsePacket extends Packet {
 			cachedSerialize = ser.toString().getBytes();
 			byte[] add = null;
 			if (data && finalc != null) {
-				add = finalc;
+				if (!thisClone.headers.hasHeader("Transfer-Encoding")) {
+					add = finalc;
+				}else {
+					add = crlf.getBytes();
+				}
 				if (thisClone.body == null) {
 					thisClone.body = new MessageBody(thisClone);
 				}
@@ -82,9 +87,17 @@ public class ResponsePacket extends Packet {
 		return new String(cachedSerialize);
 	}
 	
+	public boolean reqTransfer = false;
+	
 	public ResponsePacket write(DataOutputStream out) throws IOException {
 		out.write(serialize(request.method != Method.HEAD));
 		out.flush();
+		if (cachedPacket.headers.hasHeader("Transfer-Encoding")) {
+			String te = cachedPacket.headers.getHeader("Transfer-Encoding");
+			if (te.equals("chunked")) {
+				cachedPacket.reqTransfer = true;
+			}
+		}
 		if (headers.hasHeader("Connection")) {
 			String c = headers.getHeader("Connection");
 			if (c.equals("Close")) {

@@ -5,9 +5,13 @@ public class Resource {
 	public String type = "text/html";
 	public String loc = "/";
 	public boolean wasDir = false;
+	public boolean tooBig = false;
 	
 	public Resource clone() {
-		return new Resource(data, type, loc);
+		Resource res = new Resource(data, type, loc);
+		res.wasDir = wasDir;
+		res.tooBig = tooBig;
+		return res;
 	}
 	
 	public Resource(byte[] data, String type) {

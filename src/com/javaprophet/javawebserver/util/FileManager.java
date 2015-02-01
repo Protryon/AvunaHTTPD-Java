@@ -11,10 +11,23 @@ import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.http.StatusCode;
 import com.javaprophet.javawebserver.plugins.Patch;
+import com.javaprophet.javawebserver.plugins.base.PatchChunked;
 
 public class FileManager {
 	public FileManager() {
 		
+	}
+	
+	private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+	
+	public String bytesToHex(byte[] bytes) {
+		char[] hexChars = new char[bytes.length * 2];
+		for (int j = 0; j < bytes.length; j++) {
+			int v = bytes[j] & 0xFF;
+			hexChars[j * 2] = hexArray[v >>> 4];
+			hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+		}
+		return new String(hexChars);
 	}
 	
 	public File getMainDir() {
@@ -124,6 +137,7 @@ public class FileManager {
 	public static final HashMap<String, byte[]> cache = new HashMap<String, byte[]>();
 	public static final HashMap<String, String> extCache = new HashMap<String, String>();
 	public static final HashMap<String, Boolean> lwiCache = new HashMap<String, Boolean>();
+	public static final HashMap<String, Boolean> tbCache = new HashMap<String, Boolean>();
 	private static long cacheClock = 0L;
 	
 	public Resource getResource(String reqTarget) {
@@ -138,6 +152,7 @@ public class FileManager {
 			byte[] resource = null;
 			String ext = "";
 			boolean lwi = false;
+			boolean tooBig = false;
 			if (cache.containsKey(rt)) {
 				long t = System.currentTimeMillis();
 				long cc = Integer.parseInt(((String)JavaWebServer.mainConfig.get("cacheClock")));
@@ -145,6 +160,7 @@ public class FileManager {
 					resource = cache.get(rt);
 					ext = extCache.get(rt);
 					lwi = lwiCache.get(rt);
+					tooBig = tbCache.get(rt);
 				}else {
 					cacheClock = t;
 					clearCache();
@@ -152,6 +168,8 @@ public class FileManager {
 			}
 			if (resource == null) {
 				File abs = getAbsolutePath(rt);
+				ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
+				ext = JavaWebServer.extensionToMime.containsKey(ext) ? JavaWebServer.extensionToMime.get(ext) : "application/octet-stream";
 				FileInputStream fin = new FileInputStream(abs);
 				ByteArrayOutputStream bout = new ByteArrayOutputStream();
 				int i = 1;
@@ -161,18 +179,23 @@ public class FileManager {
 					if (i > 0) {
 						bout.write(buf, 0, i);
 					}
+					if (PatchChunked.INSTANCE.enabled && bout.size() > Integer.parseInt((String)PatchChunked.INSTANCE.pcfg.get("minsize")) && !ext.startsWith("application")) {
+						bout.reset();
+						tooBig = true;
+						break;
+					}
 				}
 				fin.close();
 				resource = bout.toByteArray();
 				cache.put(rt, resource);
-				ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
-				ext = JavaWebServer.extensionToMime.containsKey(ext) ? JavaWebServer.extensionToMime.get(ext) : "application/octet-stream";
 				extCache.put(rt, ext);
 				lwi = this.lwi;
 				lwiCache.put(rt, lwi);
+				tbCache.put(rt, tooBig);
 			}
 			Resource r = new Resource(resource, ext, rt);
 			r.wasDir = lwi;
+			r.tooBig = tooBig;
 			return r;
 		}catch (IOException e) {
 			if (!(e instanceof FileNotFoundException)) e.printStackTrace();

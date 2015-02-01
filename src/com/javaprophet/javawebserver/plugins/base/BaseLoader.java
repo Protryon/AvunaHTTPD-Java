@@ -25,6 +25,8 @@ public class BaseLoader {
 		// caching
 		PatchRegistry.registerPatch(new PatchETag("ETag"));
 		
+		PatchRegistry.registerPatch(new PatchChunked("Chunked"));
+		
 		// transfer/encoding
 		PatchRegistry.registerPatch(new PatchGZip("GZip"));
 		

@@ -6,15 +6,17 @@ import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
 
-public class PatchContentLength extends Patch {
+public class PatchChunked extends Patch {
+	public static PatchChunked INSTANCE;
 	
-	public PatchContentLength(String name) {
+	public PatchChunked(String name) {
 		super(name);
+		INSTANCE = this;
 	}
 	
 	@Override
-	public void formatConfig(HashMap<String, Object> json) {
-		
+	public void formatConfig(HashMap<String, Object> map) {
+		if (!map.containsKey("minsize")) map.put("minsize", "10485760");// 10mb
 	}
 	
 	@Override
@@ -28,26 +30,20 @@ public class PatchContentLength extends Patch {
 	}
 	
 	@Override
+	public void processMethod(RequestPacket request, ResponsePacket response) {
+		
+	}
+	
+	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return !response.headers.hasHeader("Transfer-Encoding");
+		return response.body != null && response.body.getBody() != null && response.body.getBody().tooBig;
 	}
 	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
+		response.headers.addHeader("Transfer-Encoding", "chunked");
 		response.headers.removeHeaders("Content-Length");
-		if (response.headers.hasHeader("Transfer-Encoding")) {
-			// do we even need this?
-			response.headers.removeHeaders("Transfer-Encoding");
-		}
-		if (data != null) {
-			response.headers.addHeader("Content-Length", data.length + "");
-			if (!response.headers.hasHeader("Content-Type")) response.headers.addHeader("Content-Type", response.body.getBody().type);
-		}
 		return data;
 	}
 	
-	@Override
-	public void processMethod(RequestPacket request, ResponsePacket response) {
-		
-	}
 }

@@ -49,7 +49,7 @@ public class PatchGetPostHead extends Patch {
 	@Override
 	public void processMethod(RequestPacket request, ResponsePacket response) {
 		Resource resource = JavaWebServer.fileManager.getResource(request.target);
-		if (resource == null || resource.data == null) {
+		if (resource == null) {
 			ResponseGenerator.generateDefaultResponse(response, StatusCode.NOT_FOUND);
 			JavaWebServer.fileManager.getErrorPage(response.body, request.target, StatusCode.NOT_FOUND, "The requested URL " + request.target + " was not found on this server.");
 			return;
