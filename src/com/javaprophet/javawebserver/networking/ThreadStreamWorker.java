@@ -37,6 +37,10 @@ public class ThreadStreamWorker extends Thread {
 			// resp.headers.removeHeaders("Content-Encoding");
 			while (!work.s.isClosed()) {
 				i = fin.read(buf);
+				if (i == -1) {
+					work.s.close();
+					return;
+				}
 				if (gzip) {
 					gout.write(buf, 0, i);
 					ByteBuffer bb = ByteBuffer.allocate(4);
