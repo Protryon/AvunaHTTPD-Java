@@ -22,10 +22,11 @@ public class ThreadStreamWorker extends Thread {
 	}
 	
 	public void run() {
+		FileInputStream fin = null;
 		try {
 			boolean gzip = resp.headers.hasHeader("Content-Encoding") && resp.headers.getHeader("Content-Encoding").contains("gzip");
 			PrintStream ps = new PrintStream(work.out);
-			FileInputStream fin = new FileInputStream(JavaWebServer.fileManager.getAbsolutePath(resp.body.getBody().loc));
+			fin = new FileInputStream(JavaWebServer.fileManager.getAbsolutePath(resp.body.getBody().loc));
 			int i = 0;
 			byte[] buf = new byte[10485760];
 			ByteArrayOutputStream bout = null;
@@ -34,12 +35,12 @@ public class ThreadStreamWorker extends Thread {
 				bout = new ByteArrayOutputStream();
 				gout = new GZIPOutputStream(bout);
 			}
-			// resp.headers.removeHeaders("Content-Encoding");
+			int ii = 0;
 			while (!work.s.isClosed()) {
 				i = fin.read(buf);
 				if (i == -1) {
 					work.s.close();
-					return;
+					break;
 				}
 				if (gzip) {
 					gout.write(buf, 0, i);
@@ -49,6 +50,7 @@ public class ThreadStreamWorker extends Thread {
 					bb.position(0);
 					bb.get(bas);
 					ps.println(JavaWebServer.fileManager.bytesToHex(bas));
+					System.out.println(JavaWebServer.fileManager.bytesToHex(bas));
 					ps.write(bout.toByteArray());
 					bout.reset();
 				}else {
@@ -62,6 +64,7 @@ public class ThreadStreamWorker extends Thread {
 				}
 				ps.println();
 				ps.flush();
+				if (ii++ == 1) break;
 			}
 			if (gzip) {
 				gout.flush();
@@ -82,6 +85,12 @@ public class ThreadStreamWorker extends Thread {
 			ThreadWorker.readdWork(work);
 		}catch (IOException e) {
 			e.printStackTrace();
+		}finally {
+			try {
+				if (fin != null) fin.close();
+			}catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }

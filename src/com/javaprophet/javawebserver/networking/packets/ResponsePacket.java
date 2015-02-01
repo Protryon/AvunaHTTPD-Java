@@ -60,12 +60,12 @@ public class ResponsePacket extends Packet {
 				if (!thisClone.headers.hasHeader("Transfer-Encoding")) {
 					add = finalc;
 				}else {
-					add = crlf.getBytes();
+					add = new byte[0];// crlf.getBytes();
 				}
 				if (thisClone.body == null) {
 					thisClone.body = new MessageBody(thisClone);
 				}
-				thisClone.body.setBody(new Resource(finalc, thisClone.request.target, thisClone.headers.hasHeader("Content-Type") ? thisClone.headers.getHeader("Content-Type") : "text/html"));
+				thisClone.body.setBody(new Resource(finalc, thisClone.headers.hasHeader("Content-Type") ? thisClone.headers.getHeader("Content-Type") : "text/html", thisClone.request.target));
 			}else {
 				add = crlf.getBytes();
 			}

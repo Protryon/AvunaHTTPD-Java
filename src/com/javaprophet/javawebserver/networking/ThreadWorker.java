@@ -77,7 +77,7 @@ public class ThreadWorker extends Thread {
 					boolean t = wrp.reqTransfer;
 					long write = System.nanoTime();
 					if (t && wrp.body != null && wrp.body.getBody() != null) {
-						ThreadStreamWorker sw = new ThreadStreamWorker(focus, incomingRequest, outgoingResponse);
+						ThreadStreamWorker sw = new ThreadStreamWorker(focus, incomingRequest, wrp);
 						subworkers.add(sw);
 						sw.start();
 					}else {
