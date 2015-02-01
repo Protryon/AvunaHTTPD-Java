@@ -272,23 +272,40 @@ public class JavaWebServer {
 				}
 				System.out.println("Cache Flushed! This is not necessary for php files, and does not work for .class files(restart jws for those).");
 			}else if (command.equals("jhtml")) {
-				if (cargs.length != 2 && cargs.length != 1) {
-					System.out.println("Invalid number of arguments.");
+				if (cargs.length != 3 && cargs.length != 2) {
+					System.out.println("Invalid arguments. (method[stream/file], input, output[optional])");
 					continue;
 				}
 				try {
-					Scanner scan2 = new Scanner(new FileInputStream(new File(fileManager.getHTDocs(), cargs[0])));
+					File sc2 = null;
+					Scanner scan2 = new Scanner(new FileInputStream(sc2 = new File(fileManager.getHTDocs(), cargs[1])));
 					PrintStream ps;
-					if (cargs.length == 2) {
-						ps = new PrintStream(new FileOutputStream(new File(fileManager.getHTDocs(), cargs[1])));
+					File temp = null;
+					if (cargs.length == 3) {
+						ps = new PrintStream(new FileOutputStream(temp = new File(fileManager.getHTDocs(), cargs[2])));
 					}else {
 						ps = System.out;
 					}
+					if (cargs[0].equals("file")) {
+						ps.println("import java.io.PrintStream;");
+						ps.println("import com.javaprophet.javawebserver.networking.packets.RequestPacket;");
+						ps.println("import com.javaprophet.javawebserver.networking.packets.ResponsePacket;");
+						ps.println("import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderStream;");
+						ps.println();
+						ps.println("public class " + (cargs.length == 3 ? temp.getName().substring(0, temp.getName().indexOf(".")) : sc2.getName().substring(0, sc2.getName().indexOf("."))) + " extends JavaLoaderStream {");
+						ps.println("    public void generate(PrintStream out, ResponsePacket response, RequestPacket request) {");
+					}
 					while (scan2.hasNextLine()) {
 						String line = scan2.nextLine().trim();
-						ps.println("out.println(\"" + line.replace("\\", "\\\\").replace("\"", "\\\"") + "\");");
+						if (cargs[0].equals("stream") || cargs[0].equals("file")) {
+							ps.println((cargs[0].equals("file") ? "        " : "") + "out.println(\"" + line.replace("\\", "\\\\").replace("\"", "\\\"") + "\");");
+						}
 					}
-					if (cargs.length == 2) {
+					if (cargs[0].equals("file")) {
+						ps.println("    }");
+						ps.println("}");
+					}
+					if (cargs.length == 3) {
 						ps.flush();
 						ps.close();
 					}
@@ -297,11 +314,15 @@ public class JavaWebServer {
 					System.out.println(e.getMessage());
 				}
 				System.out.println("JHTML completed.");
+			}else if (command.equals("jcomp")) {
+				
 			}else if (command.equals("help")) {
 				System.out.println("Commands:");
 				System.out.println("exit/stop");
 				System.out.println("reload");
 				System.out.println("flushcache");
+				System.out.println("jhtml");
+				System.out.println("jcomp");
 				System.out.println("help");
 				System.out.println("");
 				System.out.println("Java Web Server(JWS) version " + VERSION);

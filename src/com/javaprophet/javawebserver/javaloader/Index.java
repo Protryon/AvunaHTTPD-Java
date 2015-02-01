@@ -7,7 +7,6 @@ import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderStream;
 
 public class Index extends JavaLoaderStream {
 	
-	@Override
 	public void generate(PrintStream out, ResponsePacket response, RequestPacket request) {
 		if (request.get.containsKey("data")) {
 			out.println(request.get.get("data"));
