@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyStore;
@@ -251,6 +252,8 @@ public class JavaWebServer {
 		Scanner scan = new Scanner(System.in);
 		while (sslr || nsslr) {
 			String command = scan.nextLine();
+			String[] cargs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1).split(" ") : new String[0];
+			command = command.contains(" ") ? command.substring(0, command.indexOf(" ")) : command;
 			if (command.equals("exit") || command.equals("stop")) {
 				System.exit(0);
 			}else if (command.equals("reload")) {
@@ -268,6 +271,32 @@ public class JavaWebServer {
 					e.printStackTrace();
 				}
 				System.out.println("Cache Flushed! This is not necessary for php files, and does not work for .class files(restart jws for those).");
+			}else if (command.equals("jhtml")) {
+				if (cargs.length != 2 && cargs.length != 1) {
+					System.out.println("Invalid number of arguments.");
+					continue;
+				}
+				try {
+					Scanner scan2 = new Scanner(new FileInputStream(new File(fileManager.getHTDocs(), cargs[0])));
+					PrintStream ps;
+					if (cargs.length == 2) {
+						ps = new PrintStream(new FileOutputStream(new File(fileManager.getHTDocs(), cargs[1])));
+					}else {
+						ps = System.out;
+					}
+					while (scan2.hasNextLine()) {
+						String line = scan2.nextLine().trim();
+						ps.println("out.println(\"" + line.replace("\\", "\\\\").replace("\"", "\\\"") + "\");");
+					}
+					if (cargs.length == 2) {
+						ps.flush();
+						ps.close();
+					}
+					scan2.close();
+				}catch (IOException e) {
+					System.out.println(e.getMessage());
+				}
+				System.out.println("JHTML completed.");
 			}else if (command.equals("help")) {
 				System.out.println("Commands:");
 				System.out.println("exit/stop");

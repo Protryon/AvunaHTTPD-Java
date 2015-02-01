@@ -12,10 +12,18 @@ public class Index extends JavaLoaderStream {
 		if (request.get.containsKey("data")) {
 			out.println(request.get.get("data"));
 		}else {
+			out.println("<html>");
+			out.println("<head>");
+			out.println("<title>SMD</title>");
+			out.println("</title>");
+			out.println("<body>");
+			out.println("<center> LAWL </center>");
 			out.println("<form action=\"\" method=\"GET\">");
 			out.println("<input type=\"text\" name=\"data\" />");
-			out.println("<input type=\"submit\" value=\"Submit\" />");
+			out.println("<input type=\"submit\" />");
 			out.println("</form>");
+			out.println("</body>");
+			out.println("</html>");
 		}
 	}
 	
