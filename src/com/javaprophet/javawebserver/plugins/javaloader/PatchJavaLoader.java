@@ -48,6 +48,7 @@ public class PatchJavaLoader extends Patch {
 				if (!f.isDirectory() && f.getName().endsWith(".jar")) {
 					method.invoke(sysloader, new Object[]{f.toURI().toURL()});
 				}
+				method.invoke(sysloader, new Object[]{JavaWebServer.fileManager.getHTDocs().toURI().toURL()});
 			}
 		}catch (Throwable t) {
 			t.printStackTrace();
@@ -100,11 +101,11 @@ public class PatchJavaLoader extends Patch {
 			long loaded = System.nanoTime();
 			JavaLoader loader = null;
 			if (!jls.containsKey(name)) {
-				Class<? extends JavaLoader> loaderClass = (Class<? extends JavaLoader>)jlcl.loadClass(name);
-				if (loaderClass == null) {
+				Class<?> loaderClass = jlcl.loadClass(name);
+				if (loaderClass == null || !JavaLoader.class.isAssignableFrom(loaderClass)) {
 					return null;
 				}
-				loader = loaderClass.newInstance();
+				loader = ((Class<? extends JavaLoader>)loaderClass).newInstance();
 				jls.put(name, loader);
 			}else {
 				loader = jls.get(name);

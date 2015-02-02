@@ -101,7 +101,6 @@ public class PatchPHP extends Patch {
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 			while (s.hasNextLine()) {
 				String line = s.nextLine().trim();
-				System.out.println(line);
 				if (line.length() > 0) {
 					if (tt && line.contains(":")) {
 						String[] lt = line.split(":");

@@ -316,7 +316,7 @@ public class JavaWebServer {
 						System.out.println("Invalid arguments. (input)");
 						continue;
 					}
-					String cp = new File((String)mainConfig.get("dir"), "jws.jar").toString() + ";" + PatchJavaLoader.lib.toString() + ";";
+					String cp = fileManager.getBaseFile("jws.jar").toString() + ";" + fileManager.getHTDocs().toString() + ";" + PatchJavaLoader.lib.toString() + ";";
 					for (File f : PatchJavaLoader.lib.listFiles()) {
 						if (!f.isDirectory() && f.getName().endsWith(".jar")) {
 							cp += f.toString() + ";";

@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.util.HashMap;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.MessageBody;
@@ -106,7 +107,7 @@ public class FileManager {
 	
 	public File getAbsolutePath(String reqTarget) {
 		lwi = false;
-		File abs = new File(JavaWebServer.fileManager.getHTDocs(), reqTarget);
+		File abs = new File(JavaWebServer.fileManager.getHTDocs(), URLDecoder.decode(reqTarget));
 		if (abs.isDirectory()) {
 			String[] index = ((String)JavaWebServer.mainConfig.get("index")).split(",");
 			for (String i : index) {
