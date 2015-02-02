@@ -35,7 +35,7 @@ public class RequestPacket extends Packet {
 				this.get.put(URLDecoder.decode(kd, "UTF-8"), "");
 			}
 		}
-		if (method == Method.POST && headers.getHeader("Content-Type").equals("x-www-form-urlencoded") && body != null && body.getBody() != null) {
+		if (method == Method.POST && headers.getHeader("Content-Type").equals("application/x-www-form-urlencoded") && body != null && body.getBody() != null) {
 			String post = new String(body.getBody().data);
 			for (String kd : post.split("&")) {
 				if (kd.contains("=")) {

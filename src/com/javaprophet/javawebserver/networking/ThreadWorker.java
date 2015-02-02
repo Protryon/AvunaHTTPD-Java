@@ -90,7 +90,7 @@ public class ThreadWorker extends Thread {
 					// System.out.println((proc2 - resp) / 1000000D + " resp-proc2");
 					// System.out.println((write - proc2) / 1000000D + " proc2-write");
 					// System.out.println((cur - write) / 1000000D + " write-cur");
-					Logger.INSTANCE.log(incomingRequest.userIP + " requested " + incomingRequest.target + " returned " + wrp.statusCode + " " + wrp.reasonPhrase + " took: " + (cur - benchStart) / 1000000D + " ms");
+					Logger.INSTANCE.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned " + wrp.statusCode + " " + wrp.reasonPhrase + " took: " + (cur - benchStart) / 1000000D + " ms");
 				}else {
 					Logger.INSTANCE.log(focus.s.getInetAddress().getHostAddress() + " closed.");
 				}
