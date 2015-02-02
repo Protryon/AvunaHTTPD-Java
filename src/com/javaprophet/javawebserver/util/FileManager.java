@@ -39,6 +39,10 @@ public class FileManager {
 		return new File((String)JavaWebServer.mainConfig.get("htdocs"));
 	}
 	
+	public File getHTSrc() {
+		return new File((String)JavaWebServer.mainConfig.get("htsrc"));
+	}
+	
 	public File getSSL() {
 		return new File((String)(((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl")).get("folder")));
 	}

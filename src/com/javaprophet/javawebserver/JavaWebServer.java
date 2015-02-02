@@ -43,6 +43,7 @@ public class JavaWebServer {
 	public static void setupFolders() {
 		fileManager.getMainDir().mkdirs();
 		fileManager.getHTDocs().mkdirs();
+		fileManager.getHTSrc().mkdirs();
 		fileManager.getPlugins().mkdirs();
 		fileManager.getTemp().mkdirs();
 		fileManager.getSSL().mkdirs();
@@ -114,6 +115,7 @@ public class JavaWebServer {
 						dir = new File((String)map.get("dir"));
 					}
 					if (!map.containsKey("htdocs")) map.put("htdocs", new File(dir, "htdocs").toString());
+					if (!map.containsKey("htsrc")) map.put("htsrc", new File(dir, "htsrc").toString());
 					if (!map.containsKey("plugins")) map.put("plugins", new File(dir, "plugins").toString());
 					if (!map.containsKey("javac")) map.put("javac", "javac");
 					if (!map.containsKey("temp")) map.put("temp", new File(dir, "temp").toString());
@@ -269,8 +271,8 @@ public class JavaWebServer {
 					}
 					System.out.println("Cache Flushed! This is not necessary for php files, and does not work for .class files(restart jws for those).");
 				}else if (command.equals("jhtml")) {
-					if (cargs.length != 3 && cargs.length != 2) {
-						System.out.println("Invalid arguments. (method[stream/file], input, output[optional])");
+					if (cargs.length != 2 && cargs.length != 1) {
+						System.out.println("Invalid arguments. (input, output[optional])");
 						continue;
 					}
 					try {
@@ -278,52 +280,41 @@ public class JavaWebServer {
 						Scanner scan2 = new Scanner(new FileInputStream(sc2 = new File(fileManager.getHTDocs(), cargs[1])));
 						PrintStream ps;
 						File temp = null;
-						if (cargs.length == 3) {
-							ps = new PrintStream(new FileOutputStream(temp = new File(fileManager.getHTDocs(), cargs[2])));
+						if (cargs.length == 2) {
+							ps = new PrintStream(new FileOutputStream(temp = new File(fileManager.getHTSrc(), cargs[2])));
 						}else {
-							ps = System.out;
+							ps = new PrintStream(new FileOutputStream(temp = new File(fileManager.getHTSrc(), cargs[1].substring(0, cargs[1].indexOf(".")) + ".java")));
 						}
-						if (cargs[0].equals("file")) {
-							ps.println("import java.io.PrintStream;");
-							ps.println("import com.javaprophet.javawebserver.networking.packets.RequestPacket;");
-							ps.println("import com.javaprophet.javawebserver.networking.packets.ResponsePacket;");
-							ps.println("import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderStream;");
-							ps.println();
-							ps.println("public class " + (cargs.length == 3 ? temp.getName().substring(0, temp.getName().indexOf(".")) : sc2.getName().substring(0, sc2.getName().indexOf("."))) + " extends JavaLoaderStream {");
-							ps.println("    public void generate(PrintStream out, ResponsePacket response, RequestPacket request) {");
-						}
+						ps.println("import java.io.PrintStream;");
+						ps.println("import com.javaprophet.javawebserver.networking.packets.RequestPacket;");
+						ps.println("import com.javaprophet.javawebserver.networking.packets.ResponsePacket;");
+						ps.println("import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderStream;");
+						ps.println();
+						ps.println("public class " + (cargs.length == 3 ? temp.getName().substring(0, temp.getName().indexOf(".")) : sc2.getName().substring(0, sc2.getName().indexOf("."))) + " extends JavaLoaderStream {");
+						ps.println("    public void generate(PrintStream out, ResponsePacket response, RequestPacket request) {");
 						while (scan2.hasNextLine()) {
 							String line = scan2.nextLine().trim();
-							if (cargs[0].equals("stream") || cargs[0].equals("file")) {
-								ps.println((cargs[0].equals("file") ? "        " : "") + "out.println(\"" + line.replace("\\", "\\\\").replace("\"", "\\\"") + "\");");
-							}
+							ps.println((cargs[0].equals("file") ? "        " : "") + "out.println(\"" + line.replace("\\", "\\\\").replace("\"", "\\\"") + "\");");
 						}
-						if (cargs[0].equals("file")) {
-							ps.println("    }");
-							ps.println("}");
-						}
-						if (cargs.length == 3) {
-							ps.flush();
-							ps.close();
-						}
+						ps.println("    }");
+						ps.println("}");
+						ps.flush();
+						ps.close();
 						scan2.close();
 					}catch (IOException e) {
 						System.out.println(e.getMessage());
 					}
 					System.out.println("JHTML completed.");
 				}else if (command.equals("jcomp")) {
-					if (cargs.length != 1) {
-						System.out.println("Invalid arguments. (input)");
-						continue;
-					}
-					String cp = fileManager.getBaseFile("jws.jar").toString() + ";" + fileManager.getHTDocs().toString() + ";" + PatchJavaLoader.lib.toString() + ";";
+					boolean all = cargs.length < 1;
+					String cp = fileManager.getBaseFile("jws.jar").toString() + ";" + fileManager.getHTDocs().toString() + ";" + fileManager.getHTSrc().toString() + ";" + PatchJavaLoader.lib.toString() + ";";
 					for (File f : PatchJavaLoader.lib.listFiles()) {
 						if (!f.isDirectory() && f.getName().endsWith(".jar")) {
 							cp += f.toString() + ";";
 						}
 					}
 					cp = cp.substring(0, cp.length() - 1);
-					ProcessBuilder pb = new ProcessBuilder((String)mainConfig.get("javac"), "-cp", cp, "-d", fileManager.getHTDocs().toString(), new File(fileManager.getHTDocs(), cargs[0]).toString());
+					ProcessBuilder pb = new ProcessBuilder((String)mainConfig.get("javac"), "-cp", cp, "-d", fileManager.getHTDocs().toString(), all ? fileManager.getHTSrc().toString().replace("\\", "/") + "/*" : new File(fileManager.getHTSrc(), cargs[0]).toString());
 					pb.redirectErrorStream(true);
 					Process proc = pb.start();
 					Scanner s = new Scanner(proc.getInputStream());
