@@ -277,13 +277,13 @@ public class JavaWebServer {
 					}
 					try {
 						File sc2 = null;
-						Scanner scan2 = new Scanner(new FileInputStream(sc2 = new File(fileManager.getHTDocs(), cargs[1])));
+						Scanner scan2 = new Scanner(new FileInputStream(sc2 = new File(fileManager.getHTDocs(), cargs[0])));
 						PrintStream ps;
 						File temp = null;
 						if (cargs.length == 2) {
-							ps = new PrintStream(new FileOutputStream(temp = new File(fileManager.getHTSrc(), cargs[2])));
+							ps = new PrintStream(new FileOutputStream(temp = new File(fileManager.getHTSrc(), cargs[1])));
 						}else {
-							ps = new PrintStream(new FileOutputStream(temp = new File(fileManager.getHTSrc(), cargs[1].substring(0, cargs[1].indexOf(".")) + ".java")));
+							ps = new PrintStream(new FileOutputStream(temp = new File(fileManager.getHTSrc(), cargs[0].substring(0, cargs[0].indexOf(".")) + ".java")));
 						}
 						ps.println("import java.io.PrintStream;");
 						ps.println("import com.javaprophet.javawebserver.networking.packets.RequestPacket;");
@@ -294,7 +294,7 @@ public class JavaWebServer {
 						ps.println("    public void generate(PrintStream out, ResponsePacket response, RequestPacket request) {");
 						while (scan2.hasNextLine()) {
 							String line = scan2.nextLine().trim();
-							ps.println((cargs[0].equals("file") ? "        " : "") + "out.println(\"" + line.replace("\\", "\\\\").replace("\"", "\\\"") + "\");");
+							ps.println("        " + "out.println(\"" + line.replace("\\", "\\\\").replace("\"", "\\\"") + "\");");
 						}
 						ps.println("    }");
 						ps.println("}");
@@ -314,7 +314,19 @@ public class JavaWebServer {
 						}
 					}
 					cp = cp.substring(0, cp.length() - 1);
-					ProcessBuilder pb = new ProcessBuilder((String)mainConfig.get("javac"), "-cp", cp, "-d", fileManager.getHTDocs().toString(), all ? fileManager.getHTSrc().toString().replace("\\", "/") + "/*" : new File(fileManager.getHTSrc(), cargs[0]).toString());
+					ArrayList<String> cfs = new ArrayList<String>();
+					cfs.add((String)mainConfig.get("javac"));
+					cfs.add("-cp");
+					cfs.add(cp);
+					cfs.add("-d");
+					cfs.add(fileManager.getHTDocs().toString());
+					if (all) {
+						recurForComp(cfs, fileManager.getHTSrc());
+					}else {
+						cfs.add("htsrc/" + cargs[0]);
+					}
+					ProcessBuilder pb = new ProcessBuilder(cfs.toArray(new String[]{}));
+					pb.directory(fileManager.getMainDir());
 					pb.redirectErrorStream(true);
 					Process proc = pb.start();
 					Scanner s = new Scanner(proc.getInputStream());
@@ -342,6 +354,16 @@ public class JavaWebServer {
 		patchBus.preExit();
 		if (mainConfig != null) {
 			mainConfig.save();
+		}
+	}
+	
+	private static void recurForComp(ArrayList<String> cfs, File base) {
+		for (File f : base.listFiles()) {
+			if (f.isDirectory()) {
+				recurForComp(cfs, f);
+			}else {
+				cfs.add(f.getAbsolutePath());
+			}
 		}
 	}
 }

@@ -82,6 +82,15 @@ public class PatchJavaLoader extends Patch {
 	
 	private final HashMap<String, JavaLoader> jls = new HashMap<String, JavaLoader>();
 	
+	public JavaLoader getFromClass(Class<? extends JavaLoader> cls) {
+		for (JavaLoader jl : jls.values()) {
+			if (cls.isAssignableFrom(jl.getClass())) {
+				return jl;
+			}
+		}
+		return null;
+	}
+	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		try {
