@@ -74,9 +74,9 @@ public class PatchPHP extends Patch {
 			pb.environment().put("SERVER_NAME", request.headers.getHeader("Host"));
 			int port = 80;
 			if (request.ssl) {
-				port = ((Long)((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl")).get("bindport")).intValue();
+				port = Integer.parseInt((String)((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl")).get("bindport"));
 			}else {
-				port = ((Long)JavaWebServer.mainConfig.get("bindport")).intValue();
+				port = Integer.parseInt(((String)JavaWebServer.mainConfig.get("bindport")));
 			}
 			pb.environment().put("SERVER_PORT", port + "");
 			pb.environment().put("SERVER_PROTOCOL", request.httpVersion);
@@ -101,6 +101,7 @@ public class PatchPHP extends Patch {
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 			while (s.hasNextLine()) {
 				String line = s.nextLine().trim();
+				System.out.println(line);
 				if (line.length() > 0) {
 					if (tt && line.contains(":")) {
 						String[] lt = line.split(":");
@@ -115,6 +116,7 @@ public class PatchPHP extends Patch {
 					}else {
 						tt = false;
 						bout.write((line + crlf).getBytes());
+						if (line.equals("</html>")) break;
 					}
 				}else {
 					tt = false;

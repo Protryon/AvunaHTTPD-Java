@@ -8,5 +8,9 @@ public abstract class JavaLoader {
 		
 	}
 	
+	public void destroy() {
+		
+	}
+	
 	public abstract byte[] generate(ResponsePacket response, RequestPacket request);
 }
