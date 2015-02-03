@@ -65,15 +65,30 @@ public class ThreadWorker extends Thread {
 					incomingRequest.userIP = focus.s.getInetAddress().getHostAddress();
 					incomingRequest.userPort = focus.s.getPort();
 					long set = System.nanoTime();
+					JavaWebServer.patchBus.processPacket(incomingRequest);
+					if (incomingRequest.drop) {
+						focus.s.close();
+						Logger.INSTANCE.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
+						continue;
+					}
 					ResponsePacket outgoingResponse = new ResponsePacket();
 					outgoingResponse.request = incomingRequest;
-					JavaWebServer.patchBus.processPacket(incomingRequest);
 					long proc1 = System.nanoTime();
 					boolean cont = JavaWebServer.rg.process(incomingRequest, outgoingResponse);
 					long resp = System.nanoTime();
 					if (cont) JavaWebServer.patchBus.processPacket(outgoingResponse);
+					if (outgoingResponse.drop) {
+						focus.s.close();
+						Logger.INSTANCE.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
+						continue;
+					}
 					long proc2 = System.nanoTime();
 					ResponsePacket wrp = outgoingResponse.write(focus.out);
+					if (wrp.drop) {
+						focus.s.close();
+						Logger.INSTANCE.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
+						continue;
+					}
 					boolean t = wrp.reqTransfer;
 					long write = System.nanoTime();
 					if (t && wrp.body != null && wrp.body.getBody() != null) {

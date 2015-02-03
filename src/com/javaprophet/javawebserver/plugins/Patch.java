@@ -27,6 +27,7 @@ public abstract class Patch {
 		});
 		try {
 			pcfg.load();
+			pcfg.save();
 		}catch (Exception e) {
 			e.printStackTrace();
 		}

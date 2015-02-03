@@ -8,6 +8,7 @@ public class Packet {
 	public Headers headers = new Headers();
 	public MessageBody body = new MessageBody(this);
 	public static final String crlf = System.getProperty("line.separator");
+	public boolean drop = false;
 	
 	public String toString() {
 		return "";

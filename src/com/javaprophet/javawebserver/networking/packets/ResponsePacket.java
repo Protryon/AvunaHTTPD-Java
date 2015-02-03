@@ -44,6 +44,9 @@ public class ResponsePacket extends Packet {
 			byte[] finalc = thisClone.body == null ? null : (thisClone.body.getBody() == null ? null : (thisClone.body.getBody().data));
 			long ps2 = System.nanoTime();
 			finalc = JavaWebServer.patchBus.processResponse(thisClone, thisClone.request, finalc);
+			if (thisClone.drop) {
+				return null;
+			}
 			long start = System.nanoTime();
 			StringBuilder ser = new StringBuilder();
 			ser.append((thisClone.httpVersion + " " + thisClone.statusCode + " " + thisClone.reasonPhrase + crlf));
@@ -90,7 +93,12 @@ public class ResponsePacket extends Packet {
 	public boolean reqTransfer = false;
 	
 	public ResponsePacket write(DataOutputStream out) throws IOException {
-		out.write(serialize(request.method != Method.HEAD));
+		byte[] write = serialize(request.method != Method.HEAD);
+		if (write == null) {
+			return null;
+		}
+		out.write(write);
+		write = null;
 		out.flush();
 		if (cachedPacket.headers.hasHeader("Transfer-Encoding")) {
 			String te = cachedPacket.headers.getHeader("Transfer-Encoding");

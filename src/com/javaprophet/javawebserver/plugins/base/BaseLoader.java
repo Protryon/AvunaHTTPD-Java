@@ -7,6 +7,8 @@ import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
 
 public class BaseLoader {
 	public static void loadBases() {
+		// sec
+		PatchRegistry.registerPatch(new PatchSecurity("Security"));
 		// special
 		PatchRegistry.registerPatch(new PatchEnforceRedirect("EnforceRedirect"));
 		PatchRegistry.registerPatch(new PatchMultiHost("MultiHost"));

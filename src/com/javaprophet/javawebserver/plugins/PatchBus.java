@@ -31,6 +31,7 @@ public class PatchBus {
 		for (Patch patch : PatchRegistry.patchs) {
 			if (patch.enabled && patch.shouldProcessPacket(p)) {
 				patch.processPacket(p);
+				if (p.drop) return;
 			}
 		}
 	}
@@ -41,6 +42,9 @@ public class PatchBus {
 			// long start = System.nanoTime();
 			if (patch.enabled && patch.shouldProcessResponse(response, request, rres)) {
 				rres = patch.processResponse(response, request, rres);
+			}
+			if (response.drop) {
+				break;
 			}
 			// System.out.println(patch.name + ": " + (System.nanoTime() - start) / 1000000D + " ms");
 		}
