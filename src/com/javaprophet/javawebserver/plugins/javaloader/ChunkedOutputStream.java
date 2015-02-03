@@ -28,7 +28,7 @@ public class ChunkedOutputStream extends DataOutputStream {
 	
 	private ByteArrayOutputStream cache = new ByteArrayOutputStream(), gzipb = new ByteArrayOutputStream();
 	
-	public void write(byte[] b, int off, int len) throws IOException {
+	public void writeHeaders() throws IOException {
 		if (!flushed) {
 			flushed = true;
 			StringBuilder ser = new StringBuilder();
@@ -42,6 +42,12 @@ public class ChunkedOutputStream extends DataOutputStream {
 			ser.append(RequestPacket.crlf);
 			super.write(ser.toString().getBytes());
 			super.flush();
+		}
+	}
+	
+	public void write(byte[] b, int off, int len) throws IOException {
+		if (!flushed) {
+			writeHeaders();
 		}else {
 			cache.write(b, off, len);
 		}
@@ -67,20 +73,7 @@ public class ChunkedOutputStream extends DataOutputStream {
 	}
 	
 	public void finish() throws IOException {
-		if (!flushed) {
-			flushed = true;
-			StringBuilder ser = new StringBuilder();
-			ser.append((toSend.httpVersion + " " + toSend.statusCode + " " + toSend.reasonPhrase + RequestPacket.crlf));
-			HashMap<String, ArrayList<String>> hdrs = toSend.headers.getHeaders();
-			for (String key : hdrs.keySet()) {
-				for (String val : hdrs.get(key)) {
-					ser.append((key + ": " + val + RequestPacket.crlf));
-				}
-			}
-			ser.append(RequestPacket.crlf);
-			super.write(ser.toString().getBytes());
-			super.flush();
-		}
+		writeHeaders();
 		if (cache.size() > 0) {
 			flush();
 		}

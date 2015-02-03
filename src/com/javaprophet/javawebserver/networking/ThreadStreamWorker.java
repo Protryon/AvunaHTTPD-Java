@@ -1,14 +1,11 @@
 package com.javaprophet.javawebserver.networking;
 
-import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.ByteBuffer;
-import java.util.zip.GZIPOutputStream;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
+import com.javaprophet.javawebserver.plugins.javaloader.ChunkedOutputStream;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class ThreadStreamWorker extends Thread {
@@ -25,61 +22,22 @@ public class ThreadStreamWorker extends Thread {
 	public void run() {
 		FileInputStream fin = null;
 		try {
-			boolean gzip = resp.headers.hasHeader("Content-Encoding") && resp.headers.getHeader("Content-Encoding").contains("gzip");
-			PrintStream ps = new PrintStream(work.out);
+			ChunkedOutputStream cos = new ChunkedOutputStream(work.out, resp, resp.headers.hasHeader("Content-Encoding") && resp.headers.getHeader("Content-Encoding").contains("gzip"));
+			cos.writeHeaders();
 			fin = new FileInputStream(JavaWebServer.fileManager.getAbsolutePath(resp.body.getBody().loc));
-			int i = 0;
+			int i = 1;
 			byte[] buf = new byte[10485760];
-			ByteArrayOutputStream bout = null;// TODO: change to ChunkedOutputStream
-			GZIPOutputStream gout = null;
-			if (gzip) {
-				bout = new ByteArrayOutputStream();
-				gout = new GZIPOutputStream(bout);
-			}
-			while (!work.s.isClosed()) {
+			while (!work.s.isClosed() && i > 0) {
 				i = fin.read(buf);
-				if (i == -1) {
+				if (i < 1) {
 					work.s.close();
 					break;
-				}
-				if (gzip) {
-					gout.write(buf, 0, i);
-					ByteBuffer bb = ByteBuffer.allocate(4);
-					bb.putInt(0, bout.size());
-					byte[] bas = new byte[4];
-					bb.position(0);
-					bb.get(bas);
-					ps.println(JavaWebServer.fileManager.bytesToHex(bas));
-					ps.write(bout.toByteArray());
-					bout.reset();
 				}else {
-					ByteBuffer bb = ByteBuffer.allocate(4);
-					bb.putInt(0, i);
-					byte[] bas = new byte[4];
-					bb.position(0);
-					bb.get(bas);
-					ps.println(JavaWebServer.fileManager.bytesToHex(bas));
-					ps.write(buf, 0, i);
+					cos.write(buf, 0, i);
+					cos.flush();
 				}
-				ps.println();
-				ps.flush();
 			}
-			if (gzip) {
-				gout.flush();
-				gout.close();
-				ByteBuffer bb = ByteBuffer.allocate(4);
-				bb.putInt(0, bout.size());
-				byte[] bas = new byte[4];
-				bb.position(0);
-				bb.get(bas);
-				ps.println(JavaWebServer.fileManager.bytesToHex(bas));
-				ps.write(bout.toByteArray());
-				bout.reset();
-				ps.println();
-				ps.flush();
-			}
-			ps.println("0");
-			ps.flush();
+			cos.finish();
 			ThreadWorker.readdWork(work);
 		}catch (IOException e) {
 			Logger.logError(e);
@@ -89,7 +47,6 @@ public class ThreadStreamWorker extends Thread {
 			}catch (IOException e) {
 				Logger.logError(e);
 			}
-			Logger.log(work.s.getInetAddress().getHostAddress() + " closed.");
 		}
 	}
 }
