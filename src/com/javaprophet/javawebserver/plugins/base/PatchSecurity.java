@@ -1,6 +1,7 @@
 package com.javaprophet.javawebserver.plugins.base;
 
 import java.util.HashMap;
+import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
@@ -40,6 +41,7 @@ public class PatchSecurity extends Patch {
 			if (req.target.matches(regex)) {
 				String action = sec.get(regex);
 				if (action.equals("drop")) {
+					JavaWebServer.bannedIPs.add(req.userIP);
 					req.drop = true;
 				}
 			}

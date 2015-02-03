@@ -102,6 +102,8 @@ public class JavaWebServer {
 	private static boolean sslr = false;
 	private static boolean ap = false;
 	
+	public static final ArrayList<String> bannedIPs = new ArrayList<String>();
+	
 	public static void main(String[] args) {
 		try {
 			System.out.println("Loading Configs");
@@ -152,11 +154,15 @@ public class JavaWebServer {
 			Thread tnssl = new Thread() {
 				public void run() {
 					try {
-						ServerSocket server = new ServerSocket(bindport, 50, InetAddress.getByName(bindip));
+						ServerSocket server = new ServerSocket(bindport, 1000, InetAddress.getByName(bindip));
 						nsslr = true;
 						ap = true;
 						while (!server.isClosed()) {
 							Socket s = server.accept();
+							if (bannedIPs.contains(s.getInetAddress().getHostAddress())) {
+								s.close();
+								continue;
+							}
 							DataOutputStream out = new DataOutputStream(s.getOutputStream());
 							out.flush();
 							DataInputStream in = new DataInputStream(s.getInputStream());
@@ -218,7 +224,7 @@ public class JavaWebServer {
 							sc.init(kmf.getKeyManagers(), trustAllCerts, new SecureRandom());
 							int sslport = Integer.parseInt((String)ssl.get("bindport"));
 							System.out.println("Starting SSLServer on " + sslport);
-							SSLServerSocket sslserver = (SSLServerSocket)sc.getServerSocketFactory().createServerSocket(sslport, 50, InetAddress.getByName(bindip));
+							SSLServerSocket sslserver = (SSLServerSocket)sc.getServerSocketFactory().createServerSocket(sslport, 1000, InetAddress.getByName(bindip));
 							sslserver.setEnabledProtocols(new String[]{fp});
 							sslr = true;
 							ap = true;
