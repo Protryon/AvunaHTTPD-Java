@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyStore;
@@ -120,6 +121,7 @@ public class JavaWebServer {
 					if (!map.containsKey("javac")) map.put("javac", "javac");
 					if (!map.containsKey("temp")) map.put("temp", new File(dir, "temp").toString());
 					if (!map.containsKey("bindport")) map.put("bindport", 80);
+					if (!map.containsKey("bindip")) map.put("bindip", "0.0.0.0");
 					if (!map.containsKey("nginxThreadCount")) map.put("nginxThreadCount", Runtime.getRuntime().availableProcessors());
 					if (!map.containsKey("errorpages")) map.put("errorpages", new HashMap<String, Object>());
 					if (!map.containsKey("index")) map.put("index", "Index.class,index.jwsl,index.php,index.html");
@@ -145,11 +147,12 @@ public class JavaWebServer {
 			System.out.println("Loading Base Plugins");
 			BaseLoader.loadBases();
 			final int bindport = Integer.parseInt((String)mainConfig.get("bindport"));
-			System.out.println("Starting Server on " + bindport);
+			final String bindip = (String)mainConfig.get("bindip");
+			System.out.println("Starting Server on " + bindip + ":" + bindport);
 			Thread tnssl = new Thread() {
 				public void run() {
 					try {
-						ServerSocket server = new ServerSocket(bindport);
+						ServerSocket server = new ServerSocket(bindport, 50, InetAddress.getByName(bindip));
 						nsslr = true;
 						ap = true;
 						while (!server.isClosed()) {
@@ -161,6 +164,7 @@ public class JavaWebServer {
 							c.handleConnection();
 							runningThreads.add(c);
 						}
+						System.out.println("Server Closed on " + bindip + ":" + bindport);
 					}catch (Exception e) {
 						e.printStackTrace();
 						ap = true;
@@ -214,7 +218,7 @@ public class JavaWebServer {
 							sc.init(kmf.getKeyManagers(), trustAllCerts, new SecureRandom());
 							int sslport = Integer.parseInt((String)ssl.get("bindport"));
 							System.out.println("Starting SSLServer on " + sslport);
-							SSLServerSocket sslserver = (SSLServerSocket)sc.getServerSocketFactory().createServerSocket(sslport);
+							SSLServerSocket sslserver = (SSLServerSocket)sc.getServerSocketFactory().createServerSocket(sslport, 50, InetAddress.getByName(bindip));
 							sslserver.setEnabledProtocols(new String[]{fp});
 							sslr = true;
 							ap = true;
@@ -227,6 +231,7 @@ public class JavaWebServer {
 								c.handleConnection();
 								runningThreads.add(c);
 							}
+							System.out.println("Server Closed on " + bindip + ":" + sslport);
 						}catch (Exception e) {
 							e.printStackTrace();
 							ap = true;

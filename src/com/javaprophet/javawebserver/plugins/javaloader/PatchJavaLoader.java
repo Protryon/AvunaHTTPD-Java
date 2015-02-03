@@ -17,24 +17,8 @@ public class PatchJavaLoader extends Patch {
 	
 	public PatchJavaLoader(String name) {
 		super(name);
-	}
-	
-	private static MessageDigest md5 = null;
-	static {
-		try {
-			md5 = MessageDigest.getInstance("MD5");
-		}catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public static File lib = null;
-	
-	@Override
-	public void formatConfig(HashMap<String, Object> json) {
-		if (!json.containsKey("lib")) json.put("lib", "lib");
 		log("Loading JavaLoader Libs");
-		lib = new File(JavaWebServer.fileManager.getMainDir(), (String)json.get("lib"));
+		lib = new File(JavaWebServer.fileManager.getMainDir(), (String)pcfg.get("lib"));
 		if (!lib.exists() || !lib.isDirectory()) {
 			lib.mkdirs();
 		}
@@ -53,6 +37,22 @@ public class PatchJavaLoader extends Patch {
 		}catch (Throwable t) {
 			t.printStackTrace();
 		}
+	}
+	
+	private static MessageDigest md5 = null;
+	static {
+		try {
+			md5 = MessageDigest.getInstance("MD5");
+		}catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static File lib = null;
+	
+	@Override
+	public void formatConfig(HashMap<String, Object> json) {
+		if (!json.containsKey("lib")) json.put("lib", "lib");
 	}
 	
 	public void preExit() {
