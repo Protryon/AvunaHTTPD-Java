@@ -3,6 +3,7 @@ package com.javaprophet.javawebserver.plugins.javaloader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -181,7 +182,17 @@ public class PatchJavaLoader extends Patch {
 			long loadert = System.nanoTime();
 			request.procJL();
 			long proc = System.nanoTime();
-			byte[] ndata = loader.generate(response, request);
+			byte[] ndata = null;
+			if (JavaLoaderBasic.class.isAssignableFrom(loader.getClass())) {
+				ndata = ((JavaLoaderBasic)loader).generate(response, request);
+			}else if (JavaLoaderPrint.class.isAssignableFrom(loader.getClass())) {
+				ByteArrayOutputStream bout = new ByteArrayOutputStream();
+				PrintStream out = new PrintStream(bout);
+				((JavaLoaderPrint)loader).generate(out, response, request);
+				ndata = bout.toByteArray();
+			}else if (JavaLoaderStream.class.isAssignableFrom(loader.getClass())) {
+				response.reqStream = (JavaLoaderStream)loader;
+			}
 			long cur = System.nanoTime();
 			// Logger.log((digest - start) / 1000000D + " start-digest");
 			// Logger.log((loaded - digest) / 1000000D + " digest-loaded");

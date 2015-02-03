@@ -9,6 +9,7 @@ import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.networking.Packet;
+import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderStream;
 import com.javaprophet.javawebserver.util.Logger;
 
 /**
@@ -18,6 +19,7 @@ public class ResponsePacket extends Packet {
 	public int statusCode = 200;
 	public String reasonPhrase = "";
 	public RequestPacket request;
+	public JavaLoaderStream reqStream = null;
 	
 	public byte[] serialize() {
 		return serialize(true);

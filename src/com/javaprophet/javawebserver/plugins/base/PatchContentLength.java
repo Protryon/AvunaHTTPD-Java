@@ -35,10 +35,6 @@ public class PatchContentLength extends Patch {
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		response.headers.removeHeaders("Content-Length");
-		if (response.headers.hasHeader("Transfer-Encoding")) {
-			// do we even need this?
-			response.headers.removeHeaders("Transfer-Encoding");
-		}
 		if (data != null) {
 			response.headers.addHeader("Content-Length", data.length + "");
 			if (!response.headers.hasHeader("Content-Type")) response.headers.addHeader("Content-Type", response.body.getBody().type);

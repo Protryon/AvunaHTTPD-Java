@@ -30,7 +30,7 @@ public class ThreadStreamWorker extends Thread {
 			fin = new FileInputStream(JavaWebServer.fileManager.getAbsolutePath(resp.body.getBody().loc));
 			int i = 0;
 			byte[] buf = new byte[10485760];
-			ByteArrayOutputStream bout = null;
+			ByteArrayOutputStream bout = null;// TODO: change to ChunkedOutputStream
 			GZIPOutputStream gout = null;
 			if (gzip) {
 				bout = new ByteArrayOutputStream();
