@@ -39,6 +39,10 @@ public class FileManager {
 		return new File((String)JavaWebServer.mainConfig.get("htdocs"));
 	}
 	
+	public File getLogs() {
+		return new File((String)JavaWebServer.mainConfig.get("logs"));
+	}
+	
 	public File getHTSrc() {
 		return new File((String)JavaWebServer.mainConfig.get("htsrc"));
 	}
@@ -99,7 +103,7 @@ public class FileManager {
 					return;
 				}
 			}catch (Exception e) {
-				e.printStackTrace();
+				Logger.logError(e);
 			}
 		}
 		Resource error = new Resource(("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">" + crlf + "<html><head>" + crlf + "<title>" + status.getStatus() + " " + status.getPhrase() + "</title>" + crlf + "</head><body>" + crlf + "<h1>" + status.getPhrase() + "</h1>" + crlf + "<p>" + info + "</p>" + crlf + "</body></html>").getBytes(), "text/html");
@@ -203,7 +207,7 @@ public class FileManager {
 			r.tooBig = tooBig;
 			return r;
 		}catch (IOException e) {
-			if (!(e instanceof FileNotFoundException)) e.printStackTrace();
+			if (!(e instanceof FileNotFoundException)) Logger.logError(e);
 			return null;
 		}
 	}

@@ -15,6 +15,7 @@ import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
+import com.javaprophet.javawebserver.util.Logger;
 
 public class PatchPHP extends Patch {
 	
@@ -127,7 +128,7 @@ public class PatchPHP extends Patch {
 			s.close();
 			return bout.toByteArray();
 		}catch (IOException e) {
-			e.printStackTrace(); // TODO: throws HTMLException?
+			Logger.logError(e); // TODO: throws HTMLException?
 		}
 		return null;// TODO: to prevent PHP leaks
 	}

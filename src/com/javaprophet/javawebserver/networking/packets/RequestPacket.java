@@ -13,6 +13,7 @@ import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.networking.Packet;
+import com.javaprophet.javawebserver.util.Logger;
 
 public class RequestPacket extends Packet {
 	public String target = "/";
@@ -151,7 +152,7 @@ public class RequestPacket extends Packet {
 			ser.write(body.getBody().data);
 			return ser.toByteArray();
 		}catch (Exception e) {
-			e.printStackTrace();
+			Logger.logError(e);
 		}
 		return new byte[0];
 	}

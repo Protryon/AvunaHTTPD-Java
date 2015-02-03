@@ -36,7 +36,7 @@ public class PatchChunked extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return response.body != null && response.body.getBody() != null && response.body.getBody().tooBig;
+		return request.httpVersion.equals("HTTP/1.1") && response.body != null && response.body.getBody() != null && response.body.getBody().tooBig;
 	}
 	
 	@Override

@@ -32,6 +32,7 @@ import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
 import com.javaprophet.javawebserver.util.Config;
 import com.javaprophet.javawebserver.util.ConfigFormat;
 import com.javaprophet.javawebserver.util.FileManager;
+import com.javaprophet.javawebserver.util.Logger;
 
 public class JavaWebServer {
 	public static final String VERSION = "1.0";
@@ -45,6 +46,7 @@ public class JavaWebServer {
 	public static void setupFolders() {
 		fileManager.getMainDir().mkdirs();
 		fileManager.getHTDocs().mkdirs();
+		fileManager.getLogs().mkdirs();
 		fileManager.getHTSrc().mkdirs();
 		fileManager.getPlugins().mkdirs();
 		fileManager.getTemp().mkdirs();
@@ -56,7 +58,7 @@ public class JavaWebServer {
 		try {
 			File mime = fileManager.getBaseFile("mime.txt");
 			if (!mime.exists()) {
-				System.out.println("Unpacking mime.txt...");
+				Logger.log("Unpacking mime.txt...");
 				InputStream in = JavaWebServer.class.getResourceAsStream("/unpack/mime.txt");
 				int i = 1;
 				byte[] buf = new byte[4096];
@@ -74,7 +76,7 @@ public class JavaWebServer {
 				fout.close();
 			}
 		}catch (IOException e) {
-			e.printStackTrace();
+			Logger.logError(e);
 		}
 	}
 	
@@ -95,7 +97,7 @@ public class JavaWebServer {
 			}
 			s.close();
 		}catch (IOException e) {
-			e.printStackTrace();
+			Logger.logError(e);
 		}
 	}
 	
@@ -107,7 +109,6 @@ public class JavaWebServer {
 	
 	public static void main(String[] args) {
 		try {
-			System.out.println("Loading Configs");
 			final File cfg = new File(args.length > 0 ? args[0] : "C:\\jws\\main.cfg");
 			mainConfig = new Config(cfg, new ConfigFormat() {
 				public void format(HashMap<String, Object> map) {
@@ -120,6 +121,7 @@ public class JavaWebServer {
 					}
 					if (!map.containsKey("htdocs")) map.put("htdocs", new File(dir, "htdocs").toString());
 					if (!map.containsKey("htsrc")) map.put("htsrc", new File(dir, "htsrc").toString());
+					if (!map.containsKey("logs")) map.put("logs", new File(dir, "logs").toString());
 					if (!map.containsKey("plugins")) map.put("plugins", new File(dir, "plugins").toString());
 					if (!map.containsKey("javac")) map.put("javac", "javac");
 					if (!map.containsKey("temp")) map.put("temp", new File(dir, "temp").toString());
@@ -145,13 +147,17 @@ public class JavaWebServer {
 			setupFolders();
 			unpack();
 			loadUnpacked();
-			System.out.println("Loading Connection Handling");
+			File lf = new File(fileManager.getLogs(), "" + (System.currentTimeMillis() / 1000L));
+			lf.createNewFile();
+			Logger.INSTANCE = new Logger(new PrintStream(new FileOutputStream(lf)));
+			Logger.log("Loaded Configs");
+			Logger.log("Loading Connection Handling");
 			Connection.init();
-			System.out.println("Loading Base Plugins");
+			Logger.log("Loading Base Plugins");
 			BaseLoader.loadBases();
 			final int bindport = Integer.parseInt((String)mainConfig.get("bindport"));
 			final String bindip = (String)mainConfig.get("bindip");
-			System.out.println("Starting Server on " + bindip + ":" + bindport);
+			Logger.log("Starting Server on " + bindip + ":" + bindport);
 			Thread tnssl = new Thread() {
 				public void run() {
 					try {
@@ -171,9 +177,9 @@ public class JavaWebServer {
 							c.handleConnection();
 							runningThreads.add(c);
 						}
-						System.out.println("Server Closed on " + bindip + ":" + bindport);
+						Logger.log("Server Closed on " + bindip + ":" + bindport);
 					}catch (Exception e) {
-						e.printStackTrace();
+						Logger.logError(e);
 						ap = true;
 					}
 					nsslr = false;
@@ -219,12 +225,12 @@ public class JavaWebServer {
 								}
 							}
 							if (sc == null) {
-								System.out.println("No suitable TLS protocols found, please upgrade Java! SSL disabled.");
+								Logger.log("No suitable TLS protocols found, please upgrade Java! SSL disabled.");
 								return;
 							}
 							sc.init(kmf.getKeyManagers(), trustAllCerts, new SecureRandom());
 							int sslport = Integer.parseInt((String)ssl.get("bindport"));
-							System.out.println("Starting SSLServer on " + sslport);
+							Logger.log("Starting SSLServer on " + sslport);
 							SSLServerSocket sslserver = (SSLServerSocket)sc.getServerSocketFactory().createServerSocket(sslport, 1000, InetAddress.getByName(bindip));
 							sslserver.setEnabledProtocols(new String[]{fp});
 							sslr = true;
@@ -238,9 +244,9 @@ public class JavaWebServer {
 								c.handleConnection();
 								runningThreads.add(c);
 							}
-							System.out.println("Server Closed on " + bindip + ":" + sslport);
+							Logger.log("Server Closed on " + bindip + ":" + sslport);
 						}catch (Exception e) {
-							e.printStackTrace();
+							Logger.logError(e);
 							ap = true;
 						}
 						sslr = false;
@@ -249,14 +255,14 @@ public class JavaWebServer {
 				tssl.start();
 			}
 		}catch (Exception e) {
-			e.printStackTrace();
+			Logger.logError(e);
 			ap = true;
 		}
 		while (!ap) {
 			try {
 				Thread.sleep(100L);
 			}catch (InterruptedException e) {
-				e.printStackTrace();
+				Logger.logError(e);
 			}
 		}
 		boolean read = true;
@@ -274,19 +280,19 @@ public class JavaWebServer {
 							mainConfig.load();
 							patchBus.preExit();
 						}catch (Exception e) {
-							e.printStackTrace();
+							Logger.logError(e);
 						}
-						System.out.println("Loaded Config! Some entries will require a restart.");
+						Logger.log("Loaded Config! Some entries will require a restart.");
 					}else if (command.equals("flushcache")) {
 						try {
 							fileManager.clearCache();
 						}catch (Exception e) {
-							e.printStackTrace();
+							Logger.logError(e);;
 						}
-						System.out.println("Cache Flushed! This is not necessary for php files, and does not work for .class files(restart jws for those).");
+						Logger.log("Cache Flushed! This is not necessary for php files, and does not work for .class files(restart jws for those).");
 					}else if (command.equals("jhtml")) {
 						if (cargs.length != 2 && cargs.length != 1) {
-							System.out.println("Invalid arguments. (input, output[optional])");
+							Logger.log("Invalid arguments. (input, output[optional])");
 							continue;
 						}
 						try {
@@ -316,9 +322,9 @@ public class JavaWebServer {
 							ps.close();
 							scan2.close();
 						}catch (IOException e) {
-							System.out.println(e.getMessage());
+							Logger.log(e.getMessage());
 						}
-						System.out.println("JHTML completed.");
+						Logger.log("JHTML completed.");
 					}else if (command.equals("jcomp")) {
 						boolean all = cargs.length < 1;
 						String cp = fileManager.getBaseFile("jws.jar").toString() + ";" + fileManager.getHTDocs().toString() + ";" + fileManager.getHTSrc().toString() + ";" + PatchJavaLoader.lib.toString() + ";";
@@ -345,33 +351,33 @@ public class JavaWebServer {
 						Process proc = pb.start();
 						Scanner s = new Scanner(proc.getInputStream());
 						while (s.hasNextLine()) {
-							System.out.println("javac: " + s.nextLine());
+							Logger.log("javac: " + s.nextLine());
 						}
 						s.close();
 					}else if (command.equals("help")) {
-						System.out.println("Commands:");
-						System.out.println("exit/stop");
-						System.out.println("reload");
-						System.out.println("flushcache");
-						System.out.println("jhtml");
-						System.out.println("jcomp");
-						System.out.println("help");
-						System.out.println("");
-						System.out.println("Java Web Server(JWS) version " + VERSION);
+						Logger.log("Commands:");
+						Logger.log("exit/stop");
+						Logger.log("reload");
+						Logger.log("flushcache");
+						Logger.log("jhtml");
+						Logger.log("jcomp");
+						Logger.log("help");
+						Logger.log("");
+						Logger.log("Java Web Server(JWS) version " + VERSION);
 					}else {
-						System.out.println("Unknown Command: " + command);
+						Logger.log("Unknown Command: " + command);
 					}
 				}catch (NoSuchElementException fe) {
 					read = false;
 					continue;
 				}catch (Exception e) {
-					e.printStackTrace();
+					Logger.logError(e);;
 				}
 			}else {
 				try {
 					Thread.sleep(100L);
 				}catch (InterruptedException e) {
-					e.printStackTrace();
+					Logger.logError(e);
 				}
 			}
 		}

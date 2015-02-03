@@ -117,7 +117,7 @@ public class Config {
 			out.flush();
 			out.close();
 		}catch (IOException e) {
-			e.printStackTrace();
+			Logger.logError(e);
 		}
 	}
 }

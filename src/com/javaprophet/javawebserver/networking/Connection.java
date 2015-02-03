@@ -31,11 +31,11 @@ public class Connection {
 		this.in = in;
 		this.out = out;
 		this.ssl = ssl;
-		Logger.INSTANCE.log(s.getInetAddress().getHostAddress() + " connected.");
+		Logger.log(s.getInetAddress().getHostAddress() + " connected.");
 		try {
 			s.setSoTimeout(1000);
 		}catch (SocketException e1) {
-			e1.printStackTrace();
+			Logger.logError(e1);
 		}
 	}
 	

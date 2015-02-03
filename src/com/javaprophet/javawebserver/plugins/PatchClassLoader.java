@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.HashMap;
+import com.javaprophet.javawebserver.util.Logger;
 
 public class PatchClassLoader extends ClassLoader {
 	public PatchClassLoader() {
@@ -34,7 +35,7 @@ public class PatchClassLoader extends ClassLoader {
 						PatchRegistry.registerPatch((Patch)patchClass.getDeclaredConstructor(String.class).newInstance(patchClass.getName().substring(patchClass.getName().lastIndexOf(".") + 1)));
 					}
 				}catch (Exception e) {
-					e.printStackTrace();
+					Logger.logError(e);
 				}
 			}
 		}

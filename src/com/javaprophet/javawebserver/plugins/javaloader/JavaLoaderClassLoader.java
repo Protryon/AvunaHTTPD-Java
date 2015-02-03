@@ -1,6 +1,7 @@
 package com.javaprophet.javawebserver.plugins.javaloader;
 
 import java.util.HashMap;
+import com.javaprophet.javawebserver.util.Logger;
 
 public class JavaLoaderClassLoader extends ClassLoader {
 	public JavaLoaderClassLoader() {
@@ -21,7 +22,7 @@ public class JavaLoaderClassLoader extends ClassLoader {
 			Class<?> see = super.loadClass(name, resolve);
 			if (see != null) return see;
 		}catch (ClassNotFoundException e) {
-			e.printStackTrace();
+			Logger.logError(e);
 		}
 		return null;
 	}

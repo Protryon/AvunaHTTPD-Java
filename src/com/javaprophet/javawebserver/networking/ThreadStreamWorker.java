@@ -82,14 +82,14 @@ public class ThreadStreamWorker extends Thread {
 			ps.flush();
 			ThreadWorker.readdWork(work);
 		}catch (IOException e) {
-			e.printStackTrace();
+			Logger.logError(e);
 		}finally {
 			try {
 				if (fin != null) fin.close();
 			}catch (IOException e) {
-				e.printStackTrace();
+				Logger.logError(e);
 			}
-			Logger.INSTANCE.log(work.s.getInetAddress().getHostAddress() + " closed.");
+			Logger.log(work.s.getInetAddress().getHostAddress() + " closed.");
 		}
 	}
 }

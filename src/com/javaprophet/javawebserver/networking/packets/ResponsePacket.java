@@ -9,6 +9,7 @@ import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.networking.Packet;
+import com.javaprophet.javawebserver.util.Logger;
 
 /**
  * This is for responeses to the client.
@@ -77,10 +78,10 @@ public class ResponsePacket extends Packet {
 			System.arraycopy(add, 0, total, cachedSerialize.length, add.length);
 			cachedPacket = thisClone;
 			long end = System.nanoTime();
-			// System.out.println("serialize: " + ((end - start) / 1000000D) + ", " + ((start - ps2) / 1000000D) + ", " + ((ps2 - ps1) / 1000000D) + " ms");
+			// Logger.log("serialize: " + ((end - start) / 1000000D) + ", " + ((start - ps2) / 1000000D) + ", " + ((ps2 - ps1) / 1000000D) + " ms");
 			return total;
 		}catch (Exception e) {
-			e.printStackTrace();
+			Logger.logError(e);
 		}
 		cachedSerialize = new byte[0];
 		return new byte[0];

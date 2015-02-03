@@ -14,6 +14,7 @@ import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
+import com.javaprophet.javawebserver.util.Logger;
 
 public class PatchAuth extends Patch {
 	
@@ -84,7 +85,7 @@ public class PatchAuth extends Patch {
 					scan.close();
 					return cr;
 				}catch (IOException e) {
-					e.printStackTrace();
+					Logger.logError(e);;
 				}
 			}else {
 				return ull.contains(up);
@@ -142,7 +143,7 @@ public class PatchAuth extends Patch {
 			response.body = null;
 			response.headers.addHeader("WWW-Authenticate", "Basic realm=\"" + auth.realm + "\"");
 		}catch (Exception e) {
-			e.printStackTrace();
+			Logger.logError(e);;
 		}
 		return null;
 	}

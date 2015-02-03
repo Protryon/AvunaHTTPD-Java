@@ -3,11 +3,12 @@ package com.javaprophet.javawebserver.plugins;
 import java.util.ArrayList;
 import java.util.HashMap;
 import com.javaprophet.javawebserver.http.Method;
+import com.javaprophet.javawebserver.util.Logger;
 
 public class PatchRegistry {
 	
 	public static void registerPatch(Patch p) {
-		System.out.println("Loading patch " + p.name);
+		Logger.log("Loading patch " + p.name);
 		patchs.add(p);
 	}
 	

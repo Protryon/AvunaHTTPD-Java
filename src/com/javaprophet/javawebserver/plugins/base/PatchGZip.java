@@ -8,6 +8,7 @@ import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
+import com.javaprophet.javawebserver.util.Logger;
 
 public class PatchGZip extends Patch {
 	
@@ -49,7 +50,7 @@ public class PatchGZip extends Patch {
 			}
 			response.headers.addHeader("Content-Encoding", "gzip");
 		}catch (IOException e) {
-			e.printStackTrace();
+			Logger.logError(e);
 		}
 		return data2;
 	}

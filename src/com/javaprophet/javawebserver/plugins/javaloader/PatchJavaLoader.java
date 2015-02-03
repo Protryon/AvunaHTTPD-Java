@@ -15,6 +15,7 @@ import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
+import com.javaprophet.javawebserver.util.Logger;
 
 public class PatchJavaLoader extends Patch {
 	
@@ -38,7 +39,7 @@ public class PatchJavaLoader extends Patch {
 			}
 			method.invoke(sysloader, new Object[]{JavaWebServer.fileManager.getHTDocs().toURI().toURL()});
 		}catch (Throwable t) {
-			t.printStackTrace();
+			Logger.logError(t);;
 		}
 		recurLoad(JavaWebServer.fileManager.getHTDocs());
 	}
@@ -90,7 +91,7 @@ public class PatchJavaLoader extends Patch {
 				}
 			}
 		}catch (Exception e) {
-			e.printStackTrace();
+			Logger.logError(e);;
 		}
 	}
 	
@@ -99,7 +100,7 @@ public class PatchJavaLoader extends Patch {
 		try {
 			md5 = MessageDigest.getInstance("MD5");
 		}catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
+			Logger.logError(e);;
 		}
 	}
 	
@@ -182,14 +183,14 @@ public class PatchJavaLoader extends Patch {
 			long proc = System.nanoTime();
 			byte[] ndata = loader.generate(response, request);
 			long cur = System.nanoTime();
-			// System.out.println((digest - start) / 1000000D + " start-digest");
-			// System.out.println((loaded - digest) / 1000000D + " digest-loaded");
-			// System.out.println((loadert - loaded) / 1000000D + " loaded-loadert");
-			// System.out.println((proc - loadert) / 1000000D + " loadert-proc");
-			// System.out.println((cur - proc) / 1000000D + " proc-cur");
+			// Logger.log((digest - start) / 1000000D + " start-digest");
+			// Logger.log((loaded - digest) / 1000000D + " digest-loaded");
+			// Logger.log((loadert - loaded) / 1000000D + " loaded-loadert");
+			// Logger.log((proc - loadert) / 1000000D + " loadert-proc");
+			// Logger.log((cur - proc) / 1000000D + " proc-cur");
 			return ndata;
 		}catch (Exception e) {
-			e.printStackTrace();
+			Logger.logError(e);;
 		}
 		return null;
 	}

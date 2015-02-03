@@ -15,6 +15,7 @@ import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
+import com.javaprophet.javawebserver.util.Logger;
 
 public class PatchLEGACYPHP extends Patch {
 	
@@ -232,7 +233,7 @@ public class PatchLEGACYPHP extends Patch {
 					chmodMethod.setAccessible(true);
 					int i = (Integer)chmodMethod.invoke(null, temp.getAbsolutePath(), 0777);
 				}catch (Exception e) {
-					e.printStackTrace();
+					Logger.logError(e);;
 				}
 			}
 			ProcessBuilder pb = new ProcessBuilder((String)pcfg.get("cmd"), JavaWebServer.mainConfig.get("temp") + "/" + temp.getName());
@@ -269,7 +270,7 @@ public class PatchLEGACYPHP extends Patch {
 			// temp.delete();
 			return bout.toByteArray();
 		}catch (IOException e) {
-			e.printStackTrace(); // TODO: throws HTMLException?
+			Logger.logError(e);; // TODO: throws HTMLException?
 		}
 		return null;// TODO: to prevent PHP leaks
 	}

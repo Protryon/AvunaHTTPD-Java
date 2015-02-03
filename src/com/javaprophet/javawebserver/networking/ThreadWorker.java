@@ -48,7 +48,7 @@ public class ThreadWorker extends Thread {
 				try {
 					Thread.sleep(10L);
 				}catch (InterruptedException e) {
-					e.printStackTrace();
+					Logger.logError(e);
 				}
 				continue;
 			}
@@ -68,7 +68,7 @@ public class ThreadWorker extends Thread {
 					JavaWebServer.patchBus.processPacket(incomingRequest);
 					if (incomingRequest.drop) {
 						focus.s.close();
-						Logger.INSTANCE.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
+						Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
 						continue;
 					}
 					ResponsePacket outgoingResponse = new ResponsePacket();
@@ -79,14 +79,14 @@ public class ThreadWorker extends Thread {
 					if (cont) JavaWebServer.patchBus.processPacket(outgoingResponse);
 					if (outgoingResponse.drop) {
 						focus.s.close();
-						Logger.INSTANCE.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
+						Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
 						continue;
 					}
 					long proc2 = System.nanoTime();
 					ResponsePacket wrp = outgoingResponse.write(focus.out);
 					if (wrp.drop) {
 						focus.s.close();
-						Logger.INSTANCE.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
+						Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
 						continue;
 					}
 					boolean t = wrp.reqTransfer;
@@ -99,31 +99,31 @@ public class ThreadWorker extends Thread {
 						workQueue.add(focus);
 					}
 					long cur = System.nanoTime();
-					// System.out.println((set - benchStart) / 1000000D + " start-set");
-					// System.out.println((proc1 - set) / 1000000D + " set-proc1");
-					// System.out.println((resp - proc1) / 1000000D + " proc1-resp");
-					// System.out.println((proc2 - resp) / 1000000D + " resp-proc2");
-					// System.out.println((write - proc2) / 1000000D + " proc2-write");
-					// System.out.println((cur - write) / 1000000D + " write-cur");
-					Logger.INSTANCE.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned " + wrp.statusCode + " " + wrp.reasonPhrase + " took: " + (cur - benchStart) / 1000000D + " ms");
+					// Logger.log((set - benchStart) / 1000000D + " start-set");
+					// Logger.log((proc1 - set) / 1000000D + " set-proc1");
+					// Logger.log((resp - proc1) / 1000000D + " proc1-resp");
+					// Logger.log((proc2 - resp) / 1000000D + " resp-proc2");
+					// Logger.log((write - proc2) / 1000000D + " proc2-write");
+					// Logger.log((cur - write) / 1000000D + " write-cur");
+					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned " + wrp.statusCode + " " + wrp.reasonPhrase + " took: " + (cur - benchStart) / 1000000D + " ms");
 				}else {
-					Logger.INSTANCE.log(focus.s.getInetAddress().getHostAddress() + " closed.");
+					Logger.log(focus.s.getInetAddress().getHostAddress() + " closed.");
 				}
 			}catch (SocketTimeoutException e) {
 				focus.tos++;
 				if (focus.tos < 10) {
 					workQueue.add(focus);
 				}else {
-					// e.printStackTrace();
+					// Logger.logError(e);
 					try {
 						focus.s.close();
 					}catch (IOException ex) {
-						ex.printStackTrace();
+						Logger.logError(ex);
 					}
 					Logger.INSTANCE.log(focus.s.getInetAddress().getHostAddress() + " closed.");
 				}
 			}catch (IOException e) {
-				if (!(e instanceof SocketException)) e.printStackTrace();
+				if (!(e instanceof SocketException)) Logger.logError(e);
 				Logger.INSTANCE.log(focus.s.getInetAddress().getHostAddress() + " closed.");
 			}
 		}

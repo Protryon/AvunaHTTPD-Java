@@ -1,7 +1,5 @@
 package com.javaprophet.javawebserver.plugins.base;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.zip.CRC32;
 import com.javaprophet.javawebserver.JavaWebServer;
@@ -16,11 +14,6 @@ public class PatchETag extends Patch {
 	
 	public PatchETag(String name) {
 		super(name);
-		try {
-			md5 = MessageDigest.getInstance("MD5");
-		}catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
 	}
 	
 	@Override
@@ -43,11 +36,8 @@ public class PatchETag extends Patch {
 		return response.statusCode == 200 && (request.method == Method.GET || request.method == Method.HEAD) && response.body != null && data != null && data.length > 0;
 	}
 	
-	public static MessageDigest md5 = null;
-	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		if (md5 == null) return data;
 		CRC32 crc = new CRC32();
 		crc.update(data);
 		String etag = crc.getValue() + "";// bytesToHex(md5.digest(data));

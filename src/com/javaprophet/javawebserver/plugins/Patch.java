@@ -8,6 +8,7 @@ import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.util.Config;
 import com.javaprophet.javawebserver.util.ConfigFormat;
+import com.javaprophet.javawebserver.util.Logger;
 
 public abstract class Patch {
 	
@@ -29,13 +30,13 @@ public abstract class Patch {
 			pcfg.load();
 			pcfg.save();
 		}catch (Exception e) {
-			e.printStackTrace();
+			Logger.logError(e);
 		}
 		enabled = ((String)pcfg.get("enabled")).equals("true");
 	}
 	
 	public void log(String line) {
-		System.out.println(name + ": " + line);
+		Logger.log(name + ": " + line);
 	}
 	
 	public final Config pcfg;
