@@ -9,15 +9,10 @@ public class JavaLoaderClassLoader extends ClassLoader {
 	
 	HashMap<String, Class<?>> javaLoaders = new HashMap<String, Class<?>>();
 	
-	public String addClass(byte[] data) {
-		try {
-			Class<?> cls = defineClass(data, 0, data.length);
-			javaLoaders.put(cls.getName(), cls);
-			return cls.getName();
-		}catch (NoClassDefFoundError e) {
-			e.printStackTrace();
-		}
-		return "";
+	public String addClass(byte[] data) throws LinkageError {
+		Class<?> cls = defineClass(data, 0, data.length);
+		javaLoaders.put(cls.getName(), cls);
+		return cls.getName();
 	}
 	
 	public Class<?> loadClass(String name, boolean resolve) {

@@ -1,12 +1,15 @@
 package com.javaprophet.javawebserver.plugins.javaloader;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.zip.CRC32;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
@@ -32,10 +35,62 @@ public class PatchJavaLoader extends Patch {
 				if (!f.isDirectory() && f.getName().endsWith(".jar")) {
 					method.invoke(sysloader, new Object[]{f.toURI().toURL()});
 				}
-				method.invoke(sysloader, new Object[]{JavaWebServer.fileManager.getHTDocs().toURI().toURL()});
 			}
+			method.invoke(sysloader, new Object[]{JavaWebServer.fileManager.getHTDocs().toURI().toURL()});
 		}catch (Throwable t) {
 			t.printStackTrace();
+		}
+		recurLoad(JavaWebServer.fileManager.getHTDocs());
+	}
+	
+	public void recurLoad(File dir) {
+		try {
+			for (File f : dir.listFiles()) {
+				if (f.isDirectory()) {
+					recurLoad(f);
+				}else {
+					if (f.getName().endsWith(".class")) {
+						ByteArrayOutputStream bout = new ByteArrayOutputStream();
+						FileInputStream fin = new FileInputStream(f);
+						int i = 1;
+						byte[] buf = new byte[1024];
+						while (i > 0) {
+							i = fin.read(buf);
+							if (i > 0) {
+								bout.write(buf, 0, i);
+							}
+						}
+						byte[] b = bout.toByteArray();
+						bout = null;
+						String name = "";
+						boolean already = false;
+						try {
+							name = jlcl.addClass(b);
+						}catch (LinkageError er) {
+							already = true;
+							String msg = er.getMessage();
+							if (msg.contains("duplicate class definition for name")) {
+								already = true;
+								String type = msg.substring(msg.indexOf("\"") + 1);
+								type = type.substring(0, type.indexOf("\"")).replace("/", ".");
+								name = type;
+							}else {
+								continue;
+							}
+						}
+						Class<?> cls = jlcl.loadClass(name);
+						if (JavaLoader.class.isAssignableFrom(cls)) {
+							CRC32 crc = new CRC32();
+							crc.update(b);
+							loadedClasses.put(crc.getValue() + "", name);
+							JavaLoader jl = (JavaLoader)cls.newInstance();
+							jls.put(name, jl);
+						}
+					}
+				}
+			}
+		}catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 	
@@ -98,8 +153,10 @@ public class PatchJavaLoader extends Patch {
 			String name = "";
 			long start = System.nanoTime();
 			long digest = 0L;
+			CRC32 crc = new CRC32();
 			synchronized (loadedClasses) {
-				String sha = data.hashCode() + "";
+				crc.update(data);
+				String sha = crc.getValue() + "";
 				digest = System.nanoTime();
 				name = loadedClasses.get(sha);
 				if (name == null || name.equals("")) {
