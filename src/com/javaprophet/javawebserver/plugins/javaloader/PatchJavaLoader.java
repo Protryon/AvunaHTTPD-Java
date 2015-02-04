@@ -68,7 +68,6 @@ public class PatchJavaLoader extends Patch {
 						try {
 							name = jlcl.addClass(b);
 						}catch (LinkageError er) {
-							er.printStackTrace();
 							String msg = er.getMessage();
 							if (msg.contains("duplicate class definition for name")) {
 								String type = msg.substring(msg.indexOf("\"") + 1);

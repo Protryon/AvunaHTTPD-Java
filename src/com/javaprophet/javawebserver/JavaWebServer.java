@@ -290,7 +290,7 @@ public class JavaWebServer {
 						try {
 							fileManager.clearCache();
 						}catch (Exception e) {
-							Logger.logError(e);;
+							Logger.logError(e);
 						}
 						Logger.log("Cache Flushed! This is not necessary for php files, and does not work for .class files(restart jws for those).");
 					}else if (command.equals("jhtml")) {
