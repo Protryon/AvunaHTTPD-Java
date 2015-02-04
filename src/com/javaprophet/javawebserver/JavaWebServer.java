@@ -112,7 +112,7 @@ public class JavaWebServer {
 	
 	public static void main(String[] args) {
 		try {
-			final File cfg = new File(args.length > 0 ? args[0] : "C:\\jws\\main.cfg");
+			final File cfg = new File(args.length > 0 ? args[0] : (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\jws\\main.cfg" : "/etc/jws/main.cfg"));
 			mainConfig = new Config(cfg, new ConfigFormat() {
 				public void format(HashMap<String, Object> map) {
 					if (!map.containsKey("version")) map.put("version", JavaWebServer.VERSION);
