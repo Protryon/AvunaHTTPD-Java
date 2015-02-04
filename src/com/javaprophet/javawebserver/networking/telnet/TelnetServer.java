@@ -82,12 +82,12 @@ public class TelnetServer extends Thread {
 								if (doAuth && !isAuth) {
 									if (com.equals(auth)) {
 										isAuth = true;
-										String res = com + JavaWebServer.crlf + "Authenticated." + JavaWebServer.crlf;
+										String res = "Authenticated." + JavaWebServer.crlf;
 										Logger.log("telnet[" + s.getInetAddress().getHostAddress() + "] Authenticated.");
 										out.write(res.getBytes());
 									}else {
 										Logger.log("telnet[" + s.getInetAddress().getHostAddress() + "] NOAUTH/DENIED: " + com);
-										String res = com + JavaWebServer.crlf + "Please Authenticate." + JavaWebServer.crlf;
+										String res = "Please Authenticate." + JavaWebServer.crlf;
 										out.write(res.getBytes());
 									}
 								}else {
@@ -103,12 +103,12 @@ public class TelnetServer extends Thread {
 							}
 						}
 						// out.write(b);
-						// out.flush();
+						out.flush();
 					}
-					isAuth = false;
-					input.reset();
 				}catch (IOException se) {
 					Logger.logError(se);
+				}finally {
+					isAuth = false;
 				}
 			}
 		}catch (Exception e) {
