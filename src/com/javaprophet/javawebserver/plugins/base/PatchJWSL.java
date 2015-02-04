@@ -1,11 +1,11 @@
 package com.javaprophet.javawebserver.plugins.base;
 
 import java.util.HashMap;
+import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
-import com.javaprophet.javawebserver.util.FileManager;
 
 public class PatchJWSL extends Patch {
 	
@@ -36,7 +36,7 @@ public class PatchJWSL extends Patch {
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		String sdata = new String(data);
-		String[] ls = sdata.split(FileManager.crlf);
+		String[] ls = sdata.split(JavaWebServer.crlf);
 		HashMap<String, Integer> codeToIndex = new HashMap<String, Integer>();
 		boolean inCode = false;
 		int cIndex = 0;
@@ -58,9 +58,9 @@ public class PatchJWSL extends Patch {
 				inCode = false;
 			}
 			if (inCode) {
-				cCode += line + FileManager.crlf;
+				cCode += line + JavaWebServer.crlf;
 			}
-			lIndex += ls[i].length() + FileManager.crlf.length();
+			lIndex += ls[i].length() + JavaWebServer.crlf.length();
 		}
 		String[] codeArray = new String[codeToIndex.size()];
 		int i = 0;

@@ -52,14 +52,14 @@ public class ResponsePacket extends Packet {
 			}
 			long start = System.nanoTime();
 			StringBuilder ser = new StringBuilder();
-			ser.append((thisClone.httpVersion + " " + thisClone.statusCode + " " + thisClone.reasonPhrase + crlf));
+			ser.append((thisClone.httpVersion + " " + thisClone.statusCode + " " + thisClone.reasonPhrase + JavaWebServer.crlf));
 			HashMap<String, ArrayList<String>> hdrs = thisClone.headers.getHeaders();
 			for (String key : hdrs.keySet()) {
 				for (String val : hdrs.get(key)) {
-					ser.append((key + ": " + val + crlf));
+					ser.append((key + ": " + val + JavaWebServer.crlf));
 				}
 			}
-			ser.append(crlf);
+			ser.append(JavaWebServer.crlf);
 			cachedSerialize = ser.toString().getBytes();
 			byte[] add = null;
 			if (data && finalc != null) {
@@ -73,7 +73,7 @@ public class ResponsePacket extends Packet {
 				}
 				thisClone.body.setBody(new Resource(finalc, thisClone.headers.hasHeader("Content-Type") ? thisClone.headers.getHeader("Content-Type") : "text/html", thisClone.request.target));
 			}else {
-				add = crlf.getBytes();
+				add = JavaWebServer.crlf.getBytes();
 			}
 			byte[] total = new byte[cachedSerialize.length + add.length];
 			System.arraycopy(cachedSerialize, 0, total, 0, cachedSerialize.length);

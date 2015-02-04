@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.zip.GZIPOutputStream;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 
 public class ChunkedOutputStream extends DataOutputStream {
@@ -32,14 +31,14 @@ public class ChunkedOutputStream extends DataOutputStream {
 		if (!flushed) {
 			flushed = true;
 			StringBuilder ser = new StringBuilder();
-			ser.append((toSend.httpVersion + " " + toSend.statusCode + " " + toSend.reasonPhrase + RequestPacket.crlf));
+			ser.append((toSend.httpVersion + " " + toSend.statusCode + " " + toSend.reasonPhrase + JavaWebServer.crlf));
 			HashMap<String, ArrayList<String>> hdrs = toSend.headers.getHeaders();
 			for (String key : hdrs.keySet()) {
 				for (String val : hdrs.get(key)) {
-					ser.append((key + ": " + val + RequestPacket.crlf));
+					ser.append((key + ": " + val + JavaWebServer.crlf));
 				}
 			}
-			ser.append(RequestPacket.crlf);
+			ser.append(JavaWebServer.crlf);
 			super.write(ser.toString().getBytes());
 			super.flush();
 		}
@@ -66,9 +65,9 @@ public class ChunkedOutputStream extends DataOutputStream {
 		byte[] bas = new byte[4];
 		bb.position(0);
 		bb.get(bas);
-		super.write((JavaWebServer.fileManager.bytesToHex(bas) + ResponsePacket.crlf).getBytes());
+		super.write((JavaWebServer.fileManager.bytesToHex(bas) + JavaWebServer.crlf).getBytes());
 		super.write(cache);
-		super.write(ResponsePacket.crlf.getBytes());
+		super.write(JavaWebServer.crlf.getBytes());
 		super.flush();
 	}
 	
@@ -87,12 +86,12 @@ public class ChunkedOutputStream extends DataOutputStream {
 			byte[] bas = new byte[4];
 			bb.position(0);
 			bb.get(bas);
-			super.write((JavaWebServer.fileManager.bytesToHex(bas) + ResponsePacket.crlf).getBytes());
+			super.write((JavaWebServer.fileManager.bytesToHex(bas) + JavaWebServer.crlf).getBytes());
 			super.write(cache);
-			super.write((ResponsePacket.crlf + "0" + ResponsePacket.crlf).getBytes());
+			super.write((JavaWebServer.crlf + "0" + JavaWebServer.crlf).getBytes());
 			super.flush();
 		}else {
-			super.write(("0" + ResponsePacket.crlf).getBytes());
+			super.write(("0" + JavaWebServer.crlf).getBytes());
 			super.flush();
 		}
 	}

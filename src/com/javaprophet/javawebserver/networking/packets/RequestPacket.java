@@ -8,6 +8,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
+import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.Headers;
 import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Method;
@@ -141,14 +142,14 @@ public class RequestPacket extends Packet {
 	public byte[] serialize() {
 		try {
 			ByteArrayOutputStream ser = new ByteArrayOutputStream();
-			ser.write((method.name + " " + target + " " + httpVersion + crlf).getBytes());
+			ser.write((method.name + " " + target + " " + httpVersion + JavaWebServer.crlf).getBytes());
 			HashMap<String, ArrayList<String>> hdrs = headers.getHeaders();
 			for (String key : hdrs.keySet()) {
 				for (String val : hdrs.get(key)) {
-					ser.write((key + ": " + val + crlf).getBytes());
+					ser.write((key + ": " + val + JavaWebServer.crlf).getBytes());
 				}
 			}
-			ser.write(crlf.getBytes());
+			ser.write(JavaWebServer.crlf.getBytes());
 			ser.write(body.getBody().data);
 			return ser.toByteArray();
 		}catch (Exception e) {

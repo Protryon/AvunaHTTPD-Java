@@ -42,7 +42,7 @@ public class JavaWebServer {
 	public static final PatchBus patchBus = new PatchBus();
 	public static final HashMap<String, String> extensionToMime = new HashMap<String, String>();
 	public static final ResponseGenerator rg = new ResponseGenerator();
-	public static final String crlf = System.getProperty("line.separator");
+	public static final String crlf = new String(new byte[]{13, 10});
 	
 	public static void setupFolders() {
 		fileManager.getMainDir().mkdirs();

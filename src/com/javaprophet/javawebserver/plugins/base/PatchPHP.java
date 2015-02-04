@@ -38,8 +38,6 @@ public class PatchPHP extends Patch {
 		return response.headers.hasHeader("Content-Type") && response.headers.getHeader("Content-Type").equals("application/x-php") && response.body != null && data != null;
 	}
 	
-	private static final String crlf = System.getProperty("line.separator");
-	
 	@Override
 	public void processMethod(RequestPacket request, ResponsePacket response) {
 		
@@ -115,7 +113,7 @@ public class PatchPHP extends Patch {
 						}
 					}else {
 						tt = false;
-						bout.write((line + crlf).getBytes());
+						bout.write((line + JavaWebServer.crlf).getBytes());
 						if (line.equals("</html>")) break;
 					}
 				}else {

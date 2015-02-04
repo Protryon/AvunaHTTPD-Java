@@ -85,8 +85,6 @@ public class FileManager {
 		}
 	}
 	
-	public static final String crlf = System.getProperty("line.separator");
-	
 	public void getErrorPage(MessageBody body, String reqTarget, StatusCode status, String info) {
 		HashMap<String, Object> errorPages = (HashMap<String, Object>)JavaWebServer.mainConfig.get("errorpages");
 		if (errorPages.containsKey(status.getStatus())) {
@@ -106,7 +104,7 @@ public class FileManager {
 				Logger.logError(e);
 			}
 		}
-		Resource error = new Resource(("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">" + crlf + "<html><head>" + crlf + "<title>" + status.getStatus() + " " + status.getPhrase() + "</title>" + crlf + "</head><body>" + crlf + "<h1>" + status.getPhrase() + "</h1>" + crlf + "<p>" + info + "</p>" + crlf + "</body></html>").getBytes(), "text/html");
+		Resource error = new Resource(("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">" + JavaWebServer.crlf + "<html><head>" + JavaWebServer.crlf + "<title>" + status.getStatus() + " " + status.getPhrase() + "</title>" + JavaWebServer.crlf + "</head><body>" + JavaWebServer.crlf + "<h1>" + status.getPhrase() + "</h1>" + JavaWebServer.crlf + "<p>" + info + "</p>" + JavaWebServer.crlf + "</body></html>").getBytes(), "text/html");
 		body.setBody(error);
 		return;
 	}

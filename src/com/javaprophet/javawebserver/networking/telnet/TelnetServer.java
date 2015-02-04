@@ -17,8 +17,6 @@ public class TelnetServer extends Thread {
 		
 	}
 	
-	public static final String lf = new String(new byte[]{13});
-	
 	public void run() {
 		try {
 			HashMap<String, Object> telnet = (HashMap<String, Object>)JavaWebServer.mainConfig.get("telnet");
@@ -81,12 +79,12 @@ public class TelnetServer extends Thread {
 								if (doAuth && !isAuth) {
 									if (com.equals(auth)) {
 										isAuth = true;
-										String res = com + JavaWebServer.crlf + "Authenticated." + lf;
+										String res = com + JavaWebServer.crlf + "Authenticated." + JavaWebServer.crlf;
 										Logger.log("telnet[" + s.getInetAddress().getHostAddress() + "] Authenticated.");
 										out.write(res.getBytes());
 									}else {
 										Logger.log("telnet[" + s.getInetAddress().getHostAddress() + "] NOAUTH/DENIED: " + com);
-										String res = com + JavaWebServer.crlf + "Please Authenticate." + lf;
+										String res = com + JavaWebServer.crlf + "Please Authenticate." + JavaWebServer.crlf;
 										out.write(res.getBytes());
 									}
 								}else {
@@ -94,7 +92,7 @@ public class TelnetServer extends Thread {
 									String res = com + JavaWebServer.crlf;
 									out.write(res.getBytes());
 									CommandProcessor.process(com, out, in, true);
-									out.write(("Command Completed." + lf).getBytes());
+									out.write(("Command Completed." + JavaWebServer.crlf).getBytes());
 								}
 								out.flush();
 							}else {
