@@ -38,25 +38,29 @@ public class ComServer extends Thread {
 					PrintStream ps = new PrintStream(out);
 					ip = s.getInetAddress().getHostAddress();
 					while (!s.isClosed()) {
-						String cs = scan.nextLine();
-						if (cs.equals("close")) {
-							throw new IOException();
-						}
-						if (doAuth && !isAuth) {
-							if (cs.equals(auth)) {
-								isAuth = true;
-								Logger.log("com[" + s.getInetAddress().getHostAddress() + "] Authenticated.");
-								out.write(("Authenticated." + JavaWebServer.crlf).getBytes());
-							}else {
-								Logger.log("com[" + s.getInetAddress().getHostAddress() + "] NOAUTH/DENIED: " + cs);
-								out.write(("Please Authenticate." + JavaWebServer.crlf).getBytes());
+						try {
+							String cs = scan.nextLine();
+							if (cs.equals("close")) {
+								throw new IOException();
 							}
-						}else {
-							Logger.log("com[" + s.getInetAddress().getHostAddress() + "]: " + cs);
-							CommandProcessor.process(cs, ps, scan, true);
-							out.write(("Command Completed." + JavaWebServer.crlf).getBytes());
+							if (doAuth && !isAuth) {
+								if (cs.equals(auth)) {
+									isAuth = true;
+									Logger.log("com[" + s.getInetAddress().getHostAddress() + "] Authenticated.");
+									out.write(("Authenticated." + JavaWebServer.crlf).getBytes());
+								}else {
+									Logger.log("com[" + s.getInetAddress().getHostAddress() + "] NOAUTH/DENIED: " + cs);
+									out.write(("Please Authenticate." + JavaWebServer.crlf).getBytes());
+								}
+							}else {
+								Logger.log("com[" + s.getInetAddress().getHostAddress() + "]: " + cs);
+								CommandProcessor.process(cs, ps, scan, true);
+								out.write(("Command Completed." + JavaWebServer.crlf).getBytes());
+							}
+							out.flush();
+						}catch (IndexOutOfBoundsException ex) {
+							
 						}
-						out.flush();
 					}
 				}catch (IOException se) {
 					Logger.log("com[" + ip + "] Closed.");
