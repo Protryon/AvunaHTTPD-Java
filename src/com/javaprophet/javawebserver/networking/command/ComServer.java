@@ -26,8 +26,9 @@ public class ComServer extends Thread {
 			String auth = (String)com.get("auth");
 			while (!server.isClosed()) {
 				String ip = "";
+				Socket s = null;
 				try {
-					Socket s = server.accept();
+					s = server.accept();
 					DataOutputStream out = new DataOutputStream(s.getOutputStream());
 					out.flush();
 					DataInputStream in = new DataInputStream(s.getInputStream());
@@ -38,6 +39,9 @@ public class ComServer extends Thread {
 					ip = s.getInetAddress().getHostAddress();
 					while (!s.isClosed()) {
 						String cs = scan.nextLine();
+						if (cs.equals("close")) {
+							throw new IOException();
+						}
 						if (doAuth && !isAuth) {
 							if (cs.equals(auth)) {
 								isAuth = true;
@@ -58,6 +62,9 @@ public class ComServer extends Thread {
 					Logger.log("com[" + ip + "] Closed.");
 				}finally {
 					isAuth = false;
+					if (s != null) {
+						s.close();
+					}
 				}
 			}
 		}catch (Exception e) {
