@@ -3,7 +3,6 @@ package com.javaprophet.javawebserver.networking;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
-import java.net.SocketException;
 import java.util.ArrayList;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.util.Logger;
@@ -32,11 +31,6 @@ public class Connection {
 		this.out = out;
 		this.ssl = ssl;
 		Logger.log(s.getInetAddress().getHostAddress() + " connected.");
-		try {
-			s.setSoTimeout(1000);
-		}catch (SocketException e1) {
-			Logger.logError(e1);
-		}
 	}
 	
 	public void handleConnection() {

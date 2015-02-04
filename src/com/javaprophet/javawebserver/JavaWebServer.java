@@ -187,6 +187,7 @@ public class JavaWebServer {
 								s.close();
 								continue;
 							}
+							s.setSoTimeout(1000);
 							DataOutputStream out = new DataOutputStream(s.getOutputStream());
 							out.flush();
 							DataInputStream in = new DataInputStream(s.getInputStream());
