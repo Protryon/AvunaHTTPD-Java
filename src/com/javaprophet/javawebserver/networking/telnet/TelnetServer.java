@@ -30,12 +30,12 @@ public class TelnetServer extends Thread {
 					DataOutputStream out = new DataOutputStream(s.getOutputStream());
 					out.flush();
 					DataInputStream in = new DataInputStream(s.getInputStream());
-					out.write(255);
-					out.write(251);
-					out.write(1);
-					out.write(255);
-					out.write(254);
-					out.write(1);
+					// out.write(255);
+					// out.write(251);
+					// out.write(1);
+					// out.write(255);
+					// out.write(254);
+					// out.write(1);
 					out.write(255);
 					out.write(251);
 					out.write(3);
@@ -48,9 +48,12 @@ public class TelnetServer extends Thread {
 					boolean cr = false;
 					while (!s.isClosed()) {
 						int b = in.read();
+						Logger.log(b + "");
 						if (b == 255) {
 							int clause = in.read();
 							int effect = in.read();
+							Logger.log(clause + "");
+							Logger.log(effect + "");
 							// ?
 						}else if (b == 244) {
 							s.close();
@@ -72,7 +75,7 @@ public class TelnetServer extends Thread {
 						}else {
 							if (b == 13 && !cr) {
 								cr = true;
-							}else if (b == 10 && cr) {
+							}else if ((b == 10 || b == 0) && cr) {
 								cr = false;
 								String com = input.toString();
 								input.reset();
@@ -99,9 +102,11 @@ public class TelnetServer extends Thread {
 								input.write(b);
 							}
 						}
-						out.write(b);
-						out.flush();
+						// out.write(b);
+						// out.flush();
 					}
+					isAuth = false;
+					input.reset();
 				}catch (IOException se) {
 					Logger.logError(se);
 				}

@@ -113,6 +113,7 @@ public class JavaWebServer {
 	
 	public static void main(String[] args) {
 		try {
+			System.setProperty("line.separator", crlf);
 			final File cfg = new File(args.length > 0 ? args[0] : (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\jws\\main.cfg" : "/etc/jws/main.cfg"));
 			mainConfig = new Config(cfg, new ConfigFormat() {
 				public void format(HashMap<String, Object> map) {
