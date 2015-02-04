@@ -56,24 +56,27 @@ public class JavaWebServer {
 	
 	public static void unpack() {
 		try {
-			File mime = fileManager.getBaseFile("mime.txt");
-			if (!mime.exists()) {
-				Logger.log("Unpacking mime.txt...");
-				InputStream in = JavaWebServer.class.getResourceAsStream("/unpack/mime.txt");
-				int i = 1;
-				byte[] buf = new byte[4096];
-				ByteArrayOutputStream bout = new ByteArrayOutputStream();
-				while (i > 0) {
-					i = in.read(buf);
-					if (i > 0) {
-						bout.write(buf, 0, i);
+			String[] unpacks = new String[]{"mime.txt", "run.sh", "kill.sh", "restart.sh"};
+			for (String up : unpacks) {
+				File mime = fileManager.getBaseFile(up);
+				if (!mime.exists()) {
+					Logger.log("Unpacking " + up + "...");
+					InputStream in = JavaWebServer.class.getResourceAsStream("/unpack/" + up);
+					int i = 1;
+					byte[] buf = new byte[4096];
+					ByteArrayOutputStream bout = new ByteArrayOutputStream();
+					while (i > 0) {
+						i = in.read(buf);
+						if (i > 0) {
+							bout.write(buf, 0, i);
+						}
 					}
+					in.close();
+					FileOutputStream fout = new FileOutputStream(mime);
+					fout.write(bout.toByteArray());
+					fout.flush();
+					fout.close();
 				}
-				in.close();
-				FileOutputStream fout = new FileOutputStream(mime);
-				fout.write(bout.toByteArray());
-				fout.flush();
-				fout.close();
 			}
 		}catch (IOException e) {
 			Logger.logError(e);
@@ -144,12 +147,12 @@ public class JavaWebServer {
 			});
 			mainConfig.load();
 			mainConfig.save();
-			setupFolders();
-			unpack();
-			loadUnpacked();
 			File lf = new File(fileManager.getLogs(), "" + (System.currentTimeMillis() / 1000L));
 			lf.createNewFile();
 			Logger.INSTANCE = new Logger(new PrintStream(new FileOutputStream(lf)));
+			setupFolders();
+			unpack();
+			loadUnpacked();
 			Logger.log("Loaded Configs");
 			Logger.log("Loading Connection Handling");
 			Connection.init();
