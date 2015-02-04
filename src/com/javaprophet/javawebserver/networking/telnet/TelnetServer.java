@@ -91,8 +91,6 @@ public class TelnetServer extends Thread {
 									}
 								}else {
 									Logger.log("telnet[" + s.getInetAddress().getHostAddress() + "]: " + com);
-									String res = com + JavaWebServer.crlf;
-									out.write(res.getBytes());
 									CommandProcessor.process(com, out, in, true);
 									out.write(("Command Completed." + JavaWebServer.crlf).getBytes());
 								}

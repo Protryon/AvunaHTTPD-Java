@@ -156,10 +156,10 @@ public class JavaWebServer {
 			});
 			mainConfig.load();
 			mainConfig.save();
+			setupFolders();
 			File lf = new File(fileManager.getLogs(), "" + (System.currentTimeMillis() / 1000L));
 			lf.createNewFile();
 			Logger.INSTANCE = new Logger(new PrintStream(new FileOutputStream(lf)));
-			setupFolders();
 			unpack();
 			loadUnpacked();
 			Logger.log("Loaded Configs");
