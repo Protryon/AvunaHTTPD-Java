@@ -65,14 +65,12 @@ public class PatchJavaLoader extends Patch {
 						byte[] b = bout.toByteArray();
 						bout = null;
 						String name = "";
-						boolean already = false;
 						try {
 							name = jlcl.addClass(b);
 						}catch (LinkageError er) {
-							already = true;
+							er.printStackTrace();
 							String msg = er.getMessage();
 							if (msg.contains("duplicate class definition for name")) {
-								already = true;
 								String type = msg.substring(msg.indexOf("\"") + 1);
 								type = type.substring(0, type.indexOf("\"")).replace("/", ".");
 								name = type;
@@ -135,7 +133,7 @@ public class PatchJavaLoader extends Patch {
 	}
 	
 	private static final HashMap<String, String> loadedClasses = new HashMap<String, String>();
-	private static final JavaLoaderClassLoader jlcl = new JavaLoaderClassLoader();
+	private static JavaLoaderClassLoader jlcl = new JavaLoaderClassLoader();
 	
 	private final HashMap<String, JavaLoader> jls = new HashMap<String, JavaLoader>();
 	

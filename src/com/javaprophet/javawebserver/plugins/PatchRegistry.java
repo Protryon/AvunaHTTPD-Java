@@ -18,4 +18,13 @@ public class PatchRegistry {
 	public static void registerMethod(Method m, Patch patch) {
 		registeredMethods.put(m, patch);
 	}
+	
+	public static Patch getPatchForClass(Class<?> cls) {
+		for (Patch p : patchs) {
+			if (cls.isAssignableFrom(p.getClass()) && p.enabled) {
+				return p;
+			}
+		}
+		return null;
+	}
 }
