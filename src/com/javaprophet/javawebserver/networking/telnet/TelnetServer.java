@@ -48,7 +48,6 @@ public class TelnetServer extends Thread {
 					boolean cr = false;
 					while (!s.isClosed()) {
 						int b = in.read();
-						Logger.log(b + "");
 						if (b == 255) {
 							int clause = in.read();
 							int effect = in.read();
