@@ -1,4 +1,4 @@
-package com.javaprophet.javawebserver;
+package com.javaprophet.javawebserver.networking.command;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,14 +9,13 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Scanner;
+import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class CommandProcessor {
-	public static void process(String command, OutputStream outs, InputStream ins, boolean telnet) throws IOException {
+	public static void process(String command, final PrintStream out, final Scanner scan, boolean telnet) throws IOException {
 		se = false;
-		final Scanner scan = new Scanner(ins);
-		final PrintStream out = new PrintStream(outs);
 		String[] cargs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1).split(" ") : new String[0];
 		String targs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1) : "";
 		command = command.contains(" ") ? command.substring(0, command.indexOf(" ")) : command;
@@ -119,6 +118,7 @@ public class CommandProcessor {
 							while (se && scan.hasNextLine()) {
 								try {
 									String line = scan.nextLine();
+									out.println(line);
 									if (line.equals("exit")) {
 										se = false;
 										continue;

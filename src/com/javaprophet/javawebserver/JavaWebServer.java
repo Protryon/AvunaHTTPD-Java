@@ -26,7 +26,9 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import com.javaprophet.javawebserver.http.ResponseGenerator;
 import com.javaprophet.javawebserver.networking.Connection;
-import com.javaprophet.javawebserver.networking.telnet.TelnetServer;
+import com.javaprophet.javawebserver.networking.command.ComClient;
+import com.javaprophet.javawebserver.networking.command.ComServer;
+import com.javaprophet.javawebserver.networking.command.CommandProcessor;
 import com.javaprophet.javawebserver.plugins.PatchBus;
 import com.javaprophet.javawebserver.plugins.base.BaseLoader;
 import com.javaprophet.javawebserver.util.Config;
@@ -113,6 +115,12 @@ public class JavaWebServer {
 	
 	public static void main(String[] args) {
 		try {
+			if (args.length >= 1 && args[0].equals("cmd")) {
+				String ip = args.length >= 2 ? args[1] : "127.0.0.1";
+				int port = args.length >= 3 ? Integer.parseInt(args[2]) : 6049;
+				ComClient.run(ip, port);
+				return;
+			}
 			System.setProperty("line.separator", crlf);
 			final File cfg = new File(args.length > 0 ? args[0] : (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\jws\\main.cfg" : "/etc/jws/main.cfg"));
 			mainConfig = new Config(cfg, new ConfigFormat() {
@@ -136,8 +144,8 @@ public class JavaWebServer {
 					if (!map.containsKey("errorpages")) map.put("errorpages", new HashMap<String, Object>());
 					if (!map.containsKey("index")) map.put("index", "Index.class,index.jwsl,index.php,index.html");
 					if (!map.containsKey("cacheClock")) map.put("cacheClock", "-1");
-					if (!map.containsKey("telnet")) map.put("telnet", new HashMap<String, Object>());
-					HashMap<String, Object> telnet = (HashMap<String, Object>)map.get("telnet");
+					if (!map.containsKey("com")) map.put("com", new HashMap<String, Object>());
+					HashMap<String, Object> telnet = (HashMap<String, Object>)map.get("com");
 					if (!telnet.containsKey("enabled")) telnet.put("enabled", "true");
 					if (!telnet.containsKey("bindport")) telnet.put("bindport", "6049");
 					if (!telnet.containsKey("bindip")) telnet.put("bindip", "127.0.0.1");
@@ -167,10 +175,10 @@ public class JavaWebServer {
 			Connection.init();
 			Logger.log("Loading Base Plugins");
 			BaseLoader.loadBases();
-			HashMap<String, Object> telnet = ((HashMap<String, Object>)mainConfig.get("telnet"));
-			if (((String)telnet.get("enabled")).equals("true")) {
-				Logger.log("Starting Telnet server on " + ((String)telnet.get("bindip")) + ":" + ((String)telnet.get("bindport")));
-				TelnetServer server = new TelnetServer();
+			HashMap<String, Object> com = ((HashMap<String, Object>)mainConfig.get("com"));
+			if (((String)com.get("enabled")).equals("true")) {
+				Logger.log("Starting Com server on " + ((String)com.get("bindip")) + ":" + ((String)com.get("bindport")));
+				ComServer server = new ComServer();
 				server.start();
 			}
 			final int bindport = Integer.parseInt((String)mainConfig.get("bindport"));
@@ -290,7 +298,7 @@ public class JavaWebServer {
 			if (read) {
 				try {
 					String command = scan.nextLine();
-					CommandProcessor.process(command, Logger.getOutputStream(), System.in, false);
+					CommandProcessor.process(command, Logger.INSTANCE, scan, false);
 				}catch (NoSuchElementException fe) {
 					read = false;
 					continue;
