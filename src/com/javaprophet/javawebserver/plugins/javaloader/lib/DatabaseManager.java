@@ -27,12 +27,13 @@ public class DatabaseManager {
 		return conn.createStatement();
 	}
 	
-	public void closeStatements() throws SQLException {
+	public void close() throws SQLException {
 		synchronized (estmts) {
 			for (ExtendedStatement estmt : estmts) {
 				estmt.stmt.close();
 			}
 		}
+		conn.close();
 	}
 	
 	public Statement leaseStatement() throws SQLException {
