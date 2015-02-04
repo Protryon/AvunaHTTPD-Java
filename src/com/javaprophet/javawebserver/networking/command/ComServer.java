@@ -25,6 +25,7 @@ public class ComServer extends Thread {
 			boolean isAuth = false;
 			String auth = (String)com.get("auth");
 			while (!server.isClosed()) {
+				String ip = "";
 				try {
 					Socket s = server.accept();
 					DataOutputStream out = new DataOutputStream(s.getOutputStream());
@@ -34,6 +35,7 @@ public class ComServer extends Thread {
 					out.flush();
 					Scanner scan = new Scanner(in);
 					PrintStream ps = new PrintStream(out);
+					ip = s.getInetAddress().getHostAddress();
 					while (!s.isClosed()) {
 						String cs = scan.nextLine();
 						if (doAuth && !isAuth) {
@@ -53,7 +55,7 @@ public class ComServer extends Thread {
 						out.flush();
 					}
 				}catch (IOException se) {
-					Logger.logError(se);
+					Logger.log("com[" + ip + "] Closed.");
 				}finally {
 					isAuth = false;
 				}
