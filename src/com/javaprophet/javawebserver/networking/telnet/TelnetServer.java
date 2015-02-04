@@ -32,12 +32,12 @@ public class TelnetServer extends Thread {
 					DataOutputStream out = new DataOutputStream(s.getOutputStream());
 					out.flush();
 					DataInputStream in = new DataInputStream(s.getInputStream());
-					// out.write(255);
-					// out.write(251);
-					// out.write(1);
-					// out.write(255);
-					// out.write(254);
-					// out.write(1);
+					out.write(255);
+					out.write(251);
+					out.write(1);
+					out.write(255);
+					out.write(254);
+					out.write(1);
 					out.write(255);
 					out.write(251);
 					out.write(3);
