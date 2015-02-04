@@ -51,7 +51,6 @@ public class ComServer extends Thread {
 							out.write(("Command Completed." + JavaWebServer.crlf).getBytes());
 						}
 						out.flush();
-						out.flush();
 					}
 				}catch (IOException se) {
 					Logger.logError(se);

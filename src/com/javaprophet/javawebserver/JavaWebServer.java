@@ -148,7 +148,7 @@ public class JavaWebServer {
 					HashMap<String, Object> telnet = (HashMap<String, Object>)map.get("com");
 					if (!telnet.containsKey("enabled")) telnet.put("enabled", "true");
 					if (!telnet.containsKey("bindport")) telnet.put("bindport", "6049");
-					if (!telnet.containsKey("bindip")) telnet.put("bindip", "127.0.0.1");
+					if (!telnet.containsKey("bindip")) telnet.put("bindip", "0.0.0.0");
 					if (!telnet.containsKey("auth")) telnet.put("auth", "jwsisawesome");
 					if (!telnet.containsKey("doAuth")) telnet.put("doAuth", "true");
 					if (!map.containsKey("ssl")) map.put("ssl", new HashMap<String, Object>());
