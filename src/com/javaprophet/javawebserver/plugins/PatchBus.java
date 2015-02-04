@@ -56,4 +56,10 @@ public class PatchBus {
 			patch.preExit();
 		}
 	}
+	
+	public void reload() {
+		for (Patch patch : PatchRegistry.patchs) {
+			patch.reload();
+		}
+	}
 }

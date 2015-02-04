@@ -49,6 +49,10 @@ public abstract class Patch {
 		pcfg.save();
 	}
 	
+	public void reload() {
+		pcfg.save();
+	}
+	
 	public abstract boolean shouldProcessPacket(Packet packet);
 	
 	public abstract void processPacket(Packet packet);

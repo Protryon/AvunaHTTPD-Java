@@ -26,9 +26,9 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import com.javaprophet.javawebserver.http.ResponseGenerator;
 import com.javaprophet.javawebserver.networking.Connection;
+import com.javaprophet.javawebserver.networking.telnet.TelnetServer;
 import com.javaprophet.javawebserver.plugins.PatchBus;
 import com.javaprophet.javawebserver.plugins.base.BaseLoader;
-import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
 import com.javaprophet.javawebserver.util.Config;
 import com.javaprophet.javawebserver.util.ConfigFormat;
 import com.javaprophet.javawebserver.util.FileManager;
@@ -42,6 +42,7 @@ public class JavaWebServer {
 	public static final PatchBus patchBus = new PatchBus();
 	public static final HashMap<String, String> extensionToMime = new HashMap<String, String>();
 	public static final ResponseGenerator rg = new ResponseGenerator();
+	public static final String crlf = System.getProperty("line.separator");
 	
 	public static void setupFolders() {
 		fileManager.getMainDir().mkdirs();
@@ -128,17 +129,24 @@ public class JavaWebServer {
 					if (!map.containsKey("plugins")) map.put("plugins", new File(dir, "plugins").toString());
 					if (!map.containsKey("javac")) map.put("javac", "javac");
 					if (!map.containsKey("temp")) map.put("temp", new File(dir, "temp").toString());
-					if (!map.containsKey("bindport")) map.put("bindport", 80);
+					if (!map.containsKey("bindport")) map.put("bindport", "80");
 					if (!map.containsKey("bindip")) map.put("bindip", "0.0.0.0");
-					if (!map.containsKey("nginxThreadCount")) map.put("nginxThreadCount", Runtime.getRuntime().availableProcessors());
+					if (!map.containsKey("nginxThreadCount")) map.put("nginxThreadCount", "" + Runtime.getRuntime().availableProcessors());
 					if (!map.containsKey("errorpages")) map.put("errorpages", new HashMap<String, Object>());
 					if (!map.containsKey("index")) map.put("index", "Index.class,index.jwsl,index.php,index.html");
-					if (!map.containsKey("cacheClock")) map.put("cacheClock", -1);
+					if (!map.containsKey("cacheClock")) map.put("cacheClock", "-1");
+					if (!map.containsKey("telnet")) map.put("telnet", new HashMap<String, Object>());
+					HashMap<String, Object> telnet = (HashMap<String, Object>)map.get("telnet");
+					if (!telnet.containsKey("enabled")) telnet.put("enabled", "true");
+					if (!telnet.containsKey("bindport")) telnet.put("bindport", "6049");
+					if (!telnet.containsKey("bindip")) telnet.put("bindip", "127.0.0.1");
+					if (!telnet.containsKey("auth")) telnet.put("auth", "jwsisawesome");
+					if (!telnet.containsKey("doAuth")) telnet.put("doAuth", "true");
 					if (!map.containsKey("ssl")) map.put("ssl", new HashMap<String, Object>());
 					HashMap<String, Object> ssl = (HashMap<String, Object>)map.get("ssl");
-					if (!ssl.containsKey("enabled")) ssl.put("enabled", false);
-					if (!ssl.containsKey("forceSSL")) ssl.put("forceSSL", false); // TODO: implement
-					if (!ssl.containsKey("bindport")) ssl.put("bindport", 443);
+					if (!ssl.containsKey("enabled")) ssl.put("enabled", "false");
+					if (!ssl.containsKey("forceSSL")) ssl.put("forceSSL", "false"); // TODO: implement
+					if (!ssl.containsKey("bindport")) ssl.put("bindport", "443");
 					if (!ssl.containsKey("folder")) ssl.put("folder", new File(dir, "ssl").toString());
 					if (!ssl.containsKey("keyFile")) ssl.put("keyFile", "keystore");
 					if (!ssl.containsKey("keystorePassword")) ssl.put("keystorePassword", "password");
@@ -158,6 +166,12 @@ public class JavaWebServer {
 			Connection.init();
 			Logger.log("Loading Base Plugins");
 			BaseLoader.loadBases();
+			HashMap<String, Object> telnet = ((HashMap<String, Object>)mainConfig.get("telnet"));
+			if (((String)telnet.get("enabled")).equals("true")) {
+				Logger.log("Starting Telnet server on " + ((String)telnet.get("bindip")) + ":" + ((String)telnet.get("bindport")));
+				TelnetServer server = new TelnetServer();
+				server.start();
+			}
 			final int bindport = Integer.parseInt((String)mainConfig.get("bindport"));
 			final String bindip = (String)mainConfig.get("bindip");
 			Logger.log("Starting Server on " + bindip + ":" + bindport);
@@ -274,107 +288,12 @@ public class JavaWebServer {
 			if (read) {
 				try {
 					String command = scan.nextLine();
-					String[] cargs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1).split(" ") : new String[0];
-					command = command.contains(" ") ? command.substring(0, command.indexOf(" ")) : command;
-					if (command.equals("exit") || command.equals("stop")) {
-						System.exit(0);
-					}else if (command.equals("reload")) {
-						try {
-							mainConfig.load();
-							patchBus.preExit();
-						}catch (Exception e) {
-							Logger.logError(e);
-						}
-						Logger.log("Loaded Config! Some entries will require a restart.");
-					}else if (command.equals("flushcache")) {
-						try {
-							fileManager.clearCache();
-						}catch (Exception e) {
-							Logger.logError(e);
-						}
-						Logger.log("Cache Flushed! This is not necessary for php files, and does not work for .class files(restart jws for those).");
-					}else if (command.equals("jhtml")) {
-						if (cargs.length != 2 && cargs.length != 1) {
-							Logger.log("Invalid arguments. (input, output[optional])");
-							continue;
-						}
-						try {
-							File sc2 = null;
-							Scanner scan2 = new Scanner(new FileInputStream(sc2 = new File(fileManager.getHTDocs(), cargs[0])));
-							PrintStream ps;
-							File temp = null;
-							if (cargs.length == 2) {
-								ps = new PrintStream(new FileOutputStream(temp = new File(fileManager.getHTSrc(), cargs[1])));
-							}else {
-								ps = new PrintStream(new FileOutputStream(temp = new File(fileManager.getHTSrc(), cargs[0].substring(0, cargs[0].indexOf(".")) + ".java")));
-							}
-							ps.println("import java.io.PrintStream;");
-							ps.println("import com.javaprophet.javawebserver.networking.packets.RequestPacket;");
-							ps.println("import com.javaprophet.javawebserver.networking.packets.ResponsePacket;");
-							ps.println("import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderStream;");
-							ps.println();
-							ps.println("public class " + (cargs.length == 3 ? temp.getName().substring(0, temp.getName().indexOf(".")) : sc2.getName().substring(0, sc2.getName().indexOf("."))) + " extends JavaLoaderStream {");
-							ps.println("    public void generate(PrintStream out, ResponsePacket response, RequestPacket request) {");
-							while (scan2.hasNextLine()) {
-								String line = scan2.nextLine().trim();
-								ps.println("        " + "out.println(\"" + line.replace("\\", "\\\\").replace("\"", "\\\"") + "\");");
-							}
-							ps.println("    }");
-							ps.println("}");
-							ps.flush();
-							ps.close();
-							scan2.close();
-						}catch (IOException e) {
-							Logger.log(e.getMessage());
-						}
-						Logger.log("JHTML completed.");
-					}else if (command.equals("jcomp")) {
-						boolean all = cargs.length < 1;
-						String cp = fileManager.getBaseFile("jws.jar").toString() + ";" + fileManager.getHTDocs().toString() + ";" + fileManager.getHTSrc().toString() + ";" + PatchJavaLoader.lib.toString() + ";";
-						for (File f : PatchJavaLoader.lib.listFiles()) {
-							if (!f.isDirectory() && f.getName().endsWith(".jar")) {
-								cp += f.toString() + ";";
-							}
-						}
-						cp = cp.substring(0, cp.length() - 1);
-						ArrayList<String> cfs = new ArrayList<String>();
-						cfs.add((String)mainConfig.get("javac"));
-						cfs.add("-cp");
-						cfs.add(cp);
-						cfs.add("-d");
-						cfs.add(fileManager.getHTDocs().toString());
-						if (all) {
-							recurForComp(cfs, fileManager.getHTSrc());
-						}else {
-							cfs.add("htsrc/" + cargs[0]);
-						}
-						ProcessBuilder pb = new ProcessBuilder(cfs.toArray(new String[]{}));
-						pb.directory(fileManager.getMainDir());
-						pb.redirectErrorStream(true);
-						Process proc = pb.start();
-						Scanner s = new Scanner(proc.getInputStream());
-						while (s.hasNextLine()) {
-							Logger.log("javac: " + s.nextLine());
-						}
-						s.close();
-					}else if (command.equals("help")) {
-						Logger.log("Commands:");
-						Logger.log("exit/stop");
-						Logger.log("reload");
-						Logger.log("flushcache");
-						Logger.log("jhtml");
-						Logger.log("jcomp");
-						Logger.log("help");
-						Logger.log("");
-						Logger.log("Java Web Server(JWS) version " + VERSION);
-					}else {
-						Logger.log("Unknown Command: " + command);
-					}
+					CommandProcessor.process(command, Logger.getOutputStream(), System.in, false);
 				}catch (NoSuchElementException fe) {
 					read = false;
 					continue;
 				}catch (Exception e) {
-					Logger.logError(e);;
+					Logger.logError(e);
 				}
 			}else {
 				try {
@@ -388,15 +307,6 @@ public class JavaWebServer {
 		if (mainConfig != null) {
 			mainConfig.save();
 		}
-	}
-	
-	private static void recurForComp(ArrayList<String> cfs, File base) {
-		for (File f : base.listFiles()) {
-			if (f.isDirectory()) {
-				recurForComp(cfs, f);
-			}else {
-				cfs.add(f.getAbsolutePath());
-			}
-		}
+		System.exit(0);
 	}
 }
