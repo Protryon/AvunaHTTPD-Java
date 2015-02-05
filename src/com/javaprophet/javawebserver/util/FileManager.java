@@ -163,7 +163,7 @@ public class FileManager {
 			if (cache.containsKey(rt)) {
 				long t = System.currentTimeMillis();
 				long cc = Integer.parseInt(((String)JavaWebServer.mainConfig.get("cacheClock")));
-				if ((cc > 0 && t - cc < cacheClock) || (cc == -1)) {
+				if (((cc > 0 && t - cc < cacheClock) || (cc == -1)) || rt.endsWith(".class")) {
 					resource = cache.get(rt);
 					ext = extCache.get(rt);
 					lwi = lwiCache.get(rt);
