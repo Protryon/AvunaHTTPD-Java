@@ -98,10 +98,10 @@ public class ResponsePacket extends Packet {
 	
 	public ResponsePacket write(DataOutputStream out) throws IOException {
 		byte[] write = serialize(request.method != Method.HEAD);
+		cachedPacket.bwt = System.nanoTime();
 		if (write == null) {
 			return null;
 		}
-		cachedPacket.bwt = System.nanoTime();
 		out.write(write);
 		write = null;
 		out.flush();

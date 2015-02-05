@@ -86,7 +86,7 @@ public class ThreadWorker extends Thread {
 					ResponsePacket wrp = outgoingResponse.write(focus.out);
 					if (wrp.drop) {
 						focus.s.close();
-						Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
+						Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned DROPPED took: " + (wrp.bwt - benchStart) / 1000000D + " ms");
 						continue;
 					}
 					boolean t = wrp.reqTransfer;
