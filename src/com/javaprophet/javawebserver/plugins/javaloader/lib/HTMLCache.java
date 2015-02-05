@@ -32,6 +32,13 @@ public class HTMLCache {
 				on = false;
 				html.put(name, cur.toString());
 				cur = new StringBuilder();
+				String[] spl = line.split(":");
+				if (spl.length != 2) {
+					continue;
+				}
+				name = spl[0];
+				ll = Integer.parseInt(spl[1]);
+				on = true;
 			}
 		}
 		if (on) {
