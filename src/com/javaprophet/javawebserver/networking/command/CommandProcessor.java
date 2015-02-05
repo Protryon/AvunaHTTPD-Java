@@ -54,7 +54,7 @@ public class CommandProcessor {
 			}catch (Exception e) {
 				e.printStackTrace(out);
 			}
-			out.println("Cache Flushed! This is not necessary for php files, and does not work for .class files(restart jws for those).");
+			out.println("Cache Flushed! This is not necessary for php files, and does not work for .class files(restart jws for those, but HTMLCache is cleared).");
 		}else if (command.equals("jhtml")) {
 			if (cargs.length != 2 && cargs.length != 1) {
 				out.println("Invalid arguments. (input, output[optional])");

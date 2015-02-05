@@ -4,18 +4,12 @@ import java.io.PrintStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class Logger extends PrintStream {
+public class Logger {
 	public static Logger INSTANCE;
 	private PrintStream ps = null;
 	
 	public Logger(PrintStream ps) {
-		super(ps);
 		this.ps = ps;
-	}
-	
-	public void write(int i) {
-		ps.write(i);
-		System.out.write(i);
 	}
 	
 	public static PrintStream getStream() {

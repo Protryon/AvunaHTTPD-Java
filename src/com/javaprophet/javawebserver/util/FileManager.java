@@ -13,6 +13,7 @@ import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.http.StatusCode;
 import com.javaprophet.javawebserver.plugins.Patch;
 import com.javaprophet.javawebserver.plugins.base.PatchChunked;
+import com.javaprophet.javawebserver.plugins.javaloader.lib.HTMLCache;
 
 public class FileManager {
 	public FileManager() {
@@ -71,7 +72,8 @@ public class FileManager {
 		return new File(getMainDir(), name);
 	}
 	
-	public void clearCache() {
+	public void clearCache() throws IOException {
+		HTMLCache.reloadAll();
 		String[] delKeys = new String[cache.size()];
 		int delSize = 0;
 		for (String file : cache.keySet()) {

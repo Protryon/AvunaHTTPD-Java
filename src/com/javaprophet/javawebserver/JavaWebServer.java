@@ -304,7 +304,7 @@ public class JavaWebServer {
 			if (read) {
 				try {
 					String command = scan.nextLine();
-					CommandProcessor.process(command, Logger.INSTANCE, scan, false);
+					CommandProcessor.process(command, System.out, scan, false);
 				}catch (NoSuchElementException fe) {
 					read = false;
 					continue;
