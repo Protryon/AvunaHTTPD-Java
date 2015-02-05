@@ -93,6 +93,7 @@ public class ResponsePacket extends Packet {
 		return new String(cachedSerialize);
 	}
 	
+	public long bwt = 0L;
 	public boolean reqTransfer = false;
 	
 	public ResponsePacket write(DataOutputStream out) throws IOException {
@@ -100,6 +101,7 @@ public class ResponsePacket extends Packet {
 		if (write == null) {
 			return null;
 		}
+		cachedPacket.bwt = System.nanoTime();
 		out.write(write);
 		write = null;
 		out.flush();

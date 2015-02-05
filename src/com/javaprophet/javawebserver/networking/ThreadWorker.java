@@ -39,7 +39,7 @@ public class ThreadWorker extends Thread {
 		keepRunning = false;
 	}
 	
-	public static final ArrayList<ThreadStreamWorker> subworkers = new ArrayList<ThreadStreamWorker>();
+	public static final ArrayList<Thread> subworkers = new ArrayList<Thread>();
 	
 	public void run() {
 		while (keepRunning) {
@@ -92,7 +92,9 @@ public class ThreadWorker extends Thread {
 					boolean t = wrp.reqTransfer;
 					long write = System.nanoTime();
 					if (wrp.reqStream != null) {
-						
+						ThreadJavaLoaderStreamWorker sw = new ThreadJavaLoaderStreamWorker(focus, incomingRequest, wrp, wrp.reqStream);
+						subworkers.add(sw);
+						sw.start();
 					}else if (t && wrp.body != null && wrp.body.getBody() != null) {
 						ThreadStreamWorker sw = new ThreadStreamWorker(focus, incomingRequest, wrp);
 						subworkers.add(sw);
@@ -100,14 +102,13 @@ public class ThreadWorker extends Thread {
 					}else {
 						workQueue.add(focus);
 					}
-					long cur = System.nanoTime();
 					// Logger.log((set - benchStart) / 1000000D + " start-set");
 					// Logger.log((proc1 - set) / 1000000D + " set-proc1");
 					// Logger.log((resp - proc1) / 1000000D + " proc1-resp");
 					// Logger.log((proc2 - resp) / 1000000D + " resp-proc2");
 					// Logger.log((write - proc2) / 1000000D + " proc2-write");
 					// Logger.log((cur - write) / 1000000D + " write-cur");
-					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned " + wrp.statusCode + " " + wrp.reasonPhrase + " took: " + (cur - benchStart) / 1000000D + " ms");
+					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned " + wrp.statusCode + " " + wrp.reasonPhrase + " took: " + (wrp.bwt - benchStart) / 1000000D + " ms");
 				}else {
 					Logger.log(focus.s.getInetAddress().getHostAddress() + " closed.");
 				}
