@@ -59,8 +59,14 @@ public class JavaWebServer {
 	
 	public static void unpack() {
 		try {
-			String[] unpacks = new String[]{"mime.txt", "run.sh", "kill.sh", "restart.sh"};
+			String[] unpacks = new String[]{"mime.txt", "run.sh", "kill.sh", "restart.sh", "cmd.sh", "run.bat", "kill.bat", "restart.bat", "cmd.bat"};
 			for (String up : unpacks) {
+				if (up.endsWith(".sh") && !System.getProperty("os.name").contains("nix")) {
+					continue;
+				}
+				if (up.endsWith(".bat") && !System.getProperty("os.name").toLowerCase().contains("windows")) {
+					continue;
+				}
 				File mime = fileManager.getBaseFile(up);
 				if (!mime.exists()) {
 					Logger.log("Unpacking " + up + "...");

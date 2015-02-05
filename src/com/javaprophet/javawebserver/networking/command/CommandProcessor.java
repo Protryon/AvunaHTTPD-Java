@@ -39,11 +39,15 @@ public class CommandProcessor {
 				if (JavaWebServer.mainConfig != null) {
 					JavaWebServer.mainConfig.save();
 				}
-				Runtime.getRuntime().exec("sh " + JavaWebServer.fileManager.getBaseFile("restart.sh"));
+				if (System.getProperty("os.name").contains("nix")) {
+					Runtime.getRuntime().exec("sh " + JavaWebServer.fileManager.getBaseFile("restart.sh"));
+				}else if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+					Runtime.getRuntime().exec(JavaWebServer.fileManager.getBaseFile("restart.bat").toString());
+				}
 			}catch (Exception e) {
 				e.printStackTrace(out);
 			}
-			out.println("Loaded Config! Some entries will require a restart.");
+			out.println("Restarting...");
 		}else if (command.equals("flushcache")) {
 			try {
 				JavaWebServer.fileManager.clearCache();
