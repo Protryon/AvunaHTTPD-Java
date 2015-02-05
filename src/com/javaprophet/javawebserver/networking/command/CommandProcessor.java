@@ -33,6 +33,17 @@ public class CommandProcessor {
 				e.printStackTrace(out);
 			}
 			out.println("Loaded Config! Some entries will require a restart.");
+		}else if (command.equals("restart")) {
+			try {
+				JavaWebServer.patchBus.preExit();
+				if (JavaWebServer.mainConfig != null) {
+					JavaWebServer.mainConfig.save();
+				}
+				Runtime.getRuntime().exec("sh " + JavaWebServer.fileManager.getBaseFile("restart.sh"));
+			}catch (Exception e) {
+				e.printStackTrace(out);
+			}
+			out.println("Loaded Config! Some entries will require a restart.");
 		}else if (command.equals("flushcache")) {
 			try {
 				JavaWebServer.fileManager.clearCache();
@@ -77,10 +88,11 @@ public class CommandProcessor {
 			out.println("JHTML completed.");
 		}else if (command.equals("jcomp")) {
 			boolean all = cargs.length < 1;
-			String cp = JavaWebServer.fileManager.getBaseFile("jws.jar").toString() + ";" + JavaWebServer.fileManager.getHTDocs().toString() + ";" + JavaWebServer.fileManager.getHTSrc().toString() + ";" + PatchJavaLoader.lib.toString() + ";";
+			String sep = System.getProperty("os.name").toLowerCase().contains("windows") ? ";" : ":";
+			String cp = JavaWebServer.fileManager.getBaseFile("jws.jar").toString() + sep + JavaWebServer.fileManager.getHTDocs().toString() + sep + JavaWebServer.fileManager.getHTSrc().toString() + sep + PatchJavaLoader.lib.toString() + sep;
 			for (File f : PatchJavaLoader.lib.listFiles()) {
 				if (!f.isDirectory() && f.getName().endsWith(".jar")) {
-					cp += f.toString() + ";";
+					cp += f.toString() + sep;
 				}
 			}
 			cp = cp.substring(0, cp.length() - 1);
@@ -158,6 +170,7 @@ public class CommandProcessor {
 			out.println("Commands:");
 			out.println("exit/stop");
 			out.println("reload");
+			out.println("restart");
 			out.println("flushcache");
 			out.println("jhtml");
 			out.println("jcomp");

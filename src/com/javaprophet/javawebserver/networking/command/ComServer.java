@@ -47,22 +47,23 @@ public class ComServer extends Thread {
 								if (cs.equals(auth)) {
 									isAuth = true;
 									Logger.log("com[" + s.getInetAddress().getHostAddress() + "] Authenticated.");
-									out.write(("Authenticated." + JavaWebServer.crlf).getBytes());
+									ps.println("Authenticated.");
 								}else {
 									Logger.log("com[" + s.getInetAddress().getHostAddress() + "] NOAUTH/DENIED: " + cs);
-									out.write(("Please Authenticate." + JavaWebServer.crlf).getBytes());
+									ps.println("Please Authenticate.");
 								}
 							}else {
 								Logger.log("com[" + s.getInetAddress().getHostAddress() + "]: " + cs);
 								CommandProcessor.process(cs, ps, scan, true);
-								out.write(("Command Completed." + JavaWebServer.crlf).getBytes());
+								ps.println("Command Completed.");
 							}
-							out.flush();
+							ps.flush();
 						}catch (IndexOutOfBoundsException ex) {
 							
 						}
 					}
 				}catch (IOException se) {
+					Logger.logError(se);
 					Logger.log("com[" + ip + "] Closed.");
 				}finally {
 					isAuth = false;

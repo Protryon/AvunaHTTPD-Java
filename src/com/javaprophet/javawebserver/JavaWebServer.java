@@ -142,7 +142,7 @@ public class JavaWebServer {
 					if (!map.containsKey("bindip")) map.put("bindip", "0.0.0.0");
 					if (!map.containsKey("nginxThreadCount")) map.put("nginxThreadCount", "" + Runtime.getRuntime().availableProcessors());
 					if (!map.containsKey("errorpages")) map.put("errorpages", new HashMap<String, Object>());
-					if (!map.containsKey("index")) map.put("index", "Index.class,index.jwsl,index.php,index.html");
+					if (!map.containsKey("index")) map.put("index", "index.class,index.jwsl,index.php,index.html");
 					if (!map.containsKey("cacheClock")) map.put("cacheClock", "-1");
 					if (!map.containsKey("com")) map.put("com", new HashMap<String, Object>());
 					HashMap<String, Object> telnet = (HashMap<String, Object>)map.get("com");
