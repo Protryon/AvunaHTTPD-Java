@@ -75,7 +75,7 @@ public class CommandProcessor {
 				ps.println("import com.javaprophet.javawebserver.networking.packets.ResponsePacket;");
 				ps.println("import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderStream;");
 				ps.println();
-				ps.println("public class " + (cargs.length == 3 ? temp.getName().substring(0, temp.getName().indexOf(".")) : sc2.getName().substring(0, sc2.getName().indexOf("."))) + " extends JavaLoaderStream {");
+				ps.println("public class " + (cargs.length == 3 ? temp.getName().substring(0, temp.getName().indexOf(".")) : sc2.getName().substring(0, sc2.getName().indexOf("."))) + " extends JavaLoaderPrint {");
 				ps.println("    public void generate(PrintStream out, ResponsePacket response, RequestPacket request) {");
 				while (scan2.hasNextLine()) {
 					String line = scan2.nextLine().trim();
