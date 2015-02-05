@@ -146,7 +146,7 @@ public class JavaWebServer {
 					if (!map.containsKey("temp")) map.put("temp", new File(dir, "temp").toString());
 					if (!map.containsKey("bindport")) map.put("bindport", "80");
 					if (!map.containsKey("bindip")) map.put("bindip", "0.0.0.0");
-					if (!map.containsKey("nginxThreadCount")) map.put("nginxThreadCount", "" + Runtime.getRuntime().availableProcessors());
+					if (!map.containsKey("workerThreadCount")) map.put("workerThreadCount", "" + (Runtime.getRuntime().availableProcessors() * 3));
 					if (!map.containsKey("errorpages")) map.put("errorpages", new HashMap<String, Object>());
 					if (!map.containsKey("index")) map.put("index", "index.class,index.jwsl,index.php,index.html");
 					if (!map.containsKey("cacheClock")) map.put("cacheClock", "-1");
