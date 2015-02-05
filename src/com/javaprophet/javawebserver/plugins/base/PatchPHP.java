@@ -72,6 +72,7 @@ public class PatchPHP extends Patch {
 			pb.environment().put("REMOTE_HOST", request.userIP);
 			pb.environment().put("REMOTE_PORT", request.userPort + "");
 			pb.environment().put("REQUEST_METHOD", request.method.name);
+			pb.environment().put("REDIRECT_STATUS", response.statusCode + "");
 			pb.environment().put("SCRIPT_NAME", rq.substring(rq.lastIndexOf("/")));
 			pb.environment().put("SERVER_NAME", request.headers.getHeader("Host"));
 			int port = 80;
