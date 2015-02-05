@@ -58,18 +58,21 @@ public class PatchPHP extends Patch {
 				get = "";
 			}
 			ProcessBuilder pb = new ProcessBuilder((String)pcfg.get("cmd"));
+			pb.environment().put("REQUEST_URI", rq);
+			
+			rq = JavaWebServer.fileManager.correctForIndex(rq);
+			
 			pb.environment().put("CONTENT_LENGTH", request.body.getBody().data.length + "");
 			pb.environment().put("CONTENT_TYPE", request.body.getBody().type);
 			pb.environment().put("GATEWAY_INTERFACE", "CGI/1.1");
-			pb.environment().put("PATH_INFO", request.target);
-			pb.environment().put("PATH_TRANSLATED", request.target);
+			// pb.environment().put("PATH_INFO", request.target);
+			// pb.environment().put("PATH_TRANSLATED", new File(JavaWebServer.fileManager.getHTDocs(), rq).toString());
 			pb.environment().put("QUERY_STRING", get);
 			pb.environment().put("REMOTE_ADDR", request.userIP);
 			pb.environment().put("REMOTE_HOST", request.userIP);
 			pb.environment().put("REMOTE_PORT", request.userPort + "");
 			pb.environment().put("REQUEST_METHOD", request.method.name);
-			rq = JavaWebServer.fileManager.correctForIndex(rq);
-			pb.environment().put("SCRIPT_NAME", rq.substring(rq.lastIndexOf("/") + 1));
+			pb.environment().put("SCRIPT_NAME", rq.substring(rq.lastIndexOf("/")));
 			pb.environment().put("SERVER_NAME", request.headers.getHeader("Host"));
 			int port = 80;
 			if (request.ssl) {
@@ -82,7 +85,6 @@ public class PatchPHP extends Patch {
 			pb.environment().put("SERVER_SOFTWARE", "JWS/" + JavaWebServer.VERSION);
 			pb.environment().put("DOCUMENT_ROOT", JavaWebServer.fileManager.getHTDocs().getAbsolutePath().replace("\\", "/"));
 			pb.environment().put("SCRIPT_FILENAME", JavaWebServer.fileManager.getAbsolutePath(rq).getAbsolutePath().replace("\\", "/"));
-			pb.environment().put("REQUEST_URI", rq);
 			HashMap<String, ArrayList<String>> hdrs = request.headers.getHeaders();
 			for (String key : hdrs.keySet()) {
 				for (String val : hdrs.get(key)) {

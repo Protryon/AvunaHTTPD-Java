@@ -39,7 +39,7 @@ public class CommandProcessor {
 				if (JavaWebServer.mainConfig != null) {
 					JavaWebServer.mainConfig.save();
 				}
-				if (System.getProperty("os.name").contains("nix")) {
+				if (System.getProperty("os.name").contains("nux")) {
 					Runtime.getRuntime().exec("sh " + JavaWebServer.fileManager.getBaseFile("restart.sh"));
 				}else if (System.getProperty("os.name").toLowerCase().contains("windows")) {
 					Runtime.getRuntime().exec(JavaWebServer.fileManager.getBaseFile("restart.bat").toString());
@@ -123,13 +123,15 @@ public class CommandProcessor {
 			out.println("JCOMP completed.");
 		}else if (command.equals("shell")) {
 			if (targs.length() > 0) {
+				Thread temp = null;
+				Thread temp2 = null;
 				try {
 					Process proc = Runtime.getRuntime().exec(targs);
 					final InputStream pin = proc.getInputStream();
 					final OutputStream pout = proc.getOutputStream();
 					final Scanner s = new Scanner(pin);
 					se = true;
-					Thread temp = new Thread() {
+					temp = new Thread() {
 						public void run() {
 							while (se && scan.hasNextLine()) {
 								try {
@@ -149,7 +151,7 @@ public class CommandProcessor {
 						}
 					};
 					temp.start();
-					Thread temp2 = new Thread() {
+					temp2 = new Thread() {
 						public void run() {
 							while (se && s.hasNextLine()) {
 								out.println(s.nextLine());
@@ -161,10 +163,11 @@ public class CommandProcessor {
 					while (se) {
 						Thread.sleep(10L);
 					}
-					temp.interrupt();
-					temp2.interrupt();
 				}catch (Exception e) {
 					e.printStackTrace(out);
+				}finally {
+					if (temp != null) temp.interrupt();
+					if (temp2 != null) temp2.interrupt();
 				}
 				out.println("Finished Execution.");
 			}else {

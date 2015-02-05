@@ -61,7 +61,7 @@ public class JavaWebServer {
 		try {
 			String[] unpacks = new String[]{"mime.txt", "run.sh", "kill.sh", "restart.sh", "cmd.sh", "run.bat", "kill.bat", "restart.bat", "cmd.bat"};
 			for (String up : unpacks) {
-				if (up.endsWith(".sh") && !System.getProperty("os.name").contains("nix")) {
+				if (up.endsWith(".sh") && !System.getProperty("os.name").contains("nux")) {
 					continue;
 				}
 				if (up.endsWith(".bat") && !System.getProperty("os.name").toLowerCase().contains("windows")) {
