@@ -34,6 +34,11 @@ public class HTMLCache {
 				cur = new StringBuilder();
 			}
 		}
+		if (on) {
+			on = false;
+			html.put(name, cur.toString());
+		}
+		s.close();
 	}
 	
 	public String get(String name) {
