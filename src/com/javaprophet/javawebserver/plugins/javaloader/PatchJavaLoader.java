@@ -116,6 +116,13 @@ public class PatchJavaLoader extends Patch {
 		}
 	}
 	
+	public void reload() {
+		super.reload();
+		for (JavaLoader jl : jls.values()) {
+			jl.reload();
+		}
+	}
+	
 	@Override
 	public boolean shouldProcessPacket(Packet packet) {
 		return false;
