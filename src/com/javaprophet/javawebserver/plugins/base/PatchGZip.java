@@ -49,6 +49,7 @@ public class PatchGZip extends Patch {
 				data2 = bout.toByteArray();
 			}
 			response.headers.addHeader("Content-Encoding", "gzip");
+			response.headers.addHeader("Vary", "Accept-Encoding");
 		}catch (IOException e) {
 			Logger.logError(e);
 		}
