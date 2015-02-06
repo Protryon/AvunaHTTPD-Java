@@ -28,7 +28,7 @@ public class PatchMultiHost extends Patch {
 		RequestPacket request = (RequestPacket)packet;
 		String host = request.headers.getHeader("Host");
 		HashMap<String, Object> forward = (HashMap<String, Object>)pcfg.get("forward");
-		if (request.httpVersion.equals("HTTP/1.0")) for (Object key : forward.keySet()) {
+		if (!request.httpVersion.equals("HTTP/1.0")) for (Object key : forward.keySet()) {
 			String[] spl = ((String)key).split(",");
 			for (String c : spl) {
 				if (c.equals(host)) {
