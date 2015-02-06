@@ -59,7 +59,7 @@ public class ComServer extends Thread {
 						ps.flush();
 					}
 				}catch (Exception se) {
-					// Logger.logError(se);
+					Logger.logError(se);
 					Logger.log("com[" + ip + "] Closed.");
 				}finally {
 					isAuth = false;
