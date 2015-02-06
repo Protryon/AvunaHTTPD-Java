@@ -39,10 +39,10 @@ public class ResponseGenerator {
 				return false;
 			}else {
 				long cur = System.nanoTime();
-				// System.out.println((ah - start) / 1000000D + " start-ah");
-				// System.out.println((ah2 - ah) / 1000000D + " ah-ah2");
-				// System.out.println((ah3 - ah2) / 1000000D + " ah2-ah3");
-				// System.out.println((cur - ah3) / 1000000D + " ah3-cur");
+				System.out.println((ah - start) / 1000000D + " start-ah");
+				System.out.println((ah2 - ah) / 1000000D + " ah-ah2");
+				System.out.println((ah3 - ah2) / 1000000D + " ah2-ah3");
+				System.out.println((cur - ah3) / 1000000D + " ah3-cur");
 				return true;
 			}
 		}catch (Exception e) {

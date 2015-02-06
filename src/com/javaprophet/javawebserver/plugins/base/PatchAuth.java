@@ -42,7 +42,7 @@ public class PatchAuth extends Patch {
 		
 	}
 	
-	public void reload() {
+	public void reload() throws IOException {
 		super.reload();
 		for (Auth a : auths) {
 			a.usersLoaded = false;

@@ -73,6 +73,9 @@ public class RequestPacket extends Packet {
 			return null;
 		}
 		int b = reqLine.indexOf(" ");
+		if (b == -1) {
+			return null;
+		}
 		incomingRequest.method = Method.get(reqLine.substring(0, b));
 		incomingRequest.target = reqLine.substring(b + 1, b = reqLine.indexOf(" ", b + 1));
 		incomingRequest.httpVersion = reqLine.substring(b + 1);

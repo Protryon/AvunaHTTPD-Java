@@ -48,6 +48,7 @@ public class PatchGetPostHead extends Patch {
 	
 	@Override
 	public void processMethod(RequestPacket request, ResponsePacket response) {
+		long start = System.nanoTime();
 		Resource resource = JavaWebServer.fileManager.getResource(request.target);
 		if (resource == null) {
 			ResponseGenerator.generateDefaultResponse(response, StatusCode.NOT_FOUND);
@@ -63,6 +64,7 @@ public class PatchGetPostHead extends Patch {
 				get = rt.substring(rt.indexOf("?"));
 				rt = rt.substring(0, rt.indexOf("?"));
 			}
+			long rtd = System.nanoTime();
 			if (resource.wasDir && !rt.endsWith("/")) {
 				ResponseGenerator.generateDefaultResponse(response, StatusCode.PERM_REDIRECT); // TODO: not relative
 				response.headers.addHeader("Location", rt + "/" + get);
@@ -71,6 +73,8 @@ public class PatchGetPostHead extends Patch {
 			}else {
 				ResponseGenerator.generateDefaultResponse(response, StatusCode.OK);
 				response.body.setBody(resource);
+				System.out.println((rtd - start) / 1000000D + " start-rtd");
+				System.out.println((System.nanoTime() - rtd) / 1000000D + " rtd-now");
 			}
 			return;
 		}

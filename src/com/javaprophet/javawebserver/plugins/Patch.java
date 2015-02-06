@@ -1,6 +1,7 @@
 package com.javaprophet.javawebserver.plugins;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.Packet;
@@ -46,10 +47,10 @@ public abstract class Patch {
 	}
 	
 	public void preExit() {
-		pcfg.save();
 	}
 	
-	public void reload() {
+	public void reload() throws IOException {
+		pcfg.load();
 		pcfg.save();
 	}
 	

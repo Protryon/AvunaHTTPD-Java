@@ -1,5 +1,6 @@
 package com.javaprophet.javawebserver.plugins;
 
+import java.io.IOException;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
@@ -57,7 +58,7 @@ public class PatchBus {
 		}
 	}
 	
-	public void reload() {
+	public void reload() throws IOException {
 		for (Patch patch : PatchRegistry.patchs) {
 			patch.reload();
 		}

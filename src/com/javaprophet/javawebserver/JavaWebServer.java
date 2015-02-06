@@ -320,9 +320,6 @@ public class JavaWebServer {
 			}
 		}
 		patchBus.preExit();
-		if (mainConfig != null) {
-			mainConfig.save();
-		}
 		System.exit(0);
 	}
 }
