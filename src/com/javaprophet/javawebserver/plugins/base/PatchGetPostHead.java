@@ -73,8 +73,8 @@ public class PatchGetPostHead extends Patch {
 			}else {
 				ResponseGenerator.generateDefaultResponse(response, StatusCode.OK);
 				response.body.setBody(resource);
-				System.out.println((rtd - start) / 1000000D + " start-rtd");
-				System.out.println((System.nanoTime() - rtd) / 1000000D + " rtd-now");
+				// System.out.println((rtd - start) / 1000000D + " start-rtd");
+				// System.out.println((System.nanoTime() - rtd) / 1000000D + " rtd-now");
 			}
 			return;
 		}
