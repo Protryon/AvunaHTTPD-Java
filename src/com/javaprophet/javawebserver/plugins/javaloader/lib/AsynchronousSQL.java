@@ -103,7 +103,7 @@ public class AsynchronousSQL {
 		return idc - 1;
 	}
 	
-	public void runQuery(int id) throws SQLException {
+	public void runQuery(int id) {
 		AQuery aq = null;
 		for (AQuery aql : aqs) {
 			if (aql.id == id) {
@@ -114,7 +114,11 @@ public class AsynchronousSQL {
 		if (aq == null) {
 			throw new NullPointerException();
 		}
-		aq.run();
+		try {
+			aq.run();
+		}catch (SQLException e) {
+			Logger.logError(e);
+		}
 	}
 	
 	public ResultSet getQuery(int id) {
