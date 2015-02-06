@@ -42,6 +42,14 @@ public class PatchAuth extends Patch {
 		
 	}
 	
+	public void reload() {
+		super.reload();
+		for (Auth a : auths) {
+			a.usersLoaded = false;
+			a.ull.clear();
+		}
+	}
+	
 	private final class Auth {
 		public String userlist;
 		public boolean cacheUsers;
