@@ -88,6 +88,9 @@ public class AsynchronousSQL {
 	}
 	
 	public int addQuery(String query, int interval, boolean isQuery, boolean alwaysRun) {
+		if (alwaysRun && interval < 1) {
+			throw new NullPointerException("Custom run && alwaysRun cannot be enabled at the same time.");
+		}
 		AQuery aq = new AQuery(manager, idc++, query, interval, isQuery, alwaysRun);
 		aqs.add(aq);
 		if (alwaysRun) {
@@ -114,7 +117,7 @@ public class AsynchronousSQL {
 		aq.run();
 	}
 	
-	public ResultSet getQuery(int id) throws SQLException {
+	public ResultSet getQuery(int id) {
 		AQuery aq = null;
 		for (AQuery aql : aqs) {
 			if (aql.id == id) {
@@ -126,7 +129,11 @@ public class AsynchronousSQL {
 			throw new NullPointerException();
 		}
 		if (!aq.alwaysRun && aq.nextrun >= System.currentTimeMillis()) {
-			aq.run();
+			try {
+				aq.run();
+			}catch (SQLException e) {
+				Logger.logError(e);
+			}
 		}
 		return aq.crs;
 	}
