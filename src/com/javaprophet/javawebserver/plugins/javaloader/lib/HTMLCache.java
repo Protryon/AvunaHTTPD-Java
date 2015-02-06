@@ -2,11 +2,11 @@ package com.javaprophet.javawebserver.plugins.javaloader.lib;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 import com.javaprophet.javawebserver.JavaWebServer;
+import com.javaprophet.javawebserver.plugins.javaloader.HTMLBuilder;
 
 public class HTMLCache {
 	private HashMap<String, String> html = new HashMap<String, String>();
@@ -102,7 +102,7 @@ public class HTMLCache {
 		return html.get(name);
 	}
 	
-	public void write(PrintStream out, String name) {
+	public void write(HTMLBuilder out, String name) throws IOException {
 		out.println(html.get(name));
 	}
 }

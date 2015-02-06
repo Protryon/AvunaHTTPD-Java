@@ -3,7 +3,6 @@ package com.javaprophet.javawebserver.plugins.javaloader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.PrintStream;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -192,7 +191,7 @@ public class PatchJavaLoader extends Patch {
 				ndata = ((JavaLoaderBasic)loader).generate(response, request);
 			}else if (type == 1) {
 				ByteArrayOutputStream bout = new ByteArrayOutputStream();
-				PrintStream out = new PrintStream(bout);
+				HTMLBuilder out = new HTMLBuilder(bout);
 				// long st = System.nanoTime();
 				((JavaLoaderPrint)loader).generate(out, response, request);
 				// System.out.println((System.nanoTime() - st) / 1000000D);
