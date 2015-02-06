@@ -28,7 +28,7 @@ public class CommandProcessor {
 		}else if (command.equals("reload")) {
 			try {
 				JavaWebServer.mainConfig.load();
-				JavaWebServer.patchBus.preExit();
+				JavaWebServer.patchBus.reload();
 			}catch (Exception e) {
 				e.printStackTrace(out);
 			}
