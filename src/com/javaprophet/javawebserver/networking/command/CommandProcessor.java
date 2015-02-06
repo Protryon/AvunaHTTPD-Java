@@ -14,7 +14,7 @@ import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class CommandProcessor {
-	public static void process(String command, final PrintStream out, final Scanner scan, boolean telnet) throws IOException {
+	public static void process(String command, final PrintStream out, final Scanner scan, boolean telnet) throws Exception {
 		se = false;
 		String[] cargs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1).split(" ") : new String[0];
 		String targs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1) : "";
