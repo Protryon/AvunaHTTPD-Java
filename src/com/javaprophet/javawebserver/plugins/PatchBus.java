@@ -39,14 +39,14 @@ public class PatchBus {
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		byte[] rres = data;
 		for (Patch patch : PatchRegistry.patchs) {
-			// long start = System.nanoTime();
 			if (patch.enabled && patch.shouldProcessResponse(response, request, rres)) {
+				// long start = System.nanoTime();
 				rres = patch.processResponse(response, request, rres);
+				// System.out.println(patch.name + ": " + (System.nanoTime() - start) / 1000000D + " ms");
 			}
 			if (response.drop) {
 				break;
 			}
-			// Logger.log(patch.name + ": " + (System.nanoTime() - start) / 1000000D + " ms");
 		}
 		return rres;
 	}

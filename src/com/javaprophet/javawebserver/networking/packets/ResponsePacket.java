@@ -80,7 +80,7 @@ public class ResponsePacket extends Packet {
 			System.arraycopy(add, 0, total, cachedSerialize.length, add.length);
 			cachedPacket = thisClone;
 			long end = System.nanoTime();
-			// Logger.log("serialize: " + ((end - start) / 1000000D) + ", " + ((start - ps2) / 1000000D) + ", " + ((ps2 - ps1) / 1000000D) + " ms");
+			// System.out.println("serialize: " + ((end - start) / 1000000D) + ", " + ((start - ps2) / 1000000D) + ", " + ((ps2 - ps1) / 1000000D) + " ms");
 			return total;
 		}catch (Exception e) {
 			Logger.logError(e);
@@ -97,7 +97,9 @@ public class ResponsePacket extends Packet {
 	public boolean reqTransfer = false;
 	
 	public ResponsePacket write(DataOutputStream out) throws IOException {
+		long start = System.nanoTime();
 		byte[] write = serialize(request.method != Method.HEAD);
+		long as = System.nanoTime();
 		cachedPacket.bwt = System.nanoTime();
 		if (write == null) {
 			return null;
@@ -105,6 +107,7 @@ public class ResponsePacket extends Packet {
 		out.write(write);
 		write = null;
 		out.flush();
+		long pw = System.nanoTime();
 		if (cachedPacket.headers.hasHeader("Transfer-Encoding")) {
 			String te = cachedPacket.headers.getHeader("Transfer-Encoding");
 			if (te.equals("chunked")) {
@@ -117,6 +120,10 @@ public class ResponsePacket extends Packet {
 				out.close();
 			}
 		}
+		long ret = System.nanoTime();
+		// System.out.println((as - start) / 1000000D + " start-as");
+		// System.out.println((pw - as) / 1000000D + " as-pw");
+		// System.out.println((ret - pw) / 1000000D + " pw-ret");
 		return cachedPacket;
 	}
 }

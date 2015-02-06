@@ -1,4 +1,4 @@
-package com.javaprophet.javawebserver.plugins.javaloader;
+package com.javaprophet.javawebserver.plugins.javaloader.lib;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

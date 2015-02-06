@@ -8,4 +8,8 @@ public abstract class JavaLoaderPrint extends JavaLoader {
 	
 	public abstract void generate(PrintStream out, ResponsePacket response, RequestPacket request);
 	
+	public final int getType() {
+		return 1;
+	}
+	
 }

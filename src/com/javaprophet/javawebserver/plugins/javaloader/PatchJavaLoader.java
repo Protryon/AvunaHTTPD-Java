@@ -187,22 +187,25 @@ public class PatchJavaLoader extends Patch {
 			request.procJL();
 			long proc = System.nanoTime();
 			byte[] ndata = null;
-			if (JavaLoaderBasic.class.isAssignableFrom(loader.getClass())) {
+			int type = loader.getType();
+			if (type == 0) {
 				ndata = ((JavaLoaderBasic)loader).generate(response, request);
-			}else if (JavaLoaderPrint.class.isAssignableFrom(loader.getClass())) {
+			}else if (type == 1) {
 				ByteArrayOutputStream bout = new ByteArrayOutputStream();
 				PrintStream out = new PrintStream(bout);
+				// long st = System.nanoTime();
 				((JavaLoaderPrint)loader).generate(out, response, request);
+				// System.out.println((System.nanoTime() - st) / 1000000D);
 				ndata = bout.toByteArray();
-			}else if (JavaLoaderStream.class.isAssignableFrom(loader.getClass())) {
+			}else if (type == 2) {
 				response.reqStream = (JavaLoaderStream)loader;
 			}
 			long cur = System.nanoTime();
-			// Logger.log((digest - start) / 1000000D + " start-digest");
-			// Logger.log((loaded - digest) / 1000000D + " digest-loaded");
-			// Logger.log((loadert - loaded) / 1000000D + " loaded-loadert");
-			// Logger.log((proc - loadert) / 1000000D + " loadert-proc");
-			// Logger.log((cur - proc) / 1000000D + " proc-cur");
+			// System.out.println((digest - start) / 1000000D + " start-digest");
+			// System.out.println((loaded - digest) / 1000000D + " digest-loaded");
+			// System.out.println((loadert - loaded) / 1000000D + " loaded-loadert");
+			// System.out.println((proc - loadert) / 1000000D + " loadert-proc");
+			// System.out.println((cur - proc) / 1000000D + " proc-cur");
 			return ndata;
 		}catch (Exception e) {
 			Logger.logError(e);;

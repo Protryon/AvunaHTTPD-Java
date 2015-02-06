@@ -2,8 +2,8 @@ package com.javaprophet.javawebserver.plugins.base;
 
 import java.util.HashMap;
 import java.util.zip.CRC32;
-import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.Method;
+import com.javaprophet.javawebserver.http.ResponseGenerator;
 import com.javaprophet.javawebserver.http.StatusCode;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
@@ -43,7 +43,7 @@ public class PatchETag extends Patch {
 		String etag = crc.getValue() + "";// bytesToHex(md5.digest(data));
 		if (request.headers.hasHeader("If-None-Match")) {
 			if (request.headers.getHeader("If-None-Match").replace("\"", "").equals(etag)) {
-				JavaWebServer.rg.generateDefaultResponse(response, StatusCode.NOT_MODIFIED);
+				ResponseGenerator.generateDefaultResponse(response, StatusCode.NOT_MODIFIED);
 				response.body = null;
 				return null;
 			}

@@ -9,6 +9,10 @@ public abstract class JavaLoader {
 		
 	}
 	
+	public int getType() {
+		return -1;
+	}
+	
 	public void reload() {
 		
 	}
