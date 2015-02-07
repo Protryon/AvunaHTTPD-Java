@@ -1,7 +1,6 @@
 package com.javaprophet.javawebserver.networking.command;
 
 import java.io.DataInputStream;
-import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.Scanner;
@@ -37,16 +36,12 @@ public class ComClient {
 				while (!cs.isClosed()) {
 					String com = scan.readLine();
 					if (com == null) {
-						try {
-							Thread.sleep(50L);
-						}catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-						continue;
+						cs.close();
+						throw new Exception();
 					}
 					System.out.println(com);
 				}
-			}catch (IOException e) {
+			}catch (Exception e) {
 				System.out.println("Connection Terminated, restarting... [close]");
 			}
 			try {
