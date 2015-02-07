@@ -84,6 +84,8 @@ public class FileManager {
 		for (int i = 0; i < delSize; i++) {
 			cache.remove(delKeys[i]);
 			extCache.remove(delKeys[i]);
+			lwiCache.remove(delKeys[i]);
+			tbCache.remove(delKeys[i]);
 		}
 	}
 	
@@ -165,14 +167,27 @@ public class FileManager {
 			if (cache.containsKey(rt)) {
 				long t = System.currentTimeMillis();
 				long cc = Integer.parseInt(((String)JavaWebServer.mainConfig.get("cacheClock")));
-				if (((cc > 0 && t - cc < cacheClock) || (cc == -1)) || extCache.get(rt).equals("application/x-java")) {
+				boolean tc = cc > 0 && t - cc < cacheClock;
+				if (tc || cc == -1 || extCache.get(rt).equals("application/x-java")) {
 					resource = cache.get(rt);
 					ext = extCache.get(rt);
 					lwi = lwiCache.get(rt);
 					tooBig = tbCache.get(rt);
-				}else {
+				}else if (!tc && cc > 0) {
 					cacheClock = t;
-					clearCache();
+					String[] delKeys = new String[cache.size()];
+					int delSize = 0;
+					for (String file : cache.keySet()) {
+						if (!extCache.get(file).equals("application/x-java")) {
+							delKeys[delSize++] = file;
+						}
+					}
+					for (int i = 0; i < delSize; i++) {
+						cache.remove(delKeys[i]);
+						extCache.remove(delKeys[i]);
+						lwiCache.remove(delKeys[i]);
+						tbCache.remove(delKeys[i]);
+					}
 				}
 			}
 			if (resource == null) {
