@@ -75,7 +75,12 @@ public class Headers {
 	public ArrayList<String> getHeaders(String name) {
 		return headers.get(name);
 	}
-	
+
+    /**
+     * Get a header value from the hashmap.
+     * @param name the key to get
+     * @return value from the name/key
+     */
 	public String getHeader(String name) {
 		for (String key : headers.keySet()) {
 			if (key.equals(name) && headers.get(key).size() > 0) {
