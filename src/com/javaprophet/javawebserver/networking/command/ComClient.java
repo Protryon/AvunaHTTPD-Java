@@ -41,6 +41,8 @@ public class ComClient {
 						if (nc >= 10) {
 							cs.close();
 							throw new Exception();
+						}else {
+							continue;
 						}
 					}
 					System.out.println(com);
