@@ -14,7 +14,7 @@ public class PatchCacheControl extends Patch {
 	
 	@Override
 	public void formatConfig(HashMap<String, Object> json) {
-		if (!json.containsKey("maxage")) json.put("maxage", "86400");
+		if (!json.containsKey("maxage")) json.put("maxage", "604800");
 		if (!json.containsKey("nocache")) json.put("nocache", "application/.*");
 	}
 	
