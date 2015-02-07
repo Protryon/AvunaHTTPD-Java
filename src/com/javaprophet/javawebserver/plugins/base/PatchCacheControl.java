@@ -6,15 +6,16 @@ import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
 
-public class PatchContentType extends Patch {
+public class PatchCacheControl extends Patch {
 	
-	public PatchContentType(String name) {
+	public PatchCacheControl(String name) {
 		super(name);
 	}
 	
 	@Override
 	public void formatConfig(HashMap<String, Object> json) {
-		
+		if (!json.containsKey("maxage")) json.put("maxage", "86400");
+		if (!json.containsKey("nocache")) json.put("nocache", "application/.*");
 	}
 	
 	@Override
@@ -28,22 +29,19 @@ public class PatchContentType extends Patch {
 	}
 	
 	@Override
+	public void processMethod(RequestPacket request, ResponsePacket response) {
+		
+	}
+	
+	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return true;
+		return response.body != null && response.body.getBody() != null;
 	}
 	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		response.headers.removeHeaders("Content-Type");
-		if (data != null) {
-			String ce = response.body.getBody().type;
-			response.headers.addHeader("Content-Type", ce.startsWith("text") ? (ce + "; charset=utf-8") : ce);
-		}
+		response.headers.addHeader("Cache-Control: max-age=" + (String)pcfg.get("maxage") + (response.headers.getHeader("Content-Type").matches((String)pcfg.get("nocache")) ? ", no-cache" : ""));
 		return data;
 	}
 	
-	@Override
-	public void processMethod(RequestPacket request, ResponsePacket response) {
-		
-	}
 }

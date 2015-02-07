@@ -13,9 +13,9 @@ public class BaseLoader {
 		PatchRegistry.registerPatch(new PatchEnforceRedirect("EnforceRedirect"));
 		PatchRegistry.registerPatch(new PatchMultiHost("MultiHost"));
 		PatchRegistry.registerPatch(new PatchContentType("ContentType"));
+		PatchRegistry.registerPatch(new PatchCacheControl("CacheControl"));
 		// methods
-		PatchGetPostHead getposthead = new PatchGetPostHead("GetPostHead");
-		PatchRegistry.registerPatch(getposthead);
+		PatchRegistry.registerPatch(new PatchGetPostHead("GetPostHead"));
 		
 		PatchRegistry.registerPatch(new PatchAuth("Auth"));
 		
