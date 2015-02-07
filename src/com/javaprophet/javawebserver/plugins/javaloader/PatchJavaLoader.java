@@ -17,6 +17,7 @@ import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
+import com.javaprophet.javawebserver.plugins.javaloader.lib.HTMLCache;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class PatchJavaLoader extends Patch {
@@ -119,6 +120,7 @@ public class PatchJavaLoader extends Patch {
 	
 	public void reload() throws IOException {
 		super.reload();
+		HTMLCache.reloadAll();
 		for (JavaLoader jl : jls.values()) {
 			jl.reload();
 		}
