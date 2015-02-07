@@ -49,7 +49,7 @@ public class AsynchronousSQL {
 		public long nextrun = 0;
 		private final DatabaseManager manager;
 		public final boolean isQuery, alwaysRun;
-		public CachedRowSet crs = null; // TODO: createCopy(); as may have concurrency issues
+		public CachedRowSet crs = null;
 		
 		public AQuery(DatabaseManager manager, int id, String query, int interval, boolean isQuery, boolean alwaysRun) {
 			this.id = id;
@@ -139,6 +139,11 @@ public class AsynchronousSQL {
 				Logger.logError(e);
 			}
 		}
-		return aq.crs;
+		try {
+			return aq.crs.createShared();
+		}catch (SQLException e) {
+			Logger.logError(e);
+			return null;
+		}
 	}
 }
