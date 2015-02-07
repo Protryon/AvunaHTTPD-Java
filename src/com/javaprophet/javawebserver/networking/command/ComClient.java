@@ -33,11 +33,15 @@ public class ComClient {
 				out = new PrintStream(cs.getOutputStream());
 				out.flush();
 				scan = new DataInputStream(cs.getInputStream());
+				int nc = 0;
 				while (!cs.isClosed()) {
 					String com = scan.readLine();
 					if (com == null) {
-						cs.close();
-						throw new Exception();
+						nc++;
+						if (nc >= 10) {
+							cs.close();
+							throw new Exception();
+						}
 					}
 					System.out.println(com);
 				}
