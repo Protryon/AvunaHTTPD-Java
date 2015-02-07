@@ -34,11 +34,11 @@ public class PatchEnforceRedirect extends Patch {
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		String host = request.headers.getHeader("Host");
-		if (!request.httpVersion.equals("HTTP/1.0")) for (Object key : pcfg.keySet()) {
+		if (!request.httpVersion.equals("HTTP/1.0")) for (String key : pcfg.keySet()) {
 			if (key.equals("enabled")) continue;
-			String regex = ((String)key);
-			if (host.matches(regex)) {
-				response.headers.updateHeader("Location", (request.ssl ? "https" : "http") + "://" + (String)pcfg.get((String)key) + request.target);
+			String regex = key;
+			if (!host.equals(pcfg.get(key)) && host.matches(regex)) {
+				response.headers.updateHeader("Location", (request.ssl ? "https" : "http") + "://" + (String)pcfg.get(key) + request.target);
 				response.statusCode = 301;
 				response.reasonPhrase = "Moved Permanently";
 				response.body = null;
