@@ -21,7 +21,7 @@ public abstract class Patch {
 	
 	public Patch(String name) {
 		this.name = name;
-		pcfg = new Config(new File(JavaWebServer.fileManager.getPlugin(this), "plugin.cfg"), new ConfigFormat() {
+		pcfg = new Config(name, new File(JavaWebServer.fileManager.getPlugin(this), "plugin.cfg"), new ConfigFormat() {
 			public void format(HashMap<String, Object> map) {
 				if (!map.containsKey("enabled")) map.put("enabled", enabled);
 				formatConfig(map);
@@ -33,7 +33,7 @@ public abstract class Patch {
 		}catch (Exception e) {
 			Logger.logError(e);
 		}
-		enabled = ((String)pcfg.get("enabled")).equals("true");
+		enabled = ((String)pcfg.get("enabled", null)).equals("true");
 	}
 	
 	public void log(String line) {

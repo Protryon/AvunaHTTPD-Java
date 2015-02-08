@@ -16,28 +16,28 @@ import com.javaprophet.javawebserver.util.Logger;
  * Server that handles all com related stuff.
  */
 public class ComServer extends Thread {
-
-    /**
-     * Our constructor
-     */
+	
+	/**
+	 * Our constructor
+	 */
 	public ComServer() {
 		
 	}
-
-    /**
-     * Our run method that handles everything
-     */
+	
+	/**
+	 * Our run method that handles everything
+	 */
 	public void run() {
 		try {
-            //Com config
-			HashMap<String, Object> com = (HashMap<String, Object>)JavaWebServer.mainConfig.get("com");
-            //Server socket and some more config options under
+			// Com config
+			HashMap<String, Object> com = (HashMap<String, Object>)JavaWebServer.mainConfig.get("com", null);
+			// Server socket and some more config options under
 			ServerSocket server = new ServerSocket(Integer.parseInt((String)com.get("bindport")), 10, InetAddress.getByName((String)com.get("bindip")));
 			boolean doAuth = com.get("doAuth").equals("true");
 			boolean isAuth = false;
 			String auth = (String)com.get("auth");
 			while (!server.isClosed()) {
-                //Loops for new connections
+				// Loops for new connections
 				String ip = "";
 				Socket s = null;
 				try {
@@ -45,7 +45,7 @@ public class ComServer extends Thread {
 					DataOutputStream out = new DataOutputStream(s.getOutputStream());
 					out.flush();
 					DataInputStream in = new DataInputStream(s.getInputStream());
-                    //Handles auth
+					// Handles auth
 					out.write(("Java Web Server(JWS) Version " + JavaWebServer.VERSION + JavaWebServer.crlf + (doAuth ? "Please Authenticate." + JavaWebServer.crlf : "")).getBytes());
 					out.flush();
 					Scanner scan = new Scanner(in);

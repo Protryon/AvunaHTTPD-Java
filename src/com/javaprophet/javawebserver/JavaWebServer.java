@@ -129,7 +129,7 @@ public class JavaWebServer {
 			}
 			System.setProperty("line.separator", crlf);
 			final File cfg = new File(args.length > 0 ? args[0] : (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\jws\\main.cfg" : "/etc/jws/main.cfg"));
-			mainConfig = new Config(cfg, new ConfigFormat() {
+			mainConfig = new Config("main", cfg, new ConfigFormat() {
 				public void format(HashMap<String, Object> map) {
 					if (!map.containsKey("version")) map.put("version", JavaWebServer.VERSION);
 					File dir = null;
@@ -181,14 +181,14 @@ public class JavaWebServer {
 			Connection.init();
 			Logger.log("Loading Base Plugins");
 			BaseLoader.loadBases();
-			HashMap<String, Object> com = ((HashMap<String, Object>)mainConfig.get("com"));
+			HashMap<String, Object> com = ((HashMap<String, Object>)mainConfig.get("com", null));
 			if (((String)com.get("enabled")).equals("true")) {
 				Logger.log("Starting Com server on " + ((String)com.get("bindip")) + ":" + ((String)com.get("bindport")));
 				ComServer server = new ComServer();
 				server.start();
 			}
-			final int bindport = Integer.parseInt((String)mainConfig.get("bindport"));
-			final String bindip = (String)mainConfig.get("bindip");
+			final int bindport = Integer.parseInt((String)mainConfig.get("bindport", null));
+			final String bindip = (String)mainConfig.get("bindip", null);
 			Logger.log("Starting Server on " + bindip + ":" + bindport);
 			Thread tnssl = new Thread() {
 				public void run() {
@@ -219,7 +219,7 @@ public class JavaWebServer {
 				}
 			};
 			tnssl.start();
-			final HashMap<String, Object> ssl = (HashMap<String, Object>)mainConfig.get("ssl");
+			final HashMap<String, Object> ssl = (HashMap<String, Object>)mainConfig.get("ssl", null);
 			if (((String)ssl.get("enabled")).equals("true")) {
 				Thread tssl = new Thread() {
 					public void run() {

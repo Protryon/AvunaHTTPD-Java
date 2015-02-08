@@ -40,7 +40,7 @@ public class PatchCacheControl extends Patch {
 	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		response.headers.addHeader("Cache-Control: max-age=" + (String)pcfg.get("maxage") + (response.headers.getHeader("Content-Type").matches((String)pcfg.get("nocache")) ? ", no-cache" : ""));
+		response.headers.addHeader("Cache-Control: max-age=" + (String)pcfg.get("maxage", response) + (response.headers.getHeader("Content-Type").matches((String)pcfg.get("nocache", response)) ? ", no-cache" : ""));
 		return data;
 	}
 	

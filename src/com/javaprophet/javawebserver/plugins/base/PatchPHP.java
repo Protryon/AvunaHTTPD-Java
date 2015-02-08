@@ -57,10 +57,10 @@ public class PatchPHP extends Patch {
 			}else {
 				get = "";
 			}
-			ProcessBuilder pb = new ProcessBuilder((String)pcfg.get("cmd"));
+			ProcessBuilder pb = new ProcessBuilder((String)pcfg.get("cmd", response));
 			pb.environment().put("REQUEST_URI", rq);
 			
-			rq = JavaWebServer.fileManager.correctForIndex(rq);
+			rq = JavaWebServer.fileManager.correctForIndex(rq, response);
 			
 			pb.environment().put("CONTENT_LENGTH", request.body.getBody().data.length + "");
 			pb.environment().put("CONTENT_TYPE", request.body.getBody().type);
@@ -77,15 +77,15 @@ public class PatchPHP extends Patch {
 			pb.environment().put("SERVER_NAME", request.headers.getHeader("Host"));
 			int port = 80;
 			if (request.ssl) {
-				port = Integer.parseInt((String)((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl")).get("bindport"));
+				port = Integer.parseInt((String)((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl", response)).get("bindport"));
 			}else {
-				port = Integer.parseInt(((String)JavaWebServer.mainConfig.get("bindport")));
+				port = Integer.parseInt(((String)JavaWebServer.mainConfig.get("bindport", response)));
 			}
 			pb.environment().put("SERVER_PORT", port + "");
 			pb.environment().put("SERVER_PROTOCOL", request.httpVersion);
 			pb.environment().put("SERVER_SOFTWARE", "JWS/" + JavaWebServer.VERSION);
 			pb.environment().put("DOCUMENT_ROOT", JavaWebServer.fileManager.getHTDocs().getAbsolutePath().replace("\\", "/"));
-			pb.environment().put("SCRIPT_FILENAME", JavaWebServer.fileManager.getAbsolutePath(rq).getAbsolutePath().replace("\\", "/"));
+			pb.environment().put("SCRIPT_FILENAME", JavaWebServer.fileManager.getAbsolutePath(rq, response).getAbsolutePath().replace("\\", "/"));
 			HashMap<String, ArrayList<String>> hdrs = request.headers.getHeaders();
 			for (String key : hdrs.keySet()) {
 				for (String val : hdrs.get(key)) {

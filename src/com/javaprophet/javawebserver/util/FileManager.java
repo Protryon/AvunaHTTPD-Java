@@ -11,6 +11,7 @@ import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.http.StatusCode;
+import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
 import com.javaprophet.javawebserver.plugins.base.PatchChunked;
 import com.javaprophet.javawebserver.plugins.javaloader.lib.HTMLCache;
@@ -33,35 +34,35 @@ public class FileManager {
 	}
 	
 	public File getMainDir() {
-		return new File((String)JavaWebServer.mainConfig.get("dir"));
+		return new File((String)JavaWebServer.mainConfig.get("dir", null));
 	}
 	
 	public File getHTDocs() {
-		return new File((String)JavaWebServer.mainConfig.get("htdocs"));
+		return new File((String)JavaWebServer.mainConfig.get("htdocs", null));
 	}
 	
 	public File getLogs() {
-		return new File((String)JavaWebServer.mainConfig.get("logs"));
+		return new File((String)JavaWebServer.mainConfig.get("logs", null));
 	}
 	
 	public File getHTSrc() {
-		return new File((String)JavaWebServer.mainConfig.get("htsrc"));
+		return new File((String)JavaWebServer.mainConfig.get("htsrc", null));
 	}
 	
 	public File getSSL() {
-		return new File((String)(((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl")).get("folder")));
+		return new File((String)(((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl", null)).get("folder")));
 	}
 	
 	public File getSSLKeystore() {
-		return new File(getSSL(), (String)(((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl")).get("keyFile")));
+		return new File(getSSL(), (String)(((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl", null)).get("keyFile")));
 	}
 	
 	public File getPlugins() {
-		return new File((String)JavaWebServer.mainConfig.get("plugins"));
+		return new File((String)JavaWebServer.mainConfig.get("plugins", null));
 	}
 	
 	public File getTemp() {
-		return new File((String)JavaWebServer.mainConfig.get("temp"));
+		return new File((String)JavaWebServer.mainConfig.get("temp", null));
 	}
 	
 	public File getPlugin(Patch p) {
@@ -89,12 +90,12 @@ public class FileManager {
 		}
 	}
 	
-	public void getErrorPage(MessageBody body, String reqTarget, StatusCode status, String info) {
-		HashMap<String, Object> errorPages = (HashMap<String, Object>)JavaWebServer.mainConfig.get("errorpages");
+	public void getErrorPage(ResponsePacket response, MessageBody body, String reqTarget, StatusCode status, String info) {
+		HashMap<String, Object> errorPages = (HashMap<String, Object>)JavaWebServer.mainConfig.get("errorpages", response);
 		if (errorPages.containsKey(status.getStatus())) {
 			try {
 				String path = (String)errorPages.get(status.getStatus());
-				Resource resource = getResource(path);
+				Resource resource = getResource(path, response);
 				if (resource != null) {
 					if (resource.type.startsWith("text")) {
 						String res = new String(resource.data);
@@ -115,11 +116,11 @@ public class FileManager {
 	
 	private boolean lwi = false;
 	
-	public File getAbsolutePath(String reqTarget) {
+	public File getAbsolutePath(String reqTarget, ResponsePacket response) {
 		lwi = false;
 		File abs = new File(JavaWebServer.fileManager.getHTDocs(), URLDecoder.decode(reqTarget));
 		if (abs.isDirectory()) {
-			String[] index = ((String)JavaWebServer.mainConfig.get("index")).split(",");
+			String[] index = ((String)JavaWebServer.mainConfig.get("index", response)).split(",");
 			for (String i : index) {
 				i = i.trim();
 				if (i.startsWith("/")) {
@@ -140,8 +141,8 @@ public class FileManager {
 		return abs;
 	}
 	
-	public String correctForIndex(String reqTarget) {
-		String p = getAbsolutePath(reqTarget).getAbsolutePath().replace("\\", "/");
+	public String correctForIndex(String reqTarget, ResponsePacket response) {
+		String p = getAbsolutePath(reqTarget, response).getAbsolutePath().replace("\\", "/");
 		return p.substring(JavaWebServer.fileManager.getHTDocs().getAbsolutePath().replace("\\", "/").length());
 	}
 	
@@ -151,7 +152,7 @@ public class FileManager {
 	public static final HashMap<String, Boolean> tbCache = new HashMap<String, Boolean>();
 	private static long cacheClock = 0L;
 	
-	public Resource getResource(String reqTarget) {
+	public Resource getResource(String reqTarget, ResponsePacket response) {
 		try {
 			String rt = reqTarget;
 			if (rt.contains("#")) {
@@ -166,7 +167,7 @@ public class FileManager {
 			boolean tooBig = false;
 			if (cache.containsKey(rt)) {
 				long t = System.currentTimeMillis();
-				long cc = Integer.parseInt(((String)JavaWebServer.mainConfig.get("cacheClock")));
+				long cc = Integer.parseInt(((String)JavaWebServer.mainConfig.get("cacheClock", response)));
 				boolean tc = cc > 0 && t - cc < cacheClock;
 				if (tc || cc == -1 || extCache.get(rt).equals("application/x-java")) {
 					resource = cache.get(rt);
@@ -191,7 +192,7 @@ public class FileManager {
 				}
 			}
 			if (resource == null) {
-				File abs = getAbsolutePath(rt);
+				File abs = getAbsolutePath(rt, response);
 				ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
 				ext = JavaWebServer.extensionToMime.containsKey(ext) ? JavaWebServer.extensionToMime.get(ext) : "application/octet-stream";
 				FileInputStream fin = new FileInputStream(abs);
@@ -203,7 +204,7 @@ public class FileManager {
 					if (i > 0) {
 						bout.write(buf, 0, i);
 					}
-					if (PatchChunked.INSTANCE.enabled && bout.size() > Integer.parseInt((String)PatchChunked.INSTANCE.pcfg.get("minsize")) && !ext.startsWith("application")) {
+					if (PatchChunked.INSTANCE.enabled && bout.size() > Integer.parseInt((String)PatchChunked.INSTANCE.pcfg.get("minsize", response)) && !ext.startsWith("application")) {
 						bout.reset();
 						tooBig = true;
 						break;

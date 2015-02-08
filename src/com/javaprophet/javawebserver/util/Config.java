@@ -6,28 +6,56 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
+import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 
 public class Config {
 	private final File cfg;
 	private ConfigFormat format = null;
 	private HashMap<String, Object> cm = new HashMap<String, Object>();
+	public final String name;
+	private final String iconf;
+	public static final HashMap<String, Config> configs = new HashMap<String, Config>();
 	
-	public Config(File cfg, ConfigFormat format) {
+	public Config(String name, File cfg, ConfigFormat format) {
 		this.cfg = cfg;
 		this.format = format;
+		this.name = name;
+		this.iconf = null;
 		if (!cfg.exists()) {
 			save();
 		}
+		configs.put(name, this);
 	}
 	
-	public Object get(String name) {
+	public Config(String name, String conf, ConfigFormat format) {
+		this.cfg = null;
+		this.format = format;
+		this.name = name;
+		this.iconf = conf;
+		configs.put(name, this);
+	}
+	
+	private boolean has(String name) {
+		return cm.containsKey(name);
+	}
+	
+	public Object get(String name, ResponsePacket response) {
+		if (response != null && response.overrideConfig != null && response.overrideConfig.has(name)) return response.overrideConfig.get(name, null);
 		return cm.get(name);
 	}
 	
-	public Set<String> keySet() {
-		return cm.keySet();
+	public Set<String> keySet(ResponsePacket response) {
+		if (response != null && response.overrideConfig != null) {
+			Set<String> base = new HashSet<String>();
+			base.addAll(cm.keySet());
+			base.addAll(response.overrideConfig.keySet(null));
+			return base;
+		}else {
+			return cm.keySet();
+		}
 	}
 	
 	public void set(String name, String value) {
@@ -41,11 +69,11 @@ public class Config {
 	}
 	
 	public void load() throws IOException {
-		if (!cfg.exists() && cfg.isFile()) {
+		if (cfg != null && !cfg.exists() && cfg.isFile()) {
 			format();
 			save();
 		}
-		Scanner in = new Scanner(new FileInputStream(cfg));
+		Scanner in = cfg == null ? new Scanner(iconf) : new Scanner(new FileInputStream(cfg));
 		readMap(cm, in);
 		in.close();
 		format();
@@ -104,6 +132,7 @@ public class Config {
 	}
 	
 	public void save() {
+		if (cfg == null) return;
 		format();
 		try {
 			if (!cfg.getParentFile().exists()) {
@@ -113,7 +142,7 @@ public class Config {
 				cfg.createNewFile();
 			}
 			PrintStream out = new PrintStream(new FileOutputStream(cfg));
-			writeMap(cfg.getName().substring(0, cfg.getName().indexOf(".")), cm, out);
+			writeMap(name, cm, out);
 			out.flush();
 			out.close();
 		}catch (IOException e) {

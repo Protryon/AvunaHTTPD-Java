@@ -18,7 +18,7 @@ public class Connection {
 	private static ArrayList<ThreadWorker> workers = new ArrayList<ThreadWorker>();
 	
 	public static void init() {
-		for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("nginxThreadCount")); i++) {
+		for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("nginxThreadCount", null)); i++) {
 			ThreadWorker worker = new ThreadWorker();
 			workers.add(worker);
 			worker.start();

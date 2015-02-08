@@ -27,7 +27,7 @@ public class PatchJavaLoader extends Patch {
 	public PatchJavaLoader(String name) {
 		super(name);
 		log("Loading JavaLoader Libs");
-		lib = new File(JavaWebServer.fileManager.getMainDir(), (String)pcfg.get("lib"));
+		lib = new File(JavaWebServer.fileManager.getMainDir(), (String)pcfg.get("lib", null));
 		if (!lib.exists() || !lib.isDirectory()) {
 			lib.mkdirs();
 		}
