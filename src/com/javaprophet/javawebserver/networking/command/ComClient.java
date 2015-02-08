@@ -5,12 +5,34 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.util.Scanner;
 
+
+/**
+ * Command Client that is connected to ComServer to handle commands from the outside.
+ */
 public class ComClient {
+
+    /**
+     * Our socket connection
+     */
 	static Socket cs = null;
+
+    /**
+     * Our inputstream to read from the socket connection
+     */
 	static DataInputStream scan = null;
+
+    /**
+     * Out writer to write to the ComClient
+     */
 	static PrintStream out = null;
-	
+
+    /**
+     * Runs the ComClient
+     * @param ip the ip
+     * @param port the port to use
+     */
 	public static void run(String ip, int port) {
+        //Handles console/com input and processes.
 		Thread mte = new Thread() {
 			public void run() {
 				Scanner inp = new Scanner(System.in);
@@ -26,7 +48,10 @@ public class ComClient {
 				}
 			}
 		};
+        //Start the thread looping
 		mte.start();
+
+        //TODO: What does this do JavaProphet?
 		while (true) {
 			try {
 				cs = new Socket(ip, port);

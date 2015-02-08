@@ -14,19 +14,36 @@ import com.javaprophet.javawebserver.j2p.JavaToPHP;
 import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
 import com.javaprophet.javawebserver.util.Logger;
 
+/**
+ * Handles all incoming commands from ComClient & ComServer.
+ */
 public class CommandProcessor {
+
+    /**
+     * Processes our command
+     * @param command the command to process
+     * @param out the output to write to
+     * @param scan the scanner to read from
+     * @param telnet if it's a telnet connection
+     * @throws Exception an exception gets thrown when something doesn't work out well.
+     */
 	public static void process(String command, final PrintStream out, final Scanner scan, boolean telnet) throws Exception {
 		se = false;
+        //Fancy command parsing right here
 		String[] cargs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1).split(" ") : new String[0];
 		String targs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1) : "";
 		command = command.contains(" ") ? command.substring(0, command.indexOf(" ")) : command;
+
+        //If else statements here, no usage of switch as the server should support JDK/JRE 6.45
 		if (command.equals("exit") || command.equals("stop")) {
 			JavaWebServer.patchBus.preExit();
 			if (JavaWebServer.mainConfig != null) {
 				JavaWebServer.mainConfig.save();
 			}
+            //TODO: No pls make better exit method.
 			System.exit(0);
 		}else if (command.equals("reload")) {
+            //Reloads our patches and config
 			try {
 				JavaWebServer.mainConfig.load();
 				JavaWebServer.patchBus.reload();
@@ -35,6 +52,8 @@ public class CommandProcessor {
 			}
 			out.println("Loaded Config! Some entries will require a restart.");
 		}else if (command.equals("restart")) {
+            //Restarts our server completely
+            //TODO: Doesnt exit the program so maybe JVMBindException will occur?
 			try {
 				JavaWebServer.patchBus.preExit();
 				if (JavaWebServer.mainConfig != null) {
@@ -50,6 +69,7 @@ public class CommandProcessor {
 			}
 			out.println("Restarting...");
 		}else if (command.equals("flushcache")) {
+            //Flushes our file cache and will require reading from files.
 			try {
 				JavaWebServer.fileManager.clearCache();
 			}catch (Exception e) {
@@ -218,9 +238,17 @@ public class CommandProcessor {
 			out.println("Unknown Command: " + command);
 		}
 	}
-	
+
+    /**
+     * WTf
+     */
 	private static boolean se = false;
-	
+
+    /**
+     * Needs comp
+     * @param cfs
+     * @param base
+     */
 	private static void recurForComp(ArrayList<String> cfs, File base) {
 		for (File f : base.listFiles()) {
 			if (f.isDirectory()) {
