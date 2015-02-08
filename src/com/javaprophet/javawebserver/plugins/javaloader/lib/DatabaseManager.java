@@ -9,6 +9,13 @@ import java.util.ArrayList;
 public class DatabaseManager {
 	private Connection conn;
 	private ArrayList<ExtendedStatement> estmts = new ArrayList<ExtendedStatement>();
+	private static ArrayList<DatabaseManager> open = new ArrayList<DatabaseManager>();
+	
+	public static void closeAll() throws SQLException {
+		for (DatabaseManager db : open) {
+			db.close();
+		}
+	}
 	
 	public DatabaseManager(String driver, String ip, String db, String user, String pass) throws SQLException {
 		conn = DriverManager.getConnection("jdbc:" + driver + "://" + ip + "/" + db + "?user=" + user + "&password=" + pass);

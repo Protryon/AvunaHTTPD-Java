@@ -10,6 +10,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.zip.CRC32;
 import com.javaprophet.javawebserver.JavaWebServer;
@@ -17,6 +18,7 @@ import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
+import com.javaprophet.javawebserver.plugins.javaloader.lib.DatabaseManager;
 import com.javaprophet.javawebserver.plugins.javaloader.lib.HTMLCache;
 import com.javaprophet.javawebserver.util.Logger;
 
@@ -42,7 +44,7 @@ public class PatchJavaLoader extends Patch {
 			}
 			method.invoke(sysloader, new Object[]{JavaWebServer.fileManager.getHTDocs().toURI().toURL()});
 		}catch (Throwable t) {
-			Logger.logError(t);;
+			Logger.logError(t);
 		}
 		recurLoad(JavaWebServer.fileManager.getHTDocs());
 	}
@@ -113,6 +115,11 @@ public class PatchJavaLoader extends Patch {
 	
 	public void preExit() {
 		super.preExit();
+		try {
+			DatabaseManager.closeAll();
+		}catch (SQLException e) {
+			Logger.logError(e);
+		}
 		for (JavaLoader jl : jls.values()) {
 			jl.destroy();
 		}
