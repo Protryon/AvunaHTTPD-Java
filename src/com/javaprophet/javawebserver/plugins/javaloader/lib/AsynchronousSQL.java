@@ -1,8 +1,8 @@
 package com.javaprophet.javawebserver.plugins.javaloader.lib;
 
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import javax.sql.rowset.CachedRowSet;
 import com.javaprophet.javawebserver.util.Logger;
@@ -44,12 +44,12 @@ public class AsynchronousSQL {
 	private boolean mr = false;
 	
 	private static final class AQuery {
-		public final int id, interval;
-		public final String query;
-		public long nextrun = 0;
+		private final int id, interval;
+		private final String query;
+		private long nextrun = 0;
 		private final DatabaseManager manager;
-		public final boolean isQuery, alwaysRun;
-		public CachedRowSet crs = null;
+		private final boolean isQuery, alwaysRun;
+		private CachedRowSet crs = null;
 		
 		public AQuery(DatabaseManager manager, int id, String query, int interval, boolean isQuery, boolean alwaysRun) {
 			this.id = id;
@@ -66,16 +66,16 @@ public class AsynchronousSQL {
 		}
 		
 		public void run() throws SQLException {
-			Statement leased = manager.leaseStatement();
+			PreparedStatement leased = manager.leasePStatement(query);
 			if (isQuery) {
-				ResultSet rs = leased.executeQuery(query);
+				ResultSet rs = leased.executeQuery();
 				CachedRowSet crs = new CachedRowSetImpl();
 				crs.populate(rs);
 				this.crs = crs;
 			}else {
-				leased.execute(query);
+				leased.execute();
 			}
-			manager.returnStatement(leased);
+			manager.returnPStatement(query, leased);
 			if (nextrun >= 0) {
 				nextrun = System.currentTimeMillis() + interval;
 			}

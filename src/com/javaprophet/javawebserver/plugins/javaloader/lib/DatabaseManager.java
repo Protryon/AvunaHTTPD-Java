@@ -2,14 +2,17 @@ package com.javaprophet.javawebserver.plugins.javaloader.lib;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class DatabaseManager {
 	private Connection conn;
 	private ArrayList<ExtendedStatement> estmts = new ArrayList<ExtendedStatement>();
 	private static ArrayList<DatabaseManager> open = new ArrayList<DatabaseManager>();
+	private HashMap<String, ArrayList<ExtendedPStatement>> pstmts = new HashMap<String, ArrayList<ExtendedPStatement>>();
 	
 	public static void closeAll() throws SQLException {
 		for (DatabaseManager db : open) {
@@ -26,6 +29,15 @@ public class DatabaseManager {
 		public boolean leased = false;
 		
 		public ExtendedStatement(Statement stmt) {
+			this.stmt = stmt;
+		}
+	}
+	
+	private static class ExtendedPStatement {
+		public final PreparedStatement stmt;
+		public boolean leased = false;
+		
+		public ExtendedPStatement(PreparedStatement stmt) {
 			this.stmt = stmt;
 		}
 	}
@@ -58,6 +70,34 @@ public class DatabaseManager {
 			estmts.add(estmt);
 		}
 		return estmt.stmt;
+	}
+	
+	public PreparedStatement leasePStatement(String sql) throws SQLException {
+		synchronized (pstmts) {
+			if (!pstmts.containsKey(sql)) pstmts.put(sql, new ArrayList<ExtendedPStatement>());
+			for (ExtendedPStatement pstmt : pstmts.get(sql)) {
+				if (!pstmt.leased) {
+					pstmt.leased = true;
+					return pstmt.stmt;
+				}
+			}
+		}
+		ExtendedPStatement pstmt = new ExtendedPStatement(conn.prepareStatement(sql));
+		pstmt.leased = true;
+		synchronized (estmts) {
+			pstmts.get(sql).add(pstmt);
+		}
+		return pstmt.stmt;
+	}
+	
+	public void returnPStatement(String sql, PreparedStatement stmt) {
+		synchronized (pstmts) {
+			for (ExtendedPStatement pstmt : pstmts.get(sql)) {
+				if (pstmt.stmt.equals(stmt)) {
+					pstmt.leased = false;
+				}
+			}
+		}
 	}
 	
 	public void returnStatement(Statement stmt) {
