@@ -126,7 +126,7 @@ public class ThreadWorker extends Thread {
 					}
 					Logger.log(focus.s.getInetAddress().getHostAddress() + " closed.");
 				}
-			}catch (IOException e) {
+			}catch (Exception e) {
 				if (!(e instanceof SocketException)) Logger.logError(e);
 				try {
 					focus.s.close();
