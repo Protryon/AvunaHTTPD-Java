@@ -11,7 +11,7 @@ import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.http.StatusCode;
-import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
+import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.plugins.Patch;
 import com.javaprophet.javawebserver.plugins.base.PatchChunked;
 import com.javaprophet.javawebserver.plugins.javaloader.lib.HTMLCache;
@@ -90,12 +90,12 @@ public class FileManager {
 		}
 	}
 	
-	public void getErrorPage(ResponsePacket response, MessageBody body, String reqTarget, StatusCode status, String info) {
-		HashMap<String, Object> errorPages = (HashMap<String, Object>)JavaWebServer.mainConfig.get("errorpages", response);
+	public void getErrorPage(RequestPacket request, MessageBody body, String reqTarget, StatusCode status, String info) {
+		HashMap<String, Object> errorPages = (HashMap<String, Object>)JavaWebServer.mainConfig.get("errorpages", request);
 		if (errorPages.containsKey(status.getStatus())) {
 			try {
 				String path = (String)errorPages.get(status.getStatus());
-				Resource resource = getResource(path, response);
+				Resource resource = getResource(path, request);
 				if (resource != null) {
 					if (resource.type.startsWith("text")) {
 						String res = new String(resource.data);
@@ -116,11 +116,11 @@ public class FileManager {
 	
 	private boolean lwi = false;
 	
-	public File getAbsolutePath(String reqTarget, ResponsePacket response) {
+	public File getAbsolutePath(String reqTarget, RequestPacket request) {
 		lwi = false;
 		File abs = new File(JavaWebServer.fileManager.getHTDocs(), URLDecoder.decode(reqTarget));
 		if (abs.isDirectory()) {
-			String[] index = ((String)JavaWebServer.mainConfig.get("index", response)).split(",");
+			String[] index = ((String)JavaWebServer.mainConfig.get("index", request)).split(",");
 			for (String i : index) {
 				i = i.trim();
 				if (i.startsWith("/")) {
@@ -141,8 +141,8 @@ public class FileManager {
 		return abs;
 	}
 	
-	public String correctForIndex(String reqTarget, ResponsePacket response) {
-		String p = getAbsolutePath(reqTarget, response).getAbsolutePath().replace("\\", "/");
+	public String correctForIndex(String reqTarget, RequestPacket request) {
+		String p = getAbsolutePath(reqTarget, request).getAbsolutePath().replace("\\", "/");
 		return p.substring(JavaWebServer.fileManager.getHTDocs().getAbsolutePath().replace("\\", "/").length());
 	}
 	
@@ -152,7 +152,7 @@ public class FileManager {
 	public static final HashMap<String, Boolean> tbCache = new HashMap<String, Boolean>();
 	private static long cacheClock = 0L;
 	
-	public Resource getResource(String reqTarget, ResponsePacket response) {
+	public Resource getResource(String reqTarget, RequestPacket request) {
 		try {
 			String rt = reqTarget;
 			if (rt.contains("#")) {
@@ -167,7 +167,7 @@ public class FileManager {
 			boolean tooBig = false;
 			if (cache.containsKey(rt)) {
 				long t = System.currentTimeMillis();
-				long cc = Integer.parseInt(((String)JavaWebServer.mainConfig.get("cacheClock", response)));
+				long cc = Integer.parseInt(((String)JavaWebServer.mainConfig.get("cacheClock", request)));
 				boolean tc = cc > 0 && t - cc < cacheClock;
 				if (tc || cc == -1 || extCache.get(rt).equals("application/x-java")) {
 					resource = cache.get(rt);
@@ -192,7 +192,7 @@ public class FileManager {
 				}
 			}
 			if (resource == null) {
-				File abs = getAbsolutePath(rt, response);
+				File abs = getAbsolutePath(rt, request);
 				ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
 				ext = JavaWebServer.extensionToMime.containsKey(ext) ? JavaWebServer.extensionToMime.get(ext) : "application/octet-stream";
 				FileInputStream fin = new FileInputStream(abs);
@@ -204,7 +204,7 @@ public class FileManager {
 					if (i > 0) {
 						bout.write(buf, 0, i);
 					}
-					if (PatchChunked.INSTANCE.enabled && bout.size() > Integer.parseInt((String)PatchChunked.INSTANCE.pcfg.get("minsize", response)) && !ext.startsWith("application")) {
+					if (PatchChunked.INSTANCE.enabled && bout.size() > Integer.parseInt((String)PatchChunked.INSTANCE.pcfg.get("minsize", request)) && !ext.startsWith("application")) {
 						bout.reset();
 						tooBig = true;
 						break;

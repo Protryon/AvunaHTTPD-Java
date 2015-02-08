@@ -29,12 +29,44 @@ public class PatchOverride extends Patch {
 	
 	@Override
 	public boolean shouldProcessPacket(Packet packet) {
-		return false;
+		return packet instanceof RequestPacket;
 	}
 	
 	@Override
 	public void processPacket(Packet packet) {
-		
+		RequestPacket request = (RequestPacket)packet;
+		if (request.overrideConfig != null) return;
+		String rt = request.target;
+		if (rt.contains("#")) rt = rt.substring(0, rt.indexOf("#"));
+		if (rt.contains("?")) rt = rt.substring(0, rt.indexOf("?"));
+		if (!request.body.getBody().wasDir) {
+			rt = rt.substring(0, rt.lastIndexOf("/") + 1);
+		}
+		if (overrides.containsKey(rt)) {
+			request.overrideConfig = overrides.get(rt);
+			return;
+		}
+		if (nogo.contains(rt)) return;
+		Resource override = JavaWebServer.fileManager.getResource(rt + fn, request);
+		if (override == null) {
+			nogo.add(rt);
+			return;
+		}
+		request.overrideConfig = new Config("override" + System.nanoTime(), new String(override.data), new ConfigFormat() {
+			
+			@Override
+			public void format(HashMap<String, Object> map) {
+				
+			}
+			
+		});
+		try {
+			request.overrideConfig.load();
+		}catch (IOException e) {
+			Logger.logError(e);
+		}
+		overrides.put(rt, request.overrideConfig);
+		return;
 	}
 	
 	@Override
@@ -52,44 +84,11 @@ public class PatchOverride extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		if (response.overrideConfig != null) return true;
-		if (response.body == null || response.body.getBody() == null) return false;
-		String rt = request.target;
-		if (rt.contains("#")) rt = rt.substring(0, rt.indexOf("#"));
-		if (rt.contains("?")) rt = rt.substring(0, rt.indexOf("?"));
-		if (!request.body.getBody().wasDir) {
-			rt = rt.substring(0, rt.lastIndexOf("/") + 1);
-		}
-		if (overrides.containsKey(rt)) {
-			response.overrideConfig = overrides.get(rt);
-			return true;
-		}
-		if (nogo.contains(rt)) return false;
-		Resource override = JavaWebServer.fileManager.getResource(rt + fn, response);
-		if (override == null) {
-			nogo.add(rt);
-			return false;
-		}
-		response.overrideConfig = new Config("override" + System.nanoTime(), new String(override.data), new ConfigFormat() {
-			
-			@Override
-			public void format(HashMap<String, Object> map) {
-				
-			}
-			
-		});
-		try {
-			response.overrideConfig.load();
-		}catch (IOException e) {
-			Logger.logError(e);
-		}
-		overrides.put(rt, response.overrideConfig);
-		return true;
+		return false;
 	}
 	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		
 		return data;
 	}
 	

@@ -24,7 +24,7 @@ public class ThreadStreamWorker extends Thread {
 		try {
 			ChunkedOutputStream cos = new ChunkedOutputStream(work.out, resp, resp.headers.hasHeader("Content-Encoding") && resp.headers.getHeader("Content-Encoding").contains("gzip"));
 			cos.writeHeaders();
-			fin = new FileInputStream(JavaWebServer.fileManager.getAbsolutePath(resp.body.getBody().loc, resp));
+			fin = new FileInputStream(JavaWebServer.fileManager.getAbsolutePath(resp.body.getBody().loc, req));
 			int i = 1;
 			byte[] buf = new byte[10485760];
 			while (!work.s.isClosed() && i > 0) {

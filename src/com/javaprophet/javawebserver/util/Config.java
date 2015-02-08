@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
-import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
+import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 
 public class Config {
 	private final File cfg;
@@ -42,16 +42,16 @@ public class Config {
 		return cm.containsKey(name);
 	}
 	
-	public Object get(String name, ResponsePacket response) {
-		if (response != null && response.overrideConfig != null && response.overrideConfig.has(name)) return response.overrideConfig.get(name, null);
+	public Object get(String name, RequestPacket request) {
+		if (request != null && request.overrideConfig != null && request.overrideConfig.has(name)) return request.overrideConfig.get(name, null);
 		return cm.get(name);
 	}
 	
-	public Set<String> keySet(ResponsePacket response) {
-		if (response != null && response.overrideConfig != null) {
+	public Set<String> keySet(RequestPacket request) {
+		if (request != null && request.overrideConfig != null) {
 			Set<String> base = new HashSet<String>();
 			base.addAll(cm.keySet());
-			base.addAll(response.overrideConfig.keySet(null));
+			base.addAll(request.overrideConfig.keySet(null));
 			return base;
 		}else {
 			return cm.keySet();

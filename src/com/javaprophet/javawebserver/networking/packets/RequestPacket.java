@@ -14,6 +14,7 @@ import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.networking.Packet;
+import com.javaprophet.javawebserver.util.Config;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class RequestPacket extends Packet {
@@ -22,6 +23,7 @@ public class RequestPacket extends Packet {
 	public String userIP = "";
 	public int userPort = 80;
 	public boolean ssl = false;
+	public Config overrideConfig = null;
 	
 	// javaloader vars
 	public HashMap<String, String> get = new HashMap<String, String>();

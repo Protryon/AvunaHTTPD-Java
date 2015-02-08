@@ -27,14 +27,14 @@ public class PatchMultiHost extends Patch {
 	public void processPacket(Packet packet) {
 		RequestPacket request = (RequestPacket)packet;
 		String host = request.headers.getHeader("Host");
-		HashMap<String, Object> forward = (HashMap<String, Object>)pcfg.get("forward", null);
+		HashMap<String, Object> forward = (HashMap<String, Object>)pcfg.get("forward", request);
 		if (!request.httpVersion.equals("HTTP/1.0")) for (Object key : forward.keySet()) {
 			if (host.matches(((String)key))) {
 				request.target = forward.get(key) + request.target;
 				return;
 			}
 		}
-		request.target = ((String)pcfg.get("default", null)) + request.target;
+		request.target = ((String)pcfg.get("default", request)) + request.target;
 	}
 	
 	@Override
