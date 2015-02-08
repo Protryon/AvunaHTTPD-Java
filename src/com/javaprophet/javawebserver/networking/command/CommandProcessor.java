@@ -10,6 +10,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Scanner;
 import com.javaprophet.javawebserver.JavaWebServer;
+import com.javaprophet.javawebserver.j2p.JavaToPHP;
 import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
 import com.javaprophet.javawebserver.util.Logger;
 
@@ -90,6 +91,33 @@ public class CommandProcessor {
 				Logger.log(e.getMessage());
 			}
 			out.println("JHTML completed.");
+		}else if (command.equals("jphp")) {
+			if (cargs.length != 2 && cargs.length != 1) {
+				out.println("Invalid arguments. (input, output[optional])");
+				return;
+			}
+			try {
+				File sc2 = null;
+				Scanner scan2 = new Scanner(new FileInputStream(sc2 = new File(JavaWebServer.fileManager.getHTDocs(), cargs[0])));
+				PrintStream ps;
+				File temp = null;
+				if (cargs.length == 2) {
+					ps = new PrintStream(new FileOutputStream(temp = new File(JavaWebServer.fileManager.getHTSrc(), cargs[1])));
+				}else {
+					ps = new PrintStream(new FileOutputStream(temp = new File(JavaWebServer.fileManager.getHTSrc(), cargs[0].substring(0, cargs[0].indexOf(".")) + ".java")));
+				}
+				StringBuilder php = new StringBuilder();
+				while (scan2.hasNextLine()) {
+					php.append(scan2.nextLine().trim() + JavaWebServer.crlf);
+				}
+				JavaToPHP.convert((cargs.length == 3 ? temp.getName().substring(0, temp.getName().indexOf(".")) : sc2.getName().substring(0, sc2.getName().indexOf("."))), ps, php.toString());
+				ps.flush();
+				ps.close();
+				scan2.close();
+			}catch (IOException e) {
+				Logger.log(e.getMessage());
+			}
+			out.println("JPHP completed.");
 		}else if (command.equals("jcomp")) {
 			boolean all = cargs.length < 1;
 			String sep = System.getProperty("os.name").toLowerCase().contains("windows") ? ";" : ":";
