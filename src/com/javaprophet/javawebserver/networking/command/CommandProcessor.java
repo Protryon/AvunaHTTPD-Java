@@ -209,6 +209,7 @@ public class CommandProcessor {
 			out.println("flushcache");
 			out.println("jhtml");
 			out.println("jcomp");
+			out.println("jphp");
 			out.println("shell");
 			out.println("help");
 			out.println("");
