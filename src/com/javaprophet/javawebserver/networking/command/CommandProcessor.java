@@ -57,6 +57,7 @@ public class CommandProcessor {
 				JavaWebServer.mainConfig.load();
 				JavaWebServer.patchBus.reload();
 			}catch (Exception e) {
+				Logger.logError(e);
 				e.printStackTrace(out);
 			}
 			out.println("Loaded Config! Some entries will require a restart.");
@@ -74,6 +75,7 @@ public class CommandProcessor {
 					Runtime.getRuntime().exec(JavaWebServer.fileManager.getBaseFile("restart.bat").toString());
 				}
 			}catch (Exception e) {
+				Logger.logError(e);
 				e.printStackTrace(out);
 			}
 			out.println("Restarting...");
@@ -83,6 +85,7 @@ public class CommandProcessor {
 				JavaWebServer.fileManager.clearCache();
 				((PatchOverride)PatchRegistry.getPatchForClass(PatchOverride.class)).flush();
 			}catch (Exception e) {
+				Logger.logError(e);
 				e.printStackTrace(out);
 			}
 			out.println("Cache Flushed! This is not necessary for php files, and does not work for .class files(restart jws for those, but HTMLCache is cleared).");
@@ -131,6 +134,7 @@ public class CommandProcessor {
 				scan2.close();
 			}catch (IOException e) {
 				Logger.log(e.getMessage());
+				e.printStackTrace(out);
 			}
 			out.println("JHTML completed.");
 		}else if (command.equals("jphp")) {
@@ -163,6 +167,7 @@ public class CommandProcessor {
 				scan2.close();
 			}catch (IOException e) {
 				Logger.log(e.getMessage());
+				e.printStackTrace(out);
 			}
 			out.println("JPHP completed.");
 		}else if (command.equals("jcomp")) {
@@ -225,7 +230,7 @@ public class CommandProcessor {
 										pout.flush();
 									}
 								}catch (IOException e) {
-									e.printStackTrace(out);
+									Logger.logError(e);
 								}
 							}
 						}
@@ -244,6 +249,7 @@ public class CommandProcessor {
 						Thread.sleep(10L);
 					}
 				}catch (Exception e) {
+					Logger.logError(e);
 					e.printStackTrace(out);
 				}finally {
 					if (temp != null) temp.interrupt();
