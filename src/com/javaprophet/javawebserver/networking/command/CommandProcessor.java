@@ -10,6 +10,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Scanner;
 import com.javaprophet.javawebserver.JavaWebServer;
+import com.javaprophet.javawebserver.hosts.Host;
 import com.javaprophet.javawebserver.j2p.JavaToPHP;
 import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
 import com.javaprophet.javawebserver.util.Logger;
@@ -18,6 +19,11 @@ import com.javaprophet.javawebserver.util.Logger;
  * Handles all incoming commands from ComClient & ComServer.
  */
 public class CommandProcessor {
+	
+	/**
+	 * Our selected Host.
+	 */
+	public static String selectedHost = "main";
 	
 	/**
 	 * Processes our command
@@ -77,20 +83,31 @@ public class CommandProcessor {
 				e.printStackTrace(out);
 			}
 			out.println("Cache Flushed! This is not necessary for php files, and does not work for .class files(restart jws for those, but HTMLCache is cleared).");
+		}else if (command.equals("select")) {
+			if (cargs.length != 1) {
+				out.println("Invalid arguments. (host)");
+				return;
+			}
+			selectedHost = cargs[0];
 		}else if (command.equals("jhtml")) {
 			if (cargs.length != 2 && cargs.length != 1) {
 				out.println("Invalid arguments. (input, output[optional])");
 				return;
 			}
 			try {
+				Host host = JavaWebServer.hosts.get(selectedHost);
+				if (host == null) {
+					out.println("Invalid Selected Host (select)");
+					return;
+				}
 				File sc2 = null;
-				Scanner scan2 = new Scanner(new FileInputStream(sc2 = new File(JavaWebServer.fileManager.getHTDocs(), cargs[0])));
+				Scanner scan2 = new Scanner(new FileInputStream(sc2 = new File(host.getHTDocs(), cargs[0])));
 				PrintStream ps;
 				File temp = null;
 				if (cargs.length == 2) {
-					ps = new PrintStream(new FileOutputStream(temp = new File(JavaWebServer.fileManager.getHTSrc(), cargs[1])));
+					ps = new PrintStream(new FileOutputStream(temp = new File(host.getHTSrc(), cargs[1])));
 				}else {
-					ps = new PrintStream(new FileOutputStream(temp = new File(JavaWebServer.fileManager.getHTSrc(), cargs[0].substring(0, cargs[0].indexOf(".")) + ".java")));
+					ps = new PrintStream(new FileOutputStream(temp = new File(host.getHTSrc(), cargs[0].substring(0, cargs[0].indexOf(".")) + ".java")));
 				}
 				ps.println("import java.io.PrintStream;");
 				ps.println("import com.javaprophet.javawebserver.networking.packets.RequestPacket;");
@@ -117,15 +134,20 @@ public class CommandProcessor {
 				out.println("Invalid arguments. (input, output[optional])");
 				return;
 			}
+			Host host = JavaWebServer.hosts.get(selectedHost);
+			if (host == null) {
+				out.println("Invalid Selected Host (select)");
+				return;
+			}
 			try {
 				File sc2 = null;
-				Scanner scan2 = new Scanner(new FileInputStream(sc2 = new File(JavaWebServer.fileManager.getHTDocs(), cargs[0])));
+				Scanner scan2 = new Scanner(new FileInputStream(sc2 = new File(host.getHTDocs(), cargs[0])));
 				PrintStream ps;
 				File temp = null;
 				if (cargs.length == 2) {
-					ps = new PrintStream(new FileOutputStream(temp = new File(JavaWebServer.fileManager.getHTSrc(), cargs[1])));
+					ps = new PrintStream(new FileOutputStream(temp = new File(host.getHTSrc(), cargs[1])));
 				}else {
-					ps = new PrintStream(new FileOutputStream(temp = new File(JavaWebServer.fileManager.getHTSrc(), cargs[0].substring(0, cargs[0].indexOf(".")) + ".java")));
+					ps = new PrintStream(new FileOutputStream(temp = new File(host.getHTSrc(), cargs[0].substring(0, cargs[0].indexOf(".")) + ".java")));
 				}
 				StringBuilder php = new StringBuilder();
 				while (scan2.hasNextLine()) {
@@ -141,8 +163,13 @@ public class CommandProcessor {
 			out.println("JPHP completed.");
 		}else if (command.equals("jcomp")) {
 			boolean all = cargs.length < 1;
+			Host host = JavaWebServer.hosts.get(selectedHost);
+			if (host == null) {
+				out.println("Invalid Selected Host (select)");
+				return;
+			}
 			String sep = System.getProperty("os.name").toLowerCase().contains("windows") ? ";" : ":";
-			String cp = JavaWebServer.fileManager.getBaseFile("jws.jar").toString() + sep + JavaWebServer.fileManager.getHTDocs().toString() + sep + JavaWebServer.fileManager.getHTSrc().toString() + sep + PatchJavaLoader.lib.toString() + sep;
+			String cp = JavaWebServer.fileManager.getBaseFile("jws.jar").toString() + sep + host.getHTDocs().toString() + sep + host.getHTSrc().toString() + sep + PatchJavaLoader.lib.toString() + sep;
 			for (File f : PatchJavaLoader.lib.listFiles()) {
 				if (!f.isDirectory() && f.getName().endsWith(".jar")) {
 					cp += f.toString() + sep;
@@ -154,9 +181,9 @@ public class CommandProcessor {
 			cfs.add("-cp");
 			cfs.add(cp);
 			cfs.add("-d");
-			cfs.add(JavaWebServer.fileManager.getHTDocs().toString());
+			cfs.add(host.getHTDocs().toString());
 			if (all) {
-				recurForComp(cfs, JavaWebServer.fileManager.getHTSrc());
+				recurForComp(cfs, host.getHTSrc());
 			}else {
 				cfs.add("htsrc/" + cargs[0]);
 			}

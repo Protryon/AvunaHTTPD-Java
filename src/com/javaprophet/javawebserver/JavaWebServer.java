@@ -1,31 +1,17 @@
 package com.javaprophet.javawebserver;
 
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.security.KeyStore;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLServerSocket;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-import com.javaprophet.javawebserver.http.ResponseGenerator;
-import com.javaprophet.javawebserver.networking.Connection;
+import com.javaprophet.javawebserver.hosts.Host;
 import com.javaprophet.javawebserver.networking.ThreadWorker;
 import com.javaprophet.javawebserver.networking.command.ComClient;
 import com.javaprophet.javawebserver.networking.command.ComServer;
@@ -39,22 +25,19 @@ import com.javaprophet.javawebserver.util.Logger;
 
 public class JavaWebServer {
 	public static final String VERSION = "1.0";
-	public static Config mainConfig;
-	public static ArrayList<Connection> runningThreads = new ArrayList<Connection>();
+	public static Config mainConfig, hostsConfig;
 	public static final FileManager fileManager = new FileManager();
 	public static final PatchBus patchBus = new PatchBus();
 	public static final HashMap<String, String> extensionToMime = new HashMap<String, String>();
-	public static final ResponseGenerator rg = new ResponseGenerator();
 	public static final String crlf = new String(new byte[]{13, 10});
 	
 	public static void setupFolders() {
 		fileManager.getMainDir().mkdirs();
-		fileManager.getHTDocs().mkdirs();
 		fileManager.getLogs().mkdirs();
-		fileManager.getHTSrc().mkdirs();
 		fileManager.getPlugins().mkdirs();
-		fileManager.getTemp().mkdirs();
-		fileManager.getSSL().mkdirs();
+		for (Host host : hosts.values()) {
+			host.setupFolders();
+		}
 		patchBus.setupFolders();
 	}
 	
@@ -114,9 +97,7 @@ public class JavaWebServer {
 		}
 	}
 	
-	private static boolean nsslr = false;
-	private static boolean sslr = false;
-	private static boolean ap = false;
+	public static final HashMap<String, Host> hosts = new HashMap<String, Host>();
 	
 	public static final ArrayList<String> bannedIPs = new ArrayList<String>();
 	
@@ -139,15 +120,11 @@ public class JavaWebServer {
 					}else {
 						dir = new File((String)map.get("dir"));
 					}
-					if (!map.containsKey("htdocs")) map.put("htdocs", new File(dir, "htdocs").toString());
-					if (!map.containsKey("htsrc")) map.put("htsrc", new File(dir, "htsrc").toString());
-					if (!map.containsKey("logs")) map.put("logs", new File(dir, "logs").toString());
+					if (!map.containsKey("hosts")) map.put("hosts", new File(dir, "hosts.cfg").toString());
 					if (!map.containsKey("plugins")) map.put("plugins", new File(dir, "plugins").toString());
+					if (!map.containsKey("logs")) map.put("logs", new File(dir, "logs").toString());
 					if (!map.containsKey("javac")) map.put("javac", "javac");
-					if (!map.containsKey("temp")) map.put("temp", new File(dir, "temp").toString());
-					if (!map.containsKey("bindport")) map.put("bindport", "80");
 					if (!map.containsKey("connlimit")) map.put("connlimit", "-1");
-					if (!map.containsKey("bindip")) map.put("bindip", "0.0.0.0");
 					if (!map.containsKey("workerThreadCount")) map.put("workerThreadCount", "" + (Runtime.getRuntime().availableProcessors() * 3));
 					if (!map.containsKey("errorpages")) map.put("errorpages", new HashMap<String, Object>());
 					if (!map.containsKey("index")) map.put("index", "index.class,index.jwsl,index.php,index.html");
@@ -159,19 +136,36 @@ public class JavaWebServer {
 					if (!telnet.containsKey("bindip")) telnet.put("bindip", "0.0.0.0");
 					if (!telnet.containsKey("auth")) telnet.put("auth", "jwsisawesome");
 					if (!telnet.containsKey("doAuth")) telnet.put("doAuth", "true");
-					if (!map.containsKey("ssl")) map.put("ssl", new HashMap<String, Object>());
-					HashMap<String, Object> ssl = (HashMap<String, Object>)map.get("ssl");
-					if (!ssl.containsKey("enabled")) ssl.put("enabled", "false");
-					if (!ssl.containsKey("forceSSL")) ssl.put("forceSSL", "false"); // TODO: implement
-					if (!ssl.containsKey("bindport")) ssl.put("bindport", "443");
-					if (!ssl.containsKey("folder")) ssl.put("folder", new File(dir, "ssl").toString());
-					if (!ssl.containsKey("keyFile")) ssl.put("keyFile", "keystore");
-					if (!ssl.containsKey("keystorePassword")) ssl.put("keystorePassword", "password");
-					if (!ssl.containsKey("keyPassword")) ssl.put("keyPassword", "password");
 				}
 			});
 			mainConfig.load();
 			mainConfig.save();
+			final int cl = Integer.parseInt((String)mainConfig.get("connlimit", null));
+			hostsConfig = new Config("hosts", fileManager.getBaseFile("hosts.cfg"), new ConfigFormat() {
+				
+				@Override
+				public void format(HashMap<String, Object> map) {
+					if (!map.containsKey("main")) map.put("main", new HashMap<String, Object>());
+					for (String key : map.keySet()) {
+						HashMap<String, Object> host = (HashMap<String, Object>)map.get(key);
+						if (!host.containsKey("port")) host.put("port", "80");
+						if (!host.containsKey("ip")) host.put("ip", "0.0.0.0");
+						if (!host.containsKey("htdocs")) host.put("htdocs", fileManager.getBaseFile("htdocs").toString());
+						if (!host.containsKey("htsrc")) host.put("htsrc", fileManager.getBaseFile("htsrc").toString());
+						if (!host.containsKey("ssl")) host.put("ssl", new HashMap<String, Object>());
+						HashMap<String, Object> ssl = (HashMap<String, Object>)host.get("ssl");
+						if (!ssl.containsKey("enabled")) ssl.put("enabled", "false");
+						if (!ssl.containsKey("keyFile")) ssl.put("keyFile", fileManager.getBaseFile("ssl/keyFile").toString());
+						if (!ssl.containsKey("keystorePassword")) ssl.put("keystorePassword", "password");
+						if (!ssl.containsKey("keyPassword")) ssl.put("keyPassword", "password");
+						Host h = new Host(key, (String)host.get("ip"), Integer.parseInt((String)host.get("port")), new File((String)host.get("htdocs")), new File((String)host.get("htsrc")), cl, ssl.get("enabled").equals("true"), new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
+						hosts.put(key, h);
+					}
+				}
+				
+			});
+			hostsConfig.load();
+			hostsConfig.save();
 			setupFolders();
 			File lf = new File(fileManager.getLogs(), "" + (System.currentTimeMillis() / 1000L));
 			lf.createNewFile();
@@ -180,8 +174,11 @@ public class JavaWebServer {
 			loadUnpacked();
 			Logger.log("Loaded Configs");
 			Logger.log("Loading Connection Handling");
-			Connection.init();
-			Logger.log("Loading Base Plugins");
+			for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount", null)); i++) {
+				ThreadWorker worker = new ThreadWorker();
+				worker.start();
+			}
+			Logger.log("Loading Plugins");
 			BaseLoader.loadBases();
 			HashMap<String, Object> com = ((HashMap<String, Object>)mainConfig.get("com", null));
 			if (((String)com.get("enabled")).equals("true")) {
@@ -189,147 +186,26 @@ public class JavaWebServer {
 				ComServer server = new ComServer();
 				server.start();
 			}
-			final int bindport = Integer.parseInt((String)mainConfig.get("bindport", null));
-			final int cl = Integer.parseInt((String)mainConfig.get("connlimit", null));
-			final String bindip = (String)mainConfig.get("bindip", null);
-			final HashMap<String, Object> ssl = (HashMap<String, Object>)mainConfig.get("ssl", null);
-			boolean forceSSL = ssl.get("enabled").equals("true") && ssl.get("forceSSL").equals("true");
-			if (!forceSSL) {
-				Logger.log("Starting Server on " + bindip + ":" + bindport);
-				Thread tnssl = new Thread() {
-					public void run() {
-						try {
-							ServerSocket server = new ServerSocket(bindport, 1000, InetAddress.getByName(bindip));
-							nsslr = true;
-							ap = true;
-							while (!server.isClosed()) {
-								Socket s = server.accept();
-								if (cl >= 0 && ThreadWorker.getQueueSize() >= cl) {
-									s.close();
-									continue;
-								}
-								if (bannedIPs.contains(s.getInetAddress().getHostAddress())) {
-									s.close();
-									continue;
-								}
-								s.setSoTimeout(1000);
-								DataOutputStream out = new DataOutputStream(s.getOutputStream());
-								out.flush();
-								DataInputStream in = new DataInputStream(s.getInputStream());
-								Connection c = new Connection(s, in, out, false);
-								c.handleConnection();
-								runningThreads.add(c);
-							}
-							Logger.log("Server Closed on " + bindip + ":" + bindport);
-						}catch (Exception e) {
-							Logger.logError(e);
-							ap = true;
-						}
-						nsslr = false;
-					}
-				};
-				tnssl.start();
-			}
-			if (((String)ssl.get("enabled")).equals("true")) {
-				Thread tssl = new Thread() {
-					public void run() {
-						try {
-							KeyStore ks = KeyStore.getInstance("JKS");
-							InputStream ksIs = new FileInputStream(fileManager.getSSLKeystore());
-							try {
-								ks.load(ksIs, ssl.get("keystorePassword").toString().toCharArray());
-							}finally {
-								if (ksIs != null) {
-									ksIs.close();
-								}
-							}
-							KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-							kmf.init(ks, ssl.get("keyPassword").toString().toCharArray());
-							TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
-								public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
-								}
-								
-								public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
-								}
-								
-								public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-									return null;
-								}
-							}};
-							SSLContext sc = null;
-							String[] possibleProtocols = new String[]{"TLSv1.2", "TLSv1.1", "TLSv1", "TLSv1.0"};
-							String fp = "";
-							for (String protocol : possibleProtocols) {
-								try {
-									sc = SSLContext.getInstance(protocol);
-									fp = protocol;
-								}catch (NoSuchAlgorithmException e) {
-									continue;
-								}
-							}
-							if (sc == null) {
-								Logger.log("No suitable TLS protocols found, please upgrade Java! SSL disabled.");
-								return;
-							}
-							sc.init(kmf.getKeyManagers(), trustAllCerts, new SecureRandom());
-							int sslport = Integer.parseInt((String)ssl.get("bindport"));
-							Logger.log("Starting SSLServer on " + sslport);
-							SSLServerSocket sslserver = (SSLServerSocket)sc.getServerSocketFactory().createServerSocket(sslport, 1000, InetAddress.getByName(bindip));
-							sslserver.setEnabledProtocols(new String[]{fp});
-							sslr = true;
-							ap = true;
-							while (!sslserver.isClosed()) {
-								Socket s = sslserver.accept();
-								DataOutputStream out = new DataOutputStream(s.getOutputStream());
-								out.flush();
-								DataInputStream in = new DataInputStream(s.getInputStream());
-								Connection c = new Connection(s, in, out, false);
-								c.handleConnection();
-								runningThreads.add(c);
-							}
-							Logger.log("Server Closed on " + bindip + ":" + sslport);
-						}catch (Exception e) {
-							Logger.logError(e);
-							ap = true;
-						}
-						sslr = false;
-					}
-				};
-				tssl.start();
+			for (Host host : hosts.values()) {
+				host.start();
 			}
 		}catch (Exception e) {
-			Logger.logError(e);
-			ap = true;
-		}
-		while (!ap) {
-			try {
-				Thread.sleep(100L);
-			}catch (InterruptedException e) {
+			if (Logger.INSTANCE == null) {
+				e.printStackTrace();
+			}else {
 				Logger.logError(e);
 			}
 		}
-		boolean read = true;
 		Scanner scan = new Scanner(System.in);
-		while (sslr || nsslr) {
-			if (read) {
-				try {
-					String command = scan.nextLine();
-					CommandProcessor.process(command, System.out, scan, false);
-				}catch (NoSuchElementException fe) {
-					read = false;
-					continue;
-				}catch (Exception e) {
-					Logger.logError(e);
-				}
-			}else {
-				try {
-					Thread.sleep(100L);
-				}catch (InterruptedException e) {
-					Logger.logError(e);
-				}
+		while (scan.hasNextLine()) {
+			try {
+				String command = scan.nextLine();
+				CommandProcessor.process(command, System.out, scan, false);
+			}catch (NoSuchElementException fe) {
+				break;
+			}catch (Exception e) {
+				Logger.logError(e);
 			}
 		}
-		patchBus.preExit();
-		System.exit(0);
 	}
 }

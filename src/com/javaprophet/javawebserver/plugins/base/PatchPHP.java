@@ -84,7 +84,7 @@ public class PatchPHP extends Patch {
 			pb.environment().put("SERVER_PORT", port + "");
 			pb.environment().put("SERVER_PROTOCOL", request.httpVersion);
 			pb.environment().put("SERVER_SOFTWARE", "JWS/" + JavaWebServer.VERSION);
-			pb.environment().put("DOCUMENT_ROOT", JavaWebServer.fileManager.getHTDocs().getAbsolutePath().replace("\\", "/"));
+			pb.environment().put("DOCUMENT_ROOT", request.host.getHTDocs().getAbsolutePath().replace("\\", "/"));
 			pb.environment().put("SCRIPT_FILENAME", JavaWebServer.fileManager.getAbsolutePath(rq, request).getAbsolutePath().replace("\\", "/"));
 			HashMap<String, ArrayList<String>> hdrs = request.headers.getHeaders();
 			for (String key : hdrs.keySet()) {

@@ -37,32 +37,12 @@ public class FileManager {
 		return new File((String)JavaWebServer.mainConfig.get("dir", null));
 	}
 	
-	public File getHTDocs() {
-		return new File((String)JavaWebServer.mainConfig.get("htdocs", null));
-	}
-	
-	public File getLogs() {
-		return new File((String)JavaWebServer.mainConfig.get("logs", null));
-	}
-	
-	public File getHTSrc() {
-		return new File((String)JavaWebServer.mainConfig.get("htsrc", null));
-	}
-	
-	public File getSSL() {
-		return new File((String)(((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl", null)).get("folder")));
-	}
-	
-	public File getSSLKeystore() {
-		return new File(getSSL(), (String)(((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl", null)).get("keyFile")));
-	}
-	
 	public File getPlugins() {
 		return new File((String)JavaWebServer.mainConfig.get("plugins", null));
 	}
 	
-	public File getTemp() {
-		return new File((String)JavaWebServer.mainConfig.get("temp", null));
+	public File getLogs() {
+		return new File((String)JavaWebServer.mainConfig.get("logs", null));
 	}
 	
 	public File getPlugin(Patch p) {
@@ -118,7 +98,7 @@ public class FileManager {
 	
 	public File getAbsolutePath(String reqTarget, RequestPacket request) {
 		lwi = false;
-		File abs = new File(JavaWebServer.fileManager.getHTDocs(), URLDecoder.decode(reqTarget));
+		File abs = new File(request.host.getHTDocs(), URLDecoder.decode(reqTarget));
 		if (abs.isDirectory()) {
 			String[] index = ((String)JavaWebServer.mainConfig.get("index", request)).split(",");
 			for (String i : index) {
@@ -143,7 +123,7 @@ public class FileManager {
 	
 	public String correctForIndex(String reqTarget, RequestPacket request) {
 		String p = getAbsolutePath(reqTarget, request).getAbsolutePath().replace("\\", "/");
-		return p.substring(JavaWebServer.fileManager.getHTDocs().getAbsolutePath().replace("\\", "/").length());
+		return p.substring(request.host.getHTDocs().getAbsolutePath().replace("\\", "/").length());
 	}
 	
 	public static final HashMap<String, byte[]> cache = new HashMap<String, byte[]>();

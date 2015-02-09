@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.zip.CRC32;
 import com.javaprophet.javawebserver.JavaWebServer;
+import com.javaprophet.javawebserver.hosts.Host;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
@@ -45,22 +46,26 @@ public class PatchJavaLoader extends Patch {
 					method.invoke(sysloader, new Object[]{f.toURI().toURL()});
 				}
 			}
-			method.invoke(sysloader, new Object[]{JavaWebServer.fileManager.getHTDocs().toURI().toURL()});
+			for (Host host : JavaWebServer.hosts.values()) {
+				method.invoke(sysloader, new Object[]{host.getHTDocs().toURI().toURL()});
+			}
 		}catch (Throwable t) {
 			Logger.logError(t);
 		}
-		recurLoad(JavaWebServer.fileManager.getHTDocs());
+		for (Host host : JavaWebServer.hosts.values()) {
+			recurLoad(host, host.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
+		}
 		PatchSecurity ps = (PatchSecurity)PatchRegistry.getPatchForClass(PatchSecurity.class);
 		if (ps.enabled) {
-			recurLoad(JavaWebServer.fileManager.getPlugin(ps));
+			recurLoad(null, JavaWebServer.fileManager.getPlugin(ps));
 		}
 	}
 	
-	public void recurLoad(File dir) {
+	public void recurLoad(Host host, File dir) {
 		try {
 			for (File f : dir.listFiles()) {
 				if (f.isDirectory()) {
-					recurLoad(f);
+					recurLoad(host, f);
 				}else {
 					if (f.getName().endsWith(".class")) {
 						ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -91,6 +96,7 @@ public class PatchJavaLoader extends Patch {
 						Class<?> cls = jlcl.loadClass(name);
 						if (JavaLoader.class.isAssignableFrom(cls)) {
 							JavaLoader jl = (JavaLoader)cls.newInstance();
+							jl.init(host);
 							if (jl.getType() == 3) {
 								security.add((JavaLoaderSecurity)jl);
 							}else {
@@ -201,6 +207,7 @@ public class PatchJavaLoader extends Patch {
 					return null;
 				}
 				loader = ((Class<? extends JavaLoader>)loaderClass).newInstance();
+				loader.init(request.host);
 				jls.put(name, loader);
 			}else {
 				loader = jls.get(name);

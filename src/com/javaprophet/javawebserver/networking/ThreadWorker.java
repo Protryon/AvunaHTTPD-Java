@@ -9,6 +9,8 @@ import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 import com.javaprophet.javawebserver.JavaWebServer;
+import com.javaprophet.javawebserver.hosts.Host;
+import com.javaprophet.javawebserver.http.ResponseGenerator;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.util.Logger;
@@ -16,17 +18,19 @@ import com.javaprophet.javawebserver.util.Logger;
 public class ThreadWorker extends Thread {
 	
 	public ThreadWorker() {
-		
+		workers.add(this);
 	}
 	
 	public static void clearWork() {
 		workQueue.clear();
 	}
 	
+	private static ArrayList<ThreadWorker> workers = new ArrayList<ThreadWorker>();
 	private static LinkedBlockingQueue<Work> workQueue = new LinkedBlockingQueue<Work>();
 	
-	public static void addWork(Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
-		workQueue.add(new Work(s, in, out, ssl));
+	public static void addWork(Host host, Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
+		Logger.log(s.getInetAddress().getHostAddress() + " connected to " + host.getHostname() + ".");
+		workQueue.add(new Work(host, s, in, out, ssl));
 	}
 	
 	public static void readdWork(Work work) {
@@ -64,6 +68,7 @@ public class ThreadWorker extends Thread {
 						focus.s.close();
 						continue;
 					}
+					incomingRequest.host = focus.host;
 					incomingRequest.ssl = focus.ssl;
 					focus.tos = 0;
 					incomingRequest.userIP = focus.s.getInetAddress().getHostAddress();
@@ -78,7 +83,7 @@ public class ThreadWorker extends Thread {
 					ResponsePacket outgoingResponse = new ResponsePacket();
 					outgoingResponse.request = incomingRequest;
 					long proc1 = System.nanoTime();
-					boolean cont = JavaWebServer.rg.process(incomingRequest, outgoingResponse);
+					boolean cont = ResponseGenerator.process(incomingRequest, outgoingResponse);
 					long resp = System.nanoTime();
 					if (cont) JavaWebServer.patchBus.processPacket(outgoingResponse);
 					if (outgoingResponse.drop) {

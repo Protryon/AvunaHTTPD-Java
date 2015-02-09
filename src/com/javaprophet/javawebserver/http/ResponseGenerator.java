@@ -30,7 +30,7 @@ public class ResponseGenerator {
 	 * @param response the response to fill in
 	 * @return returns the success of handling the request.
 	 */
-	public boolean process(RequestPacket request, ResponsePacket response) {
+	public static boolean process(RequestPacket request, ResponsePacket response) {
 		// Check if httpVersion is compatible
 		if (!request.httpVersion.equals("HTTP/1.1")) {
 			// NOTE: StatusCode.NEEDS_HTTP_1_1??
