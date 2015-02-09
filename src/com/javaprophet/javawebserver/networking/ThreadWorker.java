@@ -7,6 +7,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.hosts.Host;
@@ -27,9 +28,19 @@ public class ThreadWorker extends Thread {
 	
 	private static ArrayList<ThreadWorker> workers = new ArrayList<ThreadWorker>();
 	private static LinkedBlockingQueue<Work> workQueue = new LinkedBlockingQueue<Work>();
+	private static HashMap<String, Integer> connIPs = new HashMap<String, Integer>();
+	
+	public static int getConnectionsForIP(String ip) {
+		return connIPs.get(ip);
+	}
 	
 	public static void addWork(Host host, Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
-		Logger.log(s.getInetAddress().getHostAddress() + " connected to " + host.getHostname() + ".");
+		String ip = s.getInetAddress().getHostAddress();
+		Integer cur = connIPs.get(ip);
+		if (cur == null) cur = 0;
+		cur += 1;
+		connIPs.put(ip, cur);
+		Logger.log(ip + " connected to " + host.getHostname() + ".");
 		workQueue.add(new Work(host, s, in, out, ssl));
 	}
 	
@@ -120,7 +131,12 @@ public class ThreadWorker extends Thread {
 					// System.out.println((cur - write) / 1000000D + " write-cur");
 					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned " + wrp.statusCode + " " + wrp.reasonPhrase + " took: " + (wrp.bwt - benchStart) / 1000000D + " ms");
 				}else {
-					Logger.log(focus.s.getInetAddress().getHostAddress() + " closed.");
+					String ip = focus.s.getInetAddress().getHostAddress();
+					Integer cur = connIPs.get(ip);
+					if (cur == null) cur = 1;
+					cur -= 1;
+					connIPs.put(ip, cur);
+					Logger.log(ip + " closed.");
 				}
 			}catch (SocketTimeoutException e) {
 				focus.tos++;
@@ -133,7 +149,12 @@ public class ThreadWorker extends Thread {
 					}catch (IOException ex) {
 						Logger.logError(ex);
 					}
-					Logger.log(focus.s.getInetAddress().getHostAddress() + " closed.");
+					String ip = focus.s.getInetAddress().getHostAddress();
+					Integer cur = connIPs.get(ip);
+					if (cur == null) cur = 1;
+					cur -= 1;
+					connIPs.put(ip, cur);
+					Logger.log(ip + " closed.");
 				}
 			}catch (Exception e) {
 				if (!(e instanceof SocketException || e instanceof StringIndexOutOfBoundsException)) Logger.logError(e);
@@ -142,7 +163,12 @@ public class ThreadWorker extends Thread {
 				}catch (IOException ex) {
 					Logger.logError(ex);
 				}
-				Logger.log(focus.s.getInetAddress().getHostAddress() + " closed.");
+				String ip = focus.s.getInetAddress().getHostAddress();
+				Integer cur = connIPs.get(ip);
+				if (cur == null) cur = 1;
+				cur -= 1;
+				connIPs.put(ip, cur);
+				Logger.log(ip + " closed.");
 			}
 		}
 	}
