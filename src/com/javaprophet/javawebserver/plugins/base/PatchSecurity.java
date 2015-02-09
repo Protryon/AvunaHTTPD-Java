@@ -6,6 +6,8 @@ import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
+import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderSecurity;
+import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
 
 public class PatchSecurity extends Patch {
 	
@@ -13,46 +15,31 @@ public class PatchSecurity extends Patch {
 		super(name);
 	}
 	
-	private static HashMap<String, String> sec = null;
+	private int minDrop = 100;
 	
 	@Override
 	public void formatConfig(HashMap<String, Object> map) {
-		sec = new HashMap<String, String>();
-		for (String mk : map.keySet()) {
-			if (mk.equals("enabled")) continue;
-			if (mk.equals("blacklist")) continue;
-			HashMap<String, Object> sub = (HashMap<String, Object>)map.get(mk);
-			if (!sub.containsKey("regex")) sub.put("regex", "/\\?[0-9]+");
-			if (!sub.containsKey("action")) sub.put("action", "drop");
-			sec.put((String)sub.get("regex"), (String)sub.get("action"));
-		}
-		if (!map.containsKey("blacklist")) {
-			map.put("blacklist", new HashMap<String, Object>());
-		}
-		HashMap<String, Object> bl = (HashMap<String, Object>)map.get("blacklist");
-		for (String key : bl.keySet()) {
-			if (!JavaWebServer.bannedIPs.contains(key)) JavaWebServer.bannedIPs.add(key);
-		}
+		if (!map.containsKey("minDrop")) map.put("minDrop", "100");
+		minDrop = Integer.parseInt((String)map.get("minDrop"));
 	}
 	
 	@Override
 	public boolean shouldProcessPacket(Packet packet) {
 		if (!(packet instanceof RequestPacket)) return false;
-		if (sec == null || sec.size() < 1) return false;
+		if (PatchJavaLoader.security == null || PatchJavaLoader.security.size() < 1) return false;
 		return true;
 	}
 	
 	@Override
 	public void processPacket(Packet packet) {
 		RequestPacket req = (RequestPacket)packet;
-		for (String regex : sec.keySet()) {
-			if (req.target.matches(regex)) {
-				String action = sec.get(regex);
-				if (action.equals("drop")) {
-					JavaWebServer.bannedIPs.add(req.userIP);
-					req.drop = true;
-				}
-			}
+		int chance = 0;
+		for (JavaLoaderSecurity sec : PatchJavaLoader.security) {
+			chance += sec.check(req);
+		}
+		if (chance >= minDrop) {
+			req.drop = true;
+			JavaWebServer.bannedIPs.add(req.userIP);
 		}
 	}
 	

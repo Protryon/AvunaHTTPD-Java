@@ -11,6 +11,7 @@ import java.net.URLClassLoader;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.zip.CRC32;
 import com.javaprophet.javawebserver.JavaWebServer;
@@ -18,6 +19,8 @@ import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
+import com.javaprophet.javawebserver.plugins.PatchRegistry;
+import com.javaprophet.javawebserver.plugins.base.PatchSecurity;
 import com.javaprophet.javawebserver.plugins.javaloader.lib.DatabaseManager;
 import com.javaprophet.javawebserver.plugins.javaloader.lib.HTMLCache;
 import com.javaprophet.javawebserver.util.Logger;
@@ -47,6 +50,10 @@ public class PatchJavaLoader extends Patch {
 			Logger.logError(t);
 		}
 		recurLoad(JavaWebServer.fileManager.getHTDocs());
+		PatchSecurity ps = (PatchSecurity)PatchRegistry.getPatchForClass(PatchSecurity.class);
+		if (ps.enabled) {
+			recurLoad(JavaWebServer.fileManager.getPlugin(ps));
+		}
 	}
 	
 	public void recurLoad(File dir) {
@@ -83,17 +90,21 @@ public class PatchJavaLoader extends Patch {
 						}
 						Class<?> cls = jlcl.loadClass(name);
 						if (JavaLoader.class.isAssignableFrom(cls)) {
-							CRC32 crc = new CRC32();
-							crc.update(b);
-							loadedClasses.put(crc.getValue() + "", name);
 							JavaLoader jl = (JavaLoader)cls.newInstance();
-							jls.put(name, jl);
+							if (jl.getType() == 3) {
+								security.add((JavaLoaderSecurity)jl);
+							}else {
+								CRC32 crc = new CRC32();
+								crc.update(b);
+								loadedClasses.put(crc.getValue() + "", name);
+								jls.put(name, jl);
+							}
 						}
 					}
 				}
 			}
 		}catch (Exception e) {
-			Logger.logError(e);;
+			Logger.logError(e);
 		}
 	}
 	
@@ -105,6 +116,8 @@ public class PatchJavaLoader extends Patch {
 			Logger.logError(e);;
 		}
 	}
+	
+	public static ArrayList<JavaLoaderSecurity> security = new ArrayList<JavaLoaderSecurity>();
 	
 	public static File lib = null;
 	
