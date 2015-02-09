@@ -142,19 +142,20 @@ public class FileManager {
 			if (rt.contains("?")) {
 				rt = rt.substring(0, rt.indexOf("?"));
 			}
+			String nrt = request.host.getHostname() + rt;
 			byte[] resource = null;
 			String ext = "";
 			boolean lwi = false;
 			boolean tooBig = false;
-			if (cache.containsKey(rt)) {
+			if (cache.containsKey(nrt)) {
 				long t = System.currentTimeMillis();
 				long cc = Integer.parseInt(((String)JavaWebServer.mainConfig.get("cacheClock", request)));
 				boolean tc = cc > 0 && t - cc < cacheClock;
-				if (tc || cc == -1 || extCache.get(rt).equals("application/x-java")) {
-					resource = cache.get(rt);
-					ext = extCache.get(rt);
-					lwi = lwiCache.get(rt);
-					tooBig = tbCache.get(rt);
+				if (tc || cc == -1 || extCache.get(nrt).equals("application/x-java")) {
+					resource = cache.get(nrt);
+					ext = extCache.get(nrt);
+					lwi = lwiCache.get(nrt);
+					tooBig = tbCache.get(nrt);
 				}else if (!tc && cc > 0) {
 					cacheClock = t;
 					String[] delKeys = new String[cache.size()];
@@ -194,11 +195,11 @@ public class FileManager {
 				}
 				fin.close();
 				resource = bout.toByteArray();
-				cache.put(rt, resource);
-				extCache.put(rt, ext);
+				cache.put(nrt, resource);
+				extCache.put(nrt, ext);
 				lwi = this.lwi;
-				lwiCache.put(rt, lwi);
-				tbCache.put(rt, tooBig);
+				lwiCache.put(nrt, lwi);
+				tbCache.put(nrt, tooBig);
 			}
 			Resource r = new Resource(resource, ext, rt);
 			r.wasDir = lwi;
