@@ -42,6 +42,7 @@ public class PatchOverride extends Patch {
 		if (!request.body.getBody().wasDir) {
 			rt = rt.substring(0, rt.lastIndexOf("/") + 1);
 		}
+		rt = request.host.getHostname() + rt;
 		if (overrides.containsKey(rt)) {
 			request.overrideConfig = overrides.get(rt);
 			return;

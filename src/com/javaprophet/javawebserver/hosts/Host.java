@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.HashMap;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
@@ -25,6 +26,7 @@ public class Host extends Thread {
 	private final File htdocs, htsrc, keyFile;
 	private final int port, cl;
 	private final boolean isSSL;
+	private final HashMap<String, Object> masterOverride;
 	
 	public File getHTDocs() {
 		return htdocs;
@@ -38,7 +40,7 @@ public class Host extends Thread {
 		return name;
 	}
 	
-	public Host(String name, String ip, int port, File htdocs, File htsrc, int cl, boolean isSSL, File keyFile, String keyPassword, String keystorePassword) {
+	public Host(String name, String ip, int port, File htdocs, File htsrc, int cl, HashMap<String, Object> masterOverride, boolean isSSL, File keyFile, String keyPassword, String keystorePassword) {
 		this.name = name;
 		this.ip = ip;
 		this.port = port;
@@ -49,6 +51,7 @@ public class Host extends Thread {
 		this.keyFile = keyFile;
 		this.keyPassword = keyPassword;
 		this.keystorePassword = keystorePassword;
+		this.masterOverride = masterOverride;
 	}
 	
 	public void setupFolders() {

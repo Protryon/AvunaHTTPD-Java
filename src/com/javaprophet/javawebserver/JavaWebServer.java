@@ -158,7 +158,9 @@ public class JavaWebServer {
 						if (!ssl.containsKey("keyFile")) ssl.put("keyFile", fileManager.getBaseFile("ssl/keyFile").toString());
 						if (!ssl.containsKey("keystorePassword")) ssl.put("keystorePassword", "password");
 						if (!ssl.containsKey("keyPassword")) ssl.put("keyPassword", "password");
-						Host h = new Host(key, (String)host.get("ip"), Integer.parseInt((String)host.get("port")), new File((String)host.get("htdocs")), new File((String)host.get("htsrc")), cl, ssl.get("enabled").equals("true"), new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
+						if (!host.containsKey("masterOverride")) host.put("masterOverride", new HashMap<String, Object>());
+						HashMap<String, Object> masterOverride = (HashMap<String, Object>)host.get("masterOverride");
+						Host h = new Host(key, (String)host.get("ip"), Integer.parseInt((String)host.get("port")), new File((String)host.get("htdocs")), new File((String)host.get("htsrc")), cl, masterOverride, ssl.get("enabled").equals("true"), new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
 						hosts.put(key, h);
 					}
 				}
