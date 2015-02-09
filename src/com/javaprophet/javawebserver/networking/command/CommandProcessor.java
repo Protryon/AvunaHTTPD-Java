@@ -89,6 +89,7 @@ public class CommandProcessor {
 				return;
 			}
 			selectedHost = cargs[0];
+			out.println("Selected " + selectedHost + "!");
 		}else if (command.equals("jhtml")) {
 			if (cargs.length != 2 && cargs.length != 1) {
 				out.println("Invalid arguments. (input, output[optional])");
@@ -253,6 +254,7 @@ public class CommandProcessor {
 			out.println("Commands:");
 			out.println("exit/stop");
 			out.println("reload");
+			out.println("select");
 			out.println("restart");
 			out.println("flushcache");
 			out.println("jhtml");
