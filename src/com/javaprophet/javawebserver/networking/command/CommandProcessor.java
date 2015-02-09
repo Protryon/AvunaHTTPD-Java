@@ -12,6 +12,8 @@ import java.util.Scanner;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.hosts.Host;
 import com.javaprophet.javawebserver.j2p.JavaToPHP;
+import com.javaprophet.javawebserver.plugins.PatchRegistry;
+import com.javaprophet.javawebserver.plugins.base.PatchOverride;
 import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
 import com.javaprophet.javawebserver.util.Logger;
 
@@ -79,6 +81,7 @@ public class CommandProcessor {
 			// Flushes our file cache and will require reading from files.
 			try {
 				JavaWebServer.fileManager.clearCache();
+				((PatchOverride)PatchRegistry.getPatchForClass(PatchOverride.class)).flush();
 			}catch (Exception e) {
 				e.printStackTrace(out);
 			}

@@ -30,6 +30,10 @@ public class Config {
 		configs.put(name, this);
 	}
 	
+	public HashMap<String, Object> getMaster() {
+		return cm;
+	}
+	
 	public Config(String name, String conf, ConfigFormat format) {
 		this.cfg = null;
 		this.format = format;
@@ -43,8 +47,8 @@ public class Config {
 	}
 	
 	public Object get(String name, RequestPacket request) {
-		if (request != null && request.overrideConfig != null && request.overrideConfig.has(this.name)) {
-			HashMap<String, Object> us = ((HashMap<String, Object>)request.overrideConfig.get(this.name, null));
+		if (request != null && request.overrideConfig != null && request.overrideConfig.containsKey(this.name)) {
+			HashMap<String, Object> us = ((HashMap<String, Object>)request.overrideConfig.get(this.name));
 			if (us.containsKey(name)) {
 				return us.get(name);
 			}
@@ -56,8 +60,8 @@ public class Config {
 		if (request != null && request.overrideConfig != null) {
 			Set<String> base = new HashSet<String>();
 			base.addAll(cm.keySet());
-			if (request != null && request.overrideConfig != null && request.overrideConfig.has(this.name)) {
-				HashMap<String, Object> us = ((HashMap<String, Object>)request.overrideConfig.get(this.name, null));
+			if (request != null && request.overrideConfig != null && request.overrideConfig.containsKey(this.name)) {
+				HashMap<String, Object> us = ((HashMap<String, Object>)request.overrideConfig.get(this.name));
 				base.addAll(us.keySet());
 			}
 			return base;

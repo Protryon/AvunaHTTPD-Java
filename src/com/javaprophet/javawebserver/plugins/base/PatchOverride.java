@@ -42,18 +42,19 @@ public class PatchOverride extends Patch {
 		if (!request.body.getBody().wasDir) {
 			rt = rt.substring(0, rt.lastIndexOf("/") + 1);
 		}
+		String prt = rt;
 		rt = request.host.getHostname() + rt;
 		if (overrides.containsKey(rt)) {
 			request.overrideConfig = overrides.get(rt);
 			return;
 		}
 		if (nogo.contains(rt)) return;
-		Resource override = JavaWebServer.fileManager.getResource(rt + fn, request);
+		Resource override = JavaWebServer.fileManager.getResource(prt + fn, request);
 		if (override == null) {
 			nogo.add(rt);
 			return;
 		}
-		request.overrideConfig = new Config("override" + System.nanoTime(), new String(override.data), new ConfigFormat() {
+		Config load = new Config("override" + System.nanoTime(), new String(override.data), new ConfigFormat() {
 			
 			@Override
 			public void format(HashMap<String, Object> map) {
@@ -62,11 +63,24 @@ public class PatchOverride extends Patch {
 			
 		});
 		try {
-			request.overrideConfig.load();
+			load.load();
 		}catch (IOException e) {
 			Logger.logError(e);
 		}
-		overrides.put(rt, request.overrideConfig);
+		HashMap<String, Object> or = load.getMaster();
+		for (String key : request.host.getMasterOverride().keySet()) {
+			Object val = request.host.getMasterOverride().get(key);
+			if (or.containsKey(key) && or.get(key) instanceof HashMap) {
+				HashMap<String, Object> sub = (HashMap<String, Object>)or.get(key);
+				for (String psk : ((HashMap<String, Object>)val).keySet()) {
+					sub.put(psk, ((HashMap<String, Object>)val).get(psk));
+				}
+			}else {
+				or.put(key, val);
+			}
+		}
+		overrides.put(rt, or);
+		request.overrideConfig = or;
 		return;
 	}
 	
@@ -81,7 +95,12 @@ public class PatchOverride extends Patch {
 	}
 	
 	private ArrayList<String> nogo = new ArrayList<String>();
-	private HashMap<String, Config> overrides = new HashMap<String, Config>();
+	private HashMap<String, HashMap<String, Object>> overrides = new HashMap<String, HashMap<String, Object>>();
+	
+	public void flush() {
+		nogo.clear();
+		overrides.clear();
+	}
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {

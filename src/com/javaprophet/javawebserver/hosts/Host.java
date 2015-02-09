@@ -40,6 +40,10 @@ public class Host extends Thread {
 		return name;
 	}
 	
+	public HashMap<String, Object> getMasterOverride() {
+		return masterOverride;
+	}
+	
 	public Host(String name, String ip, int port, File htdocs, File htsrc, int cl, HashMap<String, Object> masterOverride, boolean isSSL, File keyFile, String keyPassword, String keystorePassword) {
 		this.name = name;
 		this.ip = ip;
