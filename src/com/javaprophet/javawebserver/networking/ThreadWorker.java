@@ -41,6 +41,10 @@ public class ThreadWorker extends Thread {
 	
 	public static final ArrayList<Thread> subworkers = new ArrayList<Thread>();
 	
+	public static int getQueueSize() {
+		return workQueue.size();
+	}
+	
 	public void run() {
 		while (keepRunning) {
 			Work focus = workQueue.poll();

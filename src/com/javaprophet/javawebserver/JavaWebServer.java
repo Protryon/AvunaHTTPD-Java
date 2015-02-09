@@ -26,6 +26,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import com.javaprophet.javawebserver.http.ResponseGenerator;
 import com.javaprophet.javawebserver.networking.Connection;
+import com.javaprophet.javawebserver.networking.ThreadWorker;
 import com.javaprophet.javawebserver.networking.command.ComClient;
 import com.javaprophet.javawebserver.networking.command.ComServer;
 import com.javaprophet.javawebserver.networking.command.CommandProcessor;
@@ -145,6 +146,7 @@ public class JavaWebServer {
 					if (!map.containsKey("javac")) map.put("javac", "javac");
 					if (!map.containsKey("temp")) map.put("temp", new File(dir, "temp").toString());
 					if (!map.containsKey("bindport")) map.put("bindport", "80");
+					if (!map.containsKey("connlimit")) map.put("connlimit", "-1");
 					if (!map.containsKey("bindip")) map.put("bindip", "0.0.0.0");
 					if (!map.containsKey("workerThreadCount")) map.put("workerThreadCount", "" + (Runtime.getRuntime().availableProcessors() * 3));
 					if (!map.containsKey("errorpages")) map.put("errorpages", new HashMap<String, Object>());
@@ -188,38 +190,46 @@ public class JavaWebServer {
 				server.start();
 			}
 			final int bindport = Integer.parseInt((String)mainConfig.get("bindport", null));
+			final int cl = Integer.parseInt((String)mainConfig.get("connlimit", null));
 			final String bindip = (String)mainConfig.get("bindip", null);
-			Logger.log("Starting Server on " + bindip + ":" + bindport);
-			Thread tnssl = new Thread() {
-				public void run() {
-					try {
-						ServerSocket server = new ServerSocket(bindport, 1000, InetAddress.getByName(bindip));
-						nsslr = true;
-						ap = true;
-						while (!server.isClosed()) {
-							Socket s = server.accept();
-							if (bannedIPs.contains(s.getInetAddress().getHostAddress())) {
-								s.close();
-								continue;
-							}
-							s.setSoTimeout(1000);
-							DataOutputStream out = new DataOutputStream(s.getOutputStream());
-							out.flush();
-							DataInputStream in = new DataInputStream(s.getInputStream());
-							Connection c = new Connection(s, in, out, false);
-							c.handleConnection();
-							runningThreads.add(c);
-						}
-						Logger.log("Server Closed on " + bindip + ":" + bindport);
-					}catch (Exception e) {
-						Logger.logError(e);
-						ap = true;
-					}
-					nsslr = false;
-				}
-			};
-			tnssl.start();
 			final HashMap<String, Object> ssl = (HashMap<String, Object>)mainConfig.get("ssl", null);
+			boolean forceSSL = ssl.get("enabled").equals("true") && ssl.get("forceSSL").equals("true");
+			if (!forceSSL) {
+				Logger.log("Starting Server on " + bindip + ":" + bindport);
+				Thread tnssl = new Thread() {
+					public void run() {
+						try {
+							ServerSocket server = new ServerSocket(bindport, 1000, InetAddress.getByName(bindip));
+							nsslr = true;
+							ap = true;
+							while (!server.isClosed()) {
+								Socket s = server.accept();
+								if (cl >= 0 && ThreadWorker.getQueueSize() >= cl) {
+									s.close();
+									continue;
+								}
+								if (bannedIPs.contains(s.getInetAddress().getHostAddress())) {
+									s.close();
+									continue;
+								}
+								s.setSoTimeout(1000);
+								DataOutputStream out = new DataOutputStream(s.getOutputStream());
+								out.flush();
+								DataInputStream in = new DataInputStream(s.getInputStream());
+								Connection c = new Connection(s, in, out, false);
+								c.handleConnection();
+								runningThreads.add(c);
+							}
+							Logger.log("Server Closed on " + bindip + ":" + bindport);
+						}catch (Exception e) {
+							Logger.logError(e);
+							ap = true;
+						}
+						nsslr = false;
+					}
+				};
+				tnssl.start();
+			}
 			if (((String)ssl.get("enabled")).equals("true")) {
 				Thread tssl = new Thread() {
 					public void run() {

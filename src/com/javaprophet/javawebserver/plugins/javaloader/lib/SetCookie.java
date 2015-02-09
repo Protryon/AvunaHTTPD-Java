@@ -1,6 +1,5 @@
 package com.javaprophet.javawebserver.plugins.javaloader.lib;
 
-import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 
 public class SetCookie {
@@ -12,9 +11,9 @@ public class SetCookie {
 		this.domain = domain;
 	}
 	
-	public SetCookie(ResponsePacket response, RequestPacket request) {
+	public SetCookie(ResponsePacket response) {
 		this.response = response;
-		this.domain = request.headers.hasHeader("Host") ? request.headers.getHeader("Host") : "";
+		this.domain = response.request.headers.hasHeader("Host") ? response.request.headers.getHeader("Host") : "";
 	}
 	
 	public void setCookie(String name, String value) {

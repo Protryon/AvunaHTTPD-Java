@@ -53,9 +53,9 @@ public class RequestPacket extends Packet {
 			String cookie = headers.getHeader("Cookie");
 			for (String kd : cookie.split(";")) {
 				if (kd.contains("=")) {
-					this.cookie.put(URLDecoder.decode(kd.substring(0, kd.indexOf("=")), "UTF-8"), URLDecoder.decode(kd.substring(kd.indexOf("=") + 1), "UTF-8"));
+					this.cookie.put(URLDecoder.decode(kd.substring(0, kd.indexOf("=")), "UTF-8").trim(), URLDecoder.decode(kd.substring(kd.indexOf("=") + 1), "UTF-8").trim());
 				}else {
-					this.cookie.put(URLDecoder.decode(kd, "UTF-8"), "");
+					this.cookie.put(URLDecoder.decode(kd, "UTF-8").trim(), "");
 				}
 			}
 		}

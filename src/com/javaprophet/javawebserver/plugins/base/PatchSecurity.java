@@ -20,10 +20,18 @@ public class PatchSecurity extends Patch {
 		sec = new HashMap<String, String>();
 		for (String mk : map.keySet()) {
 			if (mk.equals("enabled")) continue;
+			if (mk.equals("blacklist")) continue;
 			HashMap<String, Object> sub = (HashMap<String, Object>)map.get(mk);
 			if (!sub.containsKey("regex")) sub.put("regex", "/\\?[0-9]+");
 			if (!sub.containsKey("action")) sub.put("action", "drop");
 			sec.put((String)sub.get("regex"), (String)sub.get("action"));
+		}
+		if (!map.containsKey("blacklist")) {
+			map.put("blacklist", new HashMap<String, Object>());
+		}
+		HashMap<String, Object> bl = (HashMap<String, Object>)map.get("blacklist");
+		for (String key : bl.keySet()) {
+			if (!JavaWebServer.bannedIPs.contains(key)) JavaWebServer.bannedIPs.add(key);
 		}
 	}
 	
