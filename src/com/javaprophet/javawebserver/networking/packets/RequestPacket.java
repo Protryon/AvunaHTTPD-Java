@@ -82,12 +82,17 @@ public class RequestPacket extends Packet {
 		incomingRequest.target = reqLine.substring(b + 1, b = reqLine.indexOf(" ", b + 1));
 		incomingRequest.httpVersion = reqLine.substring(b + 1);
 		Headers headers = incomingRequest.headers;
+		int hdr = 0;
 		while (true) {
 			String headerLine = in.readLine().trim();
 			if (headerLine.length() == 0) {
 				break;
 			}else {
 				headers.addHeader(headerLine);
+				hdr++;
+			}
+			if (hdr > 100) {
+				break;
 			}
 		}
 		boolean chunked = false;
@@ -101,40 +106,8 @@ public class RequestPacket extends Packet {
 		}
 		byte[] bbody = new byte[0];
 		if (chunked && htc) {
-			String te = headers.getHeader("Transfer-Encoding");
-			ByteArrayOutputStream bout = new ByteArrayOutputStream();
-			boolean lwl = false;
-			int length = 1;
-			while (length > 0) {
-				if (lwl) {
-					byte[] data = new byte[length];
-					in.readFully(data);
-					bout.write(data);
-					lwl = false;
-				}else {
-					String len = in.readLine().trim();
-					if (len.equals("")) {
-						continue;
-					}
-					length = Integer.parseInt(len, 16);
-					lwl = true;
-				}
-			}
-			bbody = bout.toByteArray();
-			if (te.equals("chunked")) {
-				headers.removeHeaders("Transfer-Encoding");
-			}else {
-				String ntev = "";
-				for (String sp : te.split(",")) {
-					if (!sp.equals("chunked")) {
-						ntev = sp + ", ";
-					}
-				}
-				if (ntev.length() > 0) {
-					ntev = ntev.substring(0, ntev.length() - 2);
-				}
-				te = ntev;
-			}
+			// TODO: if needed, reimplement properly
+			
 		}else if (hcl) {
 			bbody = new byte[Integer.parseInt(headers.getHeader("Content-Length"))];
 			in.readFully(bbody);

@@ -27,8 +27,12 @@ public class ThreadWorker extends Thread {
 	}
 	
 	private static ArrayList<ThreadWorker> workers = new ArrayList<ThreadWorker>();
-	private static LinkedBlockingQueue<Work> workQueue = new LinkedBlockingQueue<Work>();
+	private static LinkedBlockingQueue<Work> workQueue;
 	private static HashMap<String, Integer> connIPs = new HashMap<String, Integer>();
+	
+	public static void initQueue(int connlimit) {
+		workQueue = new LinkedBlockingQueue<Work>(connlimit);
+	}
 	
 	public static int getConnectionsForIP(String ip) {
 		return connIPs.get(ip);
@@ -40,8 +44,8 @@ public class ThreadWorker extends Thread {
 		if (cur == null) cur = 0;
 		cur += 1;
 		connIPs.put(ip, cur);
-		Logger.log(ip + " connected to " + host.getHostname() + ".");
 		workQueue.add(new Work(host, s, in, out, ssl));
+		Logger.log(ip + " connected to " + host.getHostname() + ".");
 	}
 	
 	public static void readdWork(Work work) {

@@ -176,6 +176,7 @@ public class JavaWebServer {
 			loadUnpacked();
 			Logger.log("Loaded Configs");
 			Logger.log("Loading Connection Handling");
+			ThreadWorker.initQueue(cl < 1 ? 10000 : cl);
 			for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount", null)); i++) {
 				ThreadWorker worker = new ThreadWorker();
 				worker.start();
