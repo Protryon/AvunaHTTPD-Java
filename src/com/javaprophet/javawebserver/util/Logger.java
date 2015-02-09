@@ -27,7 +27,7 @@ public class Logger extends Thread {
 	}
 	
 	public static void log(String line) {
-		INSTANCE.cacheLine(line);
+		INSTANCE.cacheLine("[-DATE-] " + line);
 	}
 	
 	private void cacheLine(String line) {
@@ -41,7 +41,7 @@ public class Logger extends Thread {
 	public final Thread logThread = new Thread() {
 		public void run() {
 			while (true) {
-				String cache = cacheAccess.toString();
+				String cache = cacheAccess.toString().replace("-DATE-", timestamp.format(new Date()));
 				cacheAccess.getBuffer().setLength(0);
 				locallog(cache);
 				try {
