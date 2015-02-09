@@ -17,13 +17,11 @@ public abstract class Patch {
 	
 	public abstract void formatConfig(HashMap<String, Object> json);
 	
-	public boolean enabled = true;
-	
 	public Patch(String name) {
 		this.name = name;
 		pcfg = new Config(name, new File(JavaWebServer.fileManager.getPlugin(this), "plugin.cfg"), new ConfigFormat() {
 			public void format(HashMap<String, Object> map) {
-				if (!map.containsKey("enabled")) map.put("enabled", enabled);
+				if (!map.containsKey("enabled")) map.put("enabled", "true");
 				formatConfig(map);
 			}
 		});
@@ -33,7 +31,6 @@ public abstract class Patch {
 		}catch (Exception e) {
 			Logger.logError(e);
 		}
-		enabled = ((String)pcfg.get("enabled", null)).equals("true");
 	}
 	
 	public void log(String line) {

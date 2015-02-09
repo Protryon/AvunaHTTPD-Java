@@ -7,11 +7,9 @@ import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
 
 public class PatchChunked extends Patch {
-	public static PatchChunked INSTANCE;
 	
 	public PatchChunked(String name) {
 		super(name);
-		INSTANCE = this;
 	}
 	
 	@Override

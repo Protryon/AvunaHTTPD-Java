@@ -21,7 +21,7 @@ public class PatchRegistry {
 	
 	public static Patch getPatchForClass(Class<?> cls) {
 		for (Patch p : patchs) {
-			if (cls.isAssignableFrom(p.getClass()) && p.enabled) {
+			if (cls.isAssignableFrom(p.getClass())) {
 				return p;
 			}
 		}

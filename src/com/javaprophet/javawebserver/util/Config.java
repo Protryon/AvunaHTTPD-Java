@@ -43,7 +43,12 @@ public class Config {
 	}
 	
 	public Object get(String name, RequestPacket request) {
-		if (request != null && request.overrideConfig != null && request.overrideConfig.has(name)) return request.overrideConfig.get(name, null);
+		if (request != null && request.overrideConfig != null && request.overrideConfig.has(this.name)) {
+			HashMap<String, Object> us = ((HashMap<String, Object>)request.overrideConfig.get(this.name, null));
+			if (us.containsKey(name)) {
+				return us.get(name);
+			}
+		}
 		return cm.get(name);
 	}
 	
@@ -51,7 +56,10 @@ public class Config {
 		if (request != null && request.overrideConfig != null) {
 			Set<String> base = new HashSet<String>();
 			base.addAll(cm.keySet());
-			base.addAll(request.overrideConfig.keySet(null));
+			if (request != null && request.overrideConfig != null && request.overrideConfig.has(this.name)) {
+				HashMap<String, Object> us = ((HashMap<String, Object>)request.overrideConfig.get(this.name, null));
+				base.addAll(us.keySet());
+			}
 			return base;
 		}else {
 			return cm.keySet();

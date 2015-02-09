@@ -13,7 +13,7 @@ public class PatchBus {
 	
 	public boolean processMethod(RequestPacket request, ResponsePacket response) {
 		Patch handler = PatchRegistry.registeredMethods.get(request.method);
-		if (handler != null && handler.enabled) {
+		if (handler != null && handler.pcfg.get("enabled", request).equals("true")) {
 			handler.processMethod(request, response);
 			return true;
 		}
@@ -22,7 +22,7 @@ public class PatchBus {
 	
 	public void setupFolders() {
 		for (Patch patch : PatchRegistry.patchs) {
-			if (patch.enabled) {
+			if (patch.pcfg.get("enabled", null).equals("true")) {
 				JavaWebServer.fileManager.getPlugin(patch).mkdirs();
 			}
 		}
@@ -30,7 +30,7 @@ public class PatchBus {
 	
 	public void processPacket(Packet p) {
 		for (Patch patch : PatchRegistry.patchs) {
-			if (patch.enabled && patch.shouldProcessPacket(p)) {
+			if (patch.pcfg.get("enabled", p instanceof RequestPacket ? (RequestPacket)p : null).equals("true") && patch.shouldProcessPacket(p)) {
 				patch.processPacket(p);
 				if (p.drop) return;
 			}
@@ -40,7 +40,7 @@ public class PatchBus {
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		byte[] rres = data;
 		for (Patch patch : PatchRegistry.patchs) {
-			if (patch.enabled && patch.shouldProcessResponse(response, request, rres)) {
+			if (patch.pcfg.get("enabled", request).equals("true") && patch.shouldProcessResponse(response, request, rres)) {
 				// long start = System.nanoTime();
 				rres = patch.processResponse(response, request, rres);
 				// System.out.println(patch.name + ": " + (System.nanoTime() - start) / 1000000D + " ms");

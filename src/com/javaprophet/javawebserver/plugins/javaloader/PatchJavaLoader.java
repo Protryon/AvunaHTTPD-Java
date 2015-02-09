@@ -56,7 +56,7 @@ public class PatchJavaLoader extends Patch {
 			recurLoad(host, host.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 		}
 		PatchSecurity ps = (PatchSecurity)PatchRegistry.getPatchForClass(PatchSecurity.class);
-		if (ps.enabled) {
+		if (ps.pcfg.get("enabled", null).equals("true")) {
 			recurLoad(null, JavaWebServer.fileManager.getPlugin(ps));
 		}
 	}

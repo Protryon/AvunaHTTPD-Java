@@ -27,11 +27,12 @@ public class PatchMultiHost extends Patch {
 	public void processPacket(Packet packet) {
 		RequestPacket request = (RequestPacket)packet;
 		String host = request.headers.getHeader("Host");
-		HashMap<String, Object> forward = (HashMap<String, Object>)pcfg.get("forward", request);
-		if (!request.httpVersion.equals("HTTP/1.0")) for (Object key : forward.keySet()) {
-			if (host.matches(((String)key))) {
-				request.target = forward.get(key) + request.target;
-				return;
+		if (!request.httpVersion.equals("HTTP/1.0")) {
+			for (Object key : pcfg.keySet(request)) {
+				if (!key.equals("enabled") && host.matches(((String)key))) {
+					request.target = pcfg.get((String)key, request) + request.target;
+					return;
+				}
 			}
 		}
 		request.target = ((String)pcfg.get("default", request)) + request.target;

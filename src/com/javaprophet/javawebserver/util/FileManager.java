@@ -13,6 +13,7 @@ import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.http.StatusCode;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.plugins.Patch;
+import com.javaprophet.javawebserver.plugins.PatchRegistry;
 import com.javaprophet.javawebserver.plugins.base.PatchChunked;
 import com.javaprophet.javawebserver.plugins.javaloader.lib.HTMLCache;
 
@@ -184,7 +185,8 @@ public class FileManager {
 					if (i > 0) {
 						bout.write(buf, 0, i);
 					}
-					if (PatchChunked.INSTANCE.enabled && bout.size() > Integer.parseInt((String)PatchChunked.INSTANCE.pcfg.get("minsize", request)) && !ext.startsWith("application")) {
+					PatchChunked chunked = (PatchChunked)PatchRegistry.getPatchForClass(PatchChunked.class);
+					if (chunked.pcfg.get("enabled", null).equals("true") && bout.size() > Integer.parseInt((String)chunked.pcfg.get("minsize", request)) && !ext.startsWith("application")) {
 						bout.reset();
 						tooBig = true;
 						break;
