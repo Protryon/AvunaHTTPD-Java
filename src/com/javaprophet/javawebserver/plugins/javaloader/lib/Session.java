@@ -33,7 +33,6 @@ public class Session {
 				}
 			}
 		}
-		System.out.println("set2");
 		Session n = new Session(base, bindIP, bindAgent);
 		sesses.put(n.csessid, n);
 		return n;
