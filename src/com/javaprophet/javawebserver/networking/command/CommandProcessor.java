@@ -56,6 +56,8 @@ public class CommandProcessor {
 		}else if (command.equals("reload")) {
 			// Reloads our patches and config
 			try {
+				JavaWebServer.fileManager.clearCache();
+				((PatchOverride)PatchRegistry.getPatchForClass(PatchOverride.class)).flush();
 				JavaWebServer.mainConfig.load();
 				JavaWebServer.patchBus.reload();
 			}catch (Exception e) {
@@ -68,10 +70,7 @@ public class CommandProcessor {
 			// TODO: Doesnt exit the program so maybe JVMBindException will occur?
 			try {
 				JavaWebServer.patchBus.preExit();
-				if (JavaWebServer.mainConfig != null) {
-					JavaWebServer.mainConfig.save();
-				}
-				if (System.getProperty("os.name").contains("nux")) {
+				if (System.getProperty("os.name").contains("nux") || System.getProperty("os.name").contains("nix")) {
 					Runtime.getRuntime().exec("sh " + JavaWebServer.fileManager.getBaseFile("restart.sh"));
 				}else if (System.getProperty("os.name").toLowerCase().contains("windows")) {
 					Runtime.getRuntime().exec(JavaWebServer.fileManager.getBaseFile("restart.bat").toString());
@@ -81,16 +80,6 @@ public class CommandProcessor {
 				e.printStackTrace(out);
 			}
 			out.println("Restarting...");
-		}else if (command.equals("flushcache")) {
-			// Flushes our file cache and will require reading from files.
-			try {
-				JavaWebServer.fileManager.clearCache();
-				((PatchOverride)PatchRegistry.getPatchForClass(PatchOverride.class)).flush();
-			}catch (Exception e) {
-				Logger.logError(e);
-				e.printStackTrace(out);
-			}
-			out.println("Cache Flushed! This is not necessary for php files, and does not work for .class files(restart jws for those, but HTMLCache is cleared).");
 		}else if (command.equals("select")) {
 			if (cargs.length != 2) {
 				out.println("Invalid arguments. (host, vhost)");
@@ -267,20 +256,19 @@ public class CommandProcessor {
 			}
 		}else if (command.equals("help")) {
 			out.println("Commands:");
-			out.println("exit/stop");
-			out.println("reload");
-			out.println("select");
-			out.println("restart");
-			out.println("flushcache");
-			out.println("jhtml");
-			out.println("jcomp");
-			out.println("jphp");
-			out.println("shell");
-			out.println("help");
+			out.println("exit/stop - exits JWS");
+			out.println("reload    - flushes all caches and reloads");
+			out.println("select    - select a host/vhost");
+			out.println("restart   - attempts to restart the server by running the provided .bat/.sh files");
+			out.println("jhtml     - converts HTML to JavaLoaderPrint");
+			out.println("jcomp     - compiles all(or specified) files in the htsrc folder to the htdocs folder");
+			out.println("jphp      - attempts to roughly convert PHP->Java, will require fine tuning");
+			out.println("shell     - runs a shell on the host computer.");
+			out.println("help      - lists these commands + version");
 			out.println("");
 			out.println("Java Web Server(JWS) Version " + JavaWebServer.VERSION);
 		}else {
-			out.println("Unknown Command: " + command);
+			out.println("Unknown Command: " + command + " - Use help command.");
 		}
 	}
 	
