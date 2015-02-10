@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import com.javaprophet.javawebserver.hosts.Host;
+import com.javaprophet.javawebserver.hosts.VHost;
 import com.javaprophet.javawebserver.networking.ThreadWorker;
 import com.javaprophet.javawebserver.networking.command.ComClient;
 import com.javaprophet.javawebserver.networking.command.ComServer;
@@ -150,8 +151,16 @@ public class JavaWebServer {
 						HashMap<String, Object> host = (HashMap<String, Object>)map.get(key);
 						if (!host.containsKey("port")) host.put("port", "80");
 						if (!host.containsKey("ip")) host.put("ip", "0.0.0.0");
-						if (!host.containsKey("htdocs")) host.put("htdocs", fileManager.getBaseFile("htdocs").toString());
-						if (!host.containsKey("htsrc")) host.put("htsrc", fileManager.getBaseFile("htsrc").toString());
+						if (!host.containsKey("vhosts")) host.put("vhosts", new HashMap<String, Object>());
+						HashMap<String, Object> vhosts = (HashMap<String, Object>)host.get("vhosts");
+						if (!vhosts.containsKey("main")) vhosts.put("main", new HashMap<String, Object>());
+						for (String vkey : vhosts.keySet()) {
+							HashMap<String, Object> vhost = (HashMap<String, Object>)vhosts.get(vkey);
+							if (!vhost.containsKey("enabled")) vhost.put("enabled", "true");
+							if (!vhost.containsKey("host")) vhost.put("host", ".*");
+							if (!vhost.containsKey("htdocs")) vhost.put("htdocs", fileManager.getBaseFile("htdocs").toString());
+							if (!vhost.containsKey("htsrc")) vhost.put("htsrc", fileManager.getBaseFile("htsrc").toString());
+						}
 						if (!host.containsKey("ssl")) host.put("ssl", new HashMap<String, Object>());
 						HashMap<String, Object> ssl = (HashMap<String, Object>)host.get("ssl");
 						if (!ssl.containsKey("enabled")) ssl.put("enabled", "false");
@@ -160,7 +169,12 @@ public class JavaWebServer {
 						if (!ssl.containsKey("keyPassword")) ssl.put("keyPassword", "password");
 						if (!host.containsKey("masterOverride")) host.put("masterOverride", new HashMap<String, Object>());
 						HashMap<String, Object> masterOverride = (HashMap<String, Object>)host.get("masterOverride");
-						Host h = new Host(key, (String)host.get("ip"), Integer.parseInt((String)host.get("port")), new File((String)host.get("htdocs")), new File((String)host.get("htsrc")), cl, masterOverride, ssl.get("enabled").equals("true"), new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
+						Host h = new Host(key, (String)host.get("ip"), Integer.parseInt((String)host.get("port")), cl, masterOverride, ssl.get("enabled").equals("true"), new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
+						for (String vkey : vhosts.keySet()) {
+							HashMap<String, Object> ourvh = (HashMap<String, Object>)vhosts.get(vkey);
+							VHost vhost = new VHost(h.getHostname() + "/" + vkey, h, new File((String)ourvh.get("htdocs")), new File((String)ourvh.get("htsrc")), (String)ourvh.get("host"));
+							h.addVHost(vhost);
+						}
 						hosts.put(key, h);
 					}
 				}

@@ -9,7 +9,7 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.hosts.Host;
+import com.javaprophet.javawebserver.hosts.VHost;
 import com.javaprophet.javawebserver.http.Headers;
 import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Method;
@@ -24,7 +24,7 @@ public class RequestPacket extends Packet {
 	public int userPort = 80;
 	public boolean ssl = false;
 	public HashMap<String, Object> overrideConfig = null;
-	public Host host = null;
+	public VHost host = null;
 	// javaloader vars
 	public HashMap<String, String> get = new HashMap<String, String>();
 	public HashMap<String, String> post = new HashMap<String, String>();

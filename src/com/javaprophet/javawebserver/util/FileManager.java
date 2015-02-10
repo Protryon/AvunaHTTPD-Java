@@ -142,7 +142,7 @@ public class FileManager {
 			if (rt.contains("?")) {
 				rt = rt.substring(0, rt.indexOf("?"));
 			}
-			String nrt = request.host.getHostname() + rt;
+			String nrt = request.host.getHostPath() + rt; // TODO: overlapping htdocs caching w/o file io
 			byte[] resource = null;
 			String ext = "";
 			boolean lwi = false;

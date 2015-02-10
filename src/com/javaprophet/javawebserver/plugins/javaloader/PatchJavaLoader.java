@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.zip.CRC32;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.hosts.Host;
+import com.javaprophet.javawebserver.hosts.VHost;
 import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
@@ -47,13 +48,17 @@ public class PatchJavaLoader extends Patch {
 				}
 			}
 			for (Host host : JavaWebServer.hosts.values()) {
-				method.invoke(sysloader, new Object[]{host.getHTDocs().toURI().toURL()});
+				for (VHost vhost : host.getVHosts()) {
+					method.invoke(sysloader, new Object[]{vhost.getHTDocs().toURI().toURL()});
+				}
 			}
 		}catch (Throwable t) {
 			Logger.logError(t);
 		}
 		for (Host host : JavaWebServer.hosts.values()) {
-			recurLoad(host, host.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
+			for (VHost vhost : host.getVHosts()) {
+				recurLoad(vhost, vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
+			}
 		}
 		PatchSecurity ps = (PatchSecurity)PatchRegistry.getPatchForClass(PatchSecurity.class);
 		if (ps.pcfg.get("enabled", null).equals("true")) {
@@ -61,7 +66,7 @@ public class PatchJavaLoader extends Patch {
 		}
 	}
 	
-	public void recurLoad(Host host, File dir) {
+	public void recurLoad(VHost host, File dir) {
 		try {
 			for (File f : dir.listFiles()) {
 				if (f.isDirectory()) {

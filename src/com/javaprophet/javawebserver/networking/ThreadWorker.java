@@ -83,7 +83,8 @@ public class ThreadWorker extends Thread {
 						focus.s.close();
 						continue;
 					}
-					incomingRequest.host = focus.host;
+					String host = incomingRequest.headers.hasHeader("Host") ? incomingRequest.headers.getHeader("Host") : "";
+					incomingRequest.host = focus.host.getVHost(host);
 					incomingRequest.ssl = focus.ssl;
 					focus.tos = 0;
 					incomingRequest.userIP = focus.s.getInetAddress().getHostAddress();

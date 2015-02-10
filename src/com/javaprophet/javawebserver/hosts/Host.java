@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.ArrayList;
 import java.util.HashMap;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -23,18 +24,10 @@ import com.javaprophet.javawebserver.util.Logger;
 
 public class Host extends Thread {
 	private final String ip, keyPassword, keystorePassword, name;
-	private final File htdocs, htsrc, keyFile;
+	private final File keyFile;
 	private final int port, cl;
 	private final boolean isSSL;
 	private final HashMap<String, Object> masterOverride;
-	
-	public File getHTDocs() {
-		return htdocs;
-	}
-	
-	public File getHTSrc() {
-		return htsrc;
-	}
 	
 	public String getHostname() {
 		return name;
@@ -44,12 +37,16 @@ public class Host extends Thread {
 		return masterOverride;
 	}
 	
-	public Host(String name, String ip, int port, File htdocs, File htsrc, int cl, HashMap<String, Object> masterOverride, boolean isSSL, File keyFile, String keyPassword, String keystorePassword) {
+	private ArrayList<VHost> vhosts = new ArrayList<VHost>();
+	
+	public void addVHost(VHost vhost) {
+		vhosts.add(vhost);
+	}
+	
+	public Host(String name, String ip, int port, int cl, HashMap<String, Object> masterOverride, boolean isSSL, File keyFile, String keyPassword, String keystorePassword) {
 		this.name = name;
 		this.ip = ip;
 		this.port = port;
-		this.htdocs = htdocs;
-		this.htsrc = htsrc;
 		this.cl = cl;
 		this.isSSL = isSSL;
 		this.keyFile = keyFile;
@@ -58,9 +55,23 @@ public class Host extends Thread {
 		this.masterOverride = masterOverride;
 	}
 	
+	public VHost getVHost(String host) {
+		for (VHost vhost : vhosts) {
+			if (vhost.getVHost().equals(".*") || host.matches(vhost.getVHost())) {
+				return vhost;
+			}
+		}
+		return null;
+	}
+	
+	public ArrayList<VHost> getVHosts() {
+		return vhosts;
+	}
+	
 	public void setupFolders() {
-		htdocs.mkdirs();
-		htsrc.mkdirs();
+		for (VHost vhost : vhosts) {
+			vhost.setupFolders();
+		}
 	}
 	
 	public void run() {

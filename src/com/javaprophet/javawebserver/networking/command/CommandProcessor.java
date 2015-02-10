@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.hosts.Host;
+import com.javaprophet.javawebserver.hosts.VHost;
 import com.javaprophet.javawebserver.j2p.JavaToPHP;
 import com.javaprophet.javawebserver.plugins.PatchRegistry;
 import com.javaprophet.javawebserver.plugins.base.PatchOverride;
@@ -26,6 +27,7 @@ public class CommandProcessor {
 	 * Our selected Host.
 	 */
 	public static String selectedHost = "main";
+	public static String selectedVHost = "main";
 	
 	/**
 	 * Processes our command
@@ -90,23 +92,25 @@ public class CommandProcessor {
 			}
 			out.println("Cache Flushed! This is not necessary for php files, and does not work for .class files(restart jws for those, but HTMLCache is cleared).");
 		}else if (command.equals("select")) {
-			if (cargs.length != 1) {
-				out.println("Invalid arguments. (host)");
+			if (cargs.length != 2) {
+				out.println("Invalid arguments. (host, vhost)");
 				return;
 			}
 			selectedHost = cargs[0];
-			out.println("Selected " + selectedHost + "!");
+			selectedVHost = cargs[1];
+			out.println("Selected " + selectedHost + "/" + selectedVHost + "!");
 		}else if (command.equals("jhtml")) {
 			if (cargs.length != 2 && cargs.length != 1) {
 				out.println("Invalid arguments. (input, output[optional])");
 				return;
 			}
 			try {
-				Host host = JavaWebServer.hosts.get(selectedHost);
-				if (host == null) {
+				Host phost = JavaWebServer.hosts.get(selectedHost);
+				if (phost == null) {
 					out.println("Invalid Selected Host (select)");
 					return;
 				}
+				VHost host = phost.getVHost(selectedVHost);
 				File sc2 = null;
 				Scanner scan2 = new Scanner(new FileInputStream(sc2 = new File(host.getHTDocs(), cargs[0])));
 				PrintStream ps;
@@ -142,11 +146,12 @@ public class CommandProcessor {
 				out.println("Invalid arguments. (input, output[optional])");
 				return;
 			}
-			Host host = JavaWebServer.hosts.get(selectedHost);
-			if (host == null) {
+			Host phost = JavaWebServer.hosts.get(selectedHost);
+			if (phost == null) {
 				out.println("Invalid Selected Host (select)");
 				return;
 			}
+			VHost host = phost.getVHost(selectedVHost);
 			try {
 				File sc2 = null;
 				Scanner scan2 = new Scanner(new FileInputStream(sc2 = new File(host.getHTDocs(), cargs[0])));
@@ -172,11 +177,12 @@ public class CommandProcessor {
 			out.println("JPHP completed.");
 		}else if (command.equals("jcomp")) {
 			boolean all = cargs.length < 1;
-			Host host = JavaWebServer.hosts.get(selectedHost);
-			if (host == null) {
+			Host phost = JavaWebServer.hosts.get(selectedHost);
+			if (phost == null) {
 				out.println("Invalid Selected Host (select)");
 				return;
 			}
+			VHost host = phost.getVHost(selectedVHost);
 			String sep = System.getProperty("os.name").toLowerCase().contains("windows") ? ";" : ":";
 			String cp = JavaWebServer.fileManager.getBaseFile("jws.jar").toString() + sep + host.getHTDocs().toString() + sep + host.getHTSrc().toString() + sep + PatchJavaLoader.lib.toString() + sep;
 			for (File f : PatchJavaLoader.lib.listFiles()) {

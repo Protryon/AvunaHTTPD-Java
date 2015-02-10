@@ -1,6 +1,6 @@
 package com.javaprophet.javawebserver.plugins.javaloader;
 
-import com.javaprophet.javawebserver.hosts.Host;
+import com.javaprophet.javawebserver.hosts.VHost;
 
 public abstract class JavaLoader {
 	public JavaLoader() {
@@ -11,7 +11,7 @@ public abstract class JavaLoader {
 		
 	}
 	
-	public void init(Host host) {
+	public void init(VHost host) {
 		
 	}
 	

@@ -43,7 +43,7 @@ public class PatchOverride extends Patch {
 			rt = rt.substring(0, rt.lastIndexOf("/") + 1);
 		}
 		String prt = rt;
-		rt = request.host.getHostname() + rt;
+		rt = request.host.getHostPath() + rt;
 		if (overrides.containsKey(rt)) {
 			request.overrideConfig = overrides.get(rt);
 			return;
@@ -68,8 +68,8 @@ public class PatchOverride extends Patch {
 			Logger.logError(e);
 		}
 		HashMap<String, Object> or = load.getMaster();
-		for (String key : request.host.getMasterOverride().keySet()) {
-			Object val = request.host.getMasterOverride().get(key);
+		for (String key : request.host.getHost().getMasterOverride().keySet()) {
+			Object val = request.host.getHost().getMasterOverride().get(key);
 			if (or.containsKey(key) && or.get(key) instanceof HashMap) {
 				HashMap<String, Object> sub = (HashMap<String, Object>)or.get(key);
 				for (String psk : ((HashMap<String, Object>)val).keySet()) {
