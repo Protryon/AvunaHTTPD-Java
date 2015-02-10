@@ -271,6 +271,7 @@ public class CommandProcessor {
 			out.println("jhtml     - converts HTML to JavaLoaderPrint");
 			out.println("jcomp     - compiles all(or specified) files in the htsrc folder to the htdocs folder");
 			out.println("jphp      - attempts to roughly convert PHP->Java, will require fine tuning");
+			out.println("jlflush   - attempts to clear JavaLoaders, and reload them. Currently not functional.");
 			out.println("shell     - runs a shell on the host computer.");
 			out.println("help      - lists these commands + version");
 			out.println("");
