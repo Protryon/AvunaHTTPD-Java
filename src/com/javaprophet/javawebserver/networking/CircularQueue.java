@@ -19,8 +19,8 @@ public class CircularQueue<T> implements Queue<T> {
 	}
 	
 	@Override
-	public synchronized int size() {
-		return array.length;
+	public int size() {
+		return Math.abs(pointer - mPointer);
 	}
 	
 	@Override
