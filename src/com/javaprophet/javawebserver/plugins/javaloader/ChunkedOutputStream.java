@@ -26,10 +26,10 @@ public class ChunkedOutputStream extends DataOutputStream {
 	}
 	
 	private ByteArrayOutputStream cache = new ByteArrayOutputStream(), gzipb = new ByteArrayOutputStream();
+	private boolean writing = false;
 	
 	public void writeHeaders() throws IOException {
-		if (!flushed) {
-			flushed = true;
+		if (!flushed && !writing) {
 			StringBuilder ser = new StringBuilder();
 			ser.append((toSend.httpVersion + " " + toSend.statusCode + " " + toSend.reasonPhrase + JavaWebServer.crlf));
 			HashMap<String, ArrayList<String>> hdrs = toSend.headers.getHeaders();
@@ -39,16 +39,23 @@ public class ChunkedOutputStream extends DataOutputStream {
 				}
 			}
 			ser.append(JavaWebServer.crlf);
+			writing = true;
 			super.write(ser.toString().getBytes());
 			super.flush();
+			writing = false;
+			flushed = true;
 		}
 	}
 	
 	public void write(byte[] b, int off, int len) throws IOException {
-		if (!flushed) {
-			writeHeaders();
+		if (writing) {
+			super.write(b, off, len);
 		}else {
-			cache.write(b, off, len);
+			if (!flushed) {
+				writeHeaders();
+			}else {
+				cache.write(b, off, len);
+			}
 		}
 	}
 	
@@ -57,6 +64,7 @@ public class ChunkedOutputStream extends DataOutputStream {
 		this.cache.reset();
 		if (gzip) {
 			gzips.write(cache);
+			gzips.flush();
 			cache = gzipb.toByteArray();
 			gzipb.reset();
 		}
@@ -65,10 +73,13 @@ public class ChunkedOutputStream extends DataOutputStream {
 		byte[] bas = new byte[4];
 		bb.position(0);
 		bb.get(bas);
-		super.write((JavaWebServer.fileManager.bytesToHex(bas) + JavaWebServer.crlf).getBytes());
+		String hex = JavaWebServer.fileManager.bytesToHex(bas);
+		writing = true;
+		super.write((hex + JavaWebServer.crlf).getBytes());
 		super.write(cache);
 		super.write(JavaWebServer.crlf.getBytes());
 		super.flush();
+		writing = false;
 	}
 	
 	public void finish() throws IOException {
@@ -86,13 +97,17 @@ public class ChunkedOutputStream extends DataOutputStream {
 			byte[] bas = new byte[4];
 			bb.position(0);
 			bb.get(bas);
+			writing = true;
 			super.write((JavaWebServer.fileManager.bytesToHex(bas) + JavaWebServer.crlf).getBytes());
 			super.write(cache);
 			super.write((JavaWebServer.crlf + "0" + JavaWebServer.crlf).getBytes());
 			super.flush();
+			writing = false;
 		}else {
+			writing = true;
 			super.write(("0" + JavaWebServer.crlf).getBytes());
 			super.flush();
+			writing = false;
 		}
 	}
 	

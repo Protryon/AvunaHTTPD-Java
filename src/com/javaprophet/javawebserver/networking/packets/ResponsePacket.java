@@ -66,7 +66,9 @@ public class ResponsePacket extends Packet {
 				if (!thisClone.headers.hasHeader("Transfer-Encoding")) {
 					add = finalc;
 				}else {
-					add = new byte[0];// crlf.getBytes();
+					cachedPacket = thisClone;
+					cachedSerialize = new byte[0];
+					return new byte[0];
 				}
 				if (thisClone.body == null) {
 					thisClone.body = new MessageBody(thisClone);
@@ -103,10 +105,13 @@ public class ResponsePacket extends Packet {
 		cachedPacket.bwt = System.nanoTime();
 		if (write == null) {
 			return null;
+		}else if (write.length == 0) {
+			
+		}else {
+			out.write(write);
+			write = null;
+			out.flush();
 		}
-		out.write(write);
-		write = null;
-		out.flush();
 		long pw = System.nanoTime();
 		if (cachedPacket.headers.hasHeader("Transfer-Encoding")) {
 			String te = cachedPacket.headers.getHeader("Transfer-Encoding");

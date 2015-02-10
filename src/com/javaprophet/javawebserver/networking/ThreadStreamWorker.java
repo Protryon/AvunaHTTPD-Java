@@ -27,6 +27,7 @@ public class ThreadStreamWorker extends Thread {
 			fin = new FileInputStream(JavaWebServer.fileManager.getAbsolutePath(resp.body.getBody().loc, req));
 			int i = 1;
 			byte[] buf = new byte[10485760];
+			int b = 0;
 			while (!work.s.isClosed() && i > 0) {
 				i = fin.read(buf);
 				if (i < 1) {
@@ -36,8 +37,13 @@ public class ThreadStreamWorker extends Thread {
 					cos.write(buf, 0, i);
 					cos.flush();
 				}
+				b++;
+				if (b > 2) {
+					break;
+				}
 			}
-			cos.finish();
+			// cos.finish();
+			cos.close();
 			ThreadWorker.readdWork(work);
 		}catch (IOException e) {
 			Logger.logError(e);
