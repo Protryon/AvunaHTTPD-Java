@@ -1,4 +1,5 @@
 package com.javaprophet.javawebserver.networking;
+
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
@@ -18,7 +19,7 @@ public class CircularQueue<T> implements Queue<T> {
 	}
 	
 	@Override
-	public int size() {
+	public synchronized int size() {
 		return array.length;
 	}
 	
@@ -32,7 +33,7 @@ public class CircularQueue<T> implements Queue<T> {
 	}
 	
 	@Override
-	public boolean contains(Object o) {
+	public synchronized boolean contains(Object o) {
 		if (isEmpty()) return false;
 		for (int i = mPointer; i != pointer; i++) {
 			if (i == array.length) i = 0;
@@ -45,7 +46,7 @@ public class CircularQueue<T> implements Queue<T> {
 	}
 	
 	@Override
-	public Iterator<T> iterator() {
+	public synchronized Iterator<T> iterator() {
 		return new Iterator<T>() {
 			private int pointer = mPointer;
 			
@@ -71,7 +72,7 @@ public class CircularQueue<T> implements Queue<T> {
 	}
 	
 	@Override
-	public Object[] toArray() {
+	public synchronized Object[] toArray() {
 		Object[] n = new Object[Math.abs(pointer - mPointer)];
 		int i2 = 0;
 		for (int i = mPointer; i != pointer; i++) {
@@ -83,7 +84,7 @@ public class CircularQueue<T> implements Queue<T> {
 	}
 	
 	@Override
-	public Object[] toArray(Object[] a) {
+	public synchronized Object[] toArray(Object[] a) {
 		Object[] n = new Object[Math.abs(pointer - mPointer)];
 		int i2 = 0;
 		for (int i = mPointer; i != pointer; i++) {
@@ -95,7 +96,7 @@ public class CircularQueue<T> implements Queue<T> {
 	}
 	
 	@Override
-	public boolean remove(Object o) {
+	public synchronized boolean remove(Object o) {
 		boolean cc = false;
 		for (int i = mPointer; i != pointer; i++) {
 			if (i == array.length) i = 0;
@@ -115,7 +116,7 @@ public class CircularQueue<T> implements Queue<T> {
 	}
 	
 	@Override
-	public boolean containsAll(Collection c) {
+	public synchronized boolean containsAll(Collection c) {
 		top:
 		for (Object cc : c) {
 			for (int i = mPointer; i != pointer; i++) {
@@ -131,7 +132,7 @@ public class CircularQueue<T> implements Queue<T> {
 	}
 	
 	@Override
-	public boolean addAll(Collection c) {
+	public synchronized boolean addAll(Collection c) {
 		for (Object cc : c) {
 			add((T)cc);
 		}
@@ -139,7 +140,7 @@ public class CircularQueue<T> implements Queue<T> {
 	}
 	
 	@Override
-	public boolean removeAll(Collection c) {
+	public synchronized boolean removeAll(Collection c) {
 		boolean cc = false;
 		for (int i = mPointer; i != pointer; i++) {
 			if (i == array.length) i = 0;
@@ -159,7 +160,7 @@ public class CircularQueue<T> implements Queue<T> {
 	}
 	
 	@Override
-	public boolean retainAll(Collection c) {
+	public synchronized boolean retainAll(Collection c) {
 		boolean cc = false;
 		for (int i = mPointer; i != pointer; i++) {
 			if (i == array.length) i = 0;
@@ -179,14 +180,14 @@ public class CircularQueue<T> implements Queue<T> {
 	}
 	
 	@Override
-	public void clear() {
+	public synchronized void clear() {
 		array = new Object[array.length];
 		pointer = 0;
 		mPointer = 0;
 	}
 	
 	@Override
-	public boolean add(T e) {
+	public synchronized boolean add(T e) {
 		if (isFull()) throw new IllegalStateException();
 		array[pointer] = e;
 		pointer++;
@@ -195,14 +196,14 @@ public class CircularQueue<T> implements Queue<T> {
 	}
 	
 	@Override
-	public boolean offer(T e) {
+	public synchronized boolean offer(T e) {
 		if (isFull()) return false;
 		add(e);
 		return true;
 	}
 	
 	@Override
-	public T remove() {
+	public synchronized T remove() {
 		if (isEmpty()) throw new NoSuchElementException();
 		T etc = (T)array[mPointer];
 		array[mPointer] = null;
@@ -212,7 +213,7 @@ public class CircularQueue<T> implements Queue<T> {
 	}
 	
 	@Override
-	public T poll() {
+	public synchronized T poll() {
 		if (isEmpty()) return null;
 		T etc = (T)array[mPointer];
 		array[mPointer] = null;
@@ -222,13 +223,13 @@ public class CircularQueue<T> implements Queue<T> {
 	}
 	
 	@Override
-	public T element() {
+	public synchronized T element() {
 		if (isEmpty()) throw new NoSuchElementException();
 		return (T)array[mPointer];
 	}
 	
 	@Override
-	public T peek() {
+	public synchronized T peek() {
 		if (isEmpty()) return null;
 		return (T)array[mPointer];
 	}
