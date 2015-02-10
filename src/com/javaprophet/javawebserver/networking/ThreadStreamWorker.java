@@ -21,6 +21,7 @@ public class ThreadStreamWorker extends Thread {
 	
 	public void run() {
 		FileInputStream fin = null;
+		// resp.headers.removeHeaders("Content-Encoding");
 		try {
 			ChunkedOutputStream cos = new ChunkedOutputStream(work.out, resp, resp.headers.hasHeader("Content-Encoding") && resp.headers.getHeader("Content-Encoding").contains("gzip"));
 			cos.writeHeaders();
