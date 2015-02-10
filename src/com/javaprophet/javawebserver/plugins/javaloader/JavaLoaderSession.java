@@ -33,6 +33,9 @@ public final class JavaLoaderSession {
 	}
 	
 	public void unloadJLCL() {
+		for (JavaLoader jl : jls.values()) {
+			jl.destroy();
+		}
 		jlcl = null;
 		jls = null;
 		loadedClasses = null;

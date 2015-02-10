@@ -67,7 +67,7 @@ public class ComServer extends Thread {
 							}
 						}else {
 							Logger.log("com[" + s.getInetAddress().getHostAddress() + "]: " + cs);
-							CommandProcessor.process(cs, ps, scan, true);
+							CommandProcessor.process(cs, ps, scan);
 							ps.println("Command Completed.");
 						}
 						ps.flush();

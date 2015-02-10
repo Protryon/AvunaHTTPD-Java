@@ -67,6 +67,47 @@ public class PatchJavaLoader extends Patch {
 		}
 	}
 	
+	public void flushjl() {
+		try {
+			for (JavaLoaderSession jls : sessions) {
+				jls.unloadJLCL();
+			}
+			sessions.clear();
+			log("Loading JavaLoader Libs");
+			lib = new File(JavaWebServer.fileManager.getMainDir(), (String)pcfg.get("lib", null));
+			if (!lib.exists() || !lib.isDirectory()) {
+				lib.mkdirs();
+			}
+			URLClassLoader sysloader = (URLClassLoader)ClassLoader.getSystemClassLoader();
+			Class sysclass = URLClassLoader.class;
+			
+			try {
+				Method method = sysclass.getDeclaredMethod("addURL", URL.class);
+				method.setAccessible(true);
+				method.invoke(sysloader, new Object[]{lib.toURI().toURL()});
+				for (File f : lib.listFiles()) {
+					if (!f.isDirectory() && f.getName().endsWith(".jar")) {
+						method.invoke(sysloader, new Object[]{f.toURI().toURL()});
+					}
+				}
+			}catch (Throwable t) {
+				Logger.logError(t);
+			}
+			for (Host host : JavaWebServer.hosts.values()) {
+				for (VHost vhost : host.getVHosts()) {
+					vhost.initJLS(new URL[]{vhost.getHTDocs().toURI().toURL()});
+					recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
+				}
+			}
+			PatchSecurity ps = (PatchSecurity)PatchRegistry.getPatchForClass(PatchSecurity.class);
+			if (ps.pcfg.get("enabled", null).equals("true")) {
+				recurLoad(null, JavaWebServer.fileManager.getPlugin(ps));
+			}
+		}catch (Exception e) {
+			Logger.logError(e);
+		}
+	}
+	
 	protected static ArrayList<JavaLoaderSession> sessions = new ArrayList<JavaLoaderSession>();
 	
 	public void recurLoad(JavaLoaderSession session, File dir) {

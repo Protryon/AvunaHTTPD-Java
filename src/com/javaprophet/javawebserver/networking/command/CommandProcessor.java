@@ -35,17 +35,16 @@ public class CommandProcessor {
 	 * @param command the command to process
 	 * @param out the output to write to
 	 * @param scan the scanner to read from
-	 * @param telnet if it's a telnet connection
 	 * @throws Exception an exception gets thrown when something doesn't work out well.
 	 */
-	public static void process(String command, final PrintStream out, final Scanner scan, boolean telnet) throws Exception {
+	public static void process(String command, final PrintStream out, final Scanner scan) throws Exception {
 		se = false;
 		// Fancy command parsing right here
 		String[] cargs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1).split(" ") : new String[0];
 		String targs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1) : "";
 		command = command.contains(" ") ? command.substring(0, command.indexOf(" ")) : command;
 		
-		// If else statements here, no usage of switch as the server should support JDK/JRE 6.45
+		// If else statements here, no usage of switch as the server should support JDK/JRE 6.45 (or laziness)
 		if (command.equals("exit") || command.equals("stop")) {
 			JavaWebServer.patchBus.preExit();
 			if (JavaWebServer.mainConfig != null) {
@@ -64,7 +63,16 @@ public class CommandProcessor {
 				Logger.logError(e);
 				e.printStackTrace(out);
 			}
-			out.println("Loaded Config! Some entries will require a restart.");
+			out.println("JWS Reloaded! This does NOT update all configs, but it reloads most of them and flushes the cache. Doesn't flush the JavaLoader cache, for that use jlflush.");
+		}else if (command.equals("jlflush")) {
+			// Reloads our patches and config
+			try {
+				((PatchJavaLoader)PatchRegistry.getPatchForClass(PatchJavaLoader.class)).flushjl();
+			}catch (Exception e) {
+				Logger.logError(e);
+				e.printStackTrace(out);
+			}
+			out.println("JavaLoader flushed!");
 		}else if (command.equals("restart")) {
 			// Restarts our server completely
 			// TODO: Doesnt exit the program so maybe JVMBindException will occur?

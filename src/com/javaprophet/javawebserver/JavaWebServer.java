@@ -218,7 +218,7 @@ public class JavaWebServer {
 		while (scan.hasNextLine()) {
 			try {
 				String command = scan.nextLine();
-				CommandProcessor.process(command, System.out, scan, false);
+				CommandProcessor.process(command, System.out, scan);
 			}catch (NoSuchElementException fe) {
 				break;
 			}catch (Exception e) {
