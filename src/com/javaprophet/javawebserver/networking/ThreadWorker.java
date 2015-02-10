@@ -8,7 +8,6 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.LinkedBlockingQueue;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.hosts.Host;
 import com.javaprophet.javawebserver.http.ResponseGenerator;
@@ -27,11 +26,11 @@ public class ThreadWorker extends Thread {
 	}
 	
 	private static ArrayList<ThreadWorker> workers = new ArrayList<ThreadWorker>();
-	private static LinkedBlockingQueue<Work> workQueue;
+	private static CircularQueue<Work> workQueue;
 	private static HashMap<String, Integer> connIPs = new HashMap<String, Integer>();
 	
 	public static void initQueue(int connlimit) {
-		workQueue = new LinkedBlockingQueue<Work>(connlimit);
+		workQueue = new CircularQueue<Work>(connlimit);
 	}
 	
 	public static int getConnectionsForIP(String ip) {
