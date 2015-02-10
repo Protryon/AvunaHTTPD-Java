@@ -172,6 +172,7 @@ public class JavaWebServer {
 						Host h = new Host(key, (String)host.get("ip"), Integer.parseInt((String)host.get("port")), cl, masterOverride, ssl.get("enabled").equals("true"), new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
 						for (String vkey : vhosts.keySet()) {
 							HashMap<String, Object> ourvh = (HashMap<String, Object>)vhosts.get(vkey);
+							if (!ourvh.get("enabled").equals("true")) continue;
 							VHost vhost = new VHost(h.getHostname() + "/" + vkey, h, new File((String)ourvh.get("htdocs")), new File((String)ourvh.get("htsrc")), (String)ourvh.get("host"));
 							h.addVHost(vhost);
 						}

@@ -32,45 +32,48 @@ public class PatchJavaLoader extends Patch {
 	public PatchJavaLoader(String name) {
 		super(name);
 		log("Loading JavaLoader Libs");
-		lib = new File(JavaWebServer.fileManager.getMainDir(), (String)pcfg.get("lib", null));
-		if (!lib.exists() || !lib.isDirectory()) {
-			lib.mkdirs();
-		}
-		URLClassLoader sysloader = (URLClassLoader)ClassLoader.getSystemClassLoader();
-		Class<?> sysclass = URLClassLoader.class;
 		try {
-			Method method = sysclass.getDeclaredMethod("addURL", URL.class);
-			method.setAccessible(true);
-			method.invoke(sysloader, new Object[]{lib.toURI().toURL()});
-			for (File f : lib.listFiles()) {
-				if (!f.isDirectory() && f.getName().endsWith(".jar")) {
-					method.invoke(sysloader, new Object[]{f.toURI().toURL()});
+			lib = new File(JavaWebServer.fileManager.getMainDir(), (String)pcfg.get("lib", null));
+			if (!lib.exists() || !lib.isDirectory()) {
+				lib.mkdirs();
+			}
+			URLClassLoader sysloader = (URLClassLoader)ClassLoader.getSystemClassLoader();
+			Class sysclass = URLClassLoader.class;
+			
+			try {
+				Method method = sysclass.getDeclaredMethod("addURL", URL.class);
+				method.setAccessible(true);
+				method.invoke(sysloader, new Object[]{lib.toURI().toURL()});
+				for (File f : lib.listFiles()) {
+					if (!f.isDirectory() && f.getName().endsWith(".jar")) {
+						method.invoke(sysloader, new Object[]{f.toURI().toURL()});
+					}
 				}
+			}catch (Throwable t) {
+				Logger.logError(t);
 			}
 			for (Host host : JavaWebServer.hosts.values()) {
 				for (VHost vhost : host.getVHosts()) {
-					method.invoke(sysloader, new Object[]{vhost.getHTDocs().toURI().toURL()});
+					vhost.initJLS(new URL[]{vhost.getHTDocs().toURI().toURL()});
+					recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 				}
 			}
-		}catch (Throwable t) {
-			Logger.logError(t);
-		}
-		for (Host host : JavaWebServer.hosts.values()) {
-			for (VHost vhost : host.getVHosts()) {
-				recurLoad(vhost, vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
+			PatchSecurity ps = (PatchSecurity)PatchRegistry.getPatchForClass(PatchSecurity.class);
+			if (ps.pcfg.get("enabled", null).equals("true")) {
+				recurLoad(null, JavaWebServer.fileManager.getPlugin(ps));
 			}
-		}
-		PatchSecurity ps = (PatchSecurity)PatchRegistry.getPatchForClass(PatchSecurity.class);
-		if (ps.pcfg.get("enabled", null).equals("true")) {
-			recurLoad(null, JavaWebServer.fileManager.getPlugin(ps));
+		}catch (Exception e) {
+			Logger.logError(e);
 		}
 	}
 	
-	public void recurLoad(VHost host, File dir) {
+	protected static ArrayList<JavaLoaderSession> sessions = new ArrayList<JavaLoaderSession>();
+	
+	public void recurLoad(JavaLoaderSession session, File dir) {
 		try {
 			for (File f : dir.listFiles()) {
 				if (f.isDirectory()) {
-					recurLoad(host, f);
+					recurLoad(session, f);
 				}else {
 					if (f.getName().endsWith(".class")) {
 						ByteArrayOutputStream bout = new ByteArrayOutputStream();
@@ -87,7 +90,7 @@ public class PatchJavaLoader extends Patch {
 						bout = null;
 						String name = "";
 						try {
-							name = jlcl.addClass(b);
+							name = session.getJLCL().addClass(b);
 						}catch (LinkageError er) {
 							String msg = er.getMessage();
 							if (msg.contains("duplicate class definition for name")) {
@@ -98,17 +101,17 @@ public class PatchJavaLoader extends Patch {
 								continue;
 							}
 						}
-						Class<?> cls = jlcl.loadClass(name);
+						Class<?> cls = session.getJLCL().loadClass(name);
 						if (JavaLoader.class.isAssignableFrom(cls)) {
 							JavaLoader jl = (JavaLoader)cls.newInstance();
-							jl.init(host);
+							jl.init(session.getVHost());
 							if (jl.getType() == 3) {
 								security.add((JavaLoaderSecurity)jl);
 							}else {
 								CRC32 crc = new CRC32();
 								crc.update(b);
-								loadedClasses.put(crc.getValue() + "", name);
-								jls.put(name, jl);
+								session.getLoadedClasses().put(crc.getValue() + "", name);
+								session.getJLS().put(name, jl);
 							}
 						}
 					}
@@ -144,16 +147,20 @@ public class PatchJavaLoader extends Patch {
 		}catch (SQLException e) {
 			Logger.logError(e);
 		}
-		for (JavaLoader jl : jls.values()) {
-			jl.destroy();
+		for (JavaLoaderSession session : sessions) {
+			if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
+				jl.destroy();
+			}
 		}
 	}
 	
 	public void reload() throws IOException {
 		super.reload();
 		HTMLCache.reloadAll();
-		for (JavaLoader jl : jls.values()) {
-			jl.reload();
+		for (JavaLoaderSession session : sessions) {
+			if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
+				jl.reload();
+			}
 		}
 	}
 	
@@ -172,15 +179,12 @@ public class PatchJavaLoader extends Patch {
 		return response.headers.hasHeader("Content-Type") && response.headers.getHeader("Content-Type").equals("application/x-java") && response.body != null && data != null && data.length > 0;
 	}
 	
-	private static final HashMap<String, String> loadedClasses = new HashMap<String, String>();
-	private static JavaLoaderClassLoader jlcl = new JavaLoaderClassLoader();
-	
-	private final HashMap<String, JavaLoader> jls = new HashMap<String, JavaLoader>();
-	
 	public JavaLoader getFromClass(Class<? extends JavaLoader> cls) {
-		for (JavaLoader jl : jls.values()) {
-			if (cls.isAssignableFrom(jl.getClass())) {
-				return jl;
+		for (JavaLoaderSession session : sessions) {
+			if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
+				if (cls.isAssignableFrom(jl.getClass())) {
+					return jl;
+				}
 			}
 		}
 		return null;
@@ -194,6 +198,9 @@ public class PatchJavaLoader extends Patch {
 			long start = System.nanoTime();
 			long digest = 0L;
 			CRC32 crc = new CRC32();
+			HashMap<String, String> loadedClasses = request.host.getJLS().getLoadedClasses();
+			JavaLoaderClassLoader jlcl = request.host.getJLS().getJLCL();
+			HashMap<String, JavaLoader> jls = request.host.getJLS().getJLS();
 			synchronized (loadedClasses) {
 				crc.update(data);
 				String sha = crc.getValue() + "";

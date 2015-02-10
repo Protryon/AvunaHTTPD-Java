@@ -1,11 +1,13 @@
 package com.javaprophet.javawebserver.plugins.javaloader;
 
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.HashMap;
 import com.javaprophet.javawebserver.util.Logger;
 
-public class JavaLoaderClassLoader extends ClassLoader {
-	public JavaLoaderClassLoader() {
-		super();
+public class JavaLoaderClassLoader extends URLClassLoader {
+	public JavaLoaderClassLoader(URL[] url, ClassLoader parent) {
+		super(url);
 	}
 	
 	HashMap<String, Class<?>> javaLoaders = new HashMap<String, Class<?>>();
