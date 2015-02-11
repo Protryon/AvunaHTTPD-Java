@@ -17,7 +17,7 @@ import java.util.zip.CRC32;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.hosts.Host;
 import com.javaprophet.javawebserver.hosts.VHost;
-import com.javaprophet.javawebserver.networking.Packet;
+import com.javaprophet.javawebserver.networking.packets.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
@@ -275,10 +275,11 @@ public class PatchJavaLoader extends Patch {
 				ndata = ((JavaLoaderBasic)loader).generate(response, request);
 			}else if (type == 1) {
 				HTMLBuilder out = new HTMLBuilder(new StringWriter());
-				// long st = System.nanoTime();
 				((JavaLoaderPrint)loader).generate(out, response, request);
+				String s = out.toString();
+				// long st = System.nanoTime();
+				ndata = s.getBytes();
 				// System.out.println((System.nanoTime() - st) / 1000000D);
-				ndata = out.toString().getBytes();
 			}else if (type == 2) {
 				response.reqStream = (JavaLoaderStream)loader;
 			}

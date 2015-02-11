@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.networking.Packet;
+import com.javaprophet.javawebserver.networking.packets.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.util.Config;

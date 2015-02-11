@@ -1,7 +1,7 @@
 package com.javaprophet.javawebserver.plugins.base;
 
 import java.util.HashMap;
-import com.javaprophet.javawebserver.networking.Packet;
+import com.javaprophet.javawebserver.networking.packets.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
@@ -34,7 +34,7 @@ public class PatchChunked extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return request.httpVersion.equals("HTTP/1.1") && ((response.body != null && response.body.getBody() != null && response.body.getBody().tooBig) || response.reqStream != null);
+		return request.httpVersion.equals("HTTP/1.1") && ((response.body != null && response.body.tooBig) || response.reqStream != null);
 	}
 	
 	@Override

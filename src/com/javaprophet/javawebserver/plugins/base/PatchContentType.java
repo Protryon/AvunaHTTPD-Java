@@ -1,7 +1,7 @@
 package com.javaprophet.javawebserver.plugins.base;
 
 import java.util.HashMap;
-import com.javaprophet.javawebserver.networking.Packet;
+import com.javaprophet.javawebserver.networking.packets.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
@@ -29,14 +29,14 @@ public class PatchContentType extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return true;
+		return response.body != null && data != null;
 	}
 	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		response.headers.removeHeaders("Content-Type");
 		if (data != null) {
-			String ce = response.body.getBody().type;
+			String ce = response.body.type;
 			response.headers.addHeader("Content-Type", ce.startsWith("text") ? (ce + "; charset=utf-8") : ce);
 		}
 		return data;

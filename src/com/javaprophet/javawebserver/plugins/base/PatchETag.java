@@ -5,7 +5,7 @@ import java.util.zip.CRC32;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.ResponseGenerator;
 import com.javaprophet.javawebserver.http.StatusCode;
-import com.javaprophet.javawebserver.networking.Packet;
+import com.javaprophet.javawebserver.networking.packets.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;

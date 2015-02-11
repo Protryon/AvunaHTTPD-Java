@@ -11,10 +11,8 @@ import java.util.HashMap;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.hosts.VHost;
 import com.javaprophet.javawebserver.http.Headers;
-import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.Resource;
-import com.javaprophet.javawebserver.networking.Packet;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class RequestPacket extends Packet {
@@ -39,8 +37,8 @@ public class RequestPacket extends Packet {
 				this.get.put(URLDecoder.decode(kd, "UTF-8"), "");
 			}
 		}
-		if (method == Method.POST && headers.getHeader("Content-Type").startsWith("application/x-www-form-urlencoded") && body != null && body.getBody() != null) {
-			String post = new String(body.getBody().data);
+		if (method == Method.POST && headers.getHeader("Content-Type").startsWith("application/x-www-form-urlencoded") && body != null) {
+			String post = new String(body.data);
 			for (String kd : post.split("&")) {
 				if (kd.contains("=")) {
 					this.post.put(URLDecoder.decode(kd.substring(0, kd.indexOf("=")), "UTF-8"), URLDecoder.decode(kd.substring(kd.indexOf("=") + 1), "UTF-8"));
@@ -125,8 +123,7 @@ public class RequestPacket extends Packet {
 			in.readFully(bbody);
 		}
 		long pb = System.nanoTime();
-		MessageBody body = new MessageBody(incomingRequest, new Resource(bbody, headers.hasHeader("Content-Type") ? headers.getHeader("Content-Type") : "application/octet-stream"));
-		incomingRequest.body = body;
+		incomingRequest.body = new Resource(bbody, headers.hasHeader("Content-Type") ? headers.getHeader("Content-Type") : "application/octet-stream");
 		long cur = System.nanoTime();
 		// System.out.println((pir - start) / 1000000D + " start-pir");
 		// System.out.println((rlr - pir) / 1000000D + " pir-rlr");
@@ -148,7 +145,7 @@ public class RequestPacket extends Packet {
 				}
 			}
 			ser.write(JavaWebServer.crlf.getBytes());
-			ser.write(body.getBody().data);
+			ser.write(body.data);
 			return ser.toByteArray();
 		}catch (Exception e) {
 			Logger.logError(e);

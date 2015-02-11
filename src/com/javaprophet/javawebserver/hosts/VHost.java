@@ -52,6 +52,6 @@ public class VHost {
 	}
 	
 	public String getHostPath() {
-		return host.getHostname() + "/" + name;
+		return name;
 	}
 }

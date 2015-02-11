@@ -10,7 +10,7 @@ import sun.misc.BASE64Decoder;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.ResponseGenerator;
 import com.javaprophet.javawebserver.http.StatusCode;
-import com.javaprophet.javawebserver.networking.Packet;
+import com.javaprophet.javawebserver.networking.packets.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
@@ -116,7 +116,7 @@ public class PatchAuth extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		if (response.body != null && response.body.getBody() != null) {
+		if (response.body != null) {
 			for (Auth auth : auths) {
 				if (auth.matchesDir(request.target)) {
 					return true;

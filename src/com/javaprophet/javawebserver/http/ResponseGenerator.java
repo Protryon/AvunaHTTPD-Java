@@ -19,7 +19,7 @@ public class ResponseGenerator {
 	}
 	
 	/**
-	 * Dat format that isn't being used.
+	 * Date format that isn't being used.
 	 */
 	public static final SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
 	
@@ -52,7 +52,7 @@ public class ResponseGenerator {
 			// Now we handle all of our patches such as php or jhtml which fill in the response.
 			if (!JavaWebServer.patchBus.processMethod(request, response)) {
 				generateDefaultResponse(response, StatusCode.NOT_YET_IMPLEMENTED);
-				JavaWebServer.fileManager.getErrorPage(request, response.body, request.target, StatusCode.NOT_YET_IMPLEMENTED, "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
+				response.body = JavaWebServer.fileManager.getErrorPage(request, request.target, StatusCode.NOT_YET_IMPLEMENTED, "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
 				return false;
 			}else {
 				long cur = System.nanoTime();
@@ -65,7 +65,7 @@ public class ResponseGenerator {
 		}catch (Exception e) {
 			Logger.logError(e);
 			generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
-			JavaWebServer.fileManager.getErrorPage(request, response.body, request.target, StatusCode.NOT_YET_IMPLEMENTED, "The requested URL " + request.target + " caused a server failure.");
+			response.body = JavaWebServer.fileManager.getErrorPage(request, request.target, StatusCode.NOT_YET_IMPLEMENTED, "The requested URL " + request.target + " caused a server failure.");
 			return false;
 		}
 	}

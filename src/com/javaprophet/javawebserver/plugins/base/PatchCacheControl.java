@@ -1,7 +1,7 @@
 package com.javaprophet.javawebserver.plugins.base;
 
 import java.util.HashMap;
-import com.javaprophet.javawebserver.networking.Packet;
+import com.javaprophet.javawebserver.networking.packets.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
@@ -35,7 +35,7 @@ public class PatchCacheControl extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return response.body != null && response.body.getBody() != null;
+		return response.body != null;
 	}
 	
 	@Override

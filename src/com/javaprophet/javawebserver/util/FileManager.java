@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.http.MessageBody;
 import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.http.StatusCode;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
@@ -71,7 +70,7 @@ public class FileManager {
 		}
 	}
 	
-	public void getErrorPage(RequestPacket request, MessageBody body, String reqTarget, StatusCode status, String info) {
+	public Resource getErrorPage(RequestPacket request, String reqTarget, StatusCode status, String info) {
 		HashMap<String, Object> errorPages = (HashMap<String, Object>)JavaWebServer.mainConfig.get("errorpages", request);
 		if (errorPages.containsKey(status.getStatus())) {
 			try {
@@ -83,16 +82,14 @@ public class FileManager {
 						res = res.replace("$_statusCode_$", status.getStatus() + "").replace("$_reason_$", status.getPhrase()).replace("$_info_$", info).replace("$_reqTarget_$", reqTarget);
 						resource.data = res.getBytes();
 					}
-					body.setBody(resource);
-					return;
+					return resource;
 				}
 			}catch (Exception e) {
 				Logger.logError(e);
 			}
 		}
 		Resource error = new Resource(("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">" + JavaWebServer.crlf + "<html><head>" + JavaWebServer.crlf + "<title>" + status.getStatus() + " " + status.getPhrase() + "</title>" + JavaWebServer.crlf + "</head><body>" + JavaWebServer.crlf + "<h1>" + status.getPhrase() + "</h1>" + JavaWebServer.crlf + "<p>" + info + "</p>" + JavaWebServer.crlf + "</body></html>").getBytes(), "text/html");
-		body.setBody(error);
-		return;
+		return error;
 	}
 	
 	private boolean lwi = false;

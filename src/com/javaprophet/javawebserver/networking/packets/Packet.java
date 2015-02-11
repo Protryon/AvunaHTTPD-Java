@@ -1,12 +1,12 @@
-package com.javaprophet.javawebserver.networking;
+package com.javaprophet.javawebserver.networking.packets;
 
 import com.javaprophet.javawebserver.http.Headers;
-import com.javaprophet.javawebserver.http.MessageBody;
+import com.javaprophet.javawebserver.http.Resource;
 
 public class Packet {
 	public String httpVersion = "HTTP/1.1";
 	public Headers headers = new Headers();
-	public MessageBody body = new MessageBody(this);
+	public Resource body = null;
 	public boolean drop = false;
 	
 	public String toString() {

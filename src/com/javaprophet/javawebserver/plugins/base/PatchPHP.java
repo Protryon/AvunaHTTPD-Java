@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.networking.Packet;
+import com.javaprophet.javawebserver.networking.packets.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
@@ -62,8 +62,8 @@ public class PatchPHP extends Patch {
 			
 			rq = JavaWebServer.fileManager.correctForIndex(rq, request);
 			
-			pb.environment().put("CONTENT_LENGTH", request.body.getBody().data.length + "");
-			pb.environment().put("CONTENT_TYPE", request.body.getBody().type);
+			pb.environment().put("CONTENT_LENGTH", request.body.data.length + "");
+			pb.environment().put("CONTENT_TYPE", request.body.type);
 			pb.environment().put("GATEWAY_INTERFACE", "CGI/1.1");
 			// pb.environment().put("PATH_INFO", request.target);
 			// pb.environment().put("PATH_TRANSLATED", new File(JavaWebServer.fileManager.getHTDocs(), rq).toString());
@@ -94,8 +94,8 @@ public class PatchPHP extends Patch {
 			}
 			Process pbr = pb.start();
 			OutputStream pbout = pbr.getOutputStream();
-			if (request.body != null && request.body.getBody() != null) {
-				pbout.write(request.body.getBody().data);
+			if (request.body != null) {
+				pbout.write(request.body.data);
 				pbout.flush();
 			}
 			Scanner s = new Scanner(pbr.getInputStream());

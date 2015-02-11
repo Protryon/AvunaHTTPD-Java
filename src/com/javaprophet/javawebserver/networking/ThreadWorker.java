@@ -77,7 +77,7 @@ public class ThreadWorker extends Thread {
 			try {
 				if (!focus.s.isClosed() && focus.in.available() == 0) {
 					if (focus.sns == 0L) {
-						focus.sns = System.nanoTime() + 1000000000L;
+						focus.sns = System.nanoTime() + 10000000000L;
 						workQueue.add(focus);
 					}else {
 						if (focus.sns >= System.nanoTime()) {
@@ -93,6 +93,12 @@ public class ThreadWorker extends Thread {
 							continue;
 						}else {
 							focus.s.close();
+							String ip = focus.s.getInetAddress().getHostAddress();
+							Integer cur = connIPs.get(ip);
+							if (cur == null) cur = 1;
+							cur -= 1;
+							connIPs.put(ip, cur);
+							Logger.log(ip + " closed.");
 							continue;
 						}
 					}
@@ -130,20 +136,20 @@ public class ThreadWorker extends Thread {
 						continue;
 					}
 					long proc2 = System.nanoTime();
-					ResponsePacket wrp = outgoingResponse.write(focus.out);
-					if (wrp.drop) {
+					outgoingResponse.write(focus.out);
+					if (outgoingResponse.drop) {
 						focus.s.close();
-						Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned DROPPED took: " + (wrp.bwt - benchStart) / 1000000D + " ms");
+						Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned DROPPED took: " + (outgoingResponse.bwt - benchStart) / 1000000D + " ms");
 						continue;
 					}
-					boolean t = wrp.reqTransfer;
+					boolean t = outgoingResponse.reqTransfer;
 					long write = System.nanoTime();
-					if (wrp.reqStream != null) {
-						ThreadJavaLoaderStreamWorker sw = new ThreadJavaLoaderStreamWorker(focus, incomingRequest, wrp, wrp.reqStream);
+					if (outgoingResponse.reqStream != null) {
+						ThreadJavaLoaderStreamWorker sw = new ThreadJavaLoaderStreamWorker(focus, incomingRequest, outgoingResponse, outgoingResponse.reqStream);
 						subworkers.add(sw);
 						sw.start();
-					}else if (t && wrp.body != null && wrp.body.getBody() != null) {
-						ThreadStreamWorker sw = new ThreadStreamWorker(focus, incomingRequest, wrp);
+					}else if (t && outgoingResponse.body != null) {
+						ThreadStreamWorker sw = new ThreadStreamWorker(focus, incomingRequest, outgoingResponse);
 						subworkers.add(sw);
 						sw.start();
 					}else {
@@ -157,7 +163,7 @@ public class ThreadWorker extends Thread {
 					// System.out.println((proc2 - resp) / 1000000D + " resp-proc2");
 					// System.out.println((write - proc2) / 1000000D + " proc2-write");
 					// System.out.println((cur - write) / 1000000D + " write-cur");
-					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned " + wrp.statusCode + " " + wrp.reasonPhrase + " took: " + (wrp.bwt - benchStart) / 1000000D + " ms");
+					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase + " took: " + (outgoingResponse.bwt - benchStart) / 1000000D + " ms");
 				}else {
 					String ip = focus.s.getInetAddress().getHostAddress();
 					Integer cur = connIPs.get(ip);

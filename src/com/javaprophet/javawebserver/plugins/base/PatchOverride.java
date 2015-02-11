@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.Resource;
-import com.javaprophet.javawebserver.networking.Packet;
+import com.javaprophet.javawebserver.networking.packets.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
@@ -39,7 +39,7 @@ public class PatchOverride extends Patch {
 		String rt = request.target;
 		if (rt.contains("#")) rt = rt.substring(0, rt.indexOf("#"));
 		if (rt.contains("?")) rt = rt.substring(0, rt.indexOf("?"));
-		if (!request.body.getBody().wasDir) {
+		if (!request.body.wasDir) {
 			rt = rt.substring(0, rt.lastIndexOf("/") + 1);
 		}
 		String prt = rt;
