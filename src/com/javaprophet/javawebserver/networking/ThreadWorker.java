@@ -75,7 +75,30 @@ public class ThreadWorker extends Thread {
 				continue;
 			}
 			try {
-				if (!focus.s.isClosed()) {
+				if (!focus.s.isClosed() && focus.in.available() == 0) {
+					if (focus.sns == 0L) {
+						focus.sns = System.nanoTime() + 1000000000L;
+						workQueue.add(focus);
+					}else {
+						if (focus.sns >= System.nanoTime()) {
+							boolean sleep = workQueue.size() == 0;
+							workQueue.add(focus);
+							if (sleep) {
+								try {
+									Thread.sleep(10L);
+								}catch (InterruptedException e) {
+									Logger.logError(e);
+								}
+							}
+							continue;
+						}else {
+							focus.s.close();
+							continue;
+						}
+					}
+				}else if (!focus.s.isClosed()) {
+					focus.sns = 0L;
+					long ps = System.nanoTime();
 					RequestPacket incomingRequest = RequestPacket.read(focus.in);
 					long benchStart = System.nanoTime();
 					if (incomingRequest == null) {
@@ -127,6 +150,7 @@ public class ThreadWorker extends Thread {
 						workQueue.add(focus);
 					}
 					long cur = System.nanoTime();
+					// System.out.println((benchStart - ps) / 1000000D + " ps-start");
 					// System.out.println((set - benchStart) / 1000000D + " start-set");
 					// System.out.println((proc1 - set) / 1000000D + " set-proc1");
 					// System.out.println((resp - proc1) / 1000000D + " proc1-resp");

@@ -12,6 +12,7 @@ public class Work {
 	public final boolean ssl;
 	public final Host host;
 	public int tos = 0;
+	public long sns = 0L;
 	
 	public Work(Host host, Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
 		this.host = host;

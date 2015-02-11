@@ -66,9 +66,7 @@ public class Headers {
 	 * @param header the http header field.
 	 */
 	public void addHeader(String header) {
-		if (header.contains(":")) {
-			addHeader(header.substring(0, header.indexOf(":")).trim(), header.substring(header.indexOf(":") + 1).trim());
-		}
+		addHeader(header.substring(0, header.indexOf(":")), header.substring(header.indexOf(":") + 2));
 	}
 	
 	/**

@@ -66,25 +66,36 @@ public class RequestPacket extends Packet {
 		out.flush();
 	}
 	
+	private static String readLine(DataInputStream in) throws IOException {
+		ByteArrayOutputStream writer = new ByteArrayOutputStream();
+		int i = in.read();
+		while (i != JavaWebServer.crlfb[0] && i != -1) {
+			writer.write(i);
+			i = in.read();
+		}
+		if (JavaWebServer.crlfb.length == 2) in.read();
+		return writer.toString();
+	}
+	
 	public static RequestPacket read(DataInputStream in) throws IOException {
+		long start = System.nanoTime();
 		RequestPacket incomingRequest = new RequestPacket();
 		String reqLine = "";
-		try {
-			reqLine = in.readLine().trim();
-		}catch (NullPointerException e) {
-			return null;
-		}
+		long pir = System.nanoTime();
+		reqLine = readLine(in).trim();
 		int b = reqLine.indexOf(" ");
 		if (b == -1) {
 			return null;
 		}
+		long rlr = System.nanoTime();
 		incomingRequest.method = Method.get(reqLine.substring(0, b));
 		incomingRequest.target = reqLine.substring(b + 1, b = reqLine.indexOf(" ", b + 1));
 		incomingRequest.httpVersion = reqLine.substring(b + 1);
+		long ss = System.nanoTime();
 		Headers headers = incomingRequest.headers;
 		int hdr = 0;
 		while (true) {
-			String headerLine = in.readLine().trim();
+			String headerLine = readLine(in);
 			if (headerLine.length() == 0) {
 				break;
 			}else {
@@ -95,6 +106,7 @@ public class RequestPacket extends Packet {
 				break;
 			}
 		}
+		long ph = System.nanoTime();
 		boolean chunked = false;
 		boolean htc = headers.hasHeader("Transfer-Encoding");
 		boolean hcl = headers.hasHeader("Content-Length");
@@ -112,8 +124,16 @@ public class RequestPacket extends Packet {
 			bbody = new byte[Integer.parseInt(headers.getHeader("Content-Length"))];
 			in.readFully(bbody);
 		}
+		long pb = System.nanoTime();
 		MessageBody body = new MessageBody(incomingRequest, new Resource(bbody, headers.hasHeader("Content-Type") ? headers.getHeader("Content-Type") : "application/octet-stream"));
 		incomingRequest.body = body;
+		long cur = System.nanoTime();
+		// System.out.println((pir - start) / 1000000D + " start-pir");
+		// System.out.println((rlr - pir) / 1000000D + " pir-rlr");
+		// System.out.println((ss - rlr) / 1000000D + " rlr-ss");
+		// System.out.println((ph - ss) / 1000000D + " ss-ph");
+		// System.out.println((pb - ph) / 1000000D + " ph-pb");
+		// System.out.println((cur - pb) / 1000000D + " pb-cur");
 		return incomingRequest;
 	}
 	
