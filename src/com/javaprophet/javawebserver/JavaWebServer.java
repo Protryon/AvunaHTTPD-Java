@@ -11,6 +11,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import com.javaprophet.javawebserver.dns.RecordHolder;
+import com.javaprophet.javawebserver.dns.TCPServer;
+import com.javaprophet.javawebserver.dns.ThreadDNSWorker;
+import com.javaprophet.javawebserver.dns.UDPServer;
 import com.javaprophet.javawebserver.hosts.Host;
 import com.javaprophet.javawebserver.hosts.VHost;
 import com.javaprophet.javawebserver.networking.ThreadWorker;
@@ -27,6 +31,7 @@ import com.javaprophet.javawebserver.util.Logger;
 public class JavaWebServer {
 	public static final String VERSION = "1.0";
 	public static Config mainConfig, hostsConfig;
+	private static Config dnsConfig;
 	public static final FileManager fileManager = new FileManager();
 	public static final PatchBus patchBus = new PatchBus();
 	public static final HashMap<String, String> extensionToMime = new HashMap<String, String>();
@@ -101,6 +106,8 @@ public class JavaWebServer {
 	
 	public static final HashMap<String, Host> hosts = new HashMap<String, Host>();
 	
+	public static final RecordHolder records = new RecordHolder();
+	
 	public static final ArrayList<String> bannedIPs = new ArrayList<String>();
 	
 	public static void main(String[] args) {
@@ -131,6 +138,8 @@ public class JavaWebServer {
 					if (!map.containsKey("errorpages")) map.put("errorpages", new HashMap<String, Object>());
 					if (!map.containsKey("index")) map.put("index", "index.class,index.jwsl,index.php,index.html");
 					if (!map.containsKey("cacheClock")) map.put("cacheClock", "-1");
+					if (!map.containsKey("dns")) map.put("dns", "false");
+					if (!map.containsKey("dnsf")) map.put("dnsf", new File(dir, "dns.cfg").toString());
 					if (!map.containsKey("com")) map.put("com", new HashMap<String, Object>());
 					HashMap<String, Object> telnet = (HashMap<String, Object>)map.get("com");
 					if (!telnet.containsKey("enabled")) telnet.put("enabled", "true");
@@ -143,7 +152,7 @@ public class JavaWebServer {
 			mainConfig.load();
 			mainConfig.save();
 			final int cl = Integer.parseInt((String)mainConfig.get("connlimit", null));
-			hostsConfig = new Config("hosts", fileManager.getBaseFile("hosts.cfg"), new ConfigFormat() {
+			hostsConfig = new Config("hosts", new File((String)mainConfig.get("hosts", null)), new ConfigFormat() {
 				
 				@Override
 				public void format(HashMap<String, Object> map) {
@@ -184,26 +193,54 @@ public class JavaWebServer {
 			});
 			hostsConfig.load();
 			hostsConfig.save();
+			dnsConfig = new Config("dns", new File((String)mainConfig.get("dnsf", null)), new ConfigFormat() {
+				
+				@Override
+				public void format(HashMap<String, Object> map) {
+					for (String key : map.keySet()) {
+						// TODO
+					}
+				}
+				
+			});
+			dnsConfig.load();
+			dnsConfig.save();
 			setupFolders();
 			File lf = new File(fileManager.getLogs(), "" + (System.currentTimeMillis() / 1000L));
 			lf.createNewFile();
 			Logger.INSTANCE = new Logger(new PrintStream(new FileOutputStream(lf)));
 			unpack();
 			loadUnpacked();
+			boolean dns = mainConfig.get("dns", null).equals("true");
 			Logger.log("Loaded Configs");
 			Logger.log("Loading Connection Handling");
-			ThreadWorker.initQueue(cl < 1 ? 10000 : cl);
+			ThreadWorker.initQueue(cl < 1 ? 10000000 : cl);
 			for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount", null)); i++) {
 				ThreadWorker worker = new ThreadWorker();
 				worker.start();
+			}
+			if (dns) { // TODO maybe split off into different cfgs than above
+				ThreadDNSWorker.holder = records;
+				ThreadDNSWorker.initQueue(cl < 1 ? 10000000 : cl);
+				for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount", null)); i++) {
+					ThreadDNSWorker worker = new ThreadDNSWorker();
+					worker.start();
+				}
 			}
 			Logger.log("Loading Plugins");
 			BaseLoader.loadBases();
 			HashMap<String, Object> com = ((HashMap<String, Object>)mainConfig.get("com", null));
 			if (((String)com.get("enabled")).equals("true")) {
-				Logger.log("Starting Com server on " + ((String)com.get("bindip")) + ":" + ((String)com.get("bindport")));
+				Logger.log("Starting Com Server on " + ((String)com.get("bindip")) + ":" + ((String)com.get("bindport")));
 				ComServer server = new ComServer();
 				server.start();
+			}
+			if (dns) {
+				Logger.log("Starting DNS Nameserver on 0.0.0.0:53 (UDP+TCP)");
+				UDPServer udp = new UDPServer();
+				udp.start();
+				TCPServer tcp = new TCPServer();
+				tcp.start();
 			}
 			for (Host host : hosts.values()) {
 				host.start();

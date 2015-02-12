@@ -22,6 +22,10 @@ public class VHost {
 		this.jls = new JavaLoaderSession(this, url);
 	}
 	
+	public String getName() {
+		return name;
+	}
+	
 	public JavaLoaderSession getJLS() {
 		return jls;
 	}

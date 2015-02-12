@@ -102,7 +102,7 @@ public class ThreadWorker extends Thread {
 							continue;
 						}
 					}
-				}else if (!focus.s.isClosed()) {
+				}else if (!focus.s.isClosed()) { // TODO: fix pipelining?
 					focus.sns = 0L;
 					long ps = System.nanoTime();
 					RequestPacket incomingRequest = RequestPacket.read(focus.in);

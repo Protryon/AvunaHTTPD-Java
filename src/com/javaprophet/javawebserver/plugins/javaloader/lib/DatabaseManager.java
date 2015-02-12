@@ -13,6 +13,7 @@ public class DatabaseManager {
 	private ArrayList<ExtendedStatement> estmts = new ArrayList<ExtendedStatement>();
 	private static ArrayList<DatabaseManager> open = new ArrayList<DatabaseManager>();
 	private HashMap<String, ArrayList<ExtendedPStatement>> pstmts = new HashMap<String, ArrayList<ExtendedPStatement>>();
+	private final String jdbc;
 	
 	public static void closeAll() throws SQLException {
 		for (DatabaseManager db : open) {
@@ -21,7 +22,7 @@ public class DatabaseManager {
 	}
 	
 	public DatabaseManager(String driver, String ip, String db, String user, String pass) throws SQLException {
-		conn = DriverManager.getConnection("jdbc:" + driver + "://" + ip + "/" + db + "?user=" + user + "&password=" + pass);
+		conn = DriverManager.getConnection(jdbc = "jdbc:" + driver + "://" + ip + "/" + db + "?user=" + user + "&password=" + pass);
 	}
 	
 	private static class ExtendedStatement {
@@ -55,7 +56,24 @@ public class DatabaseManager {
 		conn.close();
 	}
 	
+	public void reconnect() throws SQLException {
+		synchronized (conn) {
+			conn = DriverManager.getConnection(jdbc);
+		}
+		synchronized (estmts) {
+			estmts.clear();
+		}
+		synchronized (pstmts) {
+			for (String key : pstmts.keySet()) {
+				pstmts.get(key).clear();
+			}
+		}
+	}
+	
 	public Statement leaseStatement() throws SQLException {
+		if (conn.isClosed()) {
+			reconnect();
+		}
 		synchronized (estmts) {
 			for (ExtendedStatement estmt : estmts) {
 				if (!estmt.leased) {
@@ -73,6 +91,9 @@ public class DatabaseManager {
 	}
 	
 	public PreparedStatement leasePStatement(String sql) throws SQLException {
+		if (conn.isClosed()) {
+			reconnect();
+		}
 		synchronized (pstmts) {
 			if (!pstmts.containsKey(sql)) pstmts.put(sql, new ArrayList<ExtendedPStatement>());
 			for (ExtendedPStatement pstmt : pstmts.get(sql)) {

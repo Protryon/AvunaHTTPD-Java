@@ -179,7 +179,7 @@ public class CommandProcessor {
 				out.println("Invalid Selected Host (select)");
 				return;
 			}
-			VHost host = phost.getVHost(selectedVHost);
+			VHost host = phost.getVHostByName(selectedVHost);
 			String sep = System.getProperty("os.name").toLowerCase().contains("windows") ? ";" : ":";
 			String cp = JavaWebServer.fileManager.getBaseFile("jws.jar").toString() + sep + host.getHTDocs().toString() + sep + host.getHTSrc().toString() + sep + PatchJavaLoader.lib.toString() + sep;
 			for (File f : PatchJavaLoader.lib.listFiles()) {

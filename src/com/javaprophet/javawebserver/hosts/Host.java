@@ -64,6 +64,15 @@ public class Host extends Thread {
 		return null;
 	}
 	
+	public VHost getVHostByName(String name) {
+		for (VHost vhost : vhosts) {
+			if (vhost.getName().equals(this.name + "/" + name)) {
+				return vhost;
+			}
+		}
+		return null;
+	}
+	
 	public ArrayList<VHost> getVHosts() {
 		return vhosts;
 	}
