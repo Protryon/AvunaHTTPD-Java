@@ -87,17 +87,7 @@ public class ThreadDNSWorker extends Thread {
 					header.setArcount(0);
 					ArrayList<ResourceRecord> resps = new ArrayList<ResourceRecord>();
 					for (Question q : query.getQd()) {
-						if (q.getType() == 2) {
-							ResourceRecord responseRecord = new ResourceRecord();
-							responseRecord.setDomain(q.getDomain());
-							responseRecord.setType(2);
-							responseRecord.setCls(1);
-							responseRecord.setTtl(86400);
-							byte[] data = Util.ipToByte("107.3.170.11");
-							responseRecord.setLength(data.length);
-							responseRecord.setData(data);
-							resps.add(responseRecord);
-						}else for (DNSRecord r : holder.getRecords()) {
+						for (DNSRecord r : holder.getRecords()) {
 							if (!r.getDomain().equals(q.getDomain()) || !r.getType().matches(q.getType())) continue;
 							ResourceRecord responseRecord = new ResourceRecord();
 							responseRecord.setDomain(q.getDomain());
