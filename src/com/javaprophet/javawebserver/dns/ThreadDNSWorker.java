@@ -111,7 +111,7 @@ public class ThreadDNSWorker extends Thread {
 						}
 					}
 					header.setAncount(resps.size());
-					System.out.println(resps.size());
+					// System.out.println(resps.size());
 					Query response = new Query(header, query.getQd(), resps.toArray(new ResourceRecord[]{}), null, null);
 					byte[] rb = response.encode();
 					if (rb.length >= 512) {
@@ -132,7 +132,7 @@ public class ThreadDNSWorker extends Thread {
 						wt.s.close();
 					}
 				}
-				System.out.println((System.nanoTime() - s) / 1000000D + " ms");
+				// System.out.println((System.nanoTime() - s) / 1000000D + " ms");
 			}catch (Exception e) {
 				e.printStackTrace();
 			}finally {

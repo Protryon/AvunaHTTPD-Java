@@ -193,25 +193,17 @@ public class JavaWebServer {
 			});
 			hostsConfig.load();
 			hostsConfig.save();
-			dnsConfig = new Config("dns", new File((String)mainConfig.get("dnsf", null)), new ConfigFormat() {
-				
-				@Override
-				public void format(HashMap<String, Object> map) {
-					for (String key : map.keySet()) {
-						// TODO
-					}
-				}
-				
-			});
-			dnsConfig.load();
-			dnsConfig.save();
+			boolean dns = mainConfig.get("dns", null).equals("true");
+			RecordHolder holder = null;
+			if (dns) {
+				holder = new RecordHolder(new File((String)mainConfig.get("dnsf", null)));
+			}
 			setupFolders();
 			File lf = new File(fileManager.getLogs(), "" + (System.currentTimeMillis() / 1000L));
 			lf.createNewFile();
 			Logger.INSTANCE = new Logger(new PrintStream(new FileOutputStream(lf)));
 			unpack();
 			loadUnpacked();
-			boolean dns = mainConfig.get("dns", null).equals("true");
 			Logger.log("Loaded Configs");
 			Logger.log("Loading Connection Handling");
 			ThreadWorker.initQueue(cl < 1 ? 10000000 : cl);
@@ -220,7 +212,7 @@ public class JavaWebServer {
 				worker.start();
 			}
 			if (dns) { // TODO maybe split off into different cfgs than above
-				ThreadDNSWorker.holder = records;
+				ThreadDNSWorker.holder = holder;
 				ThreadDNSWorker.initQueue(cl < 1 ? 10000000 : cl);
 				for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount", null)); i++) {
 					ThreadDNSWorker worker = new ThreadDNSWorker();
