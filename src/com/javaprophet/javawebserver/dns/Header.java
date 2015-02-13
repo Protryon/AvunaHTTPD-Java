@@ -1,6 +1,7 @@
 package com.javaprophet.javawebserver.dns;
 
 import java.io.ByteArrayOutputStream;
+import com.javaprophet.javawebserver.util.Logger;
 
 /**
  * Created by JavaProphet on 8/13/14 at 11:27 PM.
@@ -141,7 +142,7 @@ public class Header extends Section {
 			tout.flush();
 			updateContent(tout.toByteArray());
 		}catch (Exception e) {
-			e.printStackTrace();
+			Logger.logError(e);
 		}
 	}
 	

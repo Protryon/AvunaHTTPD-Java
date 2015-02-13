@@ -5,6 +5,7 @@ import java.net.DatagramPacket;
 import java.util.ArrayList;
 import java.util.HashMap;
 import com.javaprophet.javawebserver.networking.CircularQueue;
+import com.javaprophet.javawebserver.util.Logger;
 
 public class ThreadDNSWorker extends Thread {
 	
@@ -51,7 +52,7 @@ public class ThreadDNSWorker extends Thread {
 				try {
 					Thread.sleep(10L);
 				}catch (InterruptedException e) {
-					e.printStackTrace();
+					Logger.logError(e);
 				}
 				continue;
 			}
@@ -134,7 +135,7 @@ public class ThreadDNSWorker extends Thread {
 				}
 				// System.out.println((System.nanoTime() - s) / 1000000D + " ms");
 			}catch (Exception e) {
-				e.printStackTrace();
+				Logger.logError(e);
 			}finally {
 				if (!focus.UDP) {
 					try {

@@ -2,6 +2,7 @@ package com.javaprophet.javawebserver.dns;
 
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
+import com.javaprophet.javawebserver.util.Logger;
 
 /**
  * Created by JavaProphet on 8/13/14 at 10:56 PM.
@@ -23,7 +24,7 @@ public class UDPServer extends Thread implements IServer {
 				ThreadDNSWorker.addWork(new WorkUDP(receive.getData(), receive.getAddress(), receive.getPort(), server));
 			}
 		}catch (Exception e) {
-			e.printStackTrace();
+			Logger.logError(e);
 		}finally {
 			if (server != null) server.close();
 		}

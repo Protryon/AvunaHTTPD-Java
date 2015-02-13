@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import com.javaprophet.javawebserver.util.Logger;
 
 /**
  * Created by JavaProphet on 8/13/14 at 10:56 PM.
@@ -25,7 +26,7 @@ public class TCPServer extends Thread implements IServer {
 				ThreadDNSWorker.addWork(new WorkTCP(s, in, out));
 			}
 		}catch (Exception e) {
-			e.printStackTrace();
+			Logger.logError(e);
 		}
 	}
 }

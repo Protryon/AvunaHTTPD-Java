@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import com.javaprophet.javawebserver.util.Logger;
 
 /**
  * Created by JavaProphet on 8/14/14 at 1:33 AM.
@@ -64,7 +65,7 @@ public class Query {
 			}
 			return tout.toByteArray();
 		}catch (Exception e) {
-			e.printStackTrace();
+			Logger.logError(e);
 			return new byte[0];
 		}
 	}
@@ -355,7 +356,7 @@ public class Query {
 			this.ns = ns;
 			this.ar = ar;
 		}catch (Exception e) {
-			e.printStackTrace();
+			Logger.logError(e);
 		}
 	}
 	
