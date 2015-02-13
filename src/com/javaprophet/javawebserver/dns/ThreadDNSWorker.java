@@ -88,7 +88,7 @@ public class ThreadDNSWorker extends Thread {
 					ArrayList<ResourceRecord> resps = new ArrayList<ResourceRecord>();
 					for (Question q : query.getQd()) {
 						for (DNSRecord r : holder.getRecords()) {
-							if (!r.getDomain().equals(q.getDomain()) || !r.getType().matches(q.getType())) continue;
+							if (!(r.getDomain().equals(q.getDomain()) || r.getDomain().equals("@")) || !r.getType().matches(q.getType())) continue;
 							ResourceRecord responseRecord = new ResourceRecord();
 							responseRecord.setDomain(q.getDomain());
 							responseRecord.setType(r.getType().id);
