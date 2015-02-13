@@ -150,6 +150,9 @@ public class FileManager {
 				boolean tc = cc > 0 && t - cc < cacheClock;
 				if (tc || cc == -1 || extCache.get(nrt).equals("application/x-java")) {
 					resource = cache.get(nrt);
+					if (resource == null) {
+						return null;
+					}
 					ext = extCache.get(nrt);
 					lwi = lwiCache.get(nrt);
 					tooBig = tbCache.get(nrt);
@@ -172,26 +175,35 @@ public class FileManager {
 			}
 			if (resource == null) {
 				File abs = getAbsolutePath(rt, request);
-				ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
-				ext = JavaWebServer.extensionToMime.containsKey(ext) ? JavaWebServer.extensionToMime.get(ext) : "application/octet-stream";
-				FileInputStream fin = new FileInputStream(abs);
-				ByteArrayOutputStream bout = new ByteArrayOutputStream();
-				int i = 1;
-				byte[] buf = new byte[4096];
-				while (i > 0) {
-					i = fin.read(buf);
-					if (i > 0) {
-						bout.write(buf, 0, i);
+				if (abs.exists()) {
+					ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
+					ext = JavaWebServer.extensionToMime.containsKey(ext) ? JavaWebServer.extensionToMime.get(ext) : "application/octet-stream";
+					FileInputStream fin = new FileInputStream(abs);
+					ByteArrayOutputStream bout = new ByteArrayOutputStream();
+					int i = 1;
+					byte[] buf = new byte[4096];
+					while (i > 0) {
+						i = fin.read(buf);
+						if (i > 0) {
+							bout.write(buf, 0, i);
+						}
+						PatchChunked chunked = (PatchChunked)PatchRegistry.getPatchForClass(PatchChunked.class);
+						if (chunked.pcfg.get("enabled", null).equals("true") && bout.size() > Integer.parseInt((String)chunked.pcfg.get("minsize", request)) && !ext.startsWith("application")) {
+							bout.reset();
+							tooBig = true;
+							break;
+						}
 					}
-					PatchChunked chunked = (PatchChunked)PatchRegistry.getPatchForClass(PatchChunked.class);
-					if (chunked.pcfg.get("enabled", null).equals("true") && bout.size() > Integer.parseInt((String)chunked.pcfg.get("minsize", request)) && !ext.startsWith("application")) {
-						bout.reset();
-						tooBig = true;
-						break;
-					}
+					fin.close();
+					resource = bout.toByteArray();
+				}else {
+					cache.put(nrt, null);
+					extCache.put(nrt, "text/html");
+					lwi = this.lwi;
+					lwiCache.put(nrt, lwi);
+					tbCache.put(nrt, false);
+					return null;
 				}
-				fin.close();
-				resource = bout.toByteArray();
 				cache.put(nrt, resource);
 				extCache.put(nrt, ext);
 				lwi = this.lwi;
