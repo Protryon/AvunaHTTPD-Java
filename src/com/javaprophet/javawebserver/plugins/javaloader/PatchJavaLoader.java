@@ -72,15 +72,15 @@ public class PatchJavaLoader extends Patch {
 			for (JavaLoaderSession jls : sessions) {
 				jls.unloadJLCL();
 			}
+			System.gc();
+			Thread.sleep(1000L);
 			sessions.clear();
-			log("Loading JavaLoader Libs");
 			lib = new File(JavaWebServer.fileManager.getMainDir(), (String)pcfg.get("lib", null));
 			if (!lib.exists() || !lib.isDirectory()) {
 				lib.mkdirs();
 			}
 			URLClassLoader sysloader = (URLClassLoader)ClassLoader.getSystemClassLoader();
-			Class sysclass = URLClassLoader.class;
-			
+			Class sysclass = URLClassLoader.class; // TODO: reloading classpath sereral times?
 			try {
 				Method method = sysclass.getDeclaredMethod("addURL", URL.class);
 				method.setAccessible(true);
@@ -133,14 +133,8 @@ public class PatchJavaLoader extends Patch {
 						try {
 							name = session.getJLCL().addClass(b);
 						}catch (LinkageError er) {
-							String msg = er.getMessage();
-							if (msg.contains("duplicate class definition for name")) {
-								String type = msg.substring(msg.indexOf("\"") + 1);
-								type = type.substring(0, type.indexOf("\"")).replace("/", ".");
-								name = type;
-							}else {
-								continue;
-							}
+							// Logger.logError(er);
+							continue;
 						}
 						Class<?> cls = session.getJLCL().loadClass(name);
 						if (JavaLoader.class.isAssignableFrom(cls)) {

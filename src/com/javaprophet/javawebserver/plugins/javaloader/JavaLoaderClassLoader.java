@@ -10,10 +10,10 @@ public class JavaLoaderClassLoader extends URLClassLoader {
 		super(url);
 	}
 	
-	HashMap<String, Class<?>> javaLoaders = new HashMap<String, Class<?>>();
+	private HashMap<String, Class<?>> javaLoaders = new HashMap<String, Class<?>>();
 	
 	public String addClass(byte[] data) throws LinkageError {
-		Class<?> cls = defineClass(data, 0, data.length);
+		Class<?> cls = defineClass(null, data, 0, data.length);
 		javaLoaders.put(cls.getName(), cls);
 		return cls.getName();
 	}
@@ -27,5 +27,10 @@ public class JavaLoaderClassLoader extends URLClassLoader {
 			Logger.logError(e);
 		}
 		return null;
+	}
+	
+	public void finalize() throws Throwable {
+		super.finalize();
+		javaLoaders = null;
 	}
 }

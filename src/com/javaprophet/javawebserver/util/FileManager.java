@@ -70,6 +70,22 @@ public class FileManager {
 		}
 	}
 	
+	public void flushjl() throws IOException {
+		String[] delKeys = new String[cache.size()];
+		int delSize = 0;
+		for (String file : cache.keySet()) {
+			if (extCache.get(file).equals("application/x-java")) {
+				delKeys[delSize++] = file;
+			}
+		}
+		for (int i = 0; i < delSize; i++) {
+			cache.remove(delKeys[i]);
+			extCache.remove(delKeys[i]);
+			lwiCache.remove(delKeys[i]);
+			tbCache.remove(delKeys[i]);
+		}
+	}
+	
 	public Resource getErrorPage(RequestPacket request, String reqTarget, StatusCode status, String info) {
 		HashMap<String, Object> errorPages = (HashMap<String, Object>)JavaWebServer.mainConfig.get("errorpages", request);
 		if (errorPages.containsKey(status.getStatus())) {

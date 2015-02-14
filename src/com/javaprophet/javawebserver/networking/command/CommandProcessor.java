@@ -64,10 +64,11 @@ public class CommandProcessor {
 				e.printStackTrace(out);
 			}
 			out.println("JWS Reloaded! This does NOT update all configs, but it reloads most of them and flushes the cache. Doesn't flush the JavaLoader cache, for that use jlflush.");
-		}else if (command.equals("jlflush")) {
+		}else if (command.equals("flushjl")) {
 			// Reloads our patches and config
 			try {
 				((PatchJavaLoader)PatchRegistry.getPatchForClass(PatchJavaLoader.class)).flushjl();
+				JavaWebServer.fileManager.flushjl();
 			}catch (Exception e) {
 				Logger.logError(e);
 				e.printStackTrace(out);
@@ -271,7 +272,7 @@ public class CommandProcessor {
 			out.println("jhtml     - converts HTML to JavaLoaderPrint");
 			out.println("jcomp     - compiles all(or specified) files in the htsrc folder to the htdocs folder");
 			out.println("jphp      - attempts to roughly convert PHP->Java, will require fine tuning");
-			out.println("jlflush   - attempts to clear JavaLoaders, and reload them. Currently not functional.");
+			out.println("flushjl   - attempts to clear JavaLoaders, and reload them. Currently not functional.");
 			out.println("shell     - runs a shell on the host computer.");
 			out.println("help      - lists these commands + version");
 			out.println("");

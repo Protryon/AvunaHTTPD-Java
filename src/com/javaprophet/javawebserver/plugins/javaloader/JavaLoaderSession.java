@@ -12,7 +12,7 @@ public final class JavaLoaderSession {
 	
 	public JavaLoaderSession(VHost vhost, URL[] urls) {
 		this.vhost = vhost;
-		this.jlcl = new JavaLoaderClassLoader(urls, this.getClass().getClassLoader());
+		this.jlcl = new JavaLoaderClassLoader(urls.clone(), this.getClass().getClassLoader());
 		PatchJavaLoader.sessions.add(this);
 	}
 	
@@ -36,9 +36,9 @@ public final class JavaLoaderSession {
 		for (JavaLoader jl : jls.values()) {
 			jl.destroy();
 		}
-		jlcl = null;
 		jls = null;
 		loadedClasses = null;
+		jlcl = null;
 		System.gc();
 	}
 }
