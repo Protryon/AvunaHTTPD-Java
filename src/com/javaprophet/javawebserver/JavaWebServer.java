@@ -167,6 +167,7 @@ public class JavaWebServer {
 						for (String vkey : vhosts.keySet()) {
 							HashMap<String, Object> vhost = (HashMap<String, Object>)vhosts.get(vkey);
 							if (!vhost.containsKey("enabled")) vhost.put("enabled", "true");
+							if (!vhost.containsKey("debug")) vhost.put("debug", "false");
 							if (!vhost.containsKey("host")) vhost.put("host", ".*");
 							if (!vhost.containsKey("htdocs")) vhost.put("htdocs", fileManager.getBaseFile("htdocs").toString());
 							if (!vhost.containsKey("htsrc")) vhost.put("htsrc", fileManager.getBaseFile("htsrc").toString());
@@ -184,6 +185,7 @@ public class JavaWebServer {
 							HashMap<String, Object> ourvh = (HashMap<String, Object>)vhosts.get(vkey);
 							if (!ourvh.get("enabled").equals("true")) continue;
 							VHost vhost = new VHost(h.getHostname() + "/" + vkey, h, new File((String)ourvh.get("htdocs")), new File((String)ourvh.get("htsrc")), (String)ourvh.get("host"));
+							vhost.setDebug(ourvh.get("debug").equals("true"));
 							h.addVHost(vhost);
 						}
 						hosts.put(key, h);

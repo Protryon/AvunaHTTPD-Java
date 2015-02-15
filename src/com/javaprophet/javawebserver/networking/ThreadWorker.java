@@ -163,6 +163,9 @@ public class ThreadWorker extends Thread {
 					// System.out.println((proc2 - resp) / 1000000D + " resp-proc2");
 					// System.out.println((write - proc2) / 1000000D + " proc2-write");
 					// System.out.println((cur - write) / 1000000D + " write-cur");
+					if (incomingRequest.host.getDebug()) {
+						Logger.log(JavaWebServer.crlf + incomingRequest.toString().trim());
+					}
 					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + " " + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase + " took: " + (outgoingResponse.bwt - benchStart) / 1000000D + " ms");
 				}else {
 					String ip = focus.s.getInetAddress().getHostAddress();

@@ -26,6 +26,16 @@ public class VHost {
 		return name;
 	}
 	
+	private boolean debug = false;
+	
+	public void setDebug(boolean set) {
+		debug = set;
+	}
+	
+	public boolean getDebug() {
+		return debug;
+	}
+	
 	public JavaLoaderSession getJLS() {
 		return jls;
 	}
