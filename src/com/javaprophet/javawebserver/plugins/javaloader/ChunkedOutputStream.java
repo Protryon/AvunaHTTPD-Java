@@ -62,6 +62,7 @@ public class ChunkedOutputStream extends DataOutputStream {
 	public void flush() throws IOException {
 		byte[] cache = this.cache.toByteArray();
 		this.cache.reset();
+		if (cache.length == 0) return;
 		if (gzip) {
 			gzips.write(cache);
 			gzips.flush();
