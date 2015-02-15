@@ -34,7 +34,7 @@ public class ThreadWorker extends Thread {
 	}
 	
 	public static int getConnectionsForIP(String ip) {
-		return connIPs.get(ip);
+		return connIPs.containsKey(ip) ? connIPs.get(ip) : 0;
 	}
 	
 	public static void addWork(Host host, Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
@@ -45,6 +45,18 @@ public class ThreadWorker extends Thread {
 		connIPs.put(ip, cur);
 		workQueue.add(new Work(host, s, in, out, ssl));
 		Logger.log(ip + " connected to " + host.getHostname() + ".");
+	}
+	
+	public static void clearIPs(String ip) {
+		int i = 0;
+		for (Object worko : workQueue.toArray()) {
+			Work work = (Work)worko;
+			if (work.s.getInetAddress().getHostAddress().equals(ip)) {
+				workQueue.remove(work);
+				i++;
+			}
+		}
+		System.out.println(i + " ips raped");
 	}
 	
 	public static void readdWork(Work work) {
@@ -81,8 +93,12 @@ public class ThreadWorker extends Thread {
 						workQueue.add(focus);
 					}else {
 						if (focus.sns >= System.nanoTime()) {
-							boolean sleep = workQueue.size() == 0;
-							workQueue.add(focus);
+							boolean sleep = workQueue.isEmpty();
+							if (JavaWebServer.bannedIPs.contains(focus.s.getInetAddress().getHostAddress())) {
+								focus.s.close();
+							}else {
+								workQueue.add(focus);
+							}
 							if (sleep) {
 								try {
 									Thread.sleep(10L);

@@ -20,6 +20,10 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.ThreadWorker;
+import com.javaprophet.javawebserver.plugins.PatchRegistry;
+import com.javaprophet.javawebserver.plugins.base.PatchSecurity;
+import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderSecurity;
+import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class Host extends Thread {
@@ -28,6 +32,7 @@ public class Host extends Thread {
 	private final int port, cl;
 	private final boolean isSSL;
 	private final HashMap<String, Object> masterOverride;
+	private static long lastbipc = 0L;
 	
 	public String getHostname() {
 		return name;
@@ -137,12 +142,28 @@ public class Host extends Thread {
 					s.close();
 					continue;
 				}
+				if (lastbipc <= System.currentTimeMillis()) {
+					lastbipc = System.currentTimeMillis() + 3600000L;
+					JavaWebServer.bannedIPs.clear();
+				}
 				if (JavaWebServer.bannedIPs.contains(s.getInetAddress().getHostAddress())) {
 					s.close();
 					continue;
 				}
-				
 				s.setSoTimeout(1000);
+				if (PatchRegistry.getPatchForClass(PatchSecurity.class).pcfg.get("enabled", null).equals("true")) {
+					int minDrop = Integer.parseInt((String)PatchRegistry.getPatchForClass(PatchSecurity.class).pcfg.get("minDrop", null));
+					int chance = 0;
+					for (JavaLoaderSecurity sec : PatchJavaLoader.security) {
+						chance += sec.check(s.getInetAddress().getHostAddress());
+					}
+					if (chance >= minDrop) {
+						s.close();
+						JavaWebServer.bannedIPs.add(s.getInetAddress().getHostAddress());
+						ThreadWorker.clearIPs(s.getInetAddress().getHostAddress());
+						continue;
+					}
+				}
 				DataOutputStream out = new DataOutputStream(s.getOutputStream());
 				out.flush();
 				DataInputStream in = new DataInputStream(s.getInputStream());
