@@ -1,13 +1,10 @@
 package com.javaprophet.javawebserver.hosts;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -19,11 +16,7 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.networking.ThreadWorker;
-import com.javaprophet.javawebserver.plugins.PatchRegistry;
-import com.javaprophet.javawebserver.plugins.base.PatchSecurity;
-import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderSecurity;
-import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
+import com.javaprophet.javawebserver.networking.ThreadAccept;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class Host extends Thread {
@@ -32,7 +25,6 @@ public class Host extends Thread {
 	private final int port, cl;
 	private final boolean isSSL;
 	private final HashMap<String, Object> masterOverride;
-	private static long lastbipc = 0L;
 	
 	public String getHostname() {
 		return name;
@@ -136,38 +128,8 @@ public class Host extends Thread {
 				server = (SSLServerSocket)sc.getServerSocketFactory().createServerSocket(port, 1000, InetAddress.getByName(ip));
 				((SSLServerSocket)server).setEnabledProtocols(new String[]{fp});
 			}
-			while (!server.isClosed()) {
-				Socket s = server.accept();
-				if (cl >= 0 && ThreadWorker.getQueueSize() >= cl) {
-					s.close();
-					continue;
-				}
-				if (lastbipc <= System.currentTimeMillis()) {
-					lastbipc = System.currentTimeMillis() + 3600000L;
-					JavaWebServer.bannedIPs.clear();
-				}
-				if (JavaWebServer.bannedIPs.contains(s.getInetAddress().getHostAddress())) {
-					s.close();
-					continue;
-				}
-				s.setSoTimeout(1000);
-				if (PatchRegistry.getPatchForClass(PatchSecurity.class).pcfg.get("enabled", null).equals("true")) {
-					int minDrop = Integer.parseInt((String)PatchRegistry.getPatchForClass(PatchSecurity.class).pcfg.get("minDrop", null));
-					int chance = 0;
-					for (JavaLoaderSecurity sec : PatchJavaLoader.security) {
-						chance += sec.check(s.getInetAddress().getHostAddress());
-					}
-					if (chance >= minDrop) {
-						s.close();
-						JavaWebServer.bannedIPs.add(s.getInetAddress().getHostAddress());
-						ThreadWorker.clearIPs(s.getInetAddress().getHostAddress());
-						continue;
-					}
-				}
-				DataOutputStream out = new DataOutputStream(s.getOutputStream());
-				out.flush();
-				DataInputStream in = new DataInputStream(s.getInputStream());
-				ThreadWorker.addWork(this, s, in, out, server instanceof SSLServerSocket);
+			for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount", null)); i++) {
+				new ThreadAccept(this, server, cl).run();
 			}
 		}catch (Exception e) {
 			Logger.logError(e);

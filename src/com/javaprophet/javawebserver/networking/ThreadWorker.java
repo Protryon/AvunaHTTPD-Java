@@ -48,15 +48,12 @@ public class ThreadWorker extends Thread {
 	}
 	
 	public static void clearIPs(String ip) {
-		int i = 0;
 		for (Object worko : workQueue.toArray()) {
 			Work work = (Work)worko;
 			if (work.s.getInetAddress().getHostAddress().equals(ip)) {
 				workQueue.remove(work);
-				i++;
 			}
 		}
-		System.out.println(i + " ips raped");
 	}
 	
 	public static void readdWork(Work work) {
