@@ -30,9 +30,13 @@ public class ThreadStreamWorker extends Thread {
 			resp.headers.addHeader("Accept-Ranges", "bytes");
 			if (req.headers.hasHeader("Range")) {
 				String range = req.headers.getHeader("Range");
-				if (range.startsWith("bytes=") && range.endsWith("-")) {
-					fin.skip(Integer.parseInt(range.substring(6, range.length() - 1)));
-					ResponseGenerator.generateDefaultResponse(resp, StatusCode.PARTIAL_CONTENT);
+				if (range.startsWith("bytes=")) {
+					int ts = Integer.parseInt(range.endsWith("-") ? range.substring(6, range.length() - 1) : range.substring(6, range.indexOf("-")));
+					if (ts > 0) {
+						ResponseGenerator.generateDefaultResponse(resp, StatusCode.PARTIAL_CONTENT);
+						resp.headers.addHeader("Content-Range", "bytes " + ts + "-" + fin.available() + "/" + (fin.available() + 1));
+						fin.skip(ts);
+					}
 				}
 			}
 			ChunkedOutputStream cos = new ChunkedOutputStream(work.out, resp, resp.headers.hasHeader("Content-Encoding") && resp.headers.getHeader("Content-Encoding").contains("gzip"));
