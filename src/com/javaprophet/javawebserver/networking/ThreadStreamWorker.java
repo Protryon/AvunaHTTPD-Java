@@ -4,6 +4,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.SocketException;
 import com.javaprophet.javawebserver.JavaWebServer;
+import com.javaprophet.javawebserver.http.ResponseGenerator;
+import com.javaprophet.javawebserver.http.StatusCode;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.javaloader.ChunkedOutputStream;
@@ -24,16 +26,14 @@ public class ThreadStreamWorker extends Thread {
 		FileInputStream fin = null;
 		// resp.headers.removeHeaders("Content-Encoding");
 		try {
-			fin = new FileInputStream(JavaWebServer.fileManager.getAbsolutePath(resp.body.loc, req));
+			fin = new FileInputStream(JavaWebServer.fileManager.getAbsolutePath(resp.body.loc, req)); // TODO: bounded ranges
 			resp.headers.addHeader("Accept-Ranges", "bytes");
 			if (req.headers.hasHeader("Range")) {
 				String range = req.headers.getHeader("Range");
 				if (range.startsWith("bytes=") && range.endsWith("-")) {
-					int s = Integer.parseInt(range.substring(6, range.length() - 1));
-					System.out.println(s);
-					fin.skip(s);
+					fin.skip(Integer.parseInt(range.substring(6, range.length() - 1)));
+					ResponseGenerator.generateDefaultResponse(resp, StatusCode.PARTIAL_CONTENT);
 				}
-				System.out.println(range);
 			}
 			ChunkedOutputStream cos = new ChunkedOutputStream(work.out, resp, resp.headers.hasHeader("Content-Encoding") && resp.headers.getHeader("Content-Encoding").contains("gzip"));
 			cos.writeHeaders();
