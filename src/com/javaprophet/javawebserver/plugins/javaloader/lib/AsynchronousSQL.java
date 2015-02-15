@@ -132,7 +132,7 @@ public class AsynchronousSQL {
 		if (aq == null || !aq.isQuery) {
 			throw new NullPointerException();
 		}
-		if (!aq.alwaysRun && (aq.crs == null || aq.nextrun <= System.currentTimeMillis())) {
+		if (!aq.alwaysRun && (aq.crs == null || (aq.nextrun > 0 && aq.nextrun <= System.currentTimeMillis()))) {
 			try {
 				aq.run();
 			}catch (SQLException e) {

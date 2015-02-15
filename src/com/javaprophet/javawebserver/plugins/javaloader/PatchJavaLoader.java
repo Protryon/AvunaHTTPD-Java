@@ -269,11 +269,13 @@ public class PatchJavaLoader extends Patch {
 				ndata = ((JavaLoaderBasic)loader).generate(response, request);
 			}else if (type == 1) {
 				HTMLBuilder out = new HTMLBuilder(new StringWriter());
-				((JavaLoaderPrint)loader).generate(out, response, request);
-				String s = out.toString();
 				// long st = System.nanoTime();
-				ndata = s.getBytes();
+				
+				((JavaLoaderPrint)loader).generate(out, response, request);
 				// System.out.println((System.nanoTime() - st) / 1000000D);
+				
+				String s = out.toString();
+				ndata = s.getBytes();
 			}else if (type == 2) {
 				response.reqStream = (JavaLoaderStream)loader;
 			}
