@@ -2,6 +2,7 @@ package com.javaprophet.javawebserver.networking;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.SocketException;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
@@ -23,14 +24,25 @@ public class ThreadStreamWorker extends Thread {
 		FileInputStream fin = null;
 		// resp.headers.removeHeaders("Content-Encoding");
 		try {
+			fin = new FileInputStream(JavaWebServer.fileManager.getAbsolutePath(resp.body.loc, req));
+			resp.headers.addHeader("Accept-Ranges", "bytes");
+			if (req.headers.hasHeader("Range")) {
+				String range = req.headers.getHeader("Range");
+				if (range.startsWith("bytes=") && range.endsWith("-")) {
+					int s = Integer.parseInt(range.substring(6, range.length() - 1));
+					System.out.println(s);
+					fin.skip(s);
+				}
+				System.out.println(range);
+			}
 			ChunkedOutputStream cos = new ChunkedOutputStream(work.out, resp, resp.headers.hasHeader("Content-Encoding") && resp.headers.getHeader("Content-Encoding").contains("gzip"));
 			cos.writeHeaders();
-			fin = new FileInputStream(JavaWebServer.fileManager.getAbsolutePath(resp.body.loc, req));
 			int i = 1;
 			byte[] buf = new byte[10485760];
-			int b = 0;
+			int wr = 0;
 			while (!work.s.isClosed() && i > 0) {
 				i = fin.read(buf);
+				wr += i;
 				if (i < 1) {
 					work.s.close();
 					break;
@@ -38,19 +50,22 @@ public class ThreadStreamWorker extends Thread {
 					cos.write(buf, 0, i);
 					cos.flush();
 				}
-				b++;
-				if (b > 2) {
-					break;
-				}
 			}
-			// cos.finish();
-			cos.close();
+			cos.finish();
+			// cos.close();
 			ThreadWorker.readdWork(work);
 		}catch (IOException e) {
-			Logger.logError(e);
+			if (!(e instanceof SocketException)) Logger.logError(e);
 		}finally {
+			String ip = work.s.getInetAddress().getHostAddress();
+			Integer cur = ThreadWorker.connIPs.get(ip);
+			if (cur == null) cur = 1;
+			cur -= 1;
+			ThreadWorker.connIPs.put(ip, cur);
+			Logger.log(ip + " closed.");
 			try {
 				if (fin != null) fin.close();
+				if (work.s != null) work.s.close();
 			}catch (IOException e) {
 				Logger.logError(e);
 			}

@@ -27,7 +27,7 @@ public class ThreadWorker extends Thread {
 	
 	private static ArrayList<ThreadWorker> workers = new ArrayList<ThreadWorker>();
 	private static CircularQueue<Work> workQueue;
-	private static HashMap<String, Integer> connIPs = new HashMap<String, Integer>();
+	protected static HashMap<String, Integer> connIPs = new HashMap<String, Integer>();
 	
 	public static void initQueue(int connlimit) {
 		workQueue = new CircularQueue<Work>(connlimit);
