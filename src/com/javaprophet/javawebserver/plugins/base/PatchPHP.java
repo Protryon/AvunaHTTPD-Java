@@ -23,13 +23,13 @@ public class PatchPHP extends Patch {
 	
 	public PatchPHP(String name) {
 		super(name);
-		try {
-			this.conn = new FCGIConnection("127.0.0.1", 9000);
-			this.conn.start();
-		}catch (IOException e) {
-			Logger.logError(e);
-			this.conn = null;
-		}
+		// try {
+		// this.conn = new FCGIConnection("127.0.0.1", 9000);
+		// this.conn.start();
+		// }catch (IOException e) {
+		// Logger.logError(e);
+		// this.conn = null;
+		// }
 	}
 	
 	@Override
