@@ -10,8 +10,8 @@ public class NameValue41 extends NameValue11 {
 		super(name, value, id);
 	}
 	
-	public NameValue41(DataInputStream in) throws IOException {
-		super(in);
+	public NameValue41(DataInputStream in, int l) throws IOException {
+		readContent(in, l);
 	}
 	
 	@Override

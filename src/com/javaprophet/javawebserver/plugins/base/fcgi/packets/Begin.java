@@ -9,8 +9,8 @@ import com.javaprophet.javawebserver.plugins.base.fcgi.Type;
 public class Begin extends FCGIPacket {
 	public Role role = Role.FCGI_RESPONDER;
 	
-	public Begin(DataInputStream in) throws IOException {
-		super(in);
+	public Begin(DataInputStream in, int l) throws IOException {
+		readContent(in, l);
 	}
 	
 	public Begin(Role role, int id) {

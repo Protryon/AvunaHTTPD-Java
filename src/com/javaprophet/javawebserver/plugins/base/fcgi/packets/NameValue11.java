@@ -9,14 +9,18 @@ public class NameValue11 extends FCGIPacket {
 	public String name = "";
 	public String value = "";
 	
+	protected NameValue11() {
+		
+	}
+	
 	public NameValue11(String name, String value, int id) {
 		super(Type.FCGI_PARAMS, id);
 		this.name = name;
 		this.value = value;
 	}
 	
-	public NameValue11(DataInputStream in) throws IOException {
-		super(in);
+	public NameValue11(DataInputStream in, int l) throws IOException {
+		readContent(in, l);
 	}
 	
 	@Override

@@ -10,8 +10,8 @@ public class End extends FCGIPacket {
 	public int appStatus = -1;
 	public PStatus pstatus = null;
 	
-	public End(DataInputStream in) throws IOException {
-		super(in);
+	public End(DataInputStream in, int l) throws IOException {
+		readContent(in, l);
 	}
 	
 	public End(int appStatus, PStatus pstatus, int id) {

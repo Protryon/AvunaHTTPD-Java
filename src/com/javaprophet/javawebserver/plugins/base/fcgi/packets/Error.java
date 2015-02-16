@@ -6,8 +6,8 @@ import com.javaprophet.javawebserver.plugins.base.fcgi.Type;
 
 public class Error extends Stream {
 	
-	public Error(DataInputStream in) throws IOException {
-		super(in);
+	public Error(DataInputStream in, int l) throws IOException {
+		readContent(in, l);
 	}
 	
 	public Error(int id) {

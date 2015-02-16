@@ -8,8 +8,12 @@ import com.javaprophet.javawebserver.plugins.base.fcgi.Type;
 public abstract class Stream extends FCGIPacket {
 	public byte[] content = null;
 	
-	public Stream(DataInputStream in) throws IOException {
-		super(in);
+	protected Stream() {
+		
+	}
+	
+	public Stream(DataInputStream in, int l) throws IOException {
+		readContent(in, l);
 	}
 	
 	public Stream(Type type, int id) {
