@@ -15,12 +15,21 @@ import com.javaprophet.javawebserver.networking.packets.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
+import com.javaprophet.javawebserver.plugins.base.fcgi.FCGIConnection;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class PatchPHP extends Patch {
+	private FCGIConnection conn;
 	
 	public PatchPHP(String name) {
 		super(name);
+		try {
+			this.conn = new FCGIConnection("127.0.0.1", 9000);
+			this.conn.start();
+		}catch (IOException e) {
+			Logger.logError(e);
+			this.conn = null;
+		}
 	}
 	
 	@Override
@@ -58,6 +67,8 @@ public class PatchPHP extends Patch {
 				get = "";
 			}
 			ProcessBuilder pb = new ProcessBuilder((String)pcfg.get("cmd", request));
+			// FCGISession session = new FCGISession(conn);
+			// pb.environment().start();
 			pb.environment().put("REQUEST_URI", rq);
 			
 			rq = JavaWebServer.fileManager.correctForIndex(rq, request);
@@ -75,12 +86,7 @@ public class PatchPHP extends Patch {
 			pb.environment().put("REDIRECT_STATUS", response.statusCode + "");
 			pb.environment().put("SCRIPT_NAME", rq.substring(rq.lastIndexOf("/")));
 			pb.environment().put("SERVER_NAME", request.headers.getHeader("Host"));
-			int port = 80;
-			if (request.ssl) {
-				port = Integer.parseInt((String)((HashMap<String, Object>)JavaWebServer.mainConfig.get("ssl", request)).get("bindport"));
-			}else {
-				port = Integer.parseInt(((String)JavaWebServer.mainConfig.get("bindport", request)));
-			}
+			int port = request.host.getHost().getPort();
 			pb.environment().put("SERVER_PORT", port + "");
 			pb.environment().put("SERVER_PROTOCOL", request.httpVersion);
 			pb.environment().put("SERVER_SOFTWARE", "JWS/" + JavaWebServer.VERSION);
@@ -93,6 +99,13 @@ public class PatchPHP extends Patch {
 				}
 			}
 			Process pbr = pb.start();
+			// while (!session.isDone()) {
+			// try {
+			// Thread.sleep(1L);
+			// }catch (InterruptedException e) {
+			// Logger.logError(e);
+			// }
+			// }
 			OutputStream pbout = pbr.getOutputStream();
 			if (request.body != null) {
 				pbout.write(request.body.data);

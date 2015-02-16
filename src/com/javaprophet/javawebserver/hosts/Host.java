@@ -30,6 +30,10 @@ public class Host extends Thread {
 		return name;
 	}
 	
+	public int getPort() {
+		return port;
+	}
+	
 	public HashMap<String, Object> getMasterOverride() {
 		return masterOverride;
 	}
