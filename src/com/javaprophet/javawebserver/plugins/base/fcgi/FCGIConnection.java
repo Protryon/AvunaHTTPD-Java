@@ -4,6 +4,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.HashMap;
+import com.javaprophet.javawebserver.plugins.base.fcgi.packets.FCGIPacket;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class FCGIConnection extends Thread {
@@ -18,11 +20,25 @@ public class FCGIConnection extends Thread {
 		in = new DataInputStream(s.getInputStream());
 	}
 	
+	private final HashMap<Integer, IFCGIListener> listeners = new HashMap<Integer, IFCGIListener>();
+	
+	protected void disassemble(IFCGIListener listener) {
+		listeners.remove(listener);
+	}
+	
+	protected void write(IFCGIListener listener, FCGIPacket packet) throws IOException {
+		listeners.put(packet.id, listener);
+		packet.write(out);
+	}
+	
 	public void run() {
 		try {
 			while (!s.isClosed()) {
 				try {
-					
+					FCGIPacket recv = FCGIPacket.read(in);
+					if (listeners.containsKey(recv.id)) {
+						listeners.get(recv.id).receive(recv);
+					}
 				}catch (Exception e) {
 					Logger.logError(e);
 				}
