@@ -8,11 +8,19 @@ import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
 import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderSecurity;
 import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
+import com.javaprophet.javawebserver.plugins.javaloader.security.JLSBFlood;
+import com.javaprophet.javawebserver.plugins.javaloader.security.JLSBProxy;
+import com.javaprophet.javawebserver.plugins.javaloader.security.JLSFlood;
+import com.javaprophet.javawebserver.plugins.javaloader.security.JLSUA;
 
 public class PatchSecurity extends Patch {
 	
 	public PatchSecurity(String name) {
 		super(name);
+		PatchJavaLoader.loadBaseSecurity(new JLSBFlood());
+		PatchJavaLoader.loadBaseSecurity(new JLSBProxy());
+		PatchJavaLoader.loadBaseSecurity(new JLSFlood());
+		PatchJavaLoader.loadBaseSecurity(new JLSUA());
 	}
 	
 	private int minDrop = 100;

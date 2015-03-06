@@ -157,6 +157,10 @@ public class PatchJavaLoader extends Patch {
 		}
 	}
 	
+	public static void loadBaseSecurity(JavaLoaderSecurity sec) {
+		security.add(sec);
+	}
+	
 	private static MessageDigest md5 = null;
 	static {
 		try {
