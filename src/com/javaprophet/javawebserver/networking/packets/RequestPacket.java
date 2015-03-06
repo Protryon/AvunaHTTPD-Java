@@ -21,8 +21,10 @@ public class RequestPacket extends Packet {
 	public String userIP = "";
 	public int userPort = 80;
 	public boolean ssl = false;
-	public HashMap<String, Object> overrideConfig = null;
 	public VHost host = null;
+	public boolean forbode = false;
+	public String oredir = "";
+	public String[] overrideIndex = null;
 	// javaloader vars
 	public HashMap<String, String> get = new HashMap<String, String>();
 	public HashMap<String, String> post = new HashMap<String, String>();

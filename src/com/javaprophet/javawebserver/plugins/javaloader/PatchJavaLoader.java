@@ -33,7 +33,7 @@ public class PatchJavaLoader extends Patch {
 		super(name);
 		log("Loading JavaLoader Libs");
 		try {
-			lib = new File(JavaWebServer.fileManager.getMainDir(), (String)pcfg.get("lib", null));
+			lib = new File(JavaWebServer.fileManager.getMainDir(), (String)pcfg.get("lib"));
 			if (!lib.exists() || !lib.isDirectory()) {
 				lib.mkdirs();
 			}
@@ -59,7 +59,7 @@ public class PatchJavaLoader extends Patch {
 				}
 			}
 			PatchSecurity ps = (PatchSecurity)PatchRegistry.getPatchForClass(PatchSecurity.class);
-			if (ps.pcfg.get("enabled", null).equals("true")) {
+			if (ps.pcfg.get("enabled").equals("true")) {
 				recurLoad(null, JavaWebServer.fileManager.getPlugin(ps));
 			}
 		}catch (Exception e) {
@@ -75,7 +75,7 @@ public class PatchJavaLoader extends Patch {
 			System.gc();
 			Thread.sleep(1000L);
 			sessions.clear();
-			lib = new File(JavaWebServer.fileManager.getMainDir(), (String)pcfg.get("lib", null));
+			lib = new File(JavaWebServer.fileManager.getMainDir(), (String)pcfg.get("lib"));
 			if (!lib.exists() || !lib.isDirectory()) {
 				lib.mkdirs();
 			}
@@ -100,7 +100,7 @@ public class PatchJavaLoader extends Patch {
 				}
 			}
 			PatchSecurity ps = (PatchSecurity)PatchRegistry.getPatchForClass(PatchSecurity.class);
-			if (ps.pcfg.get("enabled", null).equals("true")) {
+			if (ps.pcfg.get("enabled").equals("true")) {
 				recurLoad(null, JavaWebServer.fileManager.getPlugin(ps));
 			}
 		}catch (Exception e) {

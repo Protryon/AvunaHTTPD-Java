@@ -35,12 +35,12 @@ public class PatchCacheControl extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return response.body != null;
+		return response.body != null && response.headers.hasHeader("Content-Type");
 	}
 	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		response.headers.addHeader("Cache-Control: max-age=" + (String)pcfg.get("maxage", request) + (response.headers.getHeader("Content-Type").matches((String)pcfg.get("nocache", request)) ? ", no-cache" : ""));
+		response.headers.addHeader("Cache-Control: max-age=" + (String)pcfg.get("maxage") + (response.headers.getHeader("Content-Type").matches((String)pcfg.get("nocache")) ? ", no-cache" : ""));
 		return data;
 	}
 	

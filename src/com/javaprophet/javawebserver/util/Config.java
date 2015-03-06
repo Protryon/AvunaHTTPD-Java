@@ -6,11 +6,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Scanner;
 import java.util.Set;
-import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 
 public class Config {
 	private final File cfg;
@@ -47,28 +45,12 @@ public class Config {
 		return cm.containsKey(name);
 	}
 	
-	public Object get(String name, RequestPacket request) {
-		if (request != null && request.overrideConfig != null && request.overrideConfig.containsKey(this.name)) {
-			HashMap<String, Object> us = ((HashMap<String, Object>)request.overrideConfig.get(this.name));
-			if (us.containsKey(name)) {
-				return us.get(name);
-			}
-		}
+	public Object get(String name) {
 		return cm.get(name);
 	}
 	
-	public Set<String> keySet(RequestPacket request) {
-		if (request != null && request.overrideConfig != null) {
-			Set<String> base = new HashSet<String>();
-			base.addAll(cm.keySet());
-			if (request != null && request.overrideConfig != null && request.overrideConfig.containsKey(this.name)) {
-				HashMap<String, Object> us = ((HashMap<String, Object>)request.overrideConfig.get(this.name));
-				base.addAll(us.keySet());
-			}
-			return base;
-		}else {
-			return cm.keySet();
-		}
+	public Set<String> keySet() {
+		return cm.keySet();
 	}
 	
 	public void set(String name, String value) {

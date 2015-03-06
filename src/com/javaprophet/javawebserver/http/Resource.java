@@ -1,5 +1,7 @@
 package com.javaprophet.javawebserver.http;
 
+import com.javaprophet.javawebserver.util.OverrideConfig;
+
 /**
  * Class that provides all the page content
  */
@@ -30,13 +32,15 @@ public class Resource {
 	 */
 	public boolean tooBig = false;
 	
+	public OverrideConfig effectiveOverride = null;
+	
 	/**
 	 * Clone the resource.
 	 * 
 	 * @return the cloned resource
 	 */
 	public Resource clone() {
-		Resource res = new Resource(data, type, loc);
+		Resource res = new Resource(data, type, loc, effectiveOverride);
 		res.wasDir = wasDir;
 		res.tooBig = tooBig;
 		return res;
@@ -60,9 +64,10 @@ public class Resource {
 	 * @param type the mime type
 	 * @param loc the location
 	 */
-	public Resource(byte[] data, String type, String loc) {
+	public Resource(byte[] data, String type, String loc, OverrideConfig effectiveOverride) {
 		this.data = data;
 		this.type = type;
 		this.loc = loc;
+		this.effectiveOverride = effectiveOverride;
 	}
 }

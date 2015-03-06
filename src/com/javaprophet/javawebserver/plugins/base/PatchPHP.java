@@ -66,7 +66,7 @@ public class PatchPHP extends Patch {
 			}else {
 				get = "";
 			}
-			ProcessBuilder pb = new ProcessBuilder((String)pcfg.get("cmd", request));
+			ProcessBuilder pb = new ProcessBuilder((String)pcfg.get("cmd"));
 			// FCGISession session = new FCGISession(conn);
 			// pb.environment().start();
 			pb.environment().put("REQUEST_URI", rq);

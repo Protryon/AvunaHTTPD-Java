@@ -4,27 +4,24 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.http.Resource;
+import com.javaprophet.javawebserver.http.ResponseGenerator;
+import com.javaprophet.javawebserver.http.StatusCode;
 import com.javaprophet.javawebserver.networking.packets.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
-import com.javaprophet.javawebserver.util.Config;
-import com.javaprophet.javawebserver.util.ConfigFormat;
+import com.javaprophet.javawebserver.util.CompiledDirective;
 import com.javaprophet.javawebserver.util.Logger;
+import com.javaprophet.javawebserver.util.OverrideConfig;
 
 public class PatchOverride extends Patch {
 	
 	public PatchOverride(String name) {
 		super(name);
-		fn = (String)pcfg.get("filename", null);
 	}
-	
-	private String fn = "";
 	
 	@Override
 	public void formatConfig(HashMap<String, Object> json) {
-		if (!json.containsKey("filename")) json.put("filename", ".htoverride");
 	}
 	
 	@Override
@@ -35,52 +32,43 @@ public class PatchOverride extends Patch {
 	@Override
 	public void processPacket(Packet packet) {
 		RequestPacket request = (RequestPacket)packet;
-		if (request.overrideConfig != null) return;
-		String rt = request.target;
-		if (rt.contains("#")) rt = rt.substring(0, rt.indexOf("#"));
-		if (rt.contains("?")) rt = rt.substring(0, rt.indexOf("?"));
-		if (!request.body.wasDir) {
-			rt = rt.substring(0, rt.lastIndexOf("/") + 1);
-		}
-		String prt = rt;
-		rt = request.host.getHostPath() + rt;
-		if (overrides.containsKey(rt)) {
-			request.overrideConfig = overrides.get(rt);
-			return;
-		}
-		if (nogo.contains(rt)) return;
-		Resource override = JavaWebServer.fileManager.getResource(prt + fn, request);
-		if (override == null) {
-			nogo.add(rt);
-			return;
-		}
-		Config load = new Config("override" + System.nanoTime(), new String(override.data), new ConfigFormat() {
-			
-			@Override
-			public void format(HashMap<String, Object> map) {
-				
-			}
-			
-		});
 		try {
-			load.load();
+			request.body = JavaWebServer.fileManager.preloadOverride(request, request.body);
 		}catch (IOException e) {
 			Logger.logError(e);
 		}
-		HashMap<String, Object> or = load.getMaster();
-		for (String key : request.host.getHost().getMasterOverride().keySet()) {
-			Object val = request.host.getHost().getMasterOverride().get(key);
-			if (or.containsKey(key) && or.get(key) instanceof HashMap) {
-				HashMap<String, Object> sub = (HashMap<String, Object>)or.get(key);
-				for (String psk : ((HashMap<String, Object>)val).keySet()) {
-					sub.put(psk, ((HashMap<String, Object>)val).get(psk));
+		if (request.body == null || request.body.effectiveOverride == null) return;
+		String rt = request.target;
+		if (rt.contains("#")) rt = rt.substring(0, rt.indexOf("#"));
+		String prt = "";
+		if (rt.contains("?")) {
+			prt = rt.substring(rt.indexOf("?"));
+			rt = rt.substring(0, rt.indexOf("?"));
+		}
+		rt = request.host.getHostPath() + rt;
+		if (rt.contains(".override")) {
+			request.forbode = true;
+			return;
+		}
+		rt += prt;
+		OverrideConfig cfg = request.body.effectiveOverride;
+		for (CompiledDirective d : cfg.getDirectives()) {
+			switch (d.directive) {
+			case forbid:
+				if (rt.matches(d.args[0])) {
+					request.forbode = true;
 				}
-			}else {
-				or.put(key, val);
+				break;
+			case redirect:
+				if (rt.matches(d.args[0])) {
+					request.oredir = d.args[1];
+				}
+				break;
+			case index:
+				request.overrideIndex = d.args;
+				break;
 			}
 		}
-		overrides.put(rt, or);
-		request.overrideConfig = or;
 		return;
 	}
 	
@@ -104,11 +92,20 @@ public class PatchOverride extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return false;
+		return request.forbode || request.oredir.length() > 0;
 	}
 	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
+		if (request.forbode) {
+			ResponseGenerator.generateDefaultResponse(response, StatusCode.FORBIDDEN);
+			response.body = JavaWebServer.fileManager.getErrorPage(request, request.target, StatusCode.FORBIDDEN, "You don't have permission to access " + request.target + " on this server.");
+			return response.body.data;
+		}else if (request.oredir.length() > 0) {
+			ResponseGenerator.generateDefaultResponse(response, StatusCode.FOUND);
+			response.headers.addHeader("Location", request.oredir);
+			return null;
+		}
 		return data;
 	}
 	

@@ -34,15 +34,15 @@ public class FileManager {
 	}
 	
 	public File getMainDir() {
-		return new File((String)JavaWebServer.mainConfig.get("dir", null));
+		return new File((String)JavaWebServer.mainConfig.get("dir"));
 	}
 	
 	public File getPlugins() {
-		return new File((String)JavaWebServer.mainConfig.get("plugins", null));
+		return new File((String)JavaWebServer.mainConfig.get("plugins"));
 	}
 	
 	public File getLogs() {
-		return new File((String)JavaWebServer.mainConfig.get("logs", null));
+		return new File((String)JavaWebServer.mainConfig.get("logs"));
 	}
 	
 	public File getPlugin(Patch p) {
@@ -68,6 +68,7 @@ public class FileManager {
 			lwiCache.remove(delKeys[i]);
 			tbCache.remove(delKeys[i]);
 		}
+		cConfigCache.clear();
 	}
 	
 	public void flushjl() throws IOException {
@@ -87,7 +88,7 @@ public class FileManager {
 	}
 	
 	public Resource getErrorPage(RequestPacket request, String reqTarget, StatusCode status, String info) {
-		HashMap<String, Object> errorPages = (HashMap<String, Object>)JavaWebServer.mainConfig.get("errorpages", request);
+		HashMap<String, Object> errorPages = (HashMap<String, Object>)JavaWebServer.mainConfig.get("errorpages");
 		if (errorPages.containsKey(status.getStatus())) {
 			try {
 				String path = (String)errorPages.get(status.getStatus());
@@ -104,7 +105,23 @@ public class FileManager {
 				Logger.logError(e);
 			}
 		}
-		Resource error = new Resource(("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">" + JavaWebServer.crlf + "<html><head>" + JavaWebServer.crlf + "<title>" + status.getStatus() + " " + status.getPhrase() + "</title>" + JavaWebServer.crlf + "</head><body>" + JavaWebServer.crlf + "<h1>" + status.getPhrase() + "</h1>" + JavaWebServer.crlf + "<p>" + info + "</p>" + JavaWebServer.crlf + "</body></html>").getBytes(), "text/html");
+		StringBuilder pb = new StringBuilder();
+		pb.append("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">");
+		pb.append("<html><head>");
+		pb.append("<title>");
+		pb.append(status.getStatus());
+		pb.append(" ");
+		pb.append(status.getPhrase());
+		pb.append("</title>");
+		pb.append("</head><body>");
+		pb.append("<h1>");
+		pb.append(status.getPhrase());
+		pb.append("</h1>");
+		pb.append("<p>");
+		pb.append(info);
+		pb.append("</p>");
+		pb.append("</body></html>");
+		Resource error = new Resource(pb.toString().getBytes(), "text/html");
 		return error;
 	}
 	
@@ -114,7 +131,12 @@ public class FileManager {
 		lwi = false;
 		File abs = new File(request.host.getHTDocs(), URLDecoder.decode(reqTarget));
 		if (abs.isDirectory()) {
-			String[] index = ((String)JavaWebServer.mainConfig.get("index", request)).split(",");
+			String[] index = null;
+			if (request.overrideIndex != null) {
+				index = request.overrideIndex;
+			}else {
+				index = ((String)JavaWebServer.mainConfig.get("index")).split(",");
+			}
 			for (String i : index) {
 				i = i.trim();
 				if (i.startsWith("/")) {
@@ -144,7 +166,39 @@ public class FileManager {
 	public static final HashMap<String, String> extCache = new HashMap<String, String>();
 	public static final HashMap<String, Boolean> lwiCache = new HashMap<String, Boolean>();
 	public static final HashMap<String, Boolean> tbCache = new HashMap<String, Boolean>();
+	public static final HashMap<String, OverrideConfig> cConfigCache = new HashMap<String, OverrideConfig>();
 	private static long cacheClock = 0L;
+	
+	public OverrideConfig loadDirective(File file, String path) throws IOException { // TODO: load superdirectory directives.
+		if (!file.exists()) return null;
+		OverrideConfig cfg = new OverrideConfig(file);
+		cfg.load();
+		cConfigCache.put(path, cfg);
+		return cfg;
+	}
+	
+	public String getSuperDirectory(String path) {
+		return path.contains("/") ? path.substring(0, path.lastIndexOf("/") + 1) : path;
+	}
+	
+	public Resource preloadOverride(RequestPacket request, Resource resource) throws IOException {
+		if (resource == null) return null;
+		String rt = request.target;
+		if (rt.contains("#")) {
+			rt = rt.substring(0, rt.indexOf("#"));
+		}
+		if (rt.contains("?")) {
+			rt = rt.substring(0, rt.indexOf("?"));
+		}
+		String nrt = getSuperDirectory(request.host.getHostPath() + rt);
+		if (cConfigCache.containsKey(nrt)) {
+			resource.effectiveOverride = cConfigCache.get(nrt);
+		}else {
+			File abs = getAbsolutePath(rt, request).getParentFile();
+			if (abs.exists()) resource.effectiveOverride = loadDirective(new File(abs, ".override"), nrt);
+		}
+		return resource;
+	}
 	
 	public Resource getResource(String reqTarget, RequestPacket request) {
 		try {
@@ -156,13 +210,15 @@ public class FileManager {
 				rt = rt.substring(0, rt.indexOf("?"));
 			}
 			String nrt = request.host.getHostPath() + rt; // TODO: overlapping htdocs caching w/o file io
+			String superdir = getSuperDirectory(nrt);
 			byte[] resource = null;
 			String ext = "";
 			boolean lwi = false;
 			boolean tooBig = false;
+			OverrideConfig directive = null;
 			if (cache.containsKey(nrt)) {
 				long t = System.currentTimeMillis();
-				long cc = Integer.parseInt(((String)JavaWebServer.mainConfig.get("cacheClock", request)));
+				long cc = Integer.parseInt(((String)JavaWebServer.mainConfig.get("cacheClock")));
 				boolean tc = cc > 0 && t - cc < cacheClock;
 				if (tc || cc == -1 || extCache.get(nrt).equals("application/x-java")) {
 					resource = cache.get(nrt);
@@ -172,6 +228,7 @@ public class FileManager {
 					ext = extCache.get(nrt);
 					lwi = lwiCache.get(nrt);
 					tooBig = tbCache.get(nrt);
+					directive = cConfigCache.get(superdir);
 				}else if (!tc && cc > 0) {
 					cacheClock = t;
 					String[] delKeys = new String[cache.size()];
@@ -187,10 +244,14 @@ public class FileManager {
 						lwiCache.remove(delKeys[i]);
 						tbCache.remove(delKeys[i]);
 					}
+					cConfigCache.clear();
 				}
 			}
 			if (resource == null) {
 				File abs = getAbsolutePath(rt, request);
+				if (!cConfigCache.containsKey(superdir)) {
+					directive = loadDirective(new File(abs.getParentFile(), ".override"), superdir);
+				}
 				if (abs.exists()) {
 					ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
 					ext = JavaWebServer.extensionToMime.containsKey(ext) ? JavaWebServer.extensionToMime.get(ext) : "application/octet-stream";
@@ -204,7 +265,7 @@ public class FileManager {
 							bout.write(buf, 0, i);
 						}
 						PatchChunked chunked = (PatchChunked)PatchRegistry.getPatchForClass(PatchChunked.class);
-						if (chunked.pcfg.get("enabled", null).equals("true") && bout.size() > Integer.parseInt((String)chunked.pcfg.get("minsize", request)) && !ext.startsWith("application")) {
+						if (chunked.pcfg.get("enabled").equals("true") && bout.size() > Integer.parseInt((String)chunked.pcfg.get("minsize")) && !ext.startsWith("application")) {
 							bout.reset();
 							tooBig = true;
 							break;
@@ -226,7 +287,7 @@ public class FileManager {
 				lwiCache.put(nrt, lwi);
 				tbCache.put(nrt, tooBig);
 			}
-			Resource r = new Resource(resource, ext, rt);
+			Resource r = new Resource(resource, ext, rt, directive);
 			r.wasDir = lwi;
 			r.tooBig = tooBig;
 			return r;

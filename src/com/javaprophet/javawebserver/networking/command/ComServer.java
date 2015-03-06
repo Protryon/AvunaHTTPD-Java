@@ -30,7 +30,7 @@ public class ComServer extends Thread {
 	public void run() {
 		try {
 			// Com config
-			HashMap<String, Object> com = (HashMap<String, Object>)JavaWebServer.mainConfig.get("com", null);
+			HashMap<String, Object> com = (HashMap<String, Object>)JavaWebServer.mainConfig.get("com");
 			// Server socket and some more config options under
 			ServerSocket server = new ServerSocket(Integer.parseInt((String)com.get("bindport")), 10, InetAddress.getByName((String)com.get("bindip")));
 			boolean doAuth = com.get("doAuth").equals("true");

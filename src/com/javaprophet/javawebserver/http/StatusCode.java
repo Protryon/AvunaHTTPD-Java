@@ -22,6 +22,11 @@ public class StatusCode {
 	public static final StatusCode UNAUTHORIZED = new StatusCode(401, "Unauthorized");
 	
 	/**
+	 * Status 403 Forbidden
+	 */
+	public static final StatusCode FORBIDDEN = new StatusCode(403, "Forbidden");
+	
+	/**
 	 * Status 404 Not Found
 	 */
 	public static final StatusCode NOT_FOUND = new StatusCode(404, "Not Found");

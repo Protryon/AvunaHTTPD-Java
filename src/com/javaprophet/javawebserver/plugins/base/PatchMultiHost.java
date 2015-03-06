@@ -28,14 +28,14 @@ public class PatchMultiHost extends Patch {
 		RequestPacket request = (RequestPacket)packet;
 		String host = request.headers.getHeader("Host");
 		if (!request.httpVersion.equals("HTTP/1.0")) {
-			for (Object key : pcfg.keySet(request)) {
+			for (Object key : pcfg.keySet()) {
 				if (!key.equals("enabled") && host.matches(((String)key))) {
-					request.target = pcfg.get((String)key, request) + request.target;
+					request.target = pcfg.get((String)key) + request.target;
 					return;
 				}
 			}
 		}
-		request.target = ((String)pcfg.get("default", request)) + request.target;
+		request.target = ((String)pcfg.get("default")) + request.target;
 	}
 	
 	@Override

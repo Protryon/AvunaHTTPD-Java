@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import com.javaprophet.javawebserver.dns.RecordHolder;
@@ -135,12 +136,12 @@ public class JavaWebServer {
 					if (!map.containsKey("javac")) map.put("javac", "javac");
 					if (!map.containsKey("connlimit")) map.put("connlimit", "-1");
 					if (!map.containsKey("workerThreadCount")) map.put("workerThreadCount", "" + (Runtime.getRuntime().availableProcessors() * 3));
-					if (!map.containsKey("errorpages")) map.put("errorpages", new HashMap<String, Object>());
+					if (!map.containsKey("errorpages")) map.put("errorpages", new LinkedHashMap<String, Object>());
 					if (!map.containsKey("index")) map.put("index", "index.class,index.jwsl,index.php,index.html");
 					if (!map.containsKey("cacheClock")) map.put("cacheClock", "-1");
 					if (!map.containsKey("dns")) map.put("dns", "false");
 					if (!map.containsKey("dnsf")) map.put("dnsf", new File(dir, "dns.cfg").toString());
-					if (!map.containsKey("com")) map.put("com", new HashMap<String, Object>());
+					if (!map.containsKey("com")) map.put("com", new LinkedHashMap<String, Object>());
 					HashMap<String, Object> telnet = (HashMap<String, Object>)map.get("com");
 					if (!telnet.containsKey("enabled")) telnet.put("enabled", "true");
 					if (!telnet.containsKey("bindport")) telnet.put("bindport", "6049");
@@ -151,8 +152,8 @@ public class JavaWebServer {
 			});
 			mainConfig.load();
 			mainConfig.save();
-			final int cl = Integer.parseInt((String)mainConfig.get("connlimit", null));
-			hostsConfig = new Config("hosts", new File((String)mainConfig.get("hosts", null)), new ConfigFormat() {
+			final int cl = Integer.parseInt((String)mainConfig.get("connlimit"));
+			hostsConfig = new Config("hosts", new File((String)mainConfig.get("hosts")), new ConfigFormat() {
 				
 				@Override
 				public void format(HashMap<String, Object> map) {
@@ -195,10 +196,10 @@ public class JavaWebServer {
 			});
 			hostsConfig.load();
 			hostsConfig.save();
-			boolean dns = mainConfig.get("dns", null).equals("true");
+			boolean dns = mainConfig.get("dns").equals("true");
 			RecordHolder holder = null;
 			if (dns) {
-				holder = new RecordHolder(new File((String)mainConfig.get("dnsf", null)));
+				holder = new RecordHolder(new File((String)mainConfig.get("dnsf")));
 			}
 			setupFolders();
 			File lf = new File(fileManager.getLogs(), "" + (System.currentTimeMillis() / 1000L));
@@ -209,21 +210,21 @@ public class JavaWebServer {
 			Logger.log("Loaded Configs");
 			Logger.log("Loading Connection Handling");
 			ThreadWorker.initQueue(cl < 1 ? 10000000 : cl);
-			for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount", null)); i++) {
+			for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount")); i++) {
 				ThreadWorker worker = new ThreadWorker();
 				worker.start();
 			}
 			if (dns) { // TODO maybe split off into different cfgs than above
 				ThreadDNSWorker.holder = holder;
 				ThreadDNSWorker.initQueue(cl < 1 ? 10000000 : cl);
-				for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount", null)); i++) {
+				for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount")); i++) {
 					ThreadDNSWorker worker = new ThreadDNSWorker();
 					worker.start();
 				}
 			}
 			Logger.log("Loading Plugins");
 			BaseLoader.loadBases();
-			HashMap<String, Object> com = ((HashMap<String, Object>)mainConfig.get("com", null));
+			HashMap<String, Object> com = ((HashMap<String, Object>)mainConfig.get("com"));
 			if (((String)com.get("enabled")).equals("true")) {
 				Logger.log("Starting Com Server on " + ((String)com.get("bindip")) + ":" + ((String)com.get("bindport")));
 				ComServer server = new ComServer();

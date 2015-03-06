@@ -11,8 +11,8 @@ public class BaseLoader {
 		PatchRegistry.registerPatch(new PatchSecurity("Security"));
 		PatchRegistry.registerPatch(new PatchOverride("Override"));
 		// special
-		PatchRegistry.registerPatch(new PatchEnforceRedirect("EnforceRedirect"));
-		PatchRegistry.registerPatch(new PatchMultiHost("MultiHost"));
+		// PatchRegistry.registerPatch(new PatchEnforceRedirect("EnforceRedirect")); deprecated
+		// PatchRegistry.registerPatch(new PatchMultiHost("MultiHost")); deprecated
 		PatchRegistry.registerPatch(new PatchContentType("ContentType"));
 		PatchRegistry.registerPatch(new PatchCacheControl("CacheControl"));
 		// methods
@@ -22,7 +22,7 @@ public class BaseLoader {
 		
 		// server side languages
 		PatchRegistry.registerPatch(new PatchJavaLoader("JavaLoader"));
-		PatchRegistry.registerPatch(new PatchJWSL("JWSL"));
+		// PatchRegistry.registerPatch(new PatchJWSL("JWSL")); deprecated
 		PatchRegistry.registerPatch(new PatchPHP("PHP"));
 		
 		// caching
