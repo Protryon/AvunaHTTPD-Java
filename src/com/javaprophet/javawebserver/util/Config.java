@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Scanner;
 import java.util.Set;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
@@ -14,7 +15,7 @@ import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 public class Config {
 	private final File cfg;
 	private ConfigFormat format = null;
-	private HashMap<String, Object> cm = new HashMap<String, Object>();
+	private HashMap<String, Object> cm = new LinkedHashMap<String, Object>();
 	public final String name;
 	private final String iconf;
 	public static final HashMap<String, Config> configs = new HashMap<String, Config>();
@@ -113,7 +114,7 @@ public class Config {
 				String name = line.substring(0, line.length() - 1);
 				boolean base = pl++ == 0;
 				if (!base) {
-					HashMap<String, Object> nmap = new HashMap<String, Object>();
+					LinkedHashMap<String, Object> nmap = new LinkedHashMap<String, Object>();
 					map.put(name, nmap);
 					readMap(nmap, in);
 				}
