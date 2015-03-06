@@ -121,8 +121,8 @@ public class ResponsePacket extends Packet {
 			}
 		}
 		long ret = System.nanoTime();
-		// System.out.println((as - start) / 1000000D + " start-as");
-		// System.out.println((pw - as) / 1000000D + " as-pw");
-		// System.out.println((ret - pw) / 1000000D + " pw-ret");
+		Logger.log((as - start) / 1000000D + " start-as");
+		Logger.log((pw - as) / 1000000D + " as-pw");
+		Logger.log((ret - pw) / 1000000D + " pw-ret");
 	}
 }

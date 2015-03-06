@@ -210,6 +210,8 @@ public class CommandProcessor {
 			}
 			s.close();
 			out.println("JCOMP completed.");
+		}else if (command.equals("mem")) {
+			out.println(((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576) + "/" + (Runtime.getRuntime().totalMemory() / 1048576) + " (MB) memory used.");
 		}else if (command.equals("shell")) {
 			if (targs.length() > 0) {
 				Thread temp = null;

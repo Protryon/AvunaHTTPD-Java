@@ -169,13 +169,13 @@ public class ThreadWorker extends Thread {
 						workQueue.add(focus);
 					}
 					long cur = System.nanoTime();
-					// System.out.println((benchStart - ps) / 1000000D + " ps-start");
-					// System.out.println((set - benchStart) / 1000000D + " start-set");
-					// System.out.println((proc1 - set) / 1000000D + " set-proc1");
-					// System.out.println((resp - proc1) / 1000000D + " proc1-resp");
-					// System.out.println((proc2 - resp) / 1000000D + " resp-proc2");
-					// System.out.println((write - proc2) / 1000000D + " proc2-write");
-					// System.out.println((cur - write) / 1000000D + " write-cur");
+					// Logger.log((benchStart - ps) / 1000000D + " ps-start");
+					// Logger.log((set - benchStart) / 1000000D + " start-set");
+					// Logger.log((proc1 - set) / 1000000D + " set-proc1");
+					// Logger.log((resp - proc1) / 1000000D + " proc1-resp");
+					// Logger.log((proc2 - resp) / 1000000D + " resp-proc2");
+					// Logger.log((write - proc2) / 1000000D + " proc2-write");
+					// Logger.log((cur - write) / 1000000D + " write-cur");
 					if (incomingRequest.host.getDebug()) {
 						Logger.log(JavaWebServer.crlf + incomingRequest.toString().trim());
 					}

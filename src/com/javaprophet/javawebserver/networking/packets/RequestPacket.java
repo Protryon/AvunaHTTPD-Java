@@ -102,6 +102,7 @@ public class RequestPacket extends Packet {
 				headers.addHeader(headerLine);
 				hdr++;
 			}
+			long he = System.nanoTime();
 			if (hdr > 100) {
 				break;
 			}
@@ -127,12 +128,12 @@ public class RequestPacket extends Packet {
 		long pb = System.nanoTime();
 		incomingRequest.body = new Resource(bbody, headers.hasHeader("Content-Type") ? headers.getHeader("Content-Type") : "application/octet-stream");
 		long cur = System.nanoTime();
-		// System.out.println((pir - start) / 1000000D + " start-pir");
-		// System.out.println((rlr - pir) / 1000000D + " pir-rlr");
-		// System.out.println((ss - rlr) / 1000000D + " rlr-ss");
-		// System.out.println((ph - ss) / 1000000D + " ss-ph");
-		// System.out.println((pb - ph) / 1000000D + " ph-pb");
-		// System.out.println((cur - pb) / 1000000D + " pb-cur");
+		// Logger.log((pir - start) / 1000000D + " start-pir");
+		// Logger.log((rlr - pir) / 1000000D + " pir-rlr");
+		// Logger.log((ss - rlr) / 1000000D + " rlr-ss");
+		// Logger.log((ph - ss) / 1000000D + " ss-ph");
+		// Logger.log((pb - ph) / 1000000D + " ph-pb");
+		// Logger.log((cur - pb) / 1000000D + " pb-cur");
 		return incomingRequest;
 	}
 	
