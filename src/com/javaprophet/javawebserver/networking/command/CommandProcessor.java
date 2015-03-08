@@ -38,8 +38,8 @@ public class CommandProcessor {
 			if (sf.isDirectory()) {
 				recurseHTML(sw, sf, ng);
 			}else {
-				String ext = sf.getName().substring(sf.getName().lastIndexOf(".") + 1);
-				if (!(ext.equals("html") || ext.equals("htm") || ext.equals("css") || ext.equals("js") || ext.equals("txt") || ext.equals("php"))) continue;
+				String ext = sf.getName().substring(sf.getName().lastIndexOf(".") + 1).toLowerCase();
+				if (!(ext.equals("html") || ext.equals("json") || ext.equals("xml") || ext.equals("xhtml") || ext.equals("htm") || ext.equals("css") || ext.equals("js") || ext.equals("txt") || ext.equals("php"))) continue;
 				try {
 					Scanner s = new Scanner(sf);
 					int l = 0;
