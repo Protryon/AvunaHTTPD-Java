@@ -104,10 +104,7 @@ public class CommandProcessor {
 		
 		// If else statements here, no usage of switch as the server should support JDK/JRE 6.45 (or laziness)
 		if (command.equals("exit") || command.equals("stop")) {
-			JavaWebServer.patchBus.preExit();
-			if (JavaWebServer.mainConfig != null) {
-				JavaWebServer.mainConfig.save();
-			}
+			
 			// TODO: No pls make better exit method.
 			System.exit(0);
 		}else if (command.equals("reload")) {

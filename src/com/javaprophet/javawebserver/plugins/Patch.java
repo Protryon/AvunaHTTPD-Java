@@ -33,6 +33,10 @@ public abstract class Patch {
 		}
 	}
 	
+	public File getDirectory() {
+		return JavaWebServer.fileManager.getPlugin(this);
+	}
+	
 	public void log(String line) {
 		Logger.log(name + ": " + line);
 	}

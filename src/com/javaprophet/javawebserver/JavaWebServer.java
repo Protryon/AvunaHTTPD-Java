@@ -216,6 +216,15 @@ public class JavaWebServer {
 			});
 			hostsConfig.load();
 			hostsConfig.save();
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				public void run() {
+					Logger.log("Softly Terminating!");
+					JavaWebServer.patchBus.preExit();
+					if (JavaWebServer.mainConfig != null) {
+						JavaWebServer.mainConfig.save();
+					}
+				}
+			});
 			boolean dns = mainConfig.get("dns").equals("true");
 			RecordHolder holder = null;
 			if (dns) {

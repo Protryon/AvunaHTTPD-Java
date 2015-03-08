@@ -12,6 +12,7 @@ public class ThreadDNSWorker extends Thread {
 	public static RecordHolder holder;
 	
 	public ThreadDNSWorker() {
+		this.setDaemon(true);
 		workers.add(this);
 	}
 	

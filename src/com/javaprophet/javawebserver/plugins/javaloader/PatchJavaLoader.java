@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.MessageDigest;
@@ -13,6 +14,7 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.zip.CRC32;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.hosts.Host;
@@ -25,12 +27,34 @@ import com.javaprophet.javawebserver.plugins.PatchRegistry;
 import com.javaprophet.javawebserver.plugins.base.PatchSecurity;
 import com.javaprophet.javawebserver.plugins.javaloader.lib.DatabaseManager;
 import com.javaprophet.javawebserver.plugins.javaloader.lib.HTMLCache;
+import com.javaprophet.javawebserver.util.Config;
+import com.javaprophet.javawebserver.util.ConfigFormat;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class PatchJavaLoader extends Patch {
 	
+	private Config config = null;
+	
 	public PatchJavaLoader(String name) {
 		super(name);
+		log("Loading JavaLoader Config & Security");
+		try {
+			secjlcl = new JavaLoaderClassLoader(new URL[]{JavaWebServer.fileManager.getPlugin(PatchRegistry.getPatchForClass(PatchSecurity.class)).toURI().toURL()}, this.getClass().getClassLoader());
+		}catch (MalformedURLException e1) {
+			e1.printStackTrace();
+		}
+		config = new Config(name, new File(getDirectory(), "config.cfg"), new ConfigFormat() {
+			public void format(HashMap<String, Object> map) {
+				
+			}
+		});
+		try {
+			config.load();
+		}catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		config.save();
+		((PatchSecurity)PatchRegistry.getPatchForClass(PatchSecurity.class)).loadBases(this);
 		log("Loading JavaLoader Libs");
 		try {
 			lib = new File(JavaWebServer.fileManager.getMainDir(), (String)pcfg.get("lib"));
@@ -72,27 +96,12 @@ public class PatchJavaLoader extends Patch {
 			for (JavaLoaderSession jls : sessions) {
 				jls.unloadJLCL();
 			}
+			security.clear();
+			secjlcl = null;
 			System.gc();
 			Thread.sleep(1000L);
 			sessions.clear();
-			lib = new File(JavaWebServer.fileManager.getMainDir(), (String)pcfg.get("lib"));
-			if (!lib.exists() || !lib.isDirectory()) {
-				lib.mkdirs();
-			}
-			URLClassLoader sysloader = (URLClassLoader)ClassLoader.getSystemClassLoader();
-			Class sysclass = URLClassLoader.class; // TODO: reloading classpath sereral times?
-			try {
-				Method method = sysclass.getDeclaredMethod("addURL", URL.class);
-				method.setAccessible(true);
-				method.invoke(sysloader, new Object[]{lib.toURI().toURL()});
-				for (File f : lib.listFiles()) {
-					if (!f.isDirectory() && f.getName().endsWith(".jar")) {
-						method.invoke(sysloader, new Object[]{f.toURI().toURL()});
-					}
-				}
-			}catch (Throwable t) {
-				Logger.logError(t);
-			}
+			((PatchSecurity)PatchRegistry.getPatchForClass(PatchSecurity.class)).loadBases(this);
 			for (Host host : JavaWebServer.hosts.values()) {
 				for (VHost vhost : host.getVHosts()) {
 					vhost.initJLS(new URL[]{vhost.getHTDocs().toURI().toURL()});
@@ -131,15 +140,18 @@ public class PatchJavaLoader extends Patch {
 						bout = null;
 						String name = "";
 						try {
-							name = session.getJLCL().addClass(b);
+							name = (session == null ? secjlcl : session.getJLCL()).addClass(b);
 						}catch (LinkageError er) {
 							// Logger.logError(er);
 							continue;
 						}
-						Class<?> cls = session.getJLCL().loadClass(name);
+						Class<?> cls = (session == null ? secjlcl : session.getJLCL()).loadClass(name);
 						if (JavaLoader.class.isAssignableFrom(cls)) {
+							if (!config.containsKey(name)) {
+								config.set(name, new LinkedHashMap<String, Object>());
+							}
 							JavaLoader jl = (JavaLoader)cls.newInstance();
-							jl.init(session.getVHost());
+							jl.init(session == null ? null : session.getVHost(), (LinkedHashMap<String, Object>)config.get(name));
 							if (jl.getType() == 3) {
 								security.add((JavaLoaderSecurity)jl);
 							}else {
@@ -157,7 +169,11 @@ public class PatchJavaLoader extends Patch {
 		}
 	}
 	
-	public static void loadBaseSecurity(JavaLoaderSecurity sec) {
+	public void loadBaseSecurity(JavaLoaderSecurity sec) {
+		if (!config.containsKey(sec.getClass().getName())) {
+			config.set(sec.getClass().getName(), new LinkedHashMap<String, Object>());
+		}
+		sec.init(null, (LinkedHashMap<String, Object>)config.get(sec.getClass().getName()));
 		security.add(sec);
 	}
 	
@@ -171,7 +187,7 @@ public class PatchJavaLoader extends Patch {
 	}
 	
 	public static ArrayList<JavaLoaderSecurity> security = new ArrayList<JavaLoaderSecurity>();
-	
+	private static JavaLoaderClassLoader secjlcl;
 	public static File lib = null;
 	
 	@Override
@@ -186,6 +202,10 @@ public class PatchJavaLoader extends Patch {
 		}catch (SQLException e) {
 			Logger.logError(e);
 		}
+		config.save();
+		for (JavaLoader jl : security) {
+			jl.destroy();
+		}
 		for (JavaLoaderSession session : sessions) {
 			if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
 				jl.destroy();
@@ -198,7 +218,10 @@ public class PatchJavaLoader extends Patch {
 		HTMLCache.reloadAll();
 		for (JavaLoaderSession session : sessions) {
 			if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
-				jl.reload();
+				if (!config.containsKey(jl.getClass().getName())) {
+					config.set(jl.getClass().getName(), new LinkedHashMap<String, Object>());
+				}
+				jl.reload((LinkedHashMap<String, Object>)config.get(jl.getClass().getName()));
 			}
 		}
 	}
@@ -257,8 +280,11 @@ public class PatchJavaLoader extends Patch {
 				if (loaderClass == null || !JavaLoader.class.isAssignableFrom(loaderClass)) {
 					return null;
 				}
+				if (!config.containsKey(name)) {
+					config.set(name, new LinkedHashMap<String, Object>());
+				}
 				loader = ((Class<? extends JavaLoader>)loaderClass).newInstance();
-				loader.init(request.host);
+				loader.init(request.host, (LinkedHashMap<String, Object>)config.get(name));
 				jls.put(name, loader);
 			}else {
 				loader = jls.get(name);

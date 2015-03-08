@@ -20,6 +20,7 @@ public class ThreadStreamWorker extends Thread {
 		this.work = work;
 		this.req = req;
 		this.resp = resp;
+		this.setDaemon(true);
 	}
 	
 	public void run() {

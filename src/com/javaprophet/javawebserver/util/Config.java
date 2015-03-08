@@ -41,7 +41,7 @@ public class Config {
 		configs.put(name, this);
 	}
 	
-	private boolean has(String name) {
+	public boolean containsKey(String name) {
 		return cm.containsKey(name);
 	}
 	
@@ -53,7 +53,7 @@ public class Config {
 		return cm.keySet();
 	}
 	
-	public void set(String name, String value) {
+	public void set(String name, Object value) {
 		cm.put(name, value);
 	}
 	

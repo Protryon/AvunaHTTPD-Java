@@ -17,10 +17,13 @@ public class PatchSecurity extends Patch {
 	
 	public PatchSecurity(String name) {
 		super(name);
-		PatchJavaLoader.loadBaseSecurity(new JLSBFlood());
-		PatchJavaLoader.loadBaseSecurity(new JLSBProxy());
-		PatchJavaLoader.loadBaseSecurity(new JLSFlood());
-		PatchJavaLoader.loadBaseSecurity(new JLSUA());
+	}
+	
+	public void loadBases(PatchJavaLoader pjl) {
+		pjl.loadBaseSecurity(new JLSBFlood());
+		pjl.loadBaseSecurity(new JLSBProxy());
+		pjl.loadBaseSecurity(new JLSFlood());
+		pjl.loadBaseSecurity(new JLSUA());
 	}
 	
 	private int minDrop = 100;

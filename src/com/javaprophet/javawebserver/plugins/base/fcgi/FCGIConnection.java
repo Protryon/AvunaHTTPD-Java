@@ -18,6 +18,7 @@ public class FCGIConnection extends Thread {
 		out = new DataOutputStream(s.getOutputStream());
 		out.flush();
 		in = new DataInputStream(s.getInputStream());
+		this.setDaemon(true);
 	}
 	
 	private final HashMap<Integer, IFCGIListener> listeners = new HashMap<Integer, IFCGIListener>();

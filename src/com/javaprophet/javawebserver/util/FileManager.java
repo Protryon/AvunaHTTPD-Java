@@ -33,24 +33,35 @@ public class FileManager {
 		return new String(hexChars);
 	}
 	
+	private File dir = null, plugins = null, logs = null;
+	private HashMap<String, File> plugin = new HashMap<String, File>();
+	private HashMap<String, File> base = new HashMap<String, File>();
+	
 	public File getMainDir() {
-		return new File((String)JavaWebServer.mainConfig.get("dir"));
+		return dir == null ? (dir = new File((String)JavaWebServer.mainConfig.get("dir"))) : dir;
 	}
 	
 	public File getPlugins() {
-		return new File((String)JavaWebServer.mainConfig.get("plugins"));
+		return plugins == null ? (plugins = new File((String)JavaWebServer.mainConfig.get("plugins"))) : plugins;
 	}
 	
 	public File getLogs() {
-		return new File((String)JavaWebServer.mainConfig.get("logs"));
+		return logs == null ? (logs = new File((String)JavaWebServer.mainConfig.get("logs"))) : logs;
 	}
 	
 	public File getPlugin(Patch p) {
-		return new File(getPlugins(), p.name);
+		if (!plugin.containsKey(p.name)) {
+			plugin.put(p.name, new File(getPlugins(), p.name));
+		}
+		return plugin.get(p.name);
 	}
 	
 	public File getBaseFile(String name) {
-		return new File(getMainDir(), name);
+		if (!base.containsKey(name)) {
+			base.put(name, new File(getMainDir(), name));
+			
+		}
+		return base.get(name);
 	}
 	
 	public void clearCache() throws IOException {

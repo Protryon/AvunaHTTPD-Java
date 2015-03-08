@@ -11,14 +11,14 @@ import com.javaprophet.javawebserver.util.Logger;
  */
 public class TCPServer extends Thread implements IServer {
 	public TCPServer() {
-		
+		this.setDaemon(true);
 	}
 	
 	public void run() {
 		try {
 			ServerSocket server = new ServerSocket(53);
 			while (!server.isClosed()) {
-				final Socket s = server.accept();
+				final Socket s = server.accept(); // TODO: thread
 				s.setSoTimeout(1000);
 				final DataOutputStream out = new DataOutputStream(s.getOutputStream());
 				out.flush();

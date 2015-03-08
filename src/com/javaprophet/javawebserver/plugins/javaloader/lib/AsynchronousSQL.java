@@ -85,6 +85,7 @@ public class AsynchronousSQL {
 	
 	public AsynchronousSQL(DatabaseManager manager) {
 		this.manager = manager;
+		trm.setDaemon(true);
 	}
 	
 	public int addQuery(String query, int interval, boolean isQuery, boolean alwaysRun) {

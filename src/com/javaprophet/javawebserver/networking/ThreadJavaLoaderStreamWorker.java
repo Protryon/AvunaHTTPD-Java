@@ -18,6 +18,7 @@ public class ThreadJavaLoaderStreamWorker extends Thread {
 		this.req = req;
 		this.resp = resp;
 		this.reqStream = reqStream;
+		this.setDaemon(true);
 	}
 	
 	public void run() {
