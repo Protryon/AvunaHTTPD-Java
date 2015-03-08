@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
 import com.javaprophet.javawebserver.JavaWebServer;
@@ -29,6 +30,30 @@ public class CommandProcessor {
 	public static String selectedHost = "main";
 	public static String selectedVHost = "main";
 	
+	private static void recurseHTML(PrintWriter sw, File f) {
+		for (File sf : f.listFiles()) {
+			if (sf.isDirectory()) {
+				recurseHTML(sw, sf);
+			}else {
+				try {
+					Scanner s = new Scanner(sf);
+					int l = 0;
+					ArrayList<String> lines = new ArrayList<String>(64);
+					while (s.hasNextLine()) {
+						lines.add(s.nextLine());
+						l++;
+					}
+					sw.println(sf.getName() + ":" + l);
+					for (String line : lines) {
+						sw.println(line);
+					}
+				}catch (IOException e) {
+					Logger.logError(e);
+				}
+			}
+		}
+	}
+	
 	/**
 	 * Processes our command
 	 * 
@@ -41,32 +66,34 @@ public class CommandProcessor {
 		se = false;
 		// Fancy command parsing right here
 		String[] cargs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1).split(" ") : new String[0];
-		String[] tcargs = new String[cargs.length];
-		int nl = 0;
-		boolean iq = false;
-		String tmp = "";
-		for (int i = 0; i < cargs.length; i++) {
-			boolean niq = false;
-			String ct = cargs[i].trim();
-			if (!iq && ct.startsWith("\"")) {
-				iq = true;
-				niq = true;
+		if (cargs.length > 0) {
+			String[] tcargs = new String[cargs.length];
+			int nl = 0;
+			boolean iq = false;
+			String tmp = "";
+			for (int i = 0; i < cargs.length; i++) {
+				boolean niq = false;
+				String ct = cargs[i].trim();
+				if (!iq && ct.startsWith("\"")) {
+					iq = true;
+					niq = true;
+				}
+				if (iq) {
+					tmp += (niq ? ct.substring(1) : ct) + " ";
+				}else {
+					tcargs[nl++] = ct;
+				}
+				if ((!niq || ct.length() > 3) && iq && ct.endsWith("\"")) {
+					iq = false;
+					String n = tmp.trim();
+					if (n.endsWith("\"")) n = n.substring(0, n.length() - 1);
+					tcargs[nl++] = n;
+					tmp = "";
+				}
 			}
-			if (iq) {
-				tmp += (niq ? ct.substring(1) : ct) + " ";
-			}else {
-				tcargs[nl++] = ct;
-			}
-			if ((!niq || ct.length() > 3) && iq && ct.endsWith("\"")) {
-				iq = false;
-				String n = tmp.trim();
-				if (n.endsWith("\"")) n = n.substring(0, n.length() - 1);
-				tcargs[nl++] = n;
-				tmp = "";
-			}
+			cargs = new String[nl];
+			System.arraycopy(tcargs, 0, cargs, 0, nl);
 		}
-		cargs = new String[nl];
-		System.arraycopy(tcargs, 0, cargs, 0, nl);
 		String targs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1) : "";
 		command = command.contains(" ") ? command.substring(0, command.indexOf(" ")) : command;
 		
@@ -123,6 +150,28 @@ public class CommandProcessor {
 			selectedHost = cargs[0];
 			selectedVHost = cargs[1];
 			out.println("Selected " + selectedHost + "/" + selectedVHost + "!");
+		}else if (command.equals("jhtmldir")) {
+			if (cargs.length != 2) {
+				out.println("Invalid arguments. (input[dir], output[html])");
+				return;
+			}
+			try {
+				Host phost = JavaWebServer.hosts.get(selectedHost);
+				if (phost == null) {
+					out.println("Invalid Selected Host (select)");
+					return;
+				}
+				VHost host = phost.getVHost(selectedVHost);
+				File temp = null;
+				PrintWriter ps = new PrintWriter(new FileOutputStream(cargs[1]));
+				recurseHTML(ps, new File(cargs[0]));
+				ps.flush();
+				ps.close();
+			}catch (IOException e) {
+				Logger.log(e.getMessage());
+				e.printStackTrace(out);
+			}
+			out.println("JHTMLDIR completed.");
 		}else if (command.equals("jhtml")) {
 			if (cargs.length != 2 && cargs.length != 1) {
 				out.println("Invalid arguments. (input, output[optional])");
@@ -298,6 +347,7 @@ public class CommandProcessor {
 			out.println("select    - select a host/vhost");
 			out.println("restart   - attempts to restart the server by running the provided .bat/.sh files");
 			out.println("jhtml     - converts HTML to JavaLoaderPrint");
+			out.println("jhtmldir  - converts a directory of HTML or other text to HTMLCache format.");
 			out.println("jcomp     - compiles all(or specified) files in the htsrc folder to the htdocs folder");
 			out.println("jphp      - attempts to roughly convert PHP->Java, will require fine tuning");
 			out.println("flushjl   - attempts to clear JavaLoaders, and reload them. Currently not functional.");
