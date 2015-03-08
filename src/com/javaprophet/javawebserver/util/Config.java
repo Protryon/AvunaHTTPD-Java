@@ -13,7 +13,7 @@ import java.util.Set;
 public class Config {
 	private final File cfg;
 	private ConfigFormat format = null;
-	private HashMap<String, Object> cm = new LinkedHashMap<String, Object>();
+	private LinkedHashMap<String, Object> cm = new LinkedHashMap<String, Object>();
 	public final String name;
 	private final String iconf;
 	public static final HashMap<String, Config> configs = new HashMap<String, Config>();
@@ -29,7 +29,7 @@ public class Config {
 		configs.put(name, this);
 	}
 	
-	public HashMap<String, Object> getMaster() {
+	public LinkedHashMap<String, Object> getMaster() {
 		return cm;
 	}
 	
@@ -86,7 +86,7 @@ public class Config {
 	
 	private int pl = 0;
 	
-	private void readMap(HashMap<String, Object> map, Scanner in) {
+	private void readMap(LinkedHashMap<String, Object> map, Scanner in) {
 		while (in.hasNextLine()) {
 			String line = in.nextLine().trim();
 			if (line.contains("#")) {
@@ -111,13 +111,13 @@ public class Config {
 		}
 	}
 	
-	private void writeMap(String name, HashMap<String, Object> map, PrintStream out) {
+	private void writeMap(String name, LinkedHashMap<String, Object> map, PrintStream out) {
 		out.println(getWTab() + name + "{");
 		tabLevel += 1;
 		for (String key : map.keySet()) {
 			Object o = map.get(key);
 			if (o.getClass().equals(map.getClass())) {
-				writeMap(key, (HashMap<String, Object>)o, out);
+				writeMap(key, (LinkedHashMap<String, Object>)o, out);
 			}else {
 				out.println(getWTab() + key + "=" + o);
 			}
