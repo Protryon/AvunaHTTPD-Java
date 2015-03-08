@@ -20,7 +20,7 @@ import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
 import com.javaprophet.javawebserver.util.Logger;
 
 /**
- * Handles all incoming commands from ComClient & ComServer.
+ * Handles all incoming commands from ComClient & ComServer & the console.
  */
 public class CommandProcessor {
 	
@@ -30,11 +30,16 @@ public class CommandProcessor {
 	public static String selectedHost = "main";
 	public static String selectedVHost = "main";
 	
-	private static void recurseHTML(PrintWriter sw, File f) {
+	private static void recurseHTML(PrintWriter sw, File f, File ng) {
 		for (File sf : f.listFiles()) {
+			if (sf.getAbsolutePath().equals(ng.getAbsolutePath())) {
+				continue;
+			}
 			if (sf.isDirectory()) {
-				recurseHTML(sw, sf);
+				recurseHTML(sw, sf, ng);
 			}else {
+				String ext = sf.getName().substring(sf.getName().lastIndexOf(".") + 1);
+				if (!(ext.equals("html") || ext.equals("htm") || ext.equals("css") || ext.equals("js") || ext.equals("txt") || ext.equals("php"))) continue;
 				try {
 					Scanner s = new Scanner(sf);
 					int l = 0;
@@ -164,7 +169,7 @@ public class CommandProcessor {
 				VHost host = phost.getVHost(selectedVHost);
 				File temp = null;
 				PrintWriter ps = new PrintWriter(new FileOutputStream(cargs[1]));
-				recurseHTML(ps, new File(cargs[0]));
+				recurseHTML(ps, temp = new File(cargs[0]), temp);
 				ps.flush();
 				ps.close();
 			}catch (IOException e) {
