@@ -41,6 +41,32 @@ public class CommandProcessor {
 		se = false;
 		// Fancy command parsing right here
 		String[] cargs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1).split(" ") : new String[0];
+		String[] tcargs = new String[cargs.length];
+		int nl = 0;
+		boolean iq = false;
+		String tmp = "";
+		for (int i = 0; i < cargs.length; i++) {
+			boolean niq = false;
+			String ct = cargs[i].trim();
+			if (!iq && ct.startsWith("\"")) {
+				iq = true;
+				niq = true;
+			}
+			if (iq) {
+				tmp += (niq ? ct.substring(1) : ct) + " ";
+			}else {
+				tcargs[nl++] = ct;
+			}
+			if ((!niq || ct.length() > 3) && iq && ct.endsWith("\"")) {
+				iq = false;
+				String n = tmp.trim();
+				if (n.endsWith("\"")) n = n.substring(0, n.length() - 1);
+				tcargs[nl++] = n;
+				tmp = "";
+			}
+		}
+		cargs = new String[nl];
+		System.arraycopy(tcargs, 0, cargs, 0, nl);
 		String targs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1) : "";
 		command = command.contains(" ") ? command.substring(0, command.indexOf(" ")) : command;
 		
