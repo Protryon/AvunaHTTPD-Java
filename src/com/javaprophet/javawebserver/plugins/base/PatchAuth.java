@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Scanner;
 import sun.misc.BASE64Decoder;
 import com.javaprophet.javawebserver.JavaWebServer;
@@ -27,7 +28,7 @@ public class PatchAuth extends Patch {
 		auths = new ArrayList<Auth>();
 		HashMap<String, Object> authList;
 		if (!map.containsKey("authList")) {
-			map.put("authList", authList = new HashMap<String, Object>());
+			map.put("authList", authList = new LinkedHashMap<String, Object>());
 		}else {
 			authList = (HashMap<String, Object>)map.get("authList");
 		}
