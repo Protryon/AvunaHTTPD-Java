@@ -29,7 +29,7 @@ public class PatchContentType extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return response.body != null && data != null;
+		return response.body != null;
 	}
 	
 	@Override

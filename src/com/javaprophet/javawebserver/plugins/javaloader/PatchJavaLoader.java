@@ -240,10 +240,10 @@ public class PatchJavaLoader extends Patch {
 			HashMap<String, String> loadedClasses = request.host.getJLS().getLoadedClasses();
 			JavaLoaderClassLoader jlcl = request.host.getJLS().getJLCL();
 			HashMap<String, JavaLoader> jls = request.host.getJLS().getJLS();
+			crc.update(data);
+			String sha = crc.getValue() + "";
+			digest = System.nanoTime();
 			synchronized (loadedClasses) {
-				crc.update(data);
-				String sha = crc.getValue() + "";
-				digest = System.nanoTime();
 				name = loadedClasses.get(sha);
 				if (name == null || name.equals("")) {
 					name = jlcl.addClass(data);

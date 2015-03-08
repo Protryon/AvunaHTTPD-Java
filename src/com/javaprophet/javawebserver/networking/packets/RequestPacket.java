@@ -25,6 +25,7 @@ public class RequestPacket extends Packet {
 	public boolean forbode = false;
 	public String oredir = "";
 	public String[] overrideIndex = null;
+	public String overrideType = null;
 	// javaloader vars
 	public HashMap<String, String> get = new HashMap<String, String>();
 	public HashMap<String, String> post = new HashMap<String, String>();

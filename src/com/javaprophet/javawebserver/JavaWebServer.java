@@ -30,7 +30,7 @@ import com.javaprophet.javawebserver.util.FileManager;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class JavaWebServer {
-	public static final String VERSION = "1.0.1b";
+	public static final String VERSION = "1.0.2";
 	public static Config mainConfig, hostsConfig;
 	private static Config dnsConfig;
 	public static final FileManager fileManager = new FileManager();
@@ -162,9 +162,9 @@ public class JavaWebServer {
 						HashMap<String, Object> host = (HashMap<String, Object>)map.get(key);
 						if (!host.containsKey("port")) host.put("port", "80");
 						if (!host.containsKey("ip")) host.put("ip", "0.0.0.0");
-						if (!host.containsKey("vhosts")) host.put("vhosts", new HashMap<String, Object>());
+						if (!host.containsKey("vhosts")) host.put("vhosts", new LinkedHashMap<String, Object>());
 						HashMap<String, Object> vhosts = (HashMap<String, Object>)host.get("vhosts");
-						if (!vhosts.containsKey("main")) vhosts.put("main", new HashMap<String, Object>());
+						if (!vhosts.containsKey("main")) vhosts.put("main", new LinkedHashMap<String, Object>());
 						for (String vkey : vhosts.keySet()) {
 							HashMap<String, Object> vhost = (HashMap<String, Object>)vhosts.get(vkey);
 							if (!vhost.containsKey("enabled")) vhost.put("enabled", "true");
@@ -173,7 +173,7 @@ public class JavaWebServer {
 							if (!vhost.containsKey("htdocs")) vhost.put("htdocs", fileManager.getBaseFile("htdocs").toString());
 							if (!vhost.containsKey("htsrc")) vhost.put("htsrc", fileManager.getBaseFile("htsrc").toString());
 						}
-						if (!host.containsKey("ssl")) host.put("ssl", new HashMap<String, Object>());
+						if (!host.containsKey("ssl")) host.put("ssl", new LinkedHashMap<String, Object>());
 						HashMap<String, Object> ssl = (HashMap<String, Object>)host.get("ssl");
 						if (!ssl.containsKey("enabled")) ssl.put("enabled", "false");
 						if (!ssl.containsKey("keyFile")) ssl.put("keyFile", fileManager.getBaseFile("ssl/keyFile").toString());

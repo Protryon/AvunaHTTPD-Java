@@ -67,6 +67,14 @@ public class PatchOverride extends Patch {
 			case index:
 				request.overrideIndex = d.args;
 				break;
+			case mime:
+				for (int i = 1; i < d.args.length; i++) {
+					if (rt.endsWith(d.args[i])) {
+						request.overrideType = d.args[0];
+						break;
+					}
+				}
+				break;
 			}
 		}
 		return;
@@ -92,7 +100,7 @@ public class PatchOverride extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return request.forbode || request.oredir.length() > 0;
+		return request.forbode || request.oredir.length() > 0 || request.overrideType != null;
 	}
 	
 	@Override
@@ -105,6 +113,9 @@ public class PatchOverride extends Patch {
 			ResponseGenerator.generateDefaultResponse(response, StatusCode.FOUND);
 			response.headers.addHeader("Location", request.oredir);
 			return null;
+		}
+		if (request.overrideType != null && response.body != null) {
+			response.body.type = request.overrideType;
 		}
 		return data;
 	}

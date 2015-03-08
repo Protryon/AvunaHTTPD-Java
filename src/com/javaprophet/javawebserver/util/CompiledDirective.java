@@ -52,6 +52,12 @@ public class CompiledDirective {
 				throw new IllegalArgumentException();
 			}
 			break;
+		case mime:
+			if (cargs.length < 2) {
+				System.out.println("[WARNING] MIME directive has invalid arguments: " + args + " expecting at one mime-type argument, and at least one extension/filename(ex .txt or index.txt).");
+				throw new IllegalArgumentException();
+			}
+			break;
 		}
 		this.args = cargs;
 	}

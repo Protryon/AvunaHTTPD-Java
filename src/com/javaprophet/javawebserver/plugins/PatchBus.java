@@ -44,7 +44,7 @@ public class PatchBus {
 			if (patch.pcfg.get("enabled").equals("true") && patch.shouldProcessResponse(response, request, rres)) {
 				rres = patch.processResponse(response, request, rres);
 			}
-			// System.out.println(request.target + patch.name + ": " + (System.nanoTime() - start) / 1000000D + " ms");
+			// Logger.log(request.target + patch.name + ": " + (System.nanoTime() - start) / 1000000D + " ms");
 			if (response.drop) {
 				break;
 			}
