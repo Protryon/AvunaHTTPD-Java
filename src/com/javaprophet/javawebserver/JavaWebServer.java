@@ -111,6 +111,27 @@ public class JavaWebServer {
 	
 	public static final ArrayList<String> bannedIPs = new ArrayList<String>();
 	
+	public static void checkPerms(File root) {
+		if (!root.exists() && root.isDirectory()) {
+			try {
+				root.mkdirs();
+			}catch (SecurityException e) {
+				Logger.log("[FATAL] Cannot read/write to " + root.getAbsolutePath());
+				System.exit(0);
+			}
+		}
+		if (!root.canWrite()) {
+			Logger.log("[FATAL] Cannot write to " + root.getAbsolutePath());
+			System.exit(0);
+		}else if (!root.canRead()) {
+			Logger.log("[FATAL] Cannot read from " + root.getAbsolutePath());
+			System.exit(0);
+		}
+		if (root.isDirectory()) for (File f : root.listFiles()) {
+			checkPerms(f);
+		}
+	}
+	
 	public static void main(String[] args) {
 		try {
 			if (args.length >= 1 && args[0].equals("cmd")) {
@@ -121,6 +142,7 @@ public class JavaWebServer {
 			}
 			System.setProperty("line.separator", crlf);
 			final File cfg = new File(args.length > 0 ? args[0] : (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\jws\\main.cfg" : "/etc/jws/main.cfg"));
+			checkPerms(cfg.getParentFile());
 			mainConfig = new Config("main", cfg, new ConfigFormat() {
 				public void format(HashMap<String, Object> map) {
 					if (!map.containsKey("version")) map.put("version", JavaWebServer.VERSION);
