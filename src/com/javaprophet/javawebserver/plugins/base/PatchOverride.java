@@ -69,7 +69,7 @@ public class PatchOverride extends Patch {
 				break;
 			case mime:
 				for (int i = 1; i < d.args.length; i++) {
-					if (rt.endsWith(d.args[i])) {
+					if (rt.matches(d.args[i])) {
 						request.overrideType = d.args[0];
 						break;
 					}
