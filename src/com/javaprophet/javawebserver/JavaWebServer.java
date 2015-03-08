@@ -157,7 +157,7 @@ public class JavaWebServer {
 				
 				@Override
 				public void format(HashMap<String, Object> map) {
-					if (!map.containsKey("main")) map.put("main", new HashMap<String, Object>());
+					if (!map.containsKey("main")) map.put("main", new LinkedHashMap<String, Object>());
 					for (String key : map.keySet()) {
 						HashMap<String, Object> host = (HashMap<String, Object>)map.get(key);
 						if (!host.containsKey("port")) host.put("port", "80");
