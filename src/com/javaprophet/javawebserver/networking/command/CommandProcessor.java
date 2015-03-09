@@ -163,7 +163,7 @@ public class CommandProcessor {
 					out.println("Invalid Selected Host (select)");
 					return;
 				}
-				VHost host = phost.getVHost(selectedVHost);
+				VHost host = phost.getVHostByName(selectedVHost);
 				File temp = null;
 				PrintWriter ps = new PrintWriter(new FileOutputStream(cargs[1]));
 				recurseHTML(ps, temp = new File(cargs[0]), temp);
@@ -185,7 +185,7 @@ public class CommandProcessor {
 					out.println("Invalid Selected Host (select)");
 					return;
 				}
-				VHost host = phost.getVHost(selectedVHost);
+				VHost host = phost.getVHostByName(selectedVHost);
 				File sc2 = null;
 				Scanner scan2 = new Scanner(new FileInputStream(sc2 = new File(host.getHTDocs(), cargs[0])));
 				PrintStream ps;
@@ -226,7 +226,7 @@ public class CommandProcessor {
 				out.println("Invalid Selected Host (select)");
 				return;
 			}
-			VHost host = phost.getVHost(selectedVHost);
+			VHost host = phost.getVHostByName(selectedVHost);
 			try {
 				File sc2 = null;
 				Scanner scan2 = new Scanner(new FileInputStream(sc2 = new File(host.getHTDocs(), cargs[0])));
