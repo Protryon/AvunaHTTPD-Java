@@ -191,17 +191,20 @@ public class CommandProcessor {
 				PrintStream ps;
 				File temp = null;
 				if (cargs.length == 2) {
-					ps = new PrintStream(new FileOutputStream(temp = new File(host.getHTSrc(), cargs[1])));
+					temp = new File(host.getHTSrc(), cargs[1]);
 				}else {
-					ps = new PrintStream(new FileOutputStream(temp = new File(host.getHTSrc(), cargs[0].substring(0, cargs[0].indexOf(".")) + ".java")));
+					temp = new File(host.getHTSrc(), cargs[0].substring(0, cargs[0].indexOf(".")) + ".java");
 				}
-				ps.println("import java.io.PrintStream;");
+				temp.getParentFile().mkdirs();
+				temp.createNewFile();
+				ps = new PrintStream(new FileOutputStream(temp));
+				ps.println("import com.javaprophet.javawebserver.plugins.javaloader.HTMLBuilder;");
 				ps.println("import com.javaprophet.javawebserver.networking.packets.RequestPacket;");
 				ps.println("import com.javaprophet.javawebserver.networking.packets.ResponsePacket;");
-				ps.println("import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderStream;");
+				ps.println("import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderPrint;");
 				ps.println();
-				ps.println("public class " + (cargs.length == 3 ? temp.getName().substring(0, temp.getName().indexOf(".")) : sc2.getName().substring(0, sc2.getName().indexOf("."))) + " extends JavaLoaderPrint {");
-				ps.println("    public void generate(PrintStream out, ResponsePacket response, RequestPacket request) {");
+				ps.println("public class " + (cargs.length == 2 ? temp.getName().substring(0, temp.getName().indexOf(".")) : sc2.getName().substring(0, sc2.getName().indexOf("."))) + " extends JavaLoaderPrint {");
+				ps.println("    public void generate(HTMLBuilder out, ResponsePacket response, RequestPacket request) {");
 				while (scan2.hasNextLine()) {
 					String line = scan2.nextLine().trim();
 					ps.println("        " + "out.println(\"" + line.replace("\\", "\\\\").replace("\"", "\\\"") + "\");");
