@@ -3,6 +3,10 @@ package com.javaprophet.javawebserver.plugins.javaloader.lib;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import com.javaprophet.javawebserver.hosts.VHost;
+import com.javaprophet.javawebserver.plugins.javaloader.JavaLoader;
+import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderSecurity;
+import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
 
 public class JavaLoaderUtil {
 	public static String mysql_real_escape_string(Statement stmt, String str) throws SQLException {
@@ -28,5 +32,20 @@ public class JavaLoaderUtil {
 		resultSet.first();
 		String r = resultSet.getString(1);
 		return r.substring(1, r.length() - 1);
+	}
+	
+	public static JavaLoader getJavaLoaderByClass(VHost host, Class<? extends JavaLoader> jlc) {
+		if (host != null) {
+			if (host.getJLS().getJLS().containsKey(jlc.getName())) {
+				return host.getJLS().getJLS().get(jlc.getName());
+			}
+		}else {
+			for (JavaLoaderSecurity jls : PatchJavaLoader.security) {
+				if (jls.getClass().getName().equals(jlc.getName())) {
+					return jls;
+				}
+			}
+		}
+		return null;
 	}
 }

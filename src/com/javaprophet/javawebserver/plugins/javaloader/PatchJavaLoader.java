@@ -91,21 +91,6 @@ public class PatchJavaLoader extends Patch {
 		}
 	}
 	
-	public JavaLoader getJavaLoaderByClass(VHost host, Class<? extends JavaLoader> jlc) {
-		if (host != null) {
-			if (host.getJLS().getJLS().containsKey(jlc.getName())) {
-				return host.getJLS().getJLS().get(jlc.getName());
-			}
-		}else {
-			for (JavaLoaderSecurity jls : security) {
-				if (jls.getClass().getName().equals(jlc.getName())) {
-					return jls;
-				}
-			}
-		}
-		return null;
-	}
-	
 	public void flushjl() {
 		try {
 			for (JavaLoaderSession jls : sessions) {
