@@ -35,13 +35,17 @@ public class JavaLoaderUtil {
 	}
 	
 	public static JavaLoader getJavaLoaderByClass(VHost host, Class<? extends JavaLoader> jlc) {
+		return getJavaLoaderByClass(host, jlc.getName());
+	}
+	
+	public static JavaLoader getJavaLoaderByClass(VHost host, String jlc) {
 		if (host != null) {
-			if (host.getJLS().getJLS().containsKey(jlc.getName())) {
-				return host.getJLS().getJLS().get(jlc.getName());
+			if (host.getJLS().getJLS().containsKey(jlc)) {
+				return host.getJLS().getJLS().get(jlc);
 			}
 		}else {
 			for (JavaLoaderSecurity jls : PatchJavaLoader.security) {
-				if (jls.getClass().getName().equals(jlc.getName())) {
+				if (jls.getClass().getName().equals(jlc)) {
 					return jls;
 				}
 			}
