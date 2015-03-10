@@ -39,6 +39,7 @@ public class Host extends Thread {
 	}
 	
 	public Host(String name, String ip, int port, int cl, boolean isSSL, File keyFile, String keyPassword, String keystorePassword) {
+		super(name + " Host");
 		this.name = name;
 		this.ip = ip;
 		this.port = port;

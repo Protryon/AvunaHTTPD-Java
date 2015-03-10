@@ -11,6 +11,7 @@ import com.javaprophet.javawebserver.util.Logger;
  */
 public class TCPServer extends Thread implements IServer {
 	public TCPServer() {
+		super("DNS TCPServer");
 		this.setDaemon(true);
 	}
 	

@@ -21,6 +21,7 @@ public class ComServer extends Thread {
 	 * Our constructor
 	 */
 	public ComServer() {
+		super("ComServer");
 		this.setDaemon(true);
 	}
 	

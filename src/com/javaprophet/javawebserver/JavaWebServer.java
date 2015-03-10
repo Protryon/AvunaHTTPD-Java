@@ -248,6 +248,7 @@ public class JavaWebServer {
 				ThreadDNSWorker.initQueue(cl < 1 ? 10000000 : cl);
 				for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount")); i++) {
 					ThreadDNSWorker worker = new ThreadDNSWorker();
+					worker.setDaemon(true);
 					worker.start();
 				}
 			}

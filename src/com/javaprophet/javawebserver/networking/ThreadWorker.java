@@ -8,6 +8,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.ArrayBlockingQueue;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.hosts.Host;
 import com.javaprophet.javawebserver.http.ResponseGenerator;
@@ -16,8 +17,10 @@ import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class ThreadWorker extends Thread {
+	private static int nid = 1;
 	
 	public ThreadWorker() {
+		super("JWS Worker Thread #" + nid++);
 		workers.add(this);
 	}
 	
@@ -26,11 +29,11 @@ public class ThreadWorker extends Thread {
 	}
 	
 	private static ArrayList<ThreadWorker> workers = new ArrayList<ThreadWorker>();
-	private static CircularQueue<Work> workQueue;
+	private static ArrayBlockingQueue<Work> workQueue;
 	protected static HashMap<String, Integer> connIPs = new HashMap<String, Integer>();
 	
 	public static void initQueue(int connlimit) {
-		workQueue = new CircularQueue<Work>(connlimit);
+		workQueue = new ArrayBlockingQueue<Work>(connlimit);
 	}
 	
 	public static int getConnectionsForIP(String ip) {
@@ -88,6 +91,14 @@ public class ThreadWorker extends Thread {
 					if (focus.sns == 0L) {
 						focus.sns = System.nanoTime() + 10000000000L;
 						workQueue.add(focus);
+						if (workQueue.isEmpty()) {
+							try {
+								Thread.sleep(10L);
+							}catch (InterruptedException e) {
+								Logger.logError(e);
+							}
+						}
+						continue;
 					}else {
 						if (focus.sns >= System.nanoTime()) {
 							boolean sleep = workQueue.isEmpty();

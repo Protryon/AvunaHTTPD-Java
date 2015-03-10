@@ -14,6 +14,7 @@ public class FCGIConnection extends Thread {
 	private final DataInputStream in;
 	
 	public FCGIConnection(String ip, int port) throws IOException {
+		super("FCGI Thread");
 		s = new Socket(ip, port);
 		out = new DataOutputStream(s.getOutputStream());
 		out.flush();

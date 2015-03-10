@@ -6,7 +6,7 @@ import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class Logger extends Thread {
+public class Logger {
 	public static Logger INSTANCE;
 	private PrintStream ps = null;
 	private PrintWriter cache = null;
@@ -16,6 +16,7 @@ public class Logger extends Thread {
 		this.ps = ps;
 		cacheAccess = new StringWriter();
 		cache = new PrintWriter(cacheAccess);
+		logThread.setDaemon(true);
 		logThread.start();
 	}
 	
@@ -38,7 +39,8 @@ public class Logger extends Thread {
 		cache.print(str);
 	}
 	
-	public final Thread logThread = new Thread() {
+	public final Thread logThread = new Thread("Log Flush Thread") {
+		
 		public void run() {
 			while (true) {
 				String cache = cacheAccess.toString().replace("-DATE-", timestamp.format(new Date()));
@@ -47,7 +49,7 @@ public class Logger extends Thread {
 				try {
 					Thread.sleep(1000L);
 				}catch (InterruptedException e) {
-					e.printStackTrace();
+					Logger.logError(e);
 				}
 			}
 		}

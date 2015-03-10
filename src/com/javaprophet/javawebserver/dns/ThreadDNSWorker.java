@@ -5,14 +5,16 @@ import java.net.DatagramPacket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import com.javaprophet.javawebserver.networking.CircularQueue;
+import java.util.concurrent.ArrayBlockingQueue;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class ThreadDNSWorker extends Thread {
 	
 	public static RecordHolder holder;
+	private static int nid = 1;
 	
 	public ThreadDNSWorker() {
+		super("JWS DNS Accept Thread #" + nid++);
 		this.setDaemon(true);
 		workers.add(this);
 	}
@@ -22,11 +24,11 @@ public class ThreadDNSWorker extends Thread {
 	}
 	
 	private static ArrayList<ThreadDNSWorker> workers = new ArrayList<ThreadDNSWorker>();
-	private static CircularQueue<Work> workQueue;
+	private static ArrayBlockingQueue<Work> workQueue;
 	private static HashMap<String, Integer> connIPs = new HashMap<String, Integer>();
 	
 	public static void initQueue(int connlimit) {
-		workQueue = new CircularQueue<Work>(connlimit);
+		workQueue = new ArrayBlockingQueue<Work>(connlimit);
 	}
 	
 	public static int getConnectionsForIP(String ip) {

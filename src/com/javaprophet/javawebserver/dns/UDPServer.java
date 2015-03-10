@@ -10,6 +10,7 @@ import com.javaprophet.javawebserver.util.Logger;
 public class UDPServer extends Thread implements IServer {
 	
 	public UDPServer() {
+		super("DNS UDPServer");
 		this.setDaemon(true);
 	}
 	

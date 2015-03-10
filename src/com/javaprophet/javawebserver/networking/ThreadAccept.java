@@ -17,8 +17,10 @@ public class ThreadAccept extends Thread {
 	private final ServerSocket server;
 	private final int cl;
 	private final Host host;
+	private static int nid = 1;
 	
 	public ThreadAccept(Host host, ServerSocket server, int cl) {
+		super("JWS Accept Thread #" + nid++);
 		this.server = server;
 		this.cl = cl;
 		this.host = host;
