@@ -147,11 +147,16 @@ public class PatchJavaLoader extends Patch {
 						}
 						Class<?> cls = (session == null ? secjlcl : session.getJLCL()).loadClass(name);
 						if (JavaLoader.class.isAssignableFrom(cls)) {
-							if (!config.containsKey(name)) {
-								config.set(name, new LinkedHashMap<String, Object>());
+							LinkedHashMap<String, Object> ocfg = null;
+							if (!config.containsKey(session.getVHost().getHostPath())) {
+								config.set(session.getVHost().getHostPath(), new LinkedHashMap<String, Object>());
+							}
+							ocfg = (LinkedHashMap<String, Object>)config.get(session.getVHost().getHostPath());
+							if (!ocfg.containsKey(name)) {
+								ocfg.put(name, new LinkedHashMap<String, Object>());
 							}
 							JavaLoader jl = (JavaLoader)cls.newInstance();
-							jl.init(session == null ? null : session.getVHost(), (LinkedHashMap<String, Object>)config.get(name));
+							jl.init(session == null ? null : session.getVHost(), (LinkedHashMap<String, Object>)ocfg.get(name));
 							if (jl.getType() == 3) {
 								security.add((JavaLoaderSecurity)jl);
 							}else {
@@ -170,10 +175,15 @@ public class PatchJavaLoader extends Patch {
 	}
 	
 	public void loadBaseSecurity(JavaLoaderSecurity sec) {
-		if (!config.containsKey(sec.getClass().getName())) {
-			config.set(sec.getClass().getName(), new LinkedHashMap<String, Object>());
+		LinkedHashMap<String, Object> ocfg = null;
+		if (!config.containsKey("security")) {
+			config.set("security", new LinkedHashMap<String, Object>());
 		}
-		sec.init(null, (LinkedHashMap<String, Object>)config.get(sec.getClass().getName()));
+		ocfg = (LinkedHashMap<String, Object>)config.get("security");
+		if (!ocfg.containsKey(sec.getClass().getName())) {
+			ocfg.put(sec.getClass().getName(), new LinkedHashMap<String, Object>());
+		}
+		sec.init(null, (LinkedHashMap<String, Object>)ocfg.get(sec.getClass().getName()));
 		security.add(sec);
 	}
 	
@@ -218,10 +228,15 @@ public class PatchJavaLoader extends Patch {
 		HTMLCache.reloadAll();
 		for (JavaLoaderSession session : sessions) {
 			if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
-				if (!config.containsKey(jl.getClass().getName())) {
-					config.set(jl.getClass().getName(), new LinkedHashMap<String, Object>());
+				LinkedHashMap<String, Object> ocfg = null;
+				if (!config.containsKey(session.getVHost().getHostPath())) {
+					config.set(session.getVHost().getHostPath(), new LinkedHashMap<String, Object>());
 				}
-				jl.reload((LinkedHashMap<String, Object>)config.get(jl.getClass().getName()));
+				ocfg = (LinkedHashMap<String, Object>)config.get(session.getVHost().getHostPath());
+				if (!ocfg.containsKey(jl.getClass().getName())) {
+					ocfg.put(jl.getClass().getName(), new LinkedHashMap<String, Object>());
+				}
+				jl.reload((LinkedHashMap<String, Object>)ocfg.get(jl.getClass().getName()));
 			}
 		}
 	}
@@ -280,11 +295,16 @@ public class PatchJavaLoader extends Patch {
 				if (loaderClass == null || !JavaLoader.class.isAssignableFrom(loaderClass)) {
 					return null;
 				}
-				if (!config.containsKey(name)) {
-					config.set(name, new LinkedHashMap<String, Object>());
+				LinkedHashMap<String, Object> ocfg = null;
+				if (!config.containsKey(request.host.getHostPath())) {
+					config.set(request.host.getHostPath(), new LinkedHashMap<String, Object>());
+				}
+				ocfg = (LinkedHashMap<String, Object>)config.get(request.host.getHostPath());
+				if (!ocfg.containsKey(name)) {
+					ocfg.put(name, new LinkedHashMap<String, Object>());
 				}
 				loader = ((Class<? extends JavaLoader>)loaderClass).newInstance();
-				loader.init(request.host, (LinkedHashMap<String, Object>)config.get(name));
+				loader.init(request.host, (LinkedHashMap<String, Object>)ocfg.get(name));
 				jls.put(name, loader);
 			}else {
 				loader = jls.get(name);

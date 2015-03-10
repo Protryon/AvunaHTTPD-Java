@@ -2,6 +2,7 @@ package com.javaprophet.javawebserver.dns;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import com.javaprophet.javawebserver.networking.CircularQueue;
@@ -125,6 +126,14 @@ public class ThreadDNSWorker extends Thread {
 					}
 				}
 				// System.out.println((System.nanoTime() - s) / 1000000D + " ms");
+			}catch (SocketException e) {
+				if (!focus.UDP) {
+					try {
+						((WorkTCP)focus).s.close();
+					}catch (IOException e1) {
+						Logger.logError(e1);
+					}
+				}
 			}catch (Exception e) {
 				Logger.logError(e);
 			}finally {
@@ -132,7 +141,7 @@ public class ThreadDNSWorker extends Thread {
 					try {
 						((WorkTCP)focus).s.close();
 					}catch (IOException e) {
-						e.printStackTrace();
+						Logger.logError(e);
 					}
 				}
 			}
