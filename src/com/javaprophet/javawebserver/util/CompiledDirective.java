@@ -36,25 +36,31 @@ public class CompiledDirective {
 		switch (directive) {
 		case forbid:
 			if (cargs.length != 1) {
-				System.out.println("[WARNING] FORBID directive has invalid arguments: " + args + " expecting one argument.");
+				Logger.log("[WARNING] FORBID directive has invalid arguments: " + args + " expecting one argument.");
 				throw new IllegalArgumentException();
 			}
 			break;
 		case redirect:
 			if (cargs.length != 2) {
-				System.out.println("[WARNING] REDIRECT directive has invalid arguments: " + args + " expecting two argument.");
+				Logger.log("[WARNING] REDIRECT directive has invalid arguments: " + args + " expecting two argument.");
 				throw new IllegalArgumentException();
 			}
 			break;
 		case index:
 			if (cargs.length == 0) {
-				System.out.println("[WARNING] INDEX directive has invalid arguments: " + args + " expecting at least one argument.");
+				Logger.log("[WARNING] INDEX directive has invalid arguments: " + args + " expecting at least one argument.");
 				throw new IllegalArgumentException();
 			}
 			break;
 		case mime:
-			if (cargs.length < 2) {
-				System.out.println("[WARNING] MIME directive has invalid arguments: " + args + " expecting at one mime-type argument, and at least one extension/filename(ex .txt or index.txt).");
+			if (cargs.length != 2) {
+				Logger.log("[WARNING] MIME directive has invalid arguments: " + args + " expecting one mime-type argument, and a regex argument.");
+				throw new IllegalArgumentException();
+			}
+			break;
+		case cache:
+			if (cargs.length != 2) {
+				Logger.log("[WARNING] CACHE directive has invalid arguments: " + args + " expecting a cache argument(off, or seconds, or -1 for perminant), and a regex argument.");
 				throw new IllegalArgumentException();
 			}
 			break;

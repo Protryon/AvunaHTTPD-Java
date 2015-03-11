@@ -1,7 +1,7 @@
 package com.javaprophet.javawebserver.util;
 
 public enum Directive {
-	forbid("forbid"), redirect("redirect"), index("index"), mime("mime");
+	forbid("forbid"), redirect("redirect"), index("index"), mime("mime"), cache("cache");
 	public final String name;
 	
 	Directive(String name) {

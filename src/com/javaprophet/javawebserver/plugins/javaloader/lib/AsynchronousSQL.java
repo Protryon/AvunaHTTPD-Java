@@ -179,6 +179,23 @@ public class AsynchronousSQL {
 		thr.start();// TODO: make worker threads
 	}
 	
+	public void syncQuery(final int id) {
+		AQuery aq = null;
+		for (AQuery aql : aqs) {
+			if (aql.id == id) {
+				aq = aql;
+				break;
+			}
+		}
+		if (aq != null) {
+			try {
+				aq.run();
+			}catch (SQLException e) {
+				Logger.logError(e);
+			}
+		}
+	}
+	
 	public void runAsync(String execute) {
 		toExec.add(execute);
 	}

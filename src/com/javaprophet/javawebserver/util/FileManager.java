@@ -230,6 +230,9 @@ public class FileManager {
 			if (cache.containsKey(nrt)) {
 				long t = System.currentTimeMillis();
 				long cc = Integer.parseInt(((String)JavaWebServer.mainConfig.get("cacheClock")));
+				if (request.overrideCache >= -1) {
+					cc = request.overrideCache;
+				}
 				boolean tc = cc > 0 && t - cc < cacheClock;
 				if (tc || cc == -1 || extCache.get(nrt).equals("application/x-java")) {
 					resource = cache.get(nrt);

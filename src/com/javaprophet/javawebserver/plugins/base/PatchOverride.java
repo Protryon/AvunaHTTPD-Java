@@ -68,11 +68,15 @@ public class PatchOverride extends Patch {
 				request.overrideIndex = d.args;
 				break;
 			case mime:
-				for (int i = 1; i < d.args.length; i++) {
-					if (rt.matches(d.args[i])) {
-						request.overrideType = d.args[0];
-						break;
-					}
+				if (rt.matches(d.args[1])) {
+					request.overrideType = d.args[0];
+					break;
+				}
+				break;
+			case cache:
+				if (rt.matches(d.args[1])) {
+					request.overrideCache = d.args[0].equals("off") ? 0 : Integer.parseInt(d.args[0]);
+					break;
 				}
 				break;
 			}
