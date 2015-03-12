@@ -20,7 +20,7 @@ public class ResponsePacket extends Packet {
 	public JavaLoaderStream reqStream = null;
 	
 	public byte[] serialize() {
-		return serialize(true);
+		return serialize(true, true);
 	}
 	
 	// public ResponsePacket clone() {
@@ -38,7 +38,7 @@ public class ResponsePacket extends Packet {
 	public byte[] cachedSerialize = null;
 	public ResponsePacket cachedPacket = null;
 	
-	public byte[] serialize(boolean data) {
+	public byte[] serialize(boolean data, boolean head) {
 		try {
 			long ps1 = System.nanoTime();
 			// ResponsePacket thisClone = clone();
@@ -50,14 +50,16 @@ public class ResponsePacket extends Packet {
 			}
 			long start = System.nanoTime();
 			StringBuilder ser = new StringBuilder();
-			ser.append((this.httpVersion + " " + this.statusCode + " " + this.reasonPhrase + JavaWebServer.crlf));
-			HashMap<String, ArrayList<String>> hdrs = this.headers.getHeaders();
-			for (String key : hdrs.keySet()) {
-				for (String val : hdrs.get(key)) {
-					ser.append((key + ": " + val + JavaWebServer.crlf));
+			if (head) {
+				ser.append((this.httpVersion + " " + this.statusCode + " " + this.reasonPhrase + JavaWebServer.crlf));
+				HashMap<String, ArrayList<String>> hdrs = this.headers.getHeaders();
+				for (String key : hdrs.keySet()) {
+					for (String val : hdrs.get(key)) {
+						ser.append((key + ": " + val + JavaWebServer.crlf));
+					}
 				}
+				ser.append(JavaWebServer.crlf);
 			}
-			ser.append(JavaWebServer.crlf);
 			cachedSerialize = ser.toString().getBytes();
 			byte[] add = null;
 			if (data && finalc != null) {
@@ -93,9 +95,24 @@ public class ResponsePacket extends Packet {
 	public long bwt = 0L;
 	public boolean reqTransfer = false;
 	
+	public byte[] subwrite = null;
+	public boolean validSub = true;
+	
+	public void subwrite() {
+		subwrite = serialize(true, false);
+		if (this.headers.hasHeader("Transfer-Encoding")) {
+			String te = this.headers.getHeader("Transfer-Encoding");
+			if (te.equals("chunked")) {
+				subwrite = null;
+				validSub = false;
+			}
+		}
+		this.bwt = System.nanoTime();
+	}
+	
 	public void write(DataOutputStream out) throws IOException {
 		long start = System.nanoTime();
-		byte[] write = serialize(request.method != Method.HEAD);
+		byte[] write = serialize(request.method != Method.HEAD, true);
 		long as = System.nanoTime();
 		this.bwt = System.nanoTime();
 		if (write == null) {

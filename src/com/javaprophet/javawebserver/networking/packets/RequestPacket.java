@@ -13,6 +13,7 @@ import com.javaprophet.javawebserver.hosts.VHost;
 import com.javaprophet.javawebserver.http.Headers;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.Resource;
+import com.javaprophet.javawebserver.networking.Work;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class RequestPacket extends Packet {
@@ -27,10 +28,37 @@ public class RequestPacket extends Packet {
 	public String[] overrideIndex = null;
 	public String overrideType = null;
 	public int overrideCache = -2;
+	public Work work;
+	public RequestPacket parent = null;
 	// javaloader vars
 	public HashMap<String, String> get = new HashMap<String, String>();
 	public HashMap<String, String> post = new HashMap<String, String>();
 	public HashMap<String, String> cookie = new HashMap<String, String>();
+	
+	public RequestPacket clone() {
+		RequestPacket ret = new RequestPacket();
+		ret.headers = headers.clone();
+		ret.drop = drop;
+		ret.body = body.clone();
+		ret.httpVersion = httpVersion;
+		ret.target = target;
+		ret.method = method;
+		ret.userIP = userIP;
+		ret.userPort = userPort;
+		ret.ssl = ssl;
+		ret.host = host;
+		ret.forbode = forbode;
+		ret.oredir = oredir;
+		ret.overrideIndex = overrideIndex;
+		ret.overrideType = overrideType;
+		ret.overrideCache = overrideCache;
+		ret.work = work;
+		ret.parent = parent;
+		ret.get = get;
+		ret.post = post;
+		ret.cookie = cookie;
+		return ret;
+	}
 	
 	public void procJL() throws UnsupportedEncodingException {
 		String get = target.contains("?") ? target.substring(target.indexOf("?") + 1) : "";

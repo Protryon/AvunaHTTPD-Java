@@ -75,6 +75,90 @@ public class ThreadWorker extends Thread {
 		return workQueue.size();
 	}
 	
+	public static ResponsePacket processSubRequest(ResponsePacket pre, RequestPacket parent, RequestPacket req) {
+		long benchStart = System.nanoTime();
+		req.work = parent.work;
+		String host = req.headers.hasHeader("Host") ? req.headers.getHeader("Host") : "";
+		req.host = parent.host;
+		req.ssl = parent.ssl;
+		req.userIP = parent.userIP;
+		req.userPort = parent.userPort;
+		JavaWebServer.patchBus.processPacket(req);
+		if (req.drop) {
+			parent.drop = true;
+			Logger.log(req.userIP + " " + req.method.name + "-SUB " + req.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
+			return null;
+		}
+		ResponsePacket outgoingResponse = pre == null ? new ResponsePacket() : pre;
+		outgoingResponse.request = req;
+		long proc1 = System.nanoTime();
+		boolean cont = ResponseGenerator.process(req, outgoingResponse);
+		long resp = System.nanoTime();
+		if (cont) JavaWebServer.patchBus.processPacket(outgoingResponse);
+		if (outgoingResponse.drop) {
+			parent.drop = true;
+			Logger.log(req.userIP + " " + req.method.name + "-SUB " + req.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
+			return null;
+		}
+		long proc2 = System.nanoTime();
+		outgoingResponse.subwrite();
+		Logger.log(req.userIP + " " + req.method.name + "-SUB " + req.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase + " took: " + (outgoingResponse.bwt - benchStart) / 1000000D + " ms");
+		return outgoingResponse;
+	}
+	
+	private static class ThreadSubRequest extends Thread {
+		public ResponsePacket pre;
+		private RequestPacket parent, req;
+		
+		public ThreadSubRequest(ResponsePacket pre, RequestPacket parent, RequestPacket req) {
+			this.pre = pre;
+			this.parent = parent;
+			this.req = req;
+		}
+		
+		public boolean done = false;
+		
+		public void run() {
+			try {
+				pre = processSubRequest(pre, parent, req);
+			}finally {
+				done = true;
+			}
+		}
+	}
+	
+	public static ResponsePacket[] processSubRequests(RequestPacket... reqs) {
+		ResponsePacket[] resps = new ResponsePacket[reqs.length];
+		for (int i = 0; i < resps.length; i++)
+			resps[i] = new ResponsePacket();
+		ArrayList<ThreadSubRequest> subreqs = new ArrayList<ThreadSubRequest>();
+		for (int i = 0; i < resps.length; i++) {
+			ThreadSubRequest tsr = new ThreadSubRequest(resps[i], reqs[i].parent, reqs[i]);
+			tsr.setDaemon(true);
+			tsr.start();
+			subreqs.add(tsr);
+		}
+		major:
+		while (true) {
+			for (ThreadSubRequest subreq : subreqs) {
+				if (!subreq.done) {
+					try {
+						Thread.sleep(0L, 100000); // TODO: longer? smarter?
+					}catch (InterruptedException e) {
+						Logger.logError(e);
+					}
+					continue major;
+				}
+			}
+			System.out.println("complete");
+			for (int i = 0; i < resps.length; i++) {
+				resps[i] = subreqs.get(i).pre;
+			}
+			break;
+		}
+		return resps;
+	}
+	
 	public void run() {
 		while (keepRunning) {
 			Work focus = workQueue.poll();
@@ -135,6 +219,7 @@ public class ThreadWorker extends Thread {
 						focus.s.close();
 						continue;
 					}
+					incomingRequest.work = focus;
 					String host = incomingRequest.headers.hasHeader("Host") ? incomingRequest.headers.getHeader("Host") : "";
 					incomingRequest.host = focus.host.getVHost(host);
 					incomingRequest.ssl = focus.ssl;

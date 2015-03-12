@@ -28,6 +28,8 @@ public class BaseLoader {
 		// caching
 		PatchRegistry.registerPatch(new PatchETag("ETag"));
 		
+		PatchRegistry.registerPatch(new PatchInline("Inline")); // TODO: perhaps before ETag? probably
+		
 		// transfer/encoding
 		PatchRegistry.registerPatch(new PatchGZip("GZip"));
 		
