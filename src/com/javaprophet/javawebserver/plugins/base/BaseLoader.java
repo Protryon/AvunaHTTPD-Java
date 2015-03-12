@@ -25,10 +25,10 @@ public class BaseLoader {
 		// PatchRegistry.registerPatch(new PatchJWSL("JWSL")); deprecated
 		PatchRegistry.registerPatch(new PatchPHP("PHP"));
 		
+		PatchRegistry.registerPatch(new PatchInline("Inline")); // TODO: perhaps before ETag? probably
+		
 		// caching
 		PatchRegistry.registerPatch(new PatchETag("ETag"));
-		
-		PatchRegistry.registerPatch(new PatchInline("Inline")); // TODO: perhaps before ETag? probably
 		
 		// transfer/encoding
 		PatchRegistry.registerPatch(new PatchGZip("GZip"));

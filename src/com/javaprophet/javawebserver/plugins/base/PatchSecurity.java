@@ -37,6 +37,7 @@ public class PatchSecurity extends Patch {
 	@Override
 	public boolean shouldProcessPacket(Packet packet) {
 		if (!(packet instanceof RequestPacket)) return false;
+		if (((RequestPacket)packet).parent != null) return false;
 		if (PatchJavaLoader.security == null || PatchJavaLoader.security.size() < 1) return false;
 		return true;
 	}

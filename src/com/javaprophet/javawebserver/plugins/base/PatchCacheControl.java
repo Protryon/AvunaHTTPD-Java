@@ -35,7 +35,7 @@ public class PatchCacheControl extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return response.body != null && response.headers.hasHeader("Content-Type");
+		return request.parent == null && response.body != null && response.headers.hasHeader("Content-Type");
 	}
 	
 	@Override

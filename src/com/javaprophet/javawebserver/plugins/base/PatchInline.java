@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.CRC32;
 import sun.misc.BASE64Encoder;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.networking.ThreadWorker;
@@ -51,6 +52,13 @@ public class PatchInline extends Patch {
 	private final Pattern inlineScript = Pattern.compile("<script.*src=\".*\".*>", Pattern.CASE_INSENSITIVE);
 	// css
 	private final Pattern inlineCSS = Pattern.compile("url\\(.*\\)", Pattern.CASE_INSENSITIVE);
+	
+	private final HashMap<String, String> cacheBase64 = new HashMap<String, String>();
+	
+	public void clearCache() {
+		cacheBase64.clear();
+	}
+	
 	private final BASE64Encoder encoder = new BASE64Encoder();
 	private final Comparator<SubReq> subReqComparator = new Comparator<SubReq>() {
 		public int compare(SubReq x, SubReq y) {
@@ -90,7 +98,11 @@ public class PatchInline extends Patch {
 	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
+		CRC32 process = new CRC32();
+		process.update(data);
+		long l = process.getValue();
 		String html = new String(data); // TODO: encoding support
+		
 		ArrayList<SubReq> subreqs = new ArrayList<SubReq>();
 		String ct = response.headers.getHeader("Content-Type");
 		if (ct.startsWith("text/html")) {
@@ -210,7 +222,15 @@ public class PatchInline extends Patch {
 		for (int i = 0; i < resps.length; i++) {
 			if (resps[i] == null || resps[i].subwrite == null) continue;
 			SubReq sr = subreqs.get(i);
-			String rep = "data:" + resps[i].headers.getHeader("Content-Type") + ";base64," + new BASE64Encoder().encode(resps[i].subwrite).replace(JavaWebServer.crlf, "");
+			String base64 = "";
+			String cachePath = resps[i].request.host.getHostPath() + resps[i].request.target;
+			if (!cacheBase64.containsKey(cachePath)) {
+				base64 = new BASE64Encoder().encode(resps[i].subwrite).replace(JavaWebServer.crlf, "");
+				cacheBase64.put(cachePath, base64);
+			}else {
+				base64 = cacheBase64.get(cachePath);
+			}
+			String rep = "data:" + resps[i].headers.getHeader("Content-Type") + ";base64," + base64;
 			rep = sr.forig.replace(sr.orig, rep);
 			html = html.substring(0, sr.start + offset) + rep + html.substring(sr.end + offset);
 			offset += rep.length() - sr.forig.length();

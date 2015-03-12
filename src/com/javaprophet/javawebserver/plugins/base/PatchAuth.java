@@ -117,6 +117,7 @@ public class PatchAuth extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
+		if (request.parent != null) return false;
 		if (response.body != null) {
 			for (Auth auth : auths) {
 				if (auth.matchesDir(request.target)) {

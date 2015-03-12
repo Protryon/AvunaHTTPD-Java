@@ -14,6 +14,7 @@ import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.plugins.Patch;
 import com.javaprophet.javawebserver.plugins.PatchRegistry;
 import com.javaprophet.javawebserver.plugins.base.PatchChunked;
+import com.javaprophet.javawebserver.plugins.base.PatchInline;
 import com.javaprophet.javawebserver.plugins.javaloader.lib.HTMLCache;
 
 public class FileManager {
@@ -80,6 +81,7 @@ public class FileManager {
 			tbCache.remove(delKeys[i]);
 		}
 		cConfigCache.clear();
+		((PatchInline)PatchRegistry.getPatchForClass(PatchInline.class)).clearCache();
 	}
 	
 	public void flushjl() throws IOException {
@@ -259,6 +261,7 @@ public class FileManager {
 						tbCache.remove(delKeys[i]);
 					}
 					cConfigCache.clear();
+					((PatchInline)PatchRegistry.getPatchForClass(PatchInline.class)).clearCache();
 				}
 			}
 			if (resource == null) {
