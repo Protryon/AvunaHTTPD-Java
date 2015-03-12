@@ -150,7 +150,6 @@ public class ThreadWorker extends Thread {
 					continue major;
 				}
 			}
-			System.out.println("complete");
 			for (int i = 0; i < resps.length; i++) {
 				resps[i] = subreqs.get(i).pre;
 			}
