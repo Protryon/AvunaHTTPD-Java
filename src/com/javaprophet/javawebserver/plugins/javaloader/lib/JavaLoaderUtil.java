@@ -9,7 +9,7 @@ import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderSecurity;
 import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
 
 public class JavaLoaderUtil {
-	public static String mysql_real_escape_string(Statement stmt, String str) throws SQLException {
+	public static String mysql_real_escape_string(DatabaseManager manager, String str) throws SQLException {
 		if (str == null) {
 			return "NULL";
 		}
@@ -27,10 +27,12 @@ public class JavaLoaderUtil {
 		if (clean_string.replaceAll("[a-zA-Z0-9_!@#$%^&*()-=+~.;:,\\Q[\\E\\Q]\\E<>{}\\/?\\\\\"' ]", "").length() < 1) {
 			return clean_string;
 		}
+		Statement stmt = manager.leaseStatement();
 		stmt.executeQuery("SELECT QUOTE('" + clean_string + "')");
 		ResultSet resultSet = stmt.getResultSet();
 		resultSet.first();
 		String r = resultSet.getString(1);
+		manager.returnStatement(stmt);
 		return r.substring(1, r.length() - 1);
 	}
 	
