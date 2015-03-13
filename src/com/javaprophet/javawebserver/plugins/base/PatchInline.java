@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 import sun.misc.BASE64Encoder;
 import com.javaprophet.javawebserver.JavaWebServer;
+import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.networking.ThreadWorker;
 import com.javaprophet.javawebserver.networking.packets.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
@@ -139,6 +140,8 @@ public class PatchInline extends Patch {
 					RequestPacket subreq = request.clone();
 					subreq.parent = request;
 					subreq.target = href;
+					subreq.method = Method.GET;
+					subreq.body.data = null;
 					subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
 					subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
 					genreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
@@ -159,6 +162,8 @@ public class PatchInline extends Patch {
 					RequestPacket subreq = request.clone();
 					subreq.parent = request;
 					subreq.target = href;
+					subreq.method = Method.GET;
+					subreq.body.data = null;
 					subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
 					subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
 					genreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
@@ -179,6 +184,8 @@ public class PatchInline extends Patch {
 					RequestPacket subreq = request.clone();
 					subreq.parent = request;
 					subreq.target = href;
+					subreq.method = Method.GET;
+					subreq.body.data = null;
 					subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
 					subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
 					genreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
@@ -199,6 +206,8 @@ public class PatchInline extends Patch {
 					RequestPacket subreq = request.clone();
 					subreq.parent = request;
 					subreq.target = href;
+					subreq.method = Method.GET;
+					subreq.body.data = null;
 					subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
 					subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
 					genreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
@@ -220,6 +229,8 @@ public class PatchInline extends Patch {
 					RequestPacket subreq = request.clone();
 					subreq.parent = request;
 					subreq.target = href;
+					subreq.method = Method.GET;
+					subreq.body.data = null;
 					subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
 					subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
 					genreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));

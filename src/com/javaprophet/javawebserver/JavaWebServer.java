@@ -18,6 +18,7 @@ import com.javaprophet.javawebserver.dns.ThreadDNSWorker;
 import com.javaprophet.javawebserver.dns.UDPServer;
 import com.javaprophet.javawebserver.hosts.Host;
 import com.javaprophet.javawebserver.hosts.VHost;
+import com.javaprophet.javawebserver.networking.ThreadConnection;
 import com.javaprophet.javawebserver.networking.ThreadWorker;
 import com.javaprophet.javawebserver.networking.command.ComClient;
 import com.javaprophet.javawebserver.networking.command.ComServer;
@@ -238,10 +239,13 @@ public class JavaWebServer {
 			loadUnpacked();
 			Logger.log("Loaded Configs");
 			Logger.log("Loading Connection Handling");
-			ThreadWorker.initQueue(cl < 1 ? 10000000 : cl);
+			ThreadConnection.initQueue(cl < 1 ? 10000000 : cl);
+			ThreadWorker.initQueue();
 			for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount")); i++) {
 				ThreadWorker worker = new ThreadWorker();
 				worker.start();
+				ThreadConnection conn = new ThreadConnection();
+				conn.start();
 			}
 			if (dns) { // TODO maybe split off into different cfgs than above
 				ThreadDNSWorker.holder = holder;

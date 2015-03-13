@@ -54,14 +54,14 @@ public class ThreadAccept extends Thread {
 					if (chance >= minDrop) {
 						s.close();
 						JavaWebServer.bannedIPs.add(s.getInetAddress().getHostAddress());
-						ThreadWorker.clearIPs(s.getInetAddress().getHostAddress());
+						ThreadConnection.clearIPs(s.getInetAddress().getHostAddress());
 						continue;
 					}
 				}
 				DataOutputStream out = new DataOutputStream(s.getOutputStream());
 				out.flush();
 				DataInputStream in = new DataInputStream(s.getInputStream());
-				ThreadWorker.addWork(host, s, in, out, server instanceof SSLServerSocket);
+				ThreadConnection.addWork(host, s, in, out, server instanceof SSLServerSocket);
 			}catch (Exception e) {
 				Logger.logError(e);
 			}

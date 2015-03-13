@@ -58,15 +58,15 @@ public class ThreadStreamWorker extends Thread {
 			}
 			cos.finish();
 			// cos.close();
-			ThreadWorker.readdWork(work);
+			ThreadConnection.readdWork(work);
 		}catch (IOException e) {
 			if (!(e instanceof SocketException)) Logger.logError(e);
 		}finally {
 			String ip = work.s.getInetAddress().getHostAddress();
-			Integer cur = ThreadWorker.connIPs.get(ip);
+			Integer cur = ThreadConnection.connIPs.get(ip);
 			if (cur == null) cur = 1;
 			cur -= 1;
-			ThreadWorker.connIPs.put(ip, cur);
+			ThreadConnection.connIPs.put(ip, cur);
 			Logger.log(ip + " closed.");
 			try {
 				if (fin != null) fin.close();

@@ -2,7 +2,7 @@ package com.javaprophet.javawebserver.plugins.javaloader.security;
 
 import java.util.LinkedHashMap;
 import com.javaprophet.javawebserver.hosts.VHost;
-import com.javaprophet.javawebserver.networking.ThreadWorker;
+import com.javaprophet.javawebserver.networking.ThreadConnection;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderSecurity;
 
@@ -27,7 +27,7 @@ public class JLSBFlood extends JavaLoaderSecurity {
 	@Override
 	public int check(String ip) {
 		if (!enabled) return 0;
-		int ips = ThreadWorker.getConnectionsForIP(ip);
+		int ips = ThreadConnection.getConnectionsForIP(ip);
 		if (ips > maxConcurrentConns) {
 			return returnWeight;
 		}

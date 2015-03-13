@@ -25,7 +25,7 @@ public class ThreadJavaLoaderStreamWorker extends Thread {
 		try {
 			ChunkedOutputStream cos = new ChunkedOutputStream(work.out, resp, resp.headers.hasHeader("Content-Encoding") && resp.headers.getHeader("Content-Encoding").contains("gzip"));
 			reqStream.generate(cos, req, resp);
-			ThreadWorker.readdWork(work);
+			ThreadConnection.readdWork(work);
 		}catch (IOException e) {
 			Logger.logError(e);
 		}finally {

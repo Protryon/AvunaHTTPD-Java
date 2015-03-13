@@ -18,6 +18,7 @@ public class ResponsePacket extends Packet {
 	public String reasonPhrase = "";
 	public RequestPacket request;
 	public JavaLoaderStream reqStream = null;
+	public boolean done = false;
 	
 	public byte[] serialize() {
 		return serialize(true, true);
@@ -97,6 +98,31 @@ public class ResponsePacket extends Packet {
 	
 	public byte[] subwrite = null;
 	public boolean validSub = true;
+	public boolean close = false;
+	
+	public void prewrite() {
+		subwrite = serialize(request.method != Method.HEAD, true);
+		if (this.headers.hasHeader("Transfer-Encoding")) {
+			String te = this.headers.getHeader("Transfer-Encoding");
+			if (te.equals("chunked")) {
+				subwrite = null;
+				validSub = false;
+			}
+		}
+		this.bwt = System.nanoTime();
+		if (this.headers.hasHeader("Transfer-Encoding")) {
+			String te = this.headers.getHeader("Transfer-Encoding");
+			if (te.equals("chunked")) {
+				this.reqTransfer = true;
+			}
+		}
+		if (headers.hasHeader("Connection")) {
+			String c = headers.getHeader("Connection");
+			if (c.equals("Close")) {
+				close = true;
+			}
+		}
+	}
 	
 	public void subwrite() {
 		subwrite = serialize(true, false);
@@ -110,7 +136,7 @@ public class ResponsePacket extends Packet {
 		this.bwt = System.nanoTime();
 	}
 	
-	public void write(DataOutputStream out) throws IOException {
+	public void write(DataOutputStream out, boolean deprecated) throws IOException {
 		long start = System.nanoTime();
 		byte[] write = serialize(request.method != Method.HEAD, true);
 		long as = System.nanoTime();
@@ -125,18 +151,7 @@ public class ResponsePacket extends Packet {
 			out.flush();
 		}
 		long pw = System.nanoTime();
-		if (this.headers.hasHeader("Transfer-Encoding")) {
-			String te = this.headers.getHeader("Transfer-Encoding");
-			if (te.equals("chunked")) {
-				this.reqTransfer = true;
-			}
-		}
-		if (headers.hasHeader("Connection")) {
-			String c = headers.getHeader("Connection");
-			if (c.equals("Close")) {
-				out.close();
-			}
-		}
+		
 		long ret = System.nanoTime();
 		// Logger.log((as - start) / 1000000D + " start-as");
 		// Logger.log((pw - as) / 1000000D + " as-pw");

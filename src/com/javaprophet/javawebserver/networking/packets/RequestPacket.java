@@ -28,8 +28,10 @@ public class RequestPacket extends Packet {
 	public String[] overrideIndex = null;
 	public String overrideType = null;
 	public int overrideCache = -2;
-	public Work work;
+	public Work work = null;
 	public RequestPacket parent = null;
+	public ResponsePacket child = null;
+	public int order = -1;
 	// javaloader vars
 	public HashMap<String, String> get = new HashMap<String, String>();
 	public HashMap<String, String> post = new HashMap<String, String>();
@@ -52,8 +54,8 @@ public class RequestPacket extends Packet {
 		ret.overrideIndex = overrideIndex;
 		ret.overrideType = overrideType;
 		ret.overrideCache = overrideCache;
-		ret.work = work;
 		ret.parent = parent;
+		ret.work = work;
 		ret.get = get;
 		ret.post = post;
 		ret.cookie = cookie;
