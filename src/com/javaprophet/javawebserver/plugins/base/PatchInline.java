@@ -15,6 +15,7 @@ import com.javaprophet.javawebserver.networking.packets.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
+import com.javaprophet.javawebserver.util.Logger;
 
 public class PatchInline extends Patch {
 	
@@ -78,10 +79,32 @@ public class PatchInline extends Patch {
 		}
 	};
 	
-	private static String processHREF(String href) {
+	private static String processHREF(String parent, String href) {
 		String h = href;
 		if (h.startsWith("http://") || h.startsWith("https://") || h.startsWith("//")) {
 			return null; // don't both with offsite stuff, will only increase response time TODO: onsite hard-linking?
+		}
+		String[] hs = h.split("/");
+		String[] ps = parent.split("/");
+		int pt = 0;
+		for (int i = 0; i < hs.length; i++) {
+			if (hs[i].length() == 0) continue;
+			if (hs[i].equals("..")) {
+				pt++;
+			}else {
+				break;
+			}
+		}
+		if (pt > ps.length) {
+			Logger.log("[WARNING] Attempt to escape htdocs from Inline: " + parent + " child: " + href);
+			return null;
+		}
+		String[] f = new String[ps.length - pt + hs.length - pt];
+		System.arraycopy(ps, 0, f, 0, ps.length - pt);
+		System.arraycopy(hs, pt, f, ps.length - pt, hs.length - pt);
+		h = "";
+		for (String s : f) {
+			h += "/" + s;
 		}
 		if (!h.startsWith("/")) h = "/" + h;
 		String th = h;
@@ -135,7 +158,7 @@ public class PatchInline extends Patch {
 						href = href.substring(0, href.indexOf(" "));
 					}
 					String oh = href;
-					href = processHREF(href);
+					href = processHREF(request.target, href);
 					if (href == null) continue;
 					RequestPacket subreq = request.clone();
 					subreq.parent = request;
@@ -157,7 +180,7 @@ public class PatchInline extends Patch {
 						href = href.substring(0, href.indexOf(" "));
 					}
 					String oh = href;
-					href = processHREF(href);
+					href = processHREF(request.target, href);
 					if (href == null) continue;
 					RequestPacket subreq = request.clone();
 					subreq.parent = request;
@@ -179,7 +202,7 @@ public class PatchInline extends Patch {
 						href = href.substring(0, href.indexOf(" "));
 					}
 					String oh = href;
-					href = processHREF(href);
+					href = processHREF(request.target, href);
 					if (href == null) continue;
 					RequestPacket subreq = request.clone();
 					subreq.parent = request;
@@ -201,7 +224,7 @@ public class PatchInline extends Patch {
 						href = href.substring(0, href.indexOf(" "));
 					}
 					String oh = href;
-					href = processHREF(href);
+					href = processHREF(request.target, href);
 					if (href == null) continue;
 					RequestPacket subreq = request.clone();
 					subreq.parent = request;
@@ -224,7 +247,7 @@ public class PatchInline extends Patch {
 						href = href.substring(0, href.indexOf(")"));
 					}
 					String oh = href;
-					href = processHREF(href);
+					href = processHREF(request.target, href);
 					if (href == null) continue;
 					RequestPacket subreq = request.clone();
 					subreq.parent = request;
