@@ -163,7 +163,7 @@ public class ThreadWorker extends Thread {
 			Work focus = workQueue.poll();
 			if (focus == null) {
 				try {
-					Thread.sleep(10L);
+					Thread.sleep(0L, 100000);
 				}catch (InterruptedException e) {
 					Logger.logError(e);
 				}
@@ -176,7 +176,7 @@ public class ThreadWorker extends Thread {
 						workQueue.add(focus);
 						if (workQueue.isEmpty()) {
 							try {
-								Thread.sleep(10L);
+								Thread.sleep(0L, 100000);
 							}catch (InterruptedException e) {
 								Logger.logError(e);
 							}
@@ -192,7 +192,7 @@ public class ThreadWorker extends Thread {
 							}
 							if (sleep) {
 								try {
-									Thread.sleep(10L);
+									Thread.sleep(0L, 100000);
 								}catch (InterruptedException e) {
 									Logger.logError(e);
 								}
