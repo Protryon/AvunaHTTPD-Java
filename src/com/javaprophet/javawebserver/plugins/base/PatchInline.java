@@ -21,9 +21,12 @@ public class PatchInline extends Patch {
 		super(name);
 	}
 	
+	private String[] uas;
+	
 	@Override
 	public void formatConfig(HashMap<String, Object> json) {
-		
+		if (!json.containsKey("user-agents")) json.put("user-agents", "gecko,chrom,webkit,opera,konqueror,trident");
+		uas = ((String)json.get("user-agents")).trim().split(",");
 	}
 	
 	@Override
@@ -39,7 +42,14 @@ public class PatchInline extends Patch {
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		String ua = request.headers.hasHeader("User-Agent") ? request.headers.getHeader("User-Agent").toLowerCase() : "";
-		if (!ua.contains("gecko") && !ua.contains("chrom") && !ua.contains("webkit") && !ua.contains("opera") && !ua.contains("konqueror") && !ua.contains("trident")) return false;
+		boolean g = false;
+		for (String pua : uas) {
+			if (ua.contains(pua)) {
+				g = true;
+				break;
+			}
+		}
+		if (!g) return false;
 		String ct = response.headers.hasHeader("Content-Type") ? response.headers.getHeader("Content-Type") : "";
 		if (ct.length() == 0) return false;
 		return response.statusCode == 200 && data != null && data.length > 0 && (ct.startsWith("text/html") || ct.startsWith("text/css"));
@@ -57,6 +67,7 @@ public class PatchInline extends Patch {
 	
 	public void clearCache() {
 		cacheBase64.clear();
+		subreqs.clear();
 	}
 	
 	private final BASE64Encoder encoder = new BASE64Encoder();
@@ -96,123 +107,132 @@ public class PatchInline extends Patch {
 		}
 	}
 	
+	private final HashMap<Long, SubReq[]> subreqs = new HashMap<Long, SubReq[]>();
+	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
+		long start = System.nanoTime();
 		CRC32 process = new CRC32();
 		process.update(data);
 		long l = process.getValue();
 		String html = new String(data); // TODO: encoding support
-		
-		ArrayList<SubReq> subreqs = new ArrayList<SubReq>();
-		String ct = response.headers.getHeader("Content-Type");
-		if (ct.startsWith("text/html")) {
-			Matcher mtch = inlineLink.matcher(html);
-			while (mtch.find()) {
-				String o = mtch.group();
-				if (!o.contains("href=")) continue;
-				String href = o.substring(o.indexOf("href=") + 5);
-				if (href.startsWith("\"")) {
-					href = href.substring(1, href.indexOf("\"", 1));
-				}else {
-					href = href.substring(0, href.indexOf(" "));
+		SubReq[] subreqs = null;
+		if (this.subreqs.containsKey(l)) {
+			subreqs = this.subreqs.get(l);
+		}else {
+			ArrayList<SubReq> genreqs = new ArrayList<SubReq>();
+			String ct = response.headers.getHeader("Content-Type");
+			if (ct.startsWith("text/html")) {
+				Matcher mtch = inlineLink.matcher(html);
+				while (mtch.find()) {
+					String o = mtch.group();
+					if (!o.contains("href=")) continue;
+					String href = o.substring(o.indexOf("href=") + 5);
+					if (href.startsWith("\"")) {
+						href = href.substring(1, href.indexOf("\"", 1));
+					}else {
+						href = href.substring(0, href.indexOf(" "));
+					}
+					String oh = href;
+					href = processHREF(href);
+					if (href == null) continue;
+					RequestPacket subreq = request.clone();
+					subreq.parent = request;
+					subreq.target = href;
+					subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
+					subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
+					genreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
 				}
-				String oh = href;
-				href = processHREF(href);
-				if (href == null) continue;
-				RequestPacket subreq = request.clone();
-				subreq.parent = request;
-				subreq.target = href;
-				subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
-				subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
-				subreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
-			}
-			mtch = inlineImage.matcher(html);
-			while (mtch.find()) {
-				String o = mtch.group();
-				if (!o.contains("src=")) continue;
-				String href = o.substring(o.indexOf("src=") + 4);
-				if (href.startsWith("\"")) {
-					href = href.substring(1, href.indexOf("\"", 1));
-				}else {
-					href = href.substring(0, href.indexOf(" "));
+				mtch = inlineImage.matcher(html);
+				while (mtch.find()) {
+					String o = mtch.group();
+					if (!o.contains("src=")) continue;
+					String href = o.substring(o.indexOf("src=") + 4);
+					if (href.startsWith("\"")) {
+						href = href.substring(1, href.indexOf("\"", 1));
+					}else {
+						href = href.substring(0, href.indexOf(" "));
+					}
+					String oh = href;
+					href = processHREF(href);
+					if (href == null) continue;
+					RequestPacket subreq = request.clone();
+					subreq.parent = request;
+					subreq.target = href;
+					subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
+					subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
+					genreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
 				}
-				String oh = href;
-				href = processHREF(href);
-				if (href == null) continue;
-				RequestPacket subreq = request.clone();
-				subreq.parent = request;
-				subreq.target = href;
-				subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
-				subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
-				subreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
-			}
-			mtch = inlineInputImage.matcher(html);
-			while (mtch.find()) {
-				String o = mtch.group();
-				if (!o.contains("src=")) continue;
-				String href = o.substring(o.indexOf("src=") + 4);
-				if (href.startsWith("\"")) {
-					href = href.substring(1, href.indexOf("\"", 1));
-				}else {
-					href = href.substring(0, href.indexOf(" "));
+				mtch = inlineInputImage.matcher(html);
+				while (mtch.find()) {
+					String o = mtch.group();
+					if (!o.contains("src=")) continue;
+					String href = o.substring(o.indexOf("src=") + 4);
+					if (href.startsWith("\"")) {
+						href = href.substring(1, href.indexOf("\"", 1));
+					}else {
+						href = href.substring(0, href.indexOf(" "));
+					}
+					String oh = href;
+					href = processHREF(href);
+					if (href == null) continue;
+					RequestPacket subreq = request.clone();
+					subreq.parent = request;
+					subreq.target = href;
+					subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
+					subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
+					genreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
 				}
-				String oh = href;
-				href = processHREF(href);
-				if (href == null) continue;
-				RequestPacket subreq = request.clone();
-				subreq.parent = request;
-				subreq.target = href;
-				subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
-				subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
-				subreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
-			}
-			mtch = inlineScript.matcher(html);
-			while (mtch.find()) {
-				String o = mtch.group();
-				if (!o.contains("src=")) continue;
-				String href = o.substring(o.indexOf("src=") + 4);
-				if (href.startsWith("\"")) {
-					href = href.substring(1, href.indexOf("\"", 1));
-				}else {
-					href = href.substring(0, href.indexOf(" "));
+				mtch = inlineScript.matcher(html);
+				while (mtch.find()) {
+					String o = mtch.group();
+					if (!o.contains("src=")) continue;
+					String href = o.substring(o.indexOf("src=") + 4);
+					if (href.startsWith("\"")) {
+						href = href.substring(1, href.indexOf("\"", 1));
+					}else {
+						href = href.substring(0, href.indexOf(" "));
+					}
+					String oh = href;
+					href = processHREF(href);
+					if (href == null) continue;
+					RequestPacket subreq = request.clone();
+					subreq.parent = request;
+					subreq.target = href;
+					subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
+					subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
+					genreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
 				}
-				String oh = href;
-				href = processHREF(href);
-				if (href == null) continue;
-				RequestPacket subreq = request.clone();
-				subreq.parent = request;
-				subreq.target = href;
-				subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
-				subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
-				subreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
-			}
-		}else if (ct.startsWith("text/css")) {
-			Matcher mtch = inlineCSS.matcher(html);
-			while (mtch.find()) {
-				String o = mtch.group();
-				if (!o.contains("url(")) continue;
-				String href = o.substring(o.indexOf("url(") + 4); // 0 + 4 :)
-				if (href.startsWith("\"")) {
-					href = href.substring(1, href.indexOf("\"", 1));
-				}else {
-					href = href.substring(0, href.indexOf(")"));
+			}else if (ct.startsWith("text/css")) {
+				Matcher mtch = inlineCSS.matcher(html);
+				while (mtch.find()) {
+					String o = mtch.group();
+					if (!o.contains("url(")) continue;
+					String href = o.substring(o.indexOf("url(") + 4); // 0 + 4 :)
+					if (href.startsWith("\"")) {
+						href = href.substring(1, href.indexOf("\"", 1));
+					}else {
+						href = href.substring(0, href.indexOf(")"));
+					}
+					String oh = href;
+					href = processHREF(href);
+					if (href == null) continue;
+					RequestPacket subreq = request.clone();
+					subreq.parent = request;
+					subreq.target = href;
+					subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
+					subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
+					genreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
 				}
-				String oh = href;
-				href = processHREF(href);
-				if (href == null) continue;
-				RequestPacket subreq = request.clone();
-				subreq.parent = request;
-				subreq.target = href;
-				subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
-				subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
-				subreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
 			}
+			Collections.sort(genreqs, subReqComparator);
+			SubReq[] sa = genreqs.toArray(new SubReq[0]);
+			subreqs = sa;
+			this.subreqs.put(l, subreqs);
 		}
-		Collections.sort(subreqs, subReqComparator);
-		SubReq[] sa = subreqs.toArray(new SubReq[0]);
-		RequestPacket[] reqs = new RequestPacket[sa.length];
-		for (int i = 0; i < sa.length; i++) {
-			reqs[i] = sa[i].req;
+		RequestPacket[] reqs = new RequestPacket[subreqs.length];
+		for (int i = 0; i < subreqs.length; i++) {
+			reqs[i] = subreqs[i].req;
 		}
 		ResponsePacket[] resps = ThreadWorker.processSubRequests(reqs);
 		for (ResponsePacket subreq : resps) {
@@ -221,7 +241,7 @@ public class PatchInline extends Patch {
 		int offset = 0;
 		for (int i = 0; i < resps.length; i++) {
 			if (resps[i] == null || resps[i].subwrite == null) continue;
-			SubReq sr = subreqs.get(i);
+			SubReq sr = subreqs[i];
 			String base64 = "";
 			String cachePath = resps[i].request.host.getHostPath() + resps[i].request.target;
 			if (!cacheBase64.containsKey(cachePath)) {
