@@ -79,7 +79,7 @@ public class ThreadConnection extends Thread {
 			Work focus = workQueue.poll();
 			if (focus == null) {
 				try {
-					Thread.sleep(0L, 100000);
+					Thread.sleep(1L);
 				}catch (InterruptedException e) {
 					Logger.logError(e);
 				}
@@ -125,7 +125,7 @@ public class ThreadConnection extends Thread {
 						readd = true;
 						if (workQueue.isEmpty()) {
 							try {
-								Thread.sleep(0L, 100000);
+								Thread.sleep(1L);
 							}catch (InterruptedException e) {
 								Logger.logError(e);
 							}
@@ -141,7 +141,7 @@ public class ThreadConnection extends Thread {
 							}
 							if (sleep) {
 								try {
-									Thread.sleep(0L, 100000);
+									Thread.sleep(1L);
 								}catch (InterruptedException e) {
 									Logger.logError(e);
 								}

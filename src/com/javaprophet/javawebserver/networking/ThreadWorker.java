@@ -75,7 +75,7 @@ public class ThreadWorker extends Thread {
 			RequestPacket incomingRequest = workQueue.poll();
 			if (incomingRequest == null) {
 				try {
-					Thread.sleep(0L, 100000);
+					Thread.sleep(1L);
 				}catch (InterruptedException e) {
 					Logger.logError(e);
 				}

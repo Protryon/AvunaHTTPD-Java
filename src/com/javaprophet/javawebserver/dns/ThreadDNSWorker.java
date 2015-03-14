@@ -54,7 +54,7 @@ public class ThreadDNSWorker extends Thread {
 			Work focus = workQueue.poll();
 			if (focus == null) {
 				try {
-					Thread.sleep(10L);
+					Thread.sleep(1L);
 				}catch (InterruptedException e) {
 					Logger.logError(e);
 				}

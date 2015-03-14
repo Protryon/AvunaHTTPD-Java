@@ -210,11 +210,11 @@ public class JavaWebServer {
 					if (!map.containsKey("logs")) map.put("logs", new File(dir, "logs").toString());
 					if (!map.containsKey("javac")) map.put("javac", "javac");
 					if (!map.containsKey("connlimit")) map.put("connlimit", "-1");
-					if (!map.containsKey("workerThreadCount")) map.put("workerThreadCount", "512");
-					if (!map.containsKey("connThreadCount")) map.put("connThreadCount", "256");
-					if (!map.containsKey("acceptThreadCount")) map.put("acceptThreadCount", "128");
-					if (!map.containsKey("dnsWorkerThreadCount")) map.put("dnsWorkerThreadCount", "32");
-					if (!map.containsKey("dnsAcceptThreadCount")) map.put("dnsAcceptThreadCount", "32");
+					if (!map.containsKey("workerThreadCount")) map.put("workerThreadCount", "128");
+					if (!map.containsKey("connThreadCount")) map.put("connThreadCount", "24");
+					if (!map.containsKey("acceptThreadCount")) map.put("acceptThreadCount", "24");
+					if (!map.containsKey("dnsWorkerThreadCount")) map.put("dnsWorkerThreadCount", "16");
+					if (!map.containsKey("dnsAcceptThreadCount")) map.put("dnsAcceptThreadCount", "16");
 					if (!map.containsKey("errorpages")) map.put("errorpages", new LinkedHashMap<String, Object>());
 					if (!map.containsKey("index")) map.put("index", "index.class,index.jwsl,index.php,index.html");
 					if (!map.containsKey("cacheClock")) map.put("cacheClock", "-1");
