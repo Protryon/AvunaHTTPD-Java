@@ -63,7 +63,7 @@ public class PatchInline extends Patch {
 	private final Pattern inlineInputImage = Pattern.compile("<input.*type=\"image\".*>", Pattern.CASE_INSENSITIVE);
 	private final Pattern inlineScript = Pattern.compile("<script.*src=\".*\".*>", Pattern.CASE_INSENSITIVE);
 	// css
-	private final Pattern inlineCSS = Pattern.compile("url\\(.*\\)", Pattern.CASE_INSENSITIVE);
+	private final Pattern inlineCSS = Pattern.compile("url\\([^\\)]*", Pattern.CASE_INSENSITIVE);
 	
 	private final HashMap<String, String> cacheBase64 = new HashMap<String, String>();
 	
@@ -112,7 +112,7 @@ public class PatchInline extends Patch {
 		String th = h;
 		if (th.contains("#")) th = th.substring(0, th.indexOf("#"));
 		if (th.contains("?")) th = th.substring(0, th.indexOf("?"));
-		if (th.endsWith(".css") || th.endsWith(".js") || th.endsWith(".png") || th.endsWith(".jpg") || th.endsWith(".gif")) {
+		if (th.endsWith(".css") || th.endsWith(".js") || th.endsWith(".png") || th.endsWith(".jpg") || th.endsWith(".gif") || th.endsWith(".eot") || th.endsWith(".svg") || th.endsWith(".ttf") || th.endsWith(".woff") || th.endsWith(".woff2")) {
 			return h;
 		}else {
 			return null; // dont want to mess up other stuff
@@ -250,7 +250,7 @@ public class PatchInline extends Patch {
 					if (href.startsWith("\"")) {
 						href = href.substring(1, href.indexOf("\"", 1));
 					}else {
-						href = href.substring(0, href.indexOf(")"));
+						href = href.contains(")") ? href.substring(0, href.indexOf(")")) : href;
 					}
 					String oh = href;
 					href = processHREF(request.target, href);

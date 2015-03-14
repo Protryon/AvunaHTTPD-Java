@@ -3,6 +3,7 @@ package com.javaprophet.javawebserver.plugins.base;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.zip.CRC32;
 import java.util.zip.GZIPOutputStream;
 import com.javaprophet.javawebserver.networking.packets.Packet;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
@@ -36,17 +37,31 @@ public class PatchGZip extends Patch {
 		return request.parent == null && request.headers.hasHeader("Accept-Encoding") && request.headers.getHeader("Accept-Encoding").contains("gzip") && !response.headers.hasHeader("Content-Encoding") && ((data != null && data.length > 0) || (response.body != null && response.body.tooBig));
 	}
 	
+	private final HashMap<Long, byte[]> pregzip = new HashMap<Long, byte[]>();
+	
+	public void clearCache() {
+		pregzip.clear();
+	}
+	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		byte[] data2 = data;
 		try {
 			if (data != null && data.length > 0) {
-				ByteArrayOutputStream bout = new ByteArrayOutputStream();
-				GZIPOutputStream gout = new GZIPOutputStream(bout);
-				gout.write(data, 0, data.length);
-				gout.flush();
-				gout.close();
-				data2 = bout.toByteArray();
+				CRC32 crc = new CRC32();
+				crc.update(data);
+				long l = crc.getValue();
+				if (pregzip.containsKey(l)) {
+					data2 = pregzip.get(l);
+				}else {
+					ByteArrayOutputStream bout = new ByteArrayOutputStream();
+					GZIPOutputStream gout = new GZIPOutputStream(bout);
+					gout.write(data, 0, data.length);
+					gout.flush();
+					gout.close();
+					data2 = bout.toByteArray();
+					pregzip.put(l, data2);
+				}
 			}
 			response.headers.addHeader("Content-Encoding", "gzip");
 			response.headers.addHeader("Vary", "Accept-Encoding");

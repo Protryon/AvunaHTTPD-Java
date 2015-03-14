@@ -14,6 +14,7 @@ import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.plugins.Patch;
 import com.javaprophet.javawebserver.plugins.PatchRegistry;
 import com.javaprophet.javawebserver.plugins.base.PatchChunked;
+import com.javaprophet.javawebserver.plugins.base.PatchGZip;
 import com.javaprophet.javawebserver.plugins.base.PatchInline;
 import com.javaprophet.javawebserver.plugins.javaloader.lib.HTMLCache;
 
@@ -82,6 +83,7 @@ public class FileManager {
 		}
 		cConfigCache.clear();
 		((PatchInline)PatchRegistry.getPatchForClass(PatchInline.class)).clearCache();
+		((PatchGZip)PatchRegistry.getPatchForClass(PatchGZip.class)).clearCache();
 	}
 	
 	public void flushjl() throws IOException {
