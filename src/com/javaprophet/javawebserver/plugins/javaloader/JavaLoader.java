@@ -8,6 +8,12 @@ public abstract class JavaLoader {
 		
 	}
 	
+	protected boolean nooutput = false;
+	
+	public final void killOutput() {
+		nooutput = true;
+	}
+	
 	public void destroy() {
 		
 	}

@@ -323,7 +323,6 @@ public class PatchJavaLoader extends Patch {
 				
 				((JavaLoaderPrint)loader).generate(out, response, request);
 				// System.out.println((System.nanoTime() - st) / 1000000D);
-				
 				String s = out.toString();
 				ndata = s.getBytes();
 			}else if (type == 2) {
@@ -335,7 +334,7 @@ public class PatchJavaLoader extends Patch {
 			// System.out.println((loadert - loaded) / 1000000D + " loaded-loadert");
 			// System.out.println((proc - loadert) / 1000000D + " loadert-proc");
 			// System.out.println((cur - proc) / 1000000D + " proc-cur");
-			return ndata;
+			return loader.nooutput ? new byte[0] : ndata;
 		}catch (Exception e) {
 			Logger.logError(e);;
 		}
