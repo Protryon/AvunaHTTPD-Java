@@ -315,13 +315,14 @@ public class PatchJavaLoader extends Patch {
 			long proc = System.nanoTime();
 			byte[] ndata = null;
 			int type = loader.getType();
+			boolean doout = true;
 			if (type == 0) {
 				ndata = ((JavaLoaderBasic)loader).generate(response, request);
 			}else if (type == 1) {
 				HTMLBuilder out = new HTMLBuilder(new StringWriter());
 				// long st = System.nanoTime();
 				
-				((JavaLoaderPrint)loader).generate(out, response, request);
+				doout = ((JavaLoaderPrint)loader).generate(out, response, request);
 				// System.out.println((System.nanoTime() - st) / 1000000D);
 				String s = out.toString();
 				ndata = s.getBytes();
@@ -334,7 +335,7 @@ public class PatchJavaLoader extends Patch {
 			// System.out.println((loadert - loaded) / 1000000D + " loaded-loadert");
 			// System.out.println((proc - loadert) / 1000000D + " loadert-proc");
 			// System.out.println((cur - proc) / 1000000D + " proc-cur");
-			return loader.nooutput ? new byte[0] : ndata;
+			return !doout ? new byte[0] : ndata;
 		}catch (Exception e) {
 			Logger.logError(e);;
 		}
