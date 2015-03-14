@@ -112,7 +112,7 @@ public class PatchInline extends Patch {
 		String th = h;
 		if (th.contains("#")) th = th.substring(0, th.indexOf("#"));
 		if (th.contains("?")) th = th.substring(0, th.indexOf("?"));
-		if (th.endsWith(".css") || th.endsWith(".js") || th.endsWith(".png") || th.endsWith(".png") || th.endsWith(".jpg") || th.endsWith(".gif")) {
+		if (th.endsWith(".css") || th.endsWith(".js") || th.endsWith(".png") || th.endsWith(".jpg") || th.endsWith(".gif")) {
 			return h;
 		}else {
 			return null; // dont want to mess up other stuff

@@ -50,14 +50,65 @@ public class JavaWebServer {
 		patchBus.setupFolders();
 	}
 	
+	public static void setupScripts() throws IOException {
+		String os = System.getProperty("os.name").toLowerCase();
+		if (os.contains("windows")) {
+			File f = fileManager.getBaseFile("run.bat");
+			if (!f.exists()) {
+				FileOutputStream fout = new FileOutputStream(f);
+				fout.write(("javaw -jar \"" + fileManager.getBaseFile("jws.jar").getAbsolutePath() + "\" \"" + fileManager.getBaseFile("main.cfg").getAbsolutePath() + "\"").getBytes());
+				fout.flush();
+				fout.close();
+			}
+			f = fileManager.getBaseFile("kill.bat");
+			if (!f.exists()) {
+				FileOutputStream fout = new FileOutputStream(f);
+				fout.write(("taskkill /f /im javaw").getBytes());
+				fout.flush();
+				fout.close();
+			}
+			f = fileManager.getBaseFile("restart.bat");
+			if (!f.exists()) {
+				FileOutputStream fout = new FileOutputStream(f);
+				fout.write(("kill.bat & run.bat").getBytes());
+				fout.flush();
+				fout.close();
+			}
+		}else {
+			File f = fileManager.getBaseFile("run.sh");
+			if (!f.exists()) {
+				FileOutputStream fout = new FileOutputStream(f);
+				fout.write(("nohup java -jar \"" + fileManager.getBaseFile("jws.jar").getAbsolutePath() + "\" \"" + fileManager.getBaseFile("main.cfg").getAbsolutePath() + "\" >& /dev/null &").getBytes());
+				fout.flush();
+				fout.close();
+			}
+			f = fileManager.getBaseFile("kill.sh");
+			if (!f.exists()) {
+				FileOutputStream fout = new FileOutputStream(f);
+				fout.write(("pkill -f jws.jar").getBytes());
+				fout.flush();
+				fout.close();
+			}
+			f = fileManager.getBaseFile("restart.sh");
+			if (!f.exists()) {
+				FileOutputStream fout = new FileOutputStream(f);
+				fout.write(("sh kill.sh & sh run.sh").getBytes());
+				fout.flush();
+				fout.close();
+			}
+		}
+	}
+	
 	public static void unpack() {
 		try {
+			setupScripts();
 			String[] unpacks = new String[]{"mime.txt", "run.sh", "kill.sh", "restart.sh", "cmd.sh", "run.bat", "kill.bat", "restart.bat", "cmd.bat"};
+			String os = System.getProperty("os.name").toLowerCase();
 			for (String up : unpacks) {
-				if (up.endsWith(".sh") && !System.getProperty("os.name").contains("nux")) {
+				if (up.endsWith(".sh") && !(os.contains("nux") || os.contains("nix") || os.contains("mac"))) {
 					continue;
 				}
-				if (up.endsWith(".bat") && !System.getProperty("os.name").toLowerCase().contains("windows")) {
+				if (up.endsWith(".bat") && !os.contains("windows")) {
 					continue;
 				}
 				File mime = fileManager.getBaseFile(up);
@@ -142,7 +193,8 @@ public class JavaWebServer {
 				return;
 			}
 			System.setProperty("line.separator", crlf);
-			final File cfg = new File(args.length > 0 ? args[0] : (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\jws\\main.cfg" : "/etc/jws/main.cfg"));
+			boolean unpack = args.length == 1 && args[0].equals("unpack");
+			final File cfg = new File(!unpack && args.length > 0 ? args[0] : (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\jws\\main.cfg" : "/etc/jws/main.cfg"));
 			checkPerms(cfg.getParentFile());
 			mainConfig = new Config("main", cfg, new ConfigFormat() {
 				public void format(HashMap<String, Object> map) {
@@ -158,7 +210,11 @@ public class JavaWebServer {
 					if (!map.containsKey("logs")) map.put("logs", new File(dir, "logs").toString());
 					if (!map.containsKey("javac")) map.put("javac", "javac");
 					if (!map.containsKey("connlimit")) map.put("connlimit", "-1");
-					if (!map.containsKey("workerThreadCount")) map.put("workerThreadCount", "" + (Runtime.getRuntime().availableProcessors() * 3));
+					if (!map.containsKey("workerThreadCount")) map.put("workerThreadCount", "512");
+					if (!map.containsKey("connThreadCount")) map.put("connThreadCount", "256");
+					if (!map.containsKey("acceptThreadCount")) map.put("acceptThreadCount", "128");
+					if (!map.containsKey("dnsWorkerThreadCount")) map.put("dnsWorkerThreadCount", "32");
+					if (!map.containsKey("dnsAcceptThreadCount")) map.put("dnsAcceptThreadCount", "32");
 					if (!map.containsKey("errorpages")) map.put("errorpages", new LinkedHashMap<String, Object>());
 					if (!map.containsKey("index")) map.put("index", "index.class,index.jwsl,index.php,index.html");
 					if (!map.containsKey("cacheClock")) map.put("cacheClock", "-1");
@@ -238,19 +294,25 @@ public class JavaWebServer {
 			unpack();
 			loadUnpacked();
 			Logger.log("Loaded Configs");
+			if (unpack) {
+				return;
+			}
 			Logger.log("Loading Connection Handling");
 			ThreadConnection.initQueue(cl < 1 ? 10000000 : cl);
 			ThreadWorker.initQueue();
 			for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount")); i++) {
 				ThreadWorker worker = new ThreadWorker();
 				worker.start();
+			}
+			for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("connThreadCount")); i++) {
 				ThreadConnection conn = new ThreadConnection();
 				conn.start();
+				
 			}
 			if (dns) { // TODO maybe split off into different cfgs than above
 				ThreadDNSWorker.holder = holder;
 				ThreadDNSWorker.initQueue(cl < 1 ? 10000000 : cl);
-				for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount")); i++) {
+				for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("dnsWorkerThreadCount")); i++) {
 					ThreadDNSWorker worker = new ThreadDNSWorker();
 					worker.setDaemon(true);
 					worker.start();

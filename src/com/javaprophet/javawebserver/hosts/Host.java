@@ -126,7 +126,7 @@ public class Host extends Thread {
 				server = (SSLServerSocket)sc.getServerSocketFactory().createServerSocket(port, 1000, InetAddress.getByName(ip));
 				((SSLServerSocket)server).setEnabledProtocols(new String[]{fp});
 			}
-			for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount")); i++) {
+			for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("acceptThreadCount")); i++) {
 				new ThreadAccept(this, server, cl).run();
 			}
 		}catch (Exception e) {
