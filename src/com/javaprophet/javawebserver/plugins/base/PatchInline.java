@@ -70,6 +70,7 @@ public class PatchInline extends Patch {
 	public void clearCache() {
 		cacheBase64.clear();
 		subreqs.clear();
+		cdata.clear();
 	}
 	
 	private final BASE64Encoder encoder = new BASE64Encoder();
@@ -85,7 +86,7 @@ public class PatchInline extends Patch {
 			return null; // don't both with offsite stuff, will only increase response time TODO: onsite hard-linking?
 		}
 		String[] hs = h.split("/");
-		String[] ps = parent.split("/");
+		String[] ps = parent.substring(0, parent.lastIndexOf("/")).split("/");
 		int pt = 0;
 		for (int i = 0; i < hs.length; i++) {
 			if (hs[i].length() == 0) continue;
@@ -104,6 +105,7 @@ public class PatchInline extends Patch {
 		System.arraycopy(hs, pt, f, ps.length - pt, hs.length - pt);
 		h = "";
 		for (String s : f) {
+			if (s.length() == 0) continue;
 			h += "/" + s;
 		}
 		if (!h.startsWith("/")) h = "/" + h;
@@ -132,6 +134,7 @@ public class PatchInline extends Patch {
 	}
 	
 	private final HashMap<Long, SubReq[]> subreqs = new HashMap<Long, SubReq[]>();
+	private final HashMap<Long, byte[]> cdata = new HashMap<Long, byte[]>();
 	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
@@ -139,6 +142,9 @@ public class PatchInline extends Patch {
 		CRC32 process = new CRC32();
 		process.update(data);
 		long l = process.getValue();
+		if (cdata.containsKey(l)) {
+			return cdata.get(l);
+		}
 		String html = new String(data); // TODO: encoding support
 		SubReq[] subreqs = null;
 		if (this.subreqs.containsKey(l)) {
@@ -289,7 +295,9 @@ public class PatchInline extends Patch {
 			html = html.substring(0, sr.start + offset) + rep + html.substring(sr.end + offset);
 			offset += rep.length() - sr.forig.length();
 		}
-		return html.getBytes();
+		byte[] hb = html.getBytes();
+		cdata.put(l, hb);
+		return hb;
 	}
 	
 	@Override
