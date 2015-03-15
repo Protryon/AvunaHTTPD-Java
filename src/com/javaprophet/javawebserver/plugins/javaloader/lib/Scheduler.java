@@ -19,7 +19,11 @@ public class Scheduler {
 					}
 					continue;
 				}
-				work.run();
+				try {
+					work.run();
+				}catch (Exception e) {
+					Logger.logError(e);
+				}
 			}
 		}
 	}

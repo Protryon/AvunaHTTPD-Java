@@ -226,6 +226,7 @@ public class PatchJavaLoader extends Patch {
 	public void reload() throws IOException {
 		super.reload();
 		HTMLCache.reloadAll();
+		config.save();
 		for (JavaLoaderSession session : sessions) {
 			if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
 				LinkedHashMap<String, Object> ocfg = null;

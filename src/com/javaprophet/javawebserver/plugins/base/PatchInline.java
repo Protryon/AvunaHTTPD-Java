@@ -24,11 +24,14 @@ public class PatchInline extends Patch {
 	}
 	
 	private String[] uas;
+	private int sizeLimit = 32768;
 	
 	@Override
 	public void formatConfig(HashMap<String, Object> json) {
 		if (!json.containsKey("user-agents")) json.put("user-agents", "gecko,chrom,webkit,opera,konqueror,trident");
+		if (!json.containsKey("sizeLimit")) json.put("sizeLimit", "32768");
 		uas = ((String)json.get("user-agents")).trim().split(",");
+		sizeLimit = Integer.parseInt((String)json.get("sizeLimit"));
 	}
 	
 	@Override
@@ -66,6 +69,7 @@ public class PatchInline extends Patch {
 	private final Pattern inlineCSS = Pattern.compile("url\\([^\\)]*", Pattern.CASE_INSENSITIVE);
 	
 	private final HashMap<String, String> cacheBase64 = new HashMap<String, String>();
+	private final HashMap<String, Boolean> tooBig = new HashMap<String, Boolean>();
 	
 	public void clearCache() {
 		cacheBase64.clear();
@@ -120,11 +124,11 @@ public class PatchInline extends Patch {
 	}
 	
 	private static class SubReq {
-		public final RequestPacket req;
+		public final String req;
 		public final int start, end;
 		public final String orig, forig;
 		
-		public SubReq(RequestPacket req, int start, int end, String orig, String forig) {
+		public SubReq(String req, int start, int end, String orig, String forig) {
 			this.req = req;
 			this.start = start;
 			this.end = end;
@@ -138,7 +142,6 @@ public class PatchInline extends Patch {
 	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		long start = System.nanoTime();
 		CRC32 process = new CRC32();
 		process.update(data);
 		long l = process.getValue();
@@ -146,6 +149,7 @@ public class PatchInline extends Patch {
 			return cdata.get(l);
 		}
 		String html = new String(data); // TODO: encoding support
+		boolean greqs = false;
 		SubReq[] subreqs = null;
 		if (this.subreqs.containsKey(l)) {
 			subreqs = this.subreqs.get(l);
@@ -166,14 +170,7 @@ public class PatchInline extends Patch {
 					String oh = href;
 					href = processHREF(request.target, href);
 					if (href == null) continue;
-					RequestPacket subreq = request.clone();
-					subreq.parent = request;
-					subreq.target = href;
-					subreq.method = Method.GET;
-					subreq.body.data = null;
-					subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
-					subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
-					genreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
+					genreqs.add(new SubReq(href, mtch.start(), mtch.end(), oh, o));
 				}
 				mtch = inlineImage.matcher(html);
 				while (mtch.find()) {
@@ -188,14 +185,7 @@ public class PatchInline extends Patch {
 					String oh = href;
 					href = processHREF(request.target, href);
 					if (href == null) continue;
-					RequestPacket subreq = request.clone();
-					subreq.parent = request;
-					subreq.target = href;
-					subreq.method = Method.GET;
-					subreq.body.data = null;
-					subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
-					subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
-					genreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
+					genreqs.add(new SubReq(href, mtch.start(), mtch.end(), oh, o));
 				}
 				mtch = inlineInputImage.matcher(html);
 				while (mtch.find()) {
@@ -210,14 +200,7 @@ public class PatchInline extends Patch {
 					String oh = href;
 					href = processHREF(request.target, href);
 					if (href == null) continue;
-					RequestPacket subreq = request.clone();
-					subreq.parent = request;
-					subreq.target = href;
-					subreq.method = Method.GET;
-					subreq.body.data = null;
-					subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
-					subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
-					genreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
+					genreqs.add(new SubReq(href, mtch.start(), mtch.end(), oh, o));
 				}
 				mtch = inlineScript.matcher(html);
 				while (mtch.find()) {
@@ -232,14 +215,7 @@ public class PatchInline extends Patch {
 					String oh = href;
 					href = processHREF(request.target, href);
 					if (href == null) continue;
-					RequestPacket subreq = request.clone();
-					subreq.parent = request;
-					subreq.target = href;
-					subreq.method = Method.GET;
-					subreq.body.data = null;
-					subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
-					subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
-					genreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
+					genreqs.add(new SubReq(href, mtch.start(), mtch.end(), oh, o));
 				}
 			}else if (ct.startsWith("text/css")) {
 				Matcher mtch = inlineCSS.matcher(html);
@@ -255,28 +231,50 @@ public class PatchInline extends Patch {
 					String oh = href;
 					href = processHREF(request.target, href);
 					if (href == null) continue;
-					RequestPacket subreq = request.clone();
-					subreq.parent = request;
-					subreq.target = href;
-					subreq.method = Method.GET;
-					subreq.body.data = null;
-					subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
-					subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
-					genreqs.add(new SubReq(subreq, mtch.start(), mtch.end(), oh, o));
+					genreqs.add(new SubReq(href, mtch.start(), mtch.end(), oh, o));
+				}
+			}
+			for (int i = 0; i < genreqs.size(); i++) {
+				if (tooBig.containsKey(genreqs.get(i).req) && tooBig.get(genreqs.get(i).req).equals(true)) {
+					genreqs.remove(i);
+					i--;
 				}
 			}
 			Collections.sort(genreqs, subReqComparator);
 			SubReq[] sa = genreqs.toArray(new SubReq[0]);
 			subreqs = sa;
-			this.subreqs.put(l, subreqs);
+			greqs = true;
 		}
 		RequestPacket[] reqs = new RequestPacket[subreqs.length];
 		for (int i = 0; i < subreqs.length; i++) {
-			reqs[i] = subreqs[i].req;
+			RequestPacket subreq = request.clone();
+			subreq.parent = request;
+			subreq.target = subreqs[i].req;
+			subreq.method = Method.GET;
+			subreq.body.data = null;
+			subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
+			subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
+			reqs[i] = subreq;
 		}
 		ResponsePacket[] resps = ThreadWorker.processSubRequests(reqs);
-		for (ResponsePacket subreq : resps) {
-			if (subreq == null || subreq.subwrite == null) continue;
+		if (greqs) {
+			SubReq[] srsn = new SubReq[subreqs.length];
+			ResponsePacket[] respsn = new ResponsePacket[resps.length];
+			int nl = 0;
+			for (int i = 0; i < reqs.length; i++) {
+				if (!(resps[i] == null || resps[i].subwrite == null || resps[i].subwrite.length > sizeLimit)) {
+					srsn[nl] = subreqs[i];
+					respsn[nl++] = resps[i];
+					tooBig.put(subreqs[i].req, false);
+				}else {
+					tooBig.put(subreqs[i].req, true);
+				}
+			}
+			subreqs = new SubReq[nl];
+			resps = new ResponsePacket[nl];
+			System.arraycopy(srsn, 0, subreqs, 0, nl);
+			System.arraycopy(respsn, 0, resps, 0, nl);
+			this.subreqs.put(l, subreqs);
 		}
 		int offset = 0;
 		for (int i = 0; i < resps.length; i++) {
