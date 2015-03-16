@@ -1,1 +1,0 @@
-javaw -jar C:\jws\jws.jar

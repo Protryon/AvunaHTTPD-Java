@@ -1,6 +1,7 @@
 package com.javaprophet.javawebserver.networking;
 
 import java.io.IOException;
+import java.net.SocketException;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.javaloader.ChunkedOutputStream;
@@ -27,9 +28,19 @@ public class ThreadJavaLoaderStreamWorker extends Thread {
 			reqStream.generate(cos, req, resp);
 			ThreadConnection.readdWork(work);
 		}catch (IOException e) {
-			Logger.logError(e);
+			if (!(e instanceof SocketException)) Logger.logError(e);
 		}finally {
-			
+			String ip = work.s.getInetAddress().getHostAddress();
+			Integer cur = ThreadConnection.connIPs.get(ip);
+			if (cur == null) cur = 1;
+			cur -= 1;
+			ThreadConnection.connIPs.put(ip, cur);
+			Logger.log(ip + " closed.");
+			try {
+				if (work.s != null) work.s.close();
+			}catch (IOException e) {
+				Logger.logError(e);
+			}
 		}
 	}
 }

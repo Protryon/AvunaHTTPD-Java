@@ -764,5 +764,4 @@ video/x-sgi-movie movie
 video/x-smv smv
 x-conference/x-cooltalk ice
 application/x-php php
-application/x-jwsl jwsl
 application/x-java class
