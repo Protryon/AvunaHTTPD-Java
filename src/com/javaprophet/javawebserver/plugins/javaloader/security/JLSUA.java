@@ -1,7 +1,6 @@
 package com.javaprophet.javawebserver.plugins.javaloader.security;
 
 import java.util.LinkedHashMap;
-import com.javaprophet.javawebserver.hosts.VHost;
 import com.javaprophet.javawebserver.networking.packets.RequestPacket;
 import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderSecurity;
 
@@ -11,17 +10,17 @@ public class JLSUA extends JavaLoaderSecurity {
 	private boolean enabled = true;
 	private String[] ua = null;
 	
-	public void init(VHost host, LinkedHashMap<String, Object> cfg) {
-		if (!cfg.containsKey("returnWeight")) cfg.put("returnWeight", "100");
-		if (!cfg.containsKey("enabled")) cfg.put("enabled", "true");
-		if (!cfg.containsKey("userAgents")) cfg.put("userAgents", "wordpress,sql,php,scan");
-		this.returnWeight = Integer.parseInt((String)cfg.get("returnWeight"));
-		this.enabled = cfg.get("enabled").equals("true");
-		this.ua = ((String)cfg.get("userAgents")).split(",");
+	public void init() {
+		if (!pcfg.containsKey("returnWeight")) pcfg.put("returnWeight", "100");
+		if (!pcfg.containsKey("enabled")) pcfg.put("enabled", "true");
+		if (!pcfg.containsKey("userAgents")) pcfg.put("userAgents", "wordpress,sql,php,scan");
+		this.returnWeight = Integer.parseInt((String)pcfg.get("returnWeight"));
+		this.enabled = pcfg.get("enabled").equals("true");
+		this.ua = ((String)pcfg.get("userAgents")).split(",");
 	}
 	
 	public void reload(LinkedHashMap<String, Object> cfg) {
-		init(null, cfg);
+		init();
 	}
 	
 	@Override

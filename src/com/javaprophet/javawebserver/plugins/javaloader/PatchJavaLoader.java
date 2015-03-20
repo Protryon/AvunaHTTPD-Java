@@ -91,6 +91,10 @@ public class PatchJavaLoader extends Patch {
 		}
 	}
 	
+	public void saveConfig() {
+		config.save();
+	}
+	
 	public void flushjl() {
 		try {
 			for (JavaLoaderSession jls : sessions) {
@@ -156,7 +160,9 @@ public class PatchJavaLoader extends Patch {
 								ocfg.put(name, new LinkedHashMap<String, Object>());
 							}
 							JavaLoader jl = (JavaLoader)cls.newInstance();
-							jl.init(session == null ? null : session.getVHost(), (LinkedHashMap<String, Object>)ocfg.get(name));
+							jl.pcfg = (LinkedHashMap<String, Object>)ocfg.get(name);
+							jl.host = session == null ? null : session.getVHost();
+							jl.init();
 							if (jl.getType() == 3) {
 								security.add((JavaLoaderSecurity)jl);
 							}else {
@@ -183,7 +189,9 @@ public class PatchJavaLoader extends Patch {
 		if (!ocfg.containsKey(sec.getClass().getName())) {
 			ocfg.put(sec.getClass().getName(), new LinkedHashMap<String, Object>());
 		}
-		sec.init(null, (LinkedHashMap<String, Object>)ocfg.get(sec.getClass().getName()));
+		sec.pcfg = (LinkedHashMap<String, Object>)ocfg.get(sec.getClass().getName());
+		sec.host = null;
+		sec.init();
 		security.add(sec);
 	}
 	
@@ -226,7 +234,7 @@ public class PatchJavaLoader extends Patch {
 	public void reload() throws IOException {
 		super.reload();
 		HTMLCache.reloadAll();
-		config.save();
+		config.load();
 		for (JavaLoaderSession session : sessions) {
 			if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
 				LinkedHashMap<String, Object> ocfg = null;
@@ -237,7 +245,9 @@ public class PatchJavaLoader extends Patch {
 				if (!ocfg.containsKey(jl.getClass().getName())) {
 					ocfg.put(jl.getClass().getName(), new LinkedHashMap<String, Object>());
 				}
-				jl.reload((LinkedHashMap<String, Object>)ocfg.get(jl.getClass().getName()));
+				jl.pcfg = (LinkedHashMap<String, Object>)ocfg.get(jl.getClass().getName());
+				jl.host = session == null ? null : session.getVHost();
+				jl.reload();
 			}
 		}
 	}
@@ -305,7 +315,9 @@ public class PatchJavaLoader extends Patch {
 					ocfg.put(name, new LinkedHashMap<String, Object>());
 				}
 				loader = ((Class<? extends JavaLoader>)loaderClass).newInstance();
-				loader.init(request.host, (LinkedHashMap<String, Object>)ocfg.get(name));
+				loader.pcfg = (LinkedHashMap<String, Object>)ocfg.get(name);
+				loader.host = request.host;
+				loader.init();
 				jls.put(name, loader);
 			}else {
 				loader = jls.get(name);

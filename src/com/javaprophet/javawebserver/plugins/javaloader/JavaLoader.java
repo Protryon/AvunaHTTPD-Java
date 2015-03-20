@@ -12,19 +12,14 @@ public abstract class JavaLoader {
 		
 	}
 	
-	public void init(VHost host) {
-	}
+	public LinkedHashMap<String, Object> pcfg = null;
+	public VHost host = null;
 	
-	public void init(VHost host, LinkedHashMap<String, Object> cfg) {
-		init(host);
+	public void init() {
 	}
 	
 	public int getType() {
 		return -1;
-	}
-	
-	public void reload(LinkedHashMap<String, Object> cfg) {
-		reload();
 	}
 	
 	public void reload() {
