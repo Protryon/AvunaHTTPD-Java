@@ -2,6 +2,7 @@ package com.javaprophet.javawebserver.dns;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import com.javaprophet.javawebserver.util.Logger;
@@ -10,14 +11,16 @@ import com.javaprophet.javawebserver.util.Logger;
  * Created by JavaProphet on 8/13/14 at 10:56 PM.
  */
 public class TCPServer extends Thread implements IServer {
-	public TCPServer() {
+	private final ServerSocket server;
+	
+	public TCPServer(ServerSocket server) {
 		super("DNS TCPServer");
+		this.server = server;
 		this.setDaemon(true);
 	}
 	
 	public void run() {
 		try {
-			ServerSocket server = new ServerSocket(53);
 			while (!server.isClosed()) {
 				final Socket s = server.accept(); // TODO: thread
 				s.setSoTimeout(1000);
@@ -28,6 +31,12 @@ public class TCPServer extends Thread implements IServer {
 			}
 		}catch (Exception e) {
 			Logger.logError(e);
+		}finally {
+			try {
+				server.close();
+			}catch (IOException e) {
+				Logger.logError(e);
+			}
 		}
 	}
 }

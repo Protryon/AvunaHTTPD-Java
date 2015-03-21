@@ -28,6 +28,7 @@ public abstract class Host extends Thread {
 	
 	public Host(String threadName, String ip, int port, boolean isSSL, File keyFile, String keyPassword, String keystorePassword, Protocol protocol) {
 		super(threadName + " Host");
+		setDaemon(true);
 		this.name = threadName;
 		this.ip = ip;
 		this.port = port;

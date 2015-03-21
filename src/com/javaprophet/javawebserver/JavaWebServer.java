@@ -17,6 +17,7 @@ import com.javaprophet.javawebserver.com.CommandProcessor;
 import com.javaprophet.javawebserver.dns.RecordHolder;
 import com.javaprophet.javawebserver.hosts.Host;
 import com.javaprophet.javawebserver.hosts.HostCom;
+import com.javaprophet.javawebserver.hosts.HostDNS;
 import com.javaprophet.javawebserver.hosts.HostHTTP;
 import com.javaprophet.javawebserver.hosts.HostRegistry;
 import com.javaprophet.javawebserver.hosts.Protocol;
@@ -211,6 +212,7 @@ public class JavaWebServer {
 			mainConfig.save();
 			HostRegistry.addHost(Protocol.HTTP, HostHTTP.class);
 			HostRegistry.addHost(Protocol.COM, HostCom.class);
+			HostRegistry.addHost(Protocol.DNS, HostDNS.class);
 			hostsConfig = new Config("hosts", new File((String)mainConfig.get("hosts")), new ConfigFormat() {
 				
 				@Override
