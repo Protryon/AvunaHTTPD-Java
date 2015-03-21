@@ -204,9 +204,12 @@ public class AvunaHTTPD {
 				ComClient.run(ip, port);
 				return;
 			}
+			if (System.getProperty("user.name").contains("root")) {
+				System.err.println("[WARNING] Running as root.");
+			}
 			System.setProperty("line.separator", crlf);
 			boolean unpack = args.length == 1 && args[0].equals("unpack");
-			final File cfg = new File(!unpack && args.length > 0 ? args[0] : (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\jws\\main.cfg" : "/etc/jws/main.cfg"));
+			final File cfg = new File(!unpack && args.length > 0 ? args[0] : (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\avuna\\httpd\\main.cfg" : "/etc/avuna/httpd/main.cfg"));
 			checkPerms(cfg.getParentFile());
 			mainConfig = new Config("main", cfg, new ConfigFormat() {
 				public void format(HashMap<String, Object> map) {
