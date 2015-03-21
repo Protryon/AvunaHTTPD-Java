@@ -12,17 +12,13 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import com.javaprophet.javawebserver.com.ComClient;
+import com.javaprophet.javawebserver.com.CommandProcessor;
 import com.javaprophet.javawebserver.dns.RecordHolder;
-import com.javaprophet.javawebserver.dns.TCPServer;
-import com.javaprophet.javawebserver.dns.ThreadDNSWorker;
-import com.javaprophet.javawebserver.dns.UDPServer;
 import com.javaprophet.javawebserver.hosts.Host;
-import com.javaprophet.javawebserver.hosts.VHost;
-import com.javaprophet.javawebserver.networking.ThreadConnection;
-import com.javaprophet.javawebserver.networking.ThreadWorker;
-import com.javaprophet.javawebserver.networking.command.ComClient;
-import com.javaprophet.javawebserver.networking.command.ComServer;
-import com.javaprophet.javawebserver.networking.command.CommandProcessor;
+import com.javaprophet.javawebserver.hosts.HostHTTP;
+import com.javaprophet.javawebserver.hosts.HostRegistry;
+import com.javaprophet.javawebserver.hosts.Protocol;
 import com.javaprophet.javawebserver.plugins.PatchBus;
 import com.javaprophet.javawebserver.plugins.base.BaseLoader;
 import com.javaprophet.javawebserver.util.Config;
@@ -198,7 +194,6 @@ public class JavaWebServer {
 			checkPerms(cfg.getParentFile());
 			mainConfig = new Config("main", cfg, new ConfigFormat() {
 				public void format(HashMap<String, Object> map) {
-					if (!map.containsKey("version")) map.put("version", JavaWebServer.VERSION);
 					File dir = null;
 					if (!map.containsKey("dir")) {
 						map.put("dir", (dir = cfg.getParentFile()).getAbsolutePath());
@@ -209,17 +204,6 @@ public class JavaWebServer {
 					if (!map.containsKey("plugins")) map.put("plugins", new File(dir, "plugins").toString());
 					if (!map.containsKey("logs")) map.put("logs", new File(dir, "logs").toString());
 					if (!map.containsKey("javac")) map.put("javac", "javac");
-					if (!map.containsKey("connlimit")) map.put("connlimit", "-1");
-					if (!map.containsKey("workerThreadCount")) map.put("workerThreadCount", "128");
-					if (!map.containsKey("connThreadCount")) map.put("connThreadCount", "24");
-					if (!map.containsKey("acceptThreadCount")) map.put("acceptThreadCount", "24");
-					if (!map.containsKey("dnsWorkerThreadCount")) map.put("dnsWorkerThreadCount", "16");
-					if (!map.containsKey("dnsAcceptThreadCount")) map.put("dnsAcceptThreadCount", "16");
-					if (!map.containsKey("errorpages")) map.put("errorpages", new LinkedHashMap<String, Object>());
-					if (!map.containsKey("index")) map.put("index", "index.class,index.jwsl,index.php,index.html");
-					if (!map.containsKey("cacheClock")) map.put("cacheClock", "-1");
-					if (!map.containsKey("dns")) map.put("dns", "false");
-					if (!map.containsKey("dnsf")) map.put("dnsf", new File(dir, "dns.cfg").toString());
 					if (!map.containsKey("com")) map.put("com", new LinkedHashMap<String, Object>());
 					HashMap<String, Object> telnet = (HashMap<String, Object>)map.get("com");
 					if (!telnet.containsKey("enabled")) telnet.put("enabled", "true");
@@ -231,7 +215,7 @@ public class JavaWebServer {
 			});
 			mainConfig.load();
 			mainConfig.save();
-			final int cl = Integer.parseInt((String)mainConfig.get("connlimit"));
+			HostRegistry.addHost(Protocol.HTTP, HostHTTP.class);
 			hostsConfig = new Config("hosts", new File((String)mainConfig.get("hosts")), new ConfigFormat() {
 				
 				@Override
@@ -239,34 +223,33 @@ public class JavaWebServer {
 					if (!map.containsKey("main")) map.put("main", new LinkedHashMap<String, Object>());
 					for (String key : map.keySet()) {
 						HashMap<String, Object> host = (HashMap<String, Object>)map.get(key);
+						if (!host.containsKey("enabled")) host.put("enabled", "true");
 						if (!host.containsKey("port")) host.put("port", "80");
 						if (!host.containsKey("ip")) host.put("ip", "0.0.0.0");
-						if (!host.containsKey("vhosts")) host.put("vhosts", new LinkedHashMap<String, Object>());
-						HashMap<String, Object> vhosts = (HashMap<String, Object>)host.get("vhosts");
-						if (!vhosts.containsKey("main")) vhosts.put("main", new LinkedHashMap<String, Object>());
-						for (String vkey : vhosts.keySet()) {
-							HashMap<String, Object> vhost = (HashMap<String, Object>)vhosts.get(vkey);
-							if (!vhost.containsKey("enabled")) vhost.put("enabled", "true");
-							if (!vhost.containsKey("debug")) vhost.put("debug", "false");
-							if (!vhost.containsKey("host")) vhost.put("host", ".*");
-							if (!vhost.containsKey("htdocs")) vhost.put("htdocs", fileManager.getBaseFile("htdocs").toString());
-							if (!vhost.containsKey("htsrc")) vhost.put("htsrc", fileManager.getBaseFile("htsrc").toString());
-						}
+						if (!host.containsKey("protocol")) host.put("protocol", "http");
+						if (!host.containsKey("connlimit")) host.put("connlimit", "-1");
 						if (!host.containsKey("ssl")) host.put("ssl", new LinkedHashMap<String, Object>());
 						HashMap<String, Object> ssl = (HashMap<String, Object>)host.get("ssl");
 						if (!ssl.containsKey("enabled")) ssl.put("enabled", "false");
 						if (!ssl.containsKey("keyFile")) ssl.put("keyFile", fileManager.getBaseFile("ssl/keyFile").toString());
 						if (!ssl.containsKey("keystorePassword")) ssl.put("keystorePassword", "password");
 						if (!ssl.containsKey("keyPassword")) ssl.put("keyPassword", "password");
-						Host h = new Host(key, (String)host.get("ip"), Integer.parseInt((String)host.get("port")), cl, ssl.get("enabled").equals("true"), new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
-						for (String vkey : vhosts.keySet()) {
-							HashMap<String, Object> ourvh = (HashMap<String, Object>)vhosts.get(vkey);
-							if (!ourvh.get("enabled").equals("true")) continue;
-							VHost vhost = new VHost(h.getHostname() + "/" + vkey, h, new File((String)ourvh.get("htdocs")), new File((String)ourvh.get("htsrc")), (String)ourvh.get("host"));
-							vhost.setDebug(ourvh.get("debug").equals("true"));
-							h.addVHost(vhost);
+						Protocol p = Protocol.fromString((String)host.get("protocol"));
+						if (p == null) {
+							Logger.log("Skipping Host: " + key + " due to invalid protocol!");
+							continue;
 						}
-						hosts.put(key, h);
+						if (!host.get("enabled").equals("true")) {
+							continue;
+						}
+						try {
+							Host h = (Host)HostRegistry.getHost(p).getConstructors()[0].newInstance(key, (String)host.get("ip"), Integer.parseInt((String)host.get("port")), ssl.get("enabled").equals("true"), new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
+							h.formatConfig(host);
+							hosts.put(key, h);
+						}catch (Exception e) {
+							Logger.logError(e);
+							continue;
+						}
 					}
 				}
 				
@@ -282,11 +265,10 @@ public class JavaWebServer {
 					}
 				}
 			});
-			boolean dns = mainConfig.get("dns").equals("true");
-			RecordHolder holder = null;
-			if (dns) {
-				holder = new RecordHolder(new File((String)mainConfig.get("dnsf")));
-			}
+			// RecordHolder holder = null;
+			// if (dns) {
+			// holder = new RecordHolder(new File((String)mainConfig.get("dnsf")));
+			// }
 			setupFolders();
 			File lf = new File(fileManager.getLogs(), "" + (System.currentTimeMillis() / 1000L));
 			lf.createNewFile();
@@ -297,45 +279,49 @@ public class JavaWebServer {
 			if (unpack) {
 				return;
 			}
-			Logger.log("Loading Connection Handling");
-			ThreadConnection.initQueue(cl < 1 ? 10000000 : cl);
-			ThreadWorker.initQueue();
-			for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount")); i++) {
-				ThreadWorker worker = new ThreadWorker();
-				worker.start();
-			}
-			for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("connThreadCount")); i++) {
-				ThreadConnection conn = new ThreadConnection();
-				conn.start();
-				
-			}
-			if (dns) { // TODO maybe split off into different cfgs than above
-				ThreadDNSWorker.holder = holder;
-				ThreadDNSWorker.initQueue(cl < 1 ? 10000000 : cl);
-				for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("dnsWorkerThreadCount")); i++) {
-					ThreadDNSWorker worker = new ThreadDNSWorker();
-					worker.setDaemon(true);
-					worker.start();
-				}
-			}
+			// ThreadConnection.initQueue(cl < 1 ? 10000000 : cl);
+			// ThreadWorker.initQueue();
+			// for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount")); i++) {
+			// ThreadWorker worker = new ThreadWorker();
+			// worker.start();
+			// }
+			// for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("connThreadCount")); i++) {
+			// ThreadConnection conn = new ThreadConnection();
+			// conn.start();
+			//
+			// }
+			// if (dns) { // TODO maybe split off into different cfgs than above
+			// ThreadDNSWorker.holder = holder;
+			// ThreadDNSWorker.initQueue(cl < 1 ? 10000000 : cl);
+			// for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("dnsWorkerThreadCount")); i++) {
+			// ThreadDNSWorker worker = new ThreadDNSWorker();
+			// worker.setDaemon(true);
+			// worker.start();
+			// }
+			// }
 			Logger.log("Loading Plugins");
 			BaseLoader.loadBases();
-			HashMap<String, Object> com = ((HashMap<String, Object>)mainConfig.get("com"));
-			if (((String)com.get("enabled")).equals("true")) {
-				Logger.log("Starting Com Server on " + ((String)com.get("bindip")) + ":" + ((String)com.get("bindport")));
-				ComServer server = new ComServer();
-				server.start();
+			Logger.log("Loading Connection Handling");
+			for (Host h : hosts.values()) {
+				h.start();
 			}
-			if (dns) {
-				Logger.log("Starting DNS Nameserver on 0.0.0.0:53 (UDP+TCP)");
-				UDPServer udp = new UDPServer();
-				udp.start();
-				TCPServer tcp = new TCPServer();
-				tcp.start();
-			}
-			for (Host host : hosts.values()) {
-				host.start();
-			}
+			
+			// HashMap<String, Object> com = ((HashMap<String, Object>)mainConfig.get("com"));
+			// if (((String)com.get("enabled")).equals("true")) {
+			// Logger.log("Starting Com Server on " + ((String)com.get("bindip")) + ":" + ((String)com.get("bindport")));
+			// ComServer server = new ComServer();
+			// server.start();
+			// }
+			// if (dns) {
+			// Logger.log("Starting DNS Nameserver on 0.0.0.0:53 (UDP+TCP)");
+			// UDPServer udp = new UDPServer();
+			// udp.start();
+			// TCPServer tcp = new TCPServer();
+			// tcp.start();
+			// }
+			// for (Host host : hosts.values()) {
+			// host.start();
+			// }
 		}catch (Exception e) {
 			if (Logger.INSTANCE == null) {
 				e.printStackTrace();

@@ -1,7 +1,7 @@
 package com.javaprophet.javawebserver.plugins.javaloader;
 
-import com.javaprophet.javawebserver.networking.packets.RequestPacket;
-import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
+import com.javaprophet.javawebserver.http.networking.RequestPacket;
+import com.javaprophet.javawebserver.http.networking.ResponsePacket;
 
 public abstract class JavaLoaderBasic extends JavaLoader {
 	

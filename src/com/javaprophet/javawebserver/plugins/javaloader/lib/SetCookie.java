@@ -1,6 +1,6 @@
 package com.javaprophet.javawebserver.plugins.javaloader.lib;
 
-import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
+import com.javaprophet.javawebserver.http.networking.ResponsePacket;
 
 public class SetCookie {
 	private final ResponsePacket response;

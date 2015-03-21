@@ -1,6 +1,6 @@
 package com.javaprophet.javawebserver.http;
 
-import com.javaprophet.javawebserver.util.OverrideConfig;
+import com.javaprophet.javawebserver.http.util.OverrideConfig;
 
 /**
  * Class that provides all the page content

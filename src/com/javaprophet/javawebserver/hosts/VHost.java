@@ -5,12 +5,12 @@ import java.net.URL;
 import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderSession;
 
 public class VHost {
-	private final Host host;
+	private final HostHTTP host;
 	private final File htdocs, htsrc;
 	private final String name, vhost;
 	private JavaLoaderSession jls;
 	
-	public VHost(String name, Host host, File htdocs, File htsrc, String vhost) {
+	public VHost(String name, HostHTTP host, File htdocs, File htsrc, String vhost) {
 		this.name = name;
 		this.host = host;
 		this.htdocs = htdocs;
@@ -48,7 +48,7 @@ public class VHost {
 		return vhost;
 	}
 	
-	public Host getHost() {
+	public HostHTTP getHost() {
 		return host;
 	}
 	

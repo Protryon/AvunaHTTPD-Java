@@ -1,4 +1,4 @@
-package com.javaprophet.javawebserver.networking.packets;
+package com.javaprophet.javawebserver.http.networking;
 
 import com.javaprophet.javawebserver.http.Headers;
 import com.javaprophet.javawebserver.http.Resource;

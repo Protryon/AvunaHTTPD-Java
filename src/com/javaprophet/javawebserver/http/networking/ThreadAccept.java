@@ -1,4 +1,4 @@
-package com.javaprophet.javawebserver.networking;
+package com.javaprophet.javawebserver.http.networking;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -6,7 +6,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import javax.net.ssl.SSLServerSocket;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.hosts.Host;
+import com.javaprophet.javawebserver.hosts.HostHTTP;
 import com.javaprophet.javawebserver.plugins.PatchRegistry;
 import com.javaprophet.javawebserver.plugins.base.PatchSecurity;
 import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderSecurity;
@@ -16,11 +16,12 @@ import com.javaprophet.javawebserver.util.Logger;
 public class ThreadAccept extends Thread {
 	private final ServerSocket server;
 	private final int cl;
-	private final Host host;
+	private final HostHTTP host;
 	private static int nid = 1;
 	
-	public ThreadAccept(Host host, ServerSocket server, int cl) {
+	public ThreadAccept(HostHTTP host, ServerSocket server, int cl) {
 		super("JWS Accept Thread #" + nid++);
+		setDaemon(true);
 		this.server = server;
 		this.cl = cl;
 		this.host = host;

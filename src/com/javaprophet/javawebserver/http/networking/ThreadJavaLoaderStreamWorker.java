@@ -1,10 +1,7 @@
-package com.javaprophet.javawebserver.networking;
+package com.javaprophet.javawebserver.http.networking;
 
 import java.io.IOException;
 import java.net.SocketException;
-import com.javaprophet.javawebserver.networking.packets.RequestPacket;
-import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
-import com.javaprophet.javawebserver.plugins.javaloader.ChunkedOutputStream;
 import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderStream;
 import com.javaprophet.javawebserver.util.Logger;
 

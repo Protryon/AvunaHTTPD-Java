@@ -6,13 +6,13 @@ import java.util.HashMap;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.ResponseGenerator;
 import com.javaprophet.javawebserver.http.StatusCode;
-import com.javaprophet.javawebserver.networking.packets.Packet;
-import com.javaprophet.javawebserver.networking.packets.RequestPacket;
-import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
+import com.javaprophet.javawebserver.http.networking.Packet;
+import com.javaprophet.javawebserver.http.networking.RequestPacket;
+import com.javaprophet.javawebserver.http.networking.ResponsePacket;
+import com.javaprophet.javawebserver.http.util.CompiledDirective;
+import com.javaprophet.javawebserver.http.util.OverrideConfig;
 import com.javaprophet.javawebserver.plugins.Patch;
-import com.javaprophet.javawebserver.util.CompiledDirective;
 import com.javaprophet.javawebserver.util.Logger;
-import com.javaprophet.javawebserver.util.OverrideConfig;
 
 public class PatchOverride extends Patch {
 	

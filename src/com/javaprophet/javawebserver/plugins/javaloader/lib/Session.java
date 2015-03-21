@@ -2,7 +2,7 @@ package com.javaprophet.javawebserver.plugins.javaloader.lib;
 
 import java.util.HashMap;
 import java.util.UUID;
-import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
+import com.javaprophet.javawebserver.http.networking.ResponsePacket;
 
 public class Session {
 	private final String csessid;

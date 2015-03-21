@@ -1,4 +1,4 @@
-package com.javaprophet.javawebserver.networking.packets;
+package com.javaprophet.javawebserver.http.networking;
 
 import java.io.DataOutputStream;
 import java.io.IOException;

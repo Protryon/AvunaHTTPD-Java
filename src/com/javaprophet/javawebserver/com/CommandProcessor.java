@@ -1,4 +1,4 @@
-package com.javaprophet.javawebserver.networking.command;
+package com.javaprophet.javawebserver.com;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -11,9 +11,9 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.hosts.Host;
+import com.javaprophet.javawebserver.hosts.HostHTTP;
 import com.javaprophet.javawebserver.hosts.VHost;
-import com.javaprophet.javawebserver.j2p.JavaToPHP;
+import com.javaprophet.javawebserver.http.j2p.JavaToPHP;
 import com.javaprophet.javawebserver.plugins.PatchRegistry;
 import com.javaprophet.javawebserver.plugins.base.PatchOverride;
 import com.javaprophet.javawebserver.plugins.javaloader.PatchJavaLoader;
@@ -158,7 +158,7 @@ public class CommandProcessor {
 				return;
 			}
 			try {
-				Host phost = JavaWebServer.hosts.get(selectedHost);
+				HostHTTP phost = (HostHTTP)JavaWebServer.hosts.get(selectedHost);
 				if (phost == null) {
 					out.println("Invalid Selected Host (select)");
 					return;
@@ -180,7 +180,7 @@ public class CommandProcessor {
 				return;
 			}
 			try {
-				Host phost = JavaWebServer.hosts.get(selectedHost);
+				HostHTTP phost = (HostHTTP)JavaWebServer.hosts.get(selectedHost);
 				if (phost == null) {
 					out.println("Invalid Selected Host (select)");
 					return;
@@ -224,7 +224,7 @@ public class CommandProcessor {
 				out.println("Invalid arguments. (input, output[optional])");
 				return;
 			}
-			Host phost = JavaWebServer.hosts.get(selectedHost);
+			HostHTTP phost = (HostHTTP)JavaWebServer.hosts.get(selectedHost);
 			if (phost == null) {
 				out.println("Invalid Selected Host (select)");
 				return;
@@ -255,7 +255,7 @@ public class CommandProcessor {
 			out.println("JPHP completed.");
 		}else if (command.equals("jcomp")) {
 			boolean all = cargs.length < 1;
-			Host phost = JavaWebServer.hosts.get(selectedHost);
+			HostHTTP phost = (HostHTTP)JavaWebServer.hosts.get(selectedHost);
 			if (phost == null) {
 				out.println("Invalid Selected Host (select)");
 				return;

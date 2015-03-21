@@ -1,4 +1,4 @@
-package com.javaprophet.javawebserver.util;
+package com.javaprophet.javawebserver.http.util;
 
 public enum Directive {
 	forbid("forbid"), redirect("redirect"), index("index"), mime("mime"), cache("cache");

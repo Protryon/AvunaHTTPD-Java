@@ -5,81 +5,49 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
+import java.net.SocketException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.networking.ThreadAccept;
 import com.javaprophet.javawebserver.util.Logger;
 
-public class Host extends Thread {
-	private final String ip, keyPassword, keystorePassword, name;
-	private final File keyFile;
-	private final int port, cl;
-	private final boolean isSSL;
+public abstract class Host extends Thread {
+	protected final String ip, keyPassword, keystorePassword, name;
+	protected final File keyFile;
+	protected final int port;
+	protected final boolean isSSL;
+	protected final Protocol protocol;
 	
-	public String getHostname() {
-		return name;
-	}
-	
-	public int getPort() {
-		return port;
-	}
-	
-	private ArrayList<VHost> vhosts = new ArrayList<VHost>();
-	
-	public void addVHost(VHost vhost) {
-		vhosts.add(vhost);
-	}
-	
-	public Host(String name, String ip, int port, int cl, boolean isSSL, File keyFile, String keyPassword, String keystorePassword) {
-		super(name + " Host");
-		this.name = name;
+	public Host(String threadName, String ip, int port, boolean isSSL, File keyFile, String keyPassword, String keystorePassword, Protocol protocol) {
+		super(threadName + " Host");
+		this.name = threadName;
 		this.ip = ip;
 		this.port = port;
-		this.cl = cl;
 		this.isSSL = isSSL;
 		this.keyFile = keyFile;
 		this.keyPassword = keyPassword;
 		this.keystorePassword = keystorePassword;
-	}
-	
-	public VHost getVHost(String host) {
-		for (VHost vhost : vhosts) {
-			if (vhost.getVHost().equals(".*") || host.matches(vhost.getVHost())) {
-				return vhost;
-			}
-		}
-		return null;
-	}
-	
-	public VHost getVHostByName(String name) {
-		for (VHost vhost : vhosts) {
-			if (vhost.getName().equals(this.name + "/" + name)) {
-				return vhost;
-			}
-		}
-		return null;
-	}
-	
-	public ArrayList<VHost> getVHosts() {
-		return vhosts;
+		this.protocol = protocol;
 	}
 	
 	public void setupFolders() {
-		for (VHost vhost : vhosts) {
-			vhost.setupFolders();
-		}
+		
 	}
 	
-	public void run() {
-		Logger.log("Starting " + name + " Server on " + ip + ":" + port);
+	public final LinkedHashMap<String, Object> getConfig() {
+		return (LinkedHashMap<String, Object>)JavaWebServer.hostsConfig.get(name);
+	}
+	
+	public final void run() {
+		Logger.log("Starting " + name + "/" + protocol.name + " Server on " + ip + ":" + port);
 		try {
 			ServerSocket server = null;
 			if (!isSSL) {
@@ -126,13 +94,26 @@ public class Host extends Thread {
 				server = (SSLServerSocket)sc.getServerSocketFactory().createServerSocket(port, 1000, InetAddress.getByName(ip));
 				((SSLServerSocket)server).setEnabledProtocols(new String[]{fp});
 			}
-			for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("acceptThreadCount")); i++) {
-				new ThreadAccept(this, server, cl).run();
-			}
+			setup(server);
 		}catch (Exception e) {
-			Logger.logError(e);
+			if (!(e instanceof SocketException)) Logger.logError(e);
+			Logger.log("Closing " + name + "/" + protocol.name + " Server on " + ip + ":" + port);
 		}finally {
-			Logger.log("Server " + name + " Closed on " + ip + ":" + port);
+			
 		}
 	}
+	
+	public void formatConfig(HashMap<String, Object> map) {
+		
+	}
+	
+	public String getHostname() {
+		return name;
+	}
+	
+	public int getPort() {
+		return port;
+	}
+	
+	public abstract void setup(ServerSocket s);
 }

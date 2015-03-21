@@ -1,7 +1,7 @@
 package com.javaprophet.javawebserver.plugins.javaloader.security;
 
 import java.util.LinkedHashMap;
-import com.javaprophet.javawebserver.networking.packets.RequestPacket;
+import com.javaprophet.javawebserver.http.networking.RequestPacket;
 import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderSecurity;
 
 public class JLSUA extends JavaLoaderSecurity {

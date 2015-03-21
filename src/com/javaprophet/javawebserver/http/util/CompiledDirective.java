@@ -1,4 +1,6 @@
-package com.javaprophet.javawebserver.util;
+package com.javaprophet.javawebserver.http.util;
+
+import com.javaprophet.javawebserver.util.Logger;
 
 public class CompiledDirective {
 	public final Directive directive;

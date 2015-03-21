@@ -1,4 +1,4 @@
-package com.javaprophet.javawebserver.plugins.javaloader;
+package com.javaprophet.javawebserver.http.networking;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.zip.GZIPOutputStream;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 
 public class ChunkedOutputStream extends DataOutputStream {
 	private boolean gzip = false, flushed = false;

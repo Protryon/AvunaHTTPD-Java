@@ -18,10 +18,11 @@ import java.util.LinkedHashMap;
 import java.util.zip.CRC32;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.hosts.Host;
+import com.javaprophet.javawebserver.hosts.HostHTTP;
 import com.javaprophet.javawebserver.hosts.VHost;
-import com.javaprophet.javawebserver.networking.packets.Packet;
-import com.javaprophet.javawebserver.networking.packets.RequestPacket;
-import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
+import com.javaprophet.javawebserver.http.networking.Packet;
+import com.javaprophet.javawebserver.http.networking.RequestPacket;
+import com.javaprophet.javawebserver.http.networking.ResponsePacket;
 import com.javaprophet.javawebserver.plugins.Patch;
 import com.javaprophet.javawebserver.plugins.PatchRegistry;
 import com.javaprophet.javawebserver.plugins.base.PatchSecurity;
@@ -77,7 +78,9 @@ public class PatchJavaLoader extends Patch {
 				Logger.logError(t);
 			}
 			for (Host host : JavaWebServer.hosts.values()) {
-				for (VHost vhost : host.getVHosts()) {
+				if (!(host instanceof HostHTTP)) continue;
+				HostHTTP host2 = (HostHTTP)host;
+				for (VHost vhost : host2.getVHosts()) {
 					vhost.initJLS(new URL[]{vhost.getHTDocs().toURI().toURL()});
 					recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 				}
@@ -107,7 +110,9 @@ public class PatchJavaLoader extends Patch {
 			sessions.clear();
 			((PatchSecurity)PatchRegistry.getPatchForClass(PatchSecurity.class)).loadBases(this);
 			for (Host host : JavaWebServer.hosts.values()) {
-				for (VHost vhost : host.getVHosts()) {
+				if (!(host instanceof HostHTTP)) continue;
+				HostHTTP host2 = (HostHTTP)host;
+				for (VHost vhost : host2.getVHosts()) {
 					vhost.initJLS(new URL[]{vhost.getHTDocs().toURI().toURL()});
 					recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 				}

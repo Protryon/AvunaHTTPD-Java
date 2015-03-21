@@ -10,7 +10,8 @@ import java.util.HashMap;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.Resource;
 import com.javaprophet.javawebserver.http.StatusCode;
-import com.javaprophet.javawebserver.networking.packets.RequestPacket;
+import com.javaprophet.javawebserver.http.networking.RequestPacket;
+import com.javaprophet.javawebserver.http.util.OverrideConfig;
 import com.javaprophet.javawebserver.plugins.Patch;
 import com.javaprophet.javawebserver.plugins.PatchRegistry;
 import com.javaprophet.javawebserver.plugins.base.PatchChunked;
@@ -103,7 +104,7 @@ public class FileManager {
 	}
 	
 	public Resource getErrorPage(RequestPacket request, String reqTarget, StatusCode status, String info) {
-		HashMap<String, Object> errorPages = (HashMap<String, Object>)JavaWebServer.mainConfig.get("errorpages");
+		HashMap<String, Object> errorPages = (HashMap<String, Object>)request.host.getHost().getConfig().get("errorpages");
 		if (errorPages.containsKey(status.getStatus())) {
 			try {
 				String path = (String)errorPages.get(status.getStatus());
@@ -150,7 +151,7 @@ public class FileManager {
 			if (request.overrideIndex != null) {
 				index = request.overrideIndex;
 			}else {
-				index = ((String)JavaWebServer.mainConfig.get("index")).split(",");
+				index = ((String)request.host.getHost().getConfig().get("index")).split(",");
 			}
 			for (String i : index) {
 				i = i.trim();
@@ -233,7 +234,7 @@ public class FileManager {
 			OverrideConfig directive = null;
 			if (cache.containsKey(nrt)) {
 				long t = System.currentTimeMillis();
-				long cc = Integer.parseInt(((String)JavaWebServer.mainConfig.get("cacheClock")));
+				long cc = Integer.parseInt(((String)request.host.getHost().getConfig().get("cacheClock")));
 				if (request.overrideCache >= -1) {
 					cc = request.overrideCache;
 				}

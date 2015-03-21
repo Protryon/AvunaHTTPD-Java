@@ -1,4 +1,4 @@
-package com.javaprophet.javawebserver.networking.command;
+package com.javaprophet.javawebserver.com;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

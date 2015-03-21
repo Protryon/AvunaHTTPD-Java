@@ -1,4 +1,4 @@
-package com.javaprophet.javawebserver.j2p;
+package com.javaprophet.javawebserver.http.j2p;
 
 import java.io.PrintStream;
 import java.util.ArrayList;

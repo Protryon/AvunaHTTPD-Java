@@ -1,4 +1,4 @@
-package com.javaprophet.javawebserver.networking;
+package com.javaprophet.javawebserver.http.networking;
 
 import java.io.IOException;
 import java.net.SocketException;
@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.http.ResponseGenerator;
-import com.javaprophet.javawebserver.networking.packets.RequestPacket;
-import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class ThreadWorker extends Thread {
@@ -15,6 +13,7 @@ public class ThreadWorker extends Thread {
 	
 	public ThreadWorker() {
 		super("JWS Worker Thread #" + nid++);
+		setDaemon(true);
 		workers.add(this);
 	}
 	

@@ -2,9 +2,9 @@ package com.javaprophet.javawebserver.plugins;
 
 import java.io.IOException;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.networking.packets.Packet;
-import com.javaprophet.javawebserver.networking.packets.RequestPacket;
-import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
+import com.javaprophet.javawebserver.http.networking.Packet;
+import com.javaprophet.javawebserver.http.networking.RequestPacket;
+import com.javaprophet.javawebserver.http.networking.ResponsePacket;
 
 public class PatchBus {
 	public PatchBus() {

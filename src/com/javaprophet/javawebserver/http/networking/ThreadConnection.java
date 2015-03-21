@@ -1,4 +1,4 @@
-package com.javaprophet.javawebserver.networking;
+package com.javaprophet.javawebserver.http.networking;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -10,9 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import com.javaprophet.javawebserver.JavaWebServer;
-import com.javaprophet.javawebserver.hosts.Host;
-import com.javaprophet.javawebserver.networking.packets.RequestPacket;
-import com.javaprophet.javawebserver.networking.packets.ResponsePacket;
+import com.javaprophet.javawebserver.hosts.HostHTTP;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class ThreadConnection extends Thread {
@@ -20,6 +18,7 @@ public class ThreadConnection extends Thread {
 	
 	public ThreadConnection() {
 		super("JWS Connection Thread #" + nid++);
+		setDaemon(true);
 		conns.add(this);
 	}
 	
@@ -39,7 +38,7 @@ public class ThreadConnection extends Thread {
 		return connIPs.containsKey(ip) ? connIPs.get(ip) : 0;
 	}
 	
-	public static void addWork(Host host, Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
+	public static void addWork(HostHTTP host, Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
 		String ip = s.getInetAddress().getHostAddress();
 		Integer cur = connIPs.get(ip);
 		if (cur == null) cur = 0;

@@ -1,7 +1,7 @@
 package com.javaprophet.javawebserver.plugins.javaloader.security;
 
-import com.javaprophet.javawebserver.networking.ThreadConnection;
-import com.javaprophet.javawebserver.networking.packets.RequestPacket;
+import com.javaprophet.javawebserver.http.networking.RequestPacket;
+import com.javaprophet.javawebserver.http.networking.ThreadConnection;
 import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderSecurity;
 
 public class JLSBFlood extends JavaLoaderSecurity {

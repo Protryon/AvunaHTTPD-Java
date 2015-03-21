@@ -1,9 +1,10 @@
-package com.javaprophet.javawebserver.util;
+package com.javaprophet.javawebserver.http.util;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import com.javaprophet.javawebserver.util.Logger;
 
 public class OverrideConfig {
 	private final File file;

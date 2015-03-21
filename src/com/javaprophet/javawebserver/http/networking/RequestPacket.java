@@ -1,4 +1,4 @@
-package com.javaprophet.javawebserver.networking.packets;
+package com.javaprophet.javawebserver.http.networking;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -13,7 +13,6 @@ import com.javaprophet.javawebserver.hosts.VHost;
 import com.javaprophet.javawebserver.http.Headers;
 import com.javaprophet.javawebserver.http.Method;
 import com.javaprophet.javawebserver.http.Resource;
-import com.javaprophet.javawebserver.networking.Work;
 import com.javaprophet.javawebserver.util.Logger;
 
 public class RequestPacket extends Packet {
