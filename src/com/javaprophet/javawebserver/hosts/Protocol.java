@@ -1,7 +1,7 @@
 package com.javaprophet.javawebserver.hosts;
 
 public enum Protocol {
-	HTTP("HTTP"), MAIL("MAIL"), DNS("DNS");
+	HTTP("HTTP"), MAIL("MAIL"), DNS("DNS"), COM("COM");
 	public final String name;
 	
 	private Protocol(String name) {

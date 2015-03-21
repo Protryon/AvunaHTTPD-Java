@@ -16,6 +16,7 @@ import com.javaprophet.javawebserver.com.ComClient;
 import com.javaprophet.javawebserver.com.CommandProcessor;
 import com.javaprophet.javawebserver.dns.RecordHolder;
 import com.javaprophet.javawebserver.hosts.Host;
+import com.javaprophet.javawebserver.hosts.HostCom;
 import com.javaprophet.javawebserver.hosts.HostHTTP;
 import com.javaprophet.javawebserver.hosts.HostRegistry;
 import com.javaprophet.javawebserver.hosts.Protocol;
@@ -204,30 +205,31 @@ public class JavaWebServer {
 					if (!map.containsKey("plugins")) map.put("plugins", new File(dir, "plugins").toString());
 					if (!map.containsKey("logs")) map.put("logs", new File(dir, "logs").toString());
 					if (!map.containsKey("javac")) map.put("javac", "javac");
-					if (!map.containsKey("com")) map.put("com", new LinkedHashMap<String, Object>());
-					HashMap<String, Object> telnet = (HashMap<String, Object>)map.get("com");
-					if (!telnet.containsKey("enabled")) telnet.put("enabled", "true");
-					if (!telnet.containsKey("bindport")) telnet.put("bindport", "6049");
-					if (!telnet.containsKey("bindip")) telnet.put("bindip", "127.0.0.1");
-					if (!telnet.containsKey("auth")) telnet.put("auth", "jwsisawesome");
-					if (!telnet.containsKey("doAuth")) telnet.put("doAuth", "true");
 				}
 			});
 			mainConfig.load();
 			mainConfig.save();
 			HostRegistry.addHost(Protocol.HTTP, HostHTTP.class);
+			HostRegistry.addHost(Protocol.COM, HostCom.class);
 			hostsConfig = new Config("hosts", new File((String)mainConfig.get("hosts")), new ConfigFormat() {
 				
 				@Override
 				public void format(HashMap<String, Object> map) {
-					if (!map.containsKey("main")) map.put("main", new LinkedHashMap<String, Object>());
+					boolean nm = false, nc = false;
+					if (!map.containsKey("main")) {
+						map.put("main", new LinkedHashMap<String, Object>());
+						nm = true;
+					}
+					if (!map.containsKey("com")) {
+						map.put("com", new LinkedHashMap<String, Object>());
+						nc = true;
+					}
 					for (String key : map.keySet()) {
 						HashMap<String, Object> host = (HashMap<String, Object>)map.get(key);
 						if (!host.containsKey("enabled")) host.put("enabled", "true");
-						if (!host.containsKey("port")) host.put("port", "80");
+						if (!host.containsKey("protocol")) host.put("protocol", ((nc && key.equals("com")) ? "com" : "http"));
+						if (!host.containsKey("port")) host.put("port", ((nc && key.equals("com")) ? "6049" : "80"));
 						if (!host.containsKey("ip")) host.put("ip", "0.0.0.0");
-						if (!host.containsKey("protocol")) host.put("protocol", "http");
-						if (!host.containsKey("connlimit")) host.put("connlimit", "-1");
 						if (!host.containsKey("ssl")) host.put("ssl", new LinkedHashMap<String, Object>());
 						HashMap<String, Object> ssl = (HashMap<String, Object>)host.get("ssl");
 						if (!ssl.containsKey("enabled")) ssl.put("enabled", "false");

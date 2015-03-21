@@ -4,10 +4,11 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.HashMap;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 import com.javaprophet.javawebserver.JavaWebServer;
 import com.javaprophet.javawebserver.util.Logger;
@@ -17,13 +18,20 @@ import com.javaprophet.javawebserver.util.Logger;
  */
 public class ComServer extends Thread {
 	
+	private final String[] auth;
+	private final ServerSocket server;
+	
 	/**
 	 * Our constructor
 	 */
-	public ComServer() {
+	public ComServer(ServerSocket server, String[] auth) {
 		super("ComServer");
+		this.auth = auth;
+		this.server = server;
 		this.setDaemon(true);
 	}
+	
+	private HashMap<String, Integer> attempts = new HashMap<String, Integer>();
 	
 	/**
 	 * Our run method that handles everything
@@ -31,40 +39,72 @@ public class ComServer extends Thread {
 	public void run() {
 		try {
 			// Com config
-			HashMap<String, Object> com = (HashMap<String, Object>)JavaWebServer.mainConfig.get("com");
 			// Server socket and some more config options under
-			ServerSocket server = new ServerSocket(Integer.parseInt((String)com.get("bindport")), 10, InetAddress.getByName((String)com.get("bindip")));
-			boolean doAuth = com.get("doAuth").equals("true");
+			boolean doAuth = auth != null;
 			boolean isAuth = false;
-			String auth = (String)com.get("auth");
 			while (!server.isClosed()) {
 				// Loops for new connections
 				String ip = "";
 				Socket s = null;
 				try {
 					s = server.accept();
+					if (attempts.containsKey(s.getInetAddress().getHostAddress())) {
+						if (attempts.get(s.getInetAddress().getHostAddress()) >= 4) {
+							s.close();
+							continue;
+						}
+					}
 					DataOutputStream out = new DataOutputStream(s.getOutputStream());
 					out.flush();
 					DataInputStream in = new DataInputStream(s.getInputStream());
 					// Handles auth
-					out.write(("Java Web Server(JWS) Version " + JavaWebServer.VERSION + JavaWebServer.crlf + (doAuth ? "Please Authenticate." + JavaWebServer.crlf : "")).getBytes());
+					out.write(("Java Web Server(JWS) Version " + JavaWebServer.VERSION + JavaWebServer.crlf + (doAuth ? "Username: " : "")).getBytes());
 					out.flush();
 					Scanner scan = new Scanner(in);
 					PrintStream ps = new PrintStream(out);
 					ip = s.getInetAddress().getHostAddress();
+					String user = "";
 					while (!s.isClosed()) {
-						String cs = scan.nextLine();
+						String cs = scan.nextLine().trim();
 						if (cs.equals("close")) {
 							throw new IOException();
 						}
 						if (doAuth && !isAuth) {
-							if (cs.equals(auth)) {
-								isAuth = true;
-								Logger.log("com[" + s.getInetAddress().getHostAddress() + "] Authenticated.");
-								ps.println("Authenticated.");
-							}else {
+							if (cs.length() > 0 && user.length() == 0) {
+								user = cs;
+								ps.print("Password: ");
+							}else if (user.length() == 0) {
 								Logger.log("com[" + s.getInetAddress().getHostAddress() + "] NOAUTH/DENIED: " + cs);
-								ps.println("Please Authenticate.");
+								ps.print("Username: ");
+							}else if (user.length() > 0) {
+								String total = user + ":" + cs;
+								for (String pa : auth) {
+									if (pa.equals(total)) {
+										isAuth = true;
+										Logger.log("com[" + s.getInetAddress().getHostAddress() + "] Authenticated.");
+										ps.println("Authenticated.");
+										break;
+									}
+								}
+								if (!isAuth) {
+									Logger.log("com[" + s.getInetAddress().getHostAddress() + "] NOAUTH/DENIED: " + user);
+									ps.println("Invalid Credentials!");
+									if (!attempts.containsKey(s.getInetAddress().getHostAddress())) {
+										attempts.put(s.getInetAddress().getHostAddress(), 0);
+									}
+									int a = attempts.get(s.getInetAddress().getHostAddress());
+									attempts.put(s.getInetAddress().getHostAddress(), a + 1);
+									if (a >= 4) {
+										ps.println("More than 5 invalid attempts, you are banned until server restart.");
+										s.close();
+										Logger.log("com[" + s.getInetAddress().getHostAddress() + "] KILLED 5 INVALID ATTEMPTS: " + user);
+									}
+									user = "";
+									ps.print("Username: ");
+								}
+							}else {
+								s.close();
+								Logger.log("com[" + s.getInetAddress().getHostAddress() + "] <FISHY ERROR> CLOSED: " + (user.length() == 0 ? cs : user));
 							}
 						}else {
 							Logger.log("com[" + s.getInetAddress().getHostAddress() + "]: " + cs);
@@ -74,7 +114,7 @@ public class ComServer extends Thread {
 						ps.flush();
 					}
 				}catch (Exception se) {
-					Logger.logError(se);
+					if (!(se instanceof NoSuchElementException || se instanceof SocketException)) Logger.logError(se);
 					Logger.log("com[" + ip + "] Closed.");
 				}finally {
 					isAuth = false;
@@ -85,6 +125,12 @@ public class ComServer extends Thread {
 			}
 		}catch (Exception e) {
 			Logger.logError(e);
+		}finally {
+			if (server != null) try {
+				server.close();
+			}catch (IOException e) {
+				Logger.logError(e);
+			}
 		}
 	}
 }
