@@ -1,1 +1,0 @@
-java -jar /etc/jws/jws.jar cmd

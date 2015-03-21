@@ -72,6 +72,13 @@ public class JavaWebServer {
 				fout.flush();
 				fout.close();
 			}
+			f = fileManager.getBaseFile("cmd.bat");
+			if (!f.exists()) {
+				FileOutputStream fout = new FileOutputStream(f);
+				fout.write(("java -jar \"" + fileManager.getBaseFile("jws.jar").getAbsolutePath() + "\" cmd").getBytes());
+				fout.flush();
+				fout.close();
+			}
 		}else {
 			File f = fileManager.getBaseFile("run.sh");
 			if (!f.exists()) {
@@ -91,6 +98,13 @@ public class JavaWebServer {
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
 				fout.write(("sh kill.sh & sh run.sh").getBytes());
+				fout.flush();
+				fout.close();
+			}
+			f = fileManager.getBaseFile("cmd.sh");
+			if (!f.exists()) {
+				FileOutputStream fout = new FileOutputStream(f);
+				fout.write(("java -jar \"" + fileManager.getBaseFile("jws.jar").getAbsolutePath() + "\" cmd").getBytes());
 				fout.flush();
 				fout.close();
 			}
@@ -269,10 +283,6 @@ public class JavaWebServer {
 					}
 				}
 			});
-			// RecordHolder holder = null;
-			// if (dns) {
-			// holder = new RecordHolder(new File((String)mainConfig.get("dnsf")));
-			// }
 			setupFolders();
 			File lf = new File(fileManager.getLogs(), "" + (System.currentTimeMillis() / 1000L));
 			lf.createNewFile();
@@ -283,49 +293,12 @@ public class JavaWebServer {
 			if (unpack) {
 				return;
 			}
-			// ThreadConnection.initQueue(cl < 1 ? 10000000 : cl);
-			// ThreadWorker.initQueue();
-			// for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("workerThreadCount")); i++) {
-			// ThreadWorker worker = new ThreadWorker();
-			// worker.start();
-			// }
-			// for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("connThreadCount")); i++) {
-			// ThreadConnection conn = new ThreadConnection();
-			// conn.start();
-			//
-			// }
-			// if (dns) { // TODO maybe split off into different cfgs than above
-			// ThreadDNSWorker.holder = holder;
-			// ThreadDNSWorker.initQueue(cl < 1 ? 10000000 : cl);
-			// for (int i = 0; i < Integer.parseInt((String)JavaWebServer.mainConfig.get("dnsWorkerThreadCount")); i++) {
-			// ThreadDNSWorker worker = new ThreadDNSWorker();
-			// worker.setDaemon(true);
-			// worker.start();
-			// }
-			// }
 			Logger.log("Loading Plugins");
 			BaseLoader.loadBases();
 			Logger.log("Loading Connection Handling");
 			for (Host h : hosts.values()) {
 				h.start();
 			}
-			
-			// HashMap<String, Object> com = ((HashMap<String, Object>)mainConfig.get("com"));
-			// if (((String)com.get("enabled")).equals("true")) {
-			// Logger.log("Starting Com Server on " + ((String)com.get("bindip")) + ":" + ((String)com.get("bindport")));
-			// ComServer server = new ComServer();
-			// server.start();
-			// }
-			// if (dns) {
-			// Logger.log("Starting DNS Nameserver on 0.0.0.0:53 (UDP+TCP)");
-			// UDPServer udp = new UDPServer();
-			// udp.start();
-			// TCPServer tcp = new TCPServer();
-			// tcp.start();
-			// }
-			// for (Host host : hosts.values()) {
-			// host.start();
-			// }
 		}catch (Exception e) {
 			if (Logger.INSTANCE == null) {
 				e.printStackTrace();

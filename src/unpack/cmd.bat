@@ -1,1 +1,0 @@
-java -jar C:\jws\jws.jar cmd
