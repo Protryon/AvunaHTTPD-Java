@@ -5,4 +5,4 @@ A HTTP/1.1 Webserver made in Java.
 
 Copyright 2014 Maxwell Bruce
 
-Official Website: http://javawebserver.org/
+Official Website: http://www.avuna.org/
