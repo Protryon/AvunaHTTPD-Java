@@ -29,7 +29,7 @@ import org.avuna.httpd.util.FileManager;
 import org.avuna.httpd.util.Logger;
 
 public class AvunaHTTPD {
-	public static final String VERSION = "1.0.8";
+	public static final String VERSION = "1.0.9";
 	public static Config mainConfig, hostsConfig;
 	private static Config dnsConfig;
 	public static final FileManager fileManager = new FileManager();
@@ -50,11 +50,17 @@ public class AvunaHTTPD {
 	
 	public static void setupScripts() throws IOException {
 		String os = System.getProperty("os.name").toLowerCase();
+		File us = null;
+		try {
+			us = new File(AvunaHTTPD.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+		}catch (Exception e) {
+		}
+		if (us == null) return;
 		if (os.contains("windows")) {
 			File f = fileManager.getBaseFile("run.bat");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("javaw -jar \"" + fileManager.getBaseFile("jws.jar").getAbsolutePath() + "\" \"" + fileManager.getBaseFile("main.cfg").getAbsolutePath() + "\"").getBytes());
+				fout.write(("javaw -jar \"" + us.getAbsolutePath() + "\" \"" + fileManager.getBaseFile("main.cfg").getAbsolutePath() + "\"").getBytes());
 				fout.flush();
 				fout.close();
 			}
@@ -75,7 +81,7 @@ public class AvunaHTTPD {
 			f = fileManager.getBaseFile("cmd.bat");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("java -jar \"" + fileManager.getBaseFile("jws.jar").getAbsolutePath() + "\" cmd").getBytes());
+				fout.write(("java -jar \"" + us.getAbsolutePath() + "\" cmd").getBytes());
 				fout.flush();
 				fout.close();
 			}
@@ -83,14 +89,14 @@ public class AvunaHTTPD {
 			File f = fileManager.getBaseFile("run.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("nohup java -jar \"" + fileManager.getBaseFile("jws.jar").getAbsolutePath() + "\" \"" + fileManager.getBaseFile("main.cfg").getAbsolutePath() + "\" >& /dev/null &").getBytes());
+				fout.write(("nohup java -jar \"" + us.getAbsolutePath() + "\" \"" + fileManager.getBaseFile("main.cfg").getAbsolutePath() + "\" >& /dev/null &").getBytes());
 				fout.flush();
 				fout.close();
 			}
 			f = fileManager.getBaseFile("kill.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("pkill -f jws.jar").getBytes());
+				fout.write(("pkill -f " + us.getName() + "").getBytes());
 				fout.flush();
 				fout.close();
 			}
@@ -104,7 +110,7 @@ public class AvunaHTTPD {
 			f = fileManager.getBaseFile("cmd.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("java -jar \"" + fileManager.getBaseFile("jws.jar").getAbsolutePath() + "\" cmd").getBytes());
+				fout.write(("java -jar \"" + us.getAbsolutePath() + "\" cmd").getBytes());
 				fout.flush();
 				fout.close();
 			}
@@ -180,16 +186,13 @@ public class AvunaHTTPD {
 			try {
 				root.mkdirs();
 			}catch (SecurityException e) {
-				Logger.log("[FATAL] Cannot read/write to " + root.getAbsolutePath());
-				System.exit(0);
+				System.err.println("[WARNING] Cannot read/write to " + root.getAbsolutePath());
 			}
 		}
 		if (!root.canWrite()) {
-			Logger.log("[FATAL] Cannot write to " + root.getAbsolutePath());
-			System.exit(0);
+			System.err.println("[WARNING] Cannot write to " + root.getAbsolutePath());
 		}else if (!root.canRead()) {
-			Logger.log("[FATAL] Cannot read from " + root.getAbsolutePath());
-			System.exit(0);
+			System.err.println("[WARNING] Cannot read from " + root.getAbsolutePath());
 		}
 		if (root.isDirectory()) for (File f : root.listFiles()) {
 			checkPerms(f);
@@ -209,7 +212,12 @@ public class AvunaHTTPD {
 			}
 			System.setProperty("line.separator", crlf);
 			boolean unpack = args.length == 1 && args[0].equals("unpack");
-			final File cfg = new File(!unpack && args.length > 0 ? args[0] : (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\avuna\\httpd\\main.cfg" : "/etc/avuna/httpd/main.cfg"));
+			File us = null;
+			try {
+				us = new File(AvunaHTTPD.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+			}catch (Exception e) {
+			}
+			final File cfg = new File(!unpack && args.length > 0 ? args[0] : (us == null ? (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\avuna\\httpd\\main.cfg" : "/etc/avuna/httpd/main.cfg") : (new File(us.getParentFile(), "main.cfg").getAbsolutePath())));
 			checkPerms(cfg.getParentFile());
 			mainConfig = new Config("main", cfg, new ConfigFormat() {
 				public void format(HashMap<String, Object> map) {

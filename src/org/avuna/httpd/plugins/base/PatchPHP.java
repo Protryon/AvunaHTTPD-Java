@@ -89,7 +89,7 @@ public class PatchPHP extends Patch {
 			int port = request.host.getHost().getPort();
 			pb.environment().put("SERVER_PORT", port + "");
 			pb.environment().put("SERVER_PROTOCOL", request.httpVersion);
-			pb.environment().put("SERVER_SOFTWARE", "JWS/" + AvunaHTTPD.VERSION);
+			pb.environment().put("SERVER_SOFTWARE", "Avuna/" + AvunaHTTPD.VERSION);
 			pb.environment().put("DOCUMENT_ROOT", request.host.getHTDocs().getAbsolutePath().replace("\\", "/"));
 			pb.environment().put("SCRIPT_FILENAME", AvunaHTTPD.fileManager.getAbsolutePath(rq, request).getAbsolutePath().replace("\\", "/"));
 			HashMap<String, ArrayList<String>> hdrs = request.headers.getHeaders();

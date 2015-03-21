@@ -53,7 +53,7 @@ public class HostHTTP extends Host {
 	
 	public void formatConfig(HashMap<String, Object> map) {
 		if (!map.containsKey("errorpages")) map.put("errorpages", new LinkedHashMap<String, Object>());
-		if (!map.containsKey("index")) map.put("index", "index.class,index.jwsl,index.php,index.html");
+		if (!map.containsKey("index")) map.put("index", "index.class,index.php,index.html");
 		if (!map.containsKey("cacheClock")) map.put("cacheClock", "-1");
 		if (!map.containsKey("acceptThreadCount")) map.put("acceptThreadCount", "4");
 		if (!map.containsKey("connThreadCount")) map.put("connThreadCount", "12");

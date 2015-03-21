@@ -58,7 +58,7 @@ public class ComServer extends Thread {
 					out.flush();
 					DataInputStream in = new DataInputStream(s.getInputStream());
 					// Handles auth
-					out.write(("Java Web Server(JWS) Version " + AvunaHTTPD.VERSION + AvunaHTTPD.crlf + (doAuth ? "Username: " : "")).getBytes());
+					out.write(("Avuna HTTPD Version " + AvunaHTTPD.VERSION + AvunaHTTPD.crlf + (doAuth ? "Username: " : "")).getBytes());
 					out.flush();
 					Scanner scan = new Scanner(in);
 					PrintStream ps = new PrintStream(out);

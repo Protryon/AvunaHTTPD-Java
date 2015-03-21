@@ -43,7 +43,7 @@ public class ResponseGenerator {
 			long start = System.nanoTime();
 			// response.headers.addHeader("Date", sdf.format(new Date())); timeless for optimization
 			long ah = System.nanoTime();
-			response.headers.addHeader("Server", "JWS/" + AvunaHTTPD.VERSION);
+			response.headers.addHeader("Server", "Avuna/" + AvunaHTTPD.VERSION);
 			long ah2 = System.nanoTime();
 			if (request.headers.hasHeader("Connection")) {
 				response.headers.addHeader("Connection", request.headers.getHeader("Connection"));

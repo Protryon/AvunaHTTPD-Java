@@ -17,7 +17,7 @@ public class ThreadConnection extends Thread {
 	private static int nid = 1;
 	
 	public ThreadConnection() {
-		super("JWS Connection Thread #" + nid++);
+		super("Avuna Connection Thread #" + nid++);
 		setDaemon(true);
 		conns.add(this);
 	}

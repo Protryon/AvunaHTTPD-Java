@@ -118,7 +118,7 @@ public class CommandProcessor {
 				Logger.logError(e);
 				e.printStackTrace(out);
 			}
-			out.println("JWS Reloaded! This does NOT update all configs, but it reloads most of them and flushes the cache. Doesn't flush the JavaLoader cache, for that use jlflush.");
+			out.println("Avuna Reloaded! This does NOT update all configs, but it reloads most of them and flushes the cache. Doesn't flush the JavaLoader cache, for that use jlflush.");
 		}else if (command.equals("flushjl")) {
 			// Reloads our patches and config
 			try {
@@ -262,7 +262,12 @@ public class CommandProcessor {
 			}
 			VHost host = phost.getVHostByName(selectedVHost);
 			String sep = System.getProperty("os.name").toLowerCase().contains("windows") ? ";" : ":";
-			String cp = AvunaHTTPD.fileManager.getBaseFile("jws.jar").toString() + sep + host.getHTDocs().toString() + sep + host.getHTSrc().toString() + sep + PatchJavaLoader.lib.toString() + sep;
+			File us = null;
+			try {
+				us = new File(AvunaHTTPD.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+			}catch (Exception e) {
+			}
+			String cp = us.toString() + sep + host.getHTDocs().toString() + sep + host.getHTSrc().toString() + sep + PatchJavaLoader.lib.toString() + sep;
 			for (File f : PatchJavaLoader.lib.listFiles()) {
 				if (!f.isDirectory() && f.getName().endsWith(".jar")) {
 					cp += f.toString() + sep;
@@ -347,7 +352,7 @@ public class CommandProcessor {
 			}
 		}else if (command.equals("help")) {
 			out.println("Commands:");
-			out.println("exit/stop - exits JWS");
+			out.println("exit/stop - exits Avuna");
 			out.println("reload    - flushes all caches and reloads");
 			out.println("select    - select a host/vhost");
 			out.println("restart   - attempts to restart the server by running the provided .bat/.sh files");
@@ -359,7 +364,7 @@ public class CommandProcessor {
 			out.println("shell     - runs a shell on the host computer.");
 			out.println("help      - lists these commands + version");
 			out.println("");
-			out.println("Java Web Server(JWS) Version " + AvunaHTTPD.VERSION);
+			out.println("Avuna HTTPD Version " + AvunaHTTPD.VERSION);
 		}else {
 			out.println("Unknown Command: " + command + " - Use help command.");
 		}

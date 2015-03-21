@@ -14,7 +14,7 @@ public class ThreadDNSWorker extends Thread {
 	private static int nid = 1;
 	
 	public ThreadDNSWorker() {
-		super("JWS DNS Accept Thread #" + nid++);
+		super("Avuna DNS Accept Thread #" + nid++);
 		this.setDaemon(true);
 		workers.add(this);
 	}
