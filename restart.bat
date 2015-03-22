@@ -1,0 +1,1 @@
+kill.bat & run.bat
