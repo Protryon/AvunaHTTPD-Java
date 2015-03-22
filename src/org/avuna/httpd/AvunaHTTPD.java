@@ -208,7 +208,7 @@ public class AvunaHTTPD {
 				return;
 			}
 			if (System.getProperty("user.name").contains("root")) {
-				System.err.println("[WARNING] Running as root.");
+				System.out.println("[WARNING] Running as root.");
 			}
 			System.setProperty("line.separator", crlf);
 			boolean unpack = args.length == 1 && args[0].equals("unpack");
