@@ -13,7 +13,6 @@ public class ThreadWorker extends Thread {
 	
 	public ThreadWorker() {
 		super("Avuna Worker Thread #" + nid++);
-		setDaemon(true);
 		workers.add(this);
 	}
 	

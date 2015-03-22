@@ -18,7 +18,6 @@ public class ThreadConnection extends Thread {
 	
 	public ThreadConnection() {
 		super("Avuna Connection Thread #" + nid++);
-		setDaemon(true);
 		conns.add(this);
 	}
 	

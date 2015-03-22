@@ -16,7 +16,6 @@ public class TCPServer extends Thread implements IServer {
 	public TCPServer(ServerSocket server) {
 		super("DNS TCPServer");
 		this.server = server;
-		this.setDaemon(true);
 	}
 	
 	public void run() {

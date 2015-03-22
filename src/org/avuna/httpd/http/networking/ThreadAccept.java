@@ -21,7 +21,6 @@ public class ThreadAccept extends Thread {
 	
 	public ThreadAccept(HostHTTP host, ServerSocket server, int cl) {
 		super("Avuna Accept Thread #" + nid++);
-		setDaemon(true);
 		this.server = server;
 		this.cl = cl;
 		this.host = host;

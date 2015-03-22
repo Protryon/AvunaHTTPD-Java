@@ -11,7 +11,6 @@ public class UDPServer extends Thread implements IServer {
 	
 	public UDPServer() {
 		super("DNS UDPServer");
-		this.setDaemon(true);
 	}
 	
 	public void run() {
