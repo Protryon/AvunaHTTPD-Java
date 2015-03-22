@@ -103,7 +103,7 @@ public class AvunaHTTPD {
 			f = fileManager.getBaseFile("restart.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("sh kill.sh & sh run.sh").getBytes());
+				fout.write(("sh \"" + new File(us.getParentFile(), "kill.sh").getAbsolutePath() + "\" & sh \"" + new File(us.getParentFile(), "run.sh").getAbsolutePath() + "\"").getBytes());
 				fout.flush();
 				fout.close();
 			}
