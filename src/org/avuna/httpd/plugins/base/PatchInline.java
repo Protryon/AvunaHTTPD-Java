@@ -225,6 +225,8 @@ public class PatchInline extends Patch {
 					String href = o.substring(o.indexOf("url(") + 4); // 0 + 4 :)
 					if (href.startsWith("\"")) {
 						href = href.substring(1, href.indexOf("\"", 1));
+					}else if (href.startsWith("'")) {
+						href = href.substring(1, href.indexOf("'", 1));
 					}else {
 						href = href.contains(")") ? href.substring(0, href.indexOf(")")) : href;
 					}
