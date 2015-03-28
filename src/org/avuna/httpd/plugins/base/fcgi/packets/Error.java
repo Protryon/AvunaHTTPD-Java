@@ -7,6 +7,7 @@ import org.avuna.httpd.plugins.base.fcgi.Type;
 public class Error extends Stream {
 	
 	public Error(DataInputStream in, int l) throws IOException {
+		super(Type.FCGI_STDERR);
 		readContent(in, l);
 	}
 	

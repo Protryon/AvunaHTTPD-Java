@@ -15,7 +15,7 @@ public abstract class Patch {
 	
 	public final String name;
 	
-	public abstract void formatConfig(HashMap<String, Object> json);
+	public abstract void formatConfig(HashMap<String, Object> map);
 	
 	public Patch(String name) {
 		this.name = name;

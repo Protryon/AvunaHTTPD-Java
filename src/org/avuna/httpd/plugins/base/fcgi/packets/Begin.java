@@ -10,6 +10,7 @@ public class Begin extends FCGIPacket {
 	public Role role = Role.FCGI_RESPONDER;
 	
 	public Begin(DataInputStream in, int l) throws IOException {
+		super(Type.FCGI_BEGIN_REQUEST);
 		readContent(in, l);
 	}
 	

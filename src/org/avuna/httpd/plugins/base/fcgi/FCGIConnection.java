@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.HashMap;
 import org.avuna.httpd.plugins.base.fcgi.packets.FCGIPacket;
 import org.avuna.httpd.util.Logger;
@@ -33,18 +34,26 @@ public class FCGIConnection extends Thread {
 		packet.write(out);
 	}
 	
+	public boolean isClosed() {
+		return s.isClosed();
+	}
+	
+	public void close() throws IOException {
+		s.close();
+	}
+	
 	public void run() {
 		try {
 			while (!s.isClosed()) {
-				try {
-					FCGIPacket recv = FCGIPacket.read(in);
-					if (listeners.containsKey(recv.id)) {
-						listeners.get(recv.id).receive(recv);
-					}
-				}catch (Exception e) {
-					Logger.logError(e);
+				FCGIPacket recv = FCGIPacket.read(in);
+				if (listeners.containsKey(recv.id)) {
+					listeners.get(recv.id).receive(recv);
 				}
 			}
+		}catch (SocketException e) {
+			Logger.log("FCGI Connection closed! Command reload to attempt to reconnect!");
+		}catch (Exception e) {
+			Logger.logError(e);
 		}finally {
 			if (s != null) try {
 				s.close();

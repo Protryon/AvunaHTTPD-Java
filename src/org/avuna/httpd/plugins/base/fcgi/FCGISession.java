@@ -3,10 +3,10 @@ package org.avuna.httpd.plugins.base.fcgi;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import org.avuna.httpd.plugins.base.fcgi.packets.Begin;
+import org.avuna.httpd.plugins.base.fcgi.packets.EmptyParam;
 import org.avuna.httpd.plugins.base.fcgi.packets.FCGIPacket;
 import org.avuna.httpd.plugins.base.fcgi.packets.Input;
 import org.avuna.httpd.plugins.base.fcgi.packets.NameValue11;
-import org.avuna.httpd.plugins.base.fcgi.packets.NameValue14;
 import org.avuna.httpd.plugins.base.fcgi.packets.Stream;
 
 public class FCGISession implements IFCGIListener {
@@ -33,14 +33,47 @@ public class FCGISession implements IFCGIListener {
 	}
 	
 	public void param(String name, String value) throws IOException {
+		if (fp) {
+			throw new IOException("Params are already finished!");
+		}
 		if (value.length() < 128) {
 			conn.write(this, new NameValue11(name, value, id));
 		}else {
-			conn.write(this, new NameValue14(name, value, id));
+			// conn.write(this, new NameValue14(name, value, id));
 		}
 	}
 	
+	private boolean fp = false;
+	
+	public void finishParams() throws IOException {
+		conn.write(this, new EmptyParam(id));
+		fp = true;
+	}
+	
+	private boolean hasWrittenIn = false;
+	
+	public void finishReq() throws IOException {
+		if (!fp) {
+			throw new IOException("FCGISession.finishReq() expects you to call finishParams() first.");
+		}
+		if (!hasWrittenIn) {
+			Input inp = new Input(id);
+			inp.content = new byte[0];
+			conn.write(this, inp);
+		}
+		finishReq = true;
+	}
+	
+	private boolean finishReq = false;
+	
 	public void data(byte[] data) throws IOException {
+		if (finishReq) {
+			throw new IOException("FCGISession.data() cannot be called after finishReq().");
+		}
+		if (!fp) {
+			throw new IOException("FCGISession.data() expects you to call finishParams() first.");
+		}
+		if (data.length == 0) hasWrittenIn = true; // TODO: 0 then not 0?
 		Input inp = new Input(id);
 		inp.content = data;
 		conn.write(this, inp);

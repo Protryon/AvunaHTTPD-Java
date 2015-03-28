@@ -10,7 +10,7 @@ public class NameValue11 extends FCGIPacket {
 	public String value = "";
 	
 	protected NameValue11() {
-		
+		super(Type.FCGI_PARAMS);
 	}
 	
 	public NameValue11(String name, String value, int id) {
@@ -20,6 +20,7 @@ public class NameValue11 extends FCGIPacket {
 	}
 	
 	public NameValue11(DataInputStream in, int l) throws IOException {
+		super(Type.FCGI_PARAMS);
 		readContent(in, l);
 	}
 	

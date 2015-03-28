@@ -7,11 +7,12 @@ import java.io.IOException;
 import org.avuna.httpd.plugins.base.fcgi.Type;
 
 public abstract class FCGIPacket {
-	public int version; // fcgi version 1 - 8 bits
+	public int version = 1; // fcgi version 1 - 8 bits
 	public Type type;
 	public int id; // 0=management !0=application - 16 bits
 	
-	protected FCGIPacket() {
+	protected FCGIPacket(Type type) {
+		this.type = type;
 	}
 	
 	protected FCGIPacket(Type type, int id) {
@@ -28,6 +29,7 @@ public abstract class FCGIPacket {
 		int pl = in.read();
 		in.read(); // reserved
 		FCGIPacket packet = null;
+		System.out.println("    {" + type.name() + ", " + id + ", " + cl + "}");
 		switch (type) {
 		case FCGI_BEGIN_REQUEST:
 			// TODO: not read
@@ -67,6 +69,7 @@ public abstract class FCGIPacket {
 			break;
 		}
 		in.readFully(new byte[pl]);
+		packet.id = id;
 		return packet;
 	}
 	
@@ -82,19 +85,19 @@ public abstract class FCGIPacket {
 	
 	protected abstract void writeContent(DataOutputStream out) throws IOException;
 	
-	private final ByteArrayOutputStream bout = new ByteArrayOutputStream();
-	private final DataOutputStream tout = new DataOutputStream(bout);
-	
 	public synchronized void write(DataOutputStream out) throws IOException {
+		ByteArrayOutputStream bout = new ByteArrayOutputStream();
+		DataOutputStream tout = new DataOutputStream(bout);
 		out.write(version);
 		out.write(type.id);
 		out.writeShort(id);
-		bout.reset();
 		writeContent(tout);
-		out.writeShort(bout.size());
+		byte[] b = bout.toByteArray();
+		System.out.println("{" + type.name() + ", " + id + ", " + b.length + "}");
+		out.writeShort(b.length);
 		out.write(0);
 		out.write(0);
-		out.write(bout.toByteArray());
+		out.write(b);
 		out.flush();
 	}
 }

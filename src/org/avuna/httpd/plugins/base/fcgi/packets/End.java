@@ -11,11 +11,12 @@ public class End extends FCGIPacket {
 	public PStatus pstatus = null;
 	
 	public End(DataInputStream in, int l) throws IOException {
+		super(Type.FCGI_END_REQUEST);
 		readContent(in, l);
 	}
 	
 	public End(int appStatus, PStatus pstatus, int id) {
-		super(Type.FCGI_BEGIN_REQUEST, id);
+		super(Type.FCGI_END_REQUEST, id);
 		this.appStatus = appStatus;
 		this.pstatus = pstatus;
 	}
