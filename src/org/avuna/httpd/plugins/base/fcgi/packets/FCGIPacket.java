@@ -29,7 +29,6 @@ public abstract class FCGIPacket {
 		int pl = in.read();
 		in.read(); // reserved
 		FCGIPacket packet = null;
-		System.out.println("    {" + type.name() + ", " + id + ", " + cl + "}");
 		switch (type) {
 		case FCGI_BEGIN_REQUEST:
 			// TODO: not read
@@ -93,7 +92,6 @@ public abstract class FCGIPacket {
 		out.writeShort(id);
 		writeContent(tout);
 		byte[] b = bout.toByteArray();
-		System.out.println("{" + type.name() + ", " + id + ", " + b.length + "}");
 		out.writeShort(b.length);
 		out.write(0);
 		out.write(0);
