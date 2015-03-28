@@ -242,7 +242,7 @@ public class AvunaHTTPD {
 				
 				@Override
 				public void format(HashMap<String, Object> map) {
-					boolean nm = false, nc = false;
+					boolean nm = false, nc = false, nd = false;
 					if (!map.containsKey("main")) {
 						map.put("main", new LinkedHashMap<String, Object>());
 						nm = true;
@@ -251,12 +251,16 @@ public class AvunaHTTPD {
 						map.put("com", new LinkedHashMap<String, Object>());
 						nc = true;
 					}
+					if (!map.containsKey("dns")) {
+						map.put("dns", new LinkedHashMap<String, Object>());
+						nd = true;
+					}
 					for (String key : map.keySet()) {
 						HashMap<String, Object> host = (HashMap<String, Object>)map.get(key);
-						if (!host.containsKey("enabled")) host.put("enabled", "true");
-						if (!host.containsKey("protocol")) host.put("protocol", ((nc && key.equals("com")) ? "com" : "http"));
-						if (!host.containsKey("port")) host.put("port", ((nc && key.equals("com")) ? "6049" : "80"));
-						if (!host.containsKey("ip")) host.put("ip", "0.0.0.0");
+						if (!host.containsKey("enabled")) host.put("enabled", (nc && key.equals("com")) ? "false" : "true");
+						if (!host.containsKey("protocol")) host.put("protocol", ((nd && key.equals("dns")) ? "dns" : ((nc && key.equals("com")) ? "com" : "http")));
+						if (!host.containsKey("port")) host.put("port", ((nd && key.equals("dns")) ? "53" : ((nc && key.equals("com")) ? "6049" : "80")));
+						if (!host.containsKey("ip")) host.put("ip", (nc && key.equals("com")) ? "127.0.0.1" : "0.0.0.0");
 						if (!host.containsKey("ssl")) host.put("ssl", new LinkedHashMap<String, Object>());
 						HashMap<String, Object> ssl = (HashMap<String, Object>)host.get("ssl");
 						if (!ssl.containsKey("enabled")) ssl.put("enabled", "false");
