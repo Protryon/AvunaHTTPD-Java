@@ -48,6 +48,24 @@ public class ThreadDNSWorker extends Thread {
 		return workQueue.size();
 	}
 	
+	public boolean domainMatches(String dom, String match, boolean hadType) {
+		if (match.equals("@")) return true;
+		if (match.equals("~@") && !hadType) return true;
+		if (dom.equalsIgnoreCase(match)) return true;
+		String[] spl = match.split("\\.");
+		String[] dspl = dom.split("\\.");
+		if (spl.length == dspl.length) {
+			boolean bm = true;
+			for (int i = 0; i < spl.length; i++) {
+				if (!spl[i].equalsIgnoreCase(dspl[i]) && !spl[i].equals("*")) {
+					bm = false;
+				}
+			}
+			return bm;
+		}
+		return false;
+	}
+	
 	public void run() {
 		while (keepRunning) {
 			Work focus = workQueue.poll();
@@ -90,17 +108,22 @@ public class ThreadDNSWorker extends Thread {
 					header.setArcount(0);
 					ArrayList<ResourceRecord> resps = new ArrayList<ResourceRecord>();
 					for (Question q : query.getQd()) {
+						boolean hasType = false;
 						for (DNSRecord r : holder.getRecords()) {
-							if (!(r.getDomain().equalsIgnoreCase(q.getDomain()) || r.getDomain().equals("@")) || !r.getType().matches(q.getType())) continue;
-							ResourceRecord responseRecord = new ResourceRecord();
-							responseRecord.setDomain(q.getDomain());
-							responseRecord.setType(r.getType().id);
-							responseRecord.setCls(1);
-							responseRecord.setTtl(r.getTimeToLive());
-							byte[] data = r.getData();
-							responseRecord.setLength(data.length);
-							responseRecord.setData(data);
-							resps.add(responseRecord);
+							if (!r.getType().matches(q.getType())) continue;
+							boolean matches = domainMatches(q.getDomain(), r.getDomain(), hasType);
+							if (matches) {
+								hasType = true;
+								ResourceRecord responseRecord = new ResourceRecord();
+								responseRecord.setDomain(q.getDomain());
+								responseRecord.setType(r.getType().id);
+								responseRecord.setCls(1);
+								responseRecord.setTtl(r.getTimeToLive());
+								byte[] data = r.getData();
+								responseRecord.setLength(data.length);
+								responseRecord.setData(data);
+								resps.add(responseRecord);
+							}
 							// System.out.println("Response for " + responseRecord.getDomain() + " data: " + new String(responseRecord.getData()));
 						}
 					}

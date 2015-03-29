@@ -129,6 +129,11 @@ public class HostMail extends Host {
 					new ThreadAcceptIMAP(this, imaps, mc).start();
 				}
 			}
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				public void run() {
+					
+				}
+			});
 		}catch (Exception e) {
 			Logger.logError(e);
 			Logger.log("Closing " + name + "/" + protocol.name + " Server on " + (String)getConfig().get("ip") + ":" + (String)getConfig().get("port"));
