@@ -74,6 +74,7 @@ public class ThreadWorkerSMTP extends Thread {
 				}else if (focus.in.available() > 0) {
 					String line = focus.in.readLine().trim();
 					focus.tos = 0;
+					readd = true;
 					System.out.println(focus.hashCode() + ": " + line);
 					String cmd = "";
 					if (focus.state != 101) {
