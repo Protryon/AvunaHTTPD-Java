@@ -19,6 +19,7 @@ import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostCom;
 import org.avuna.httpd.hosts.HostDNS;
 import org.avuna.httpd.hosts.HostHTTP;
+import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.hosts.HostRegistry;
 import org.avuna.httpd.hosts.Protocol;
 import org.avuna.httpd.plugins.PatchBus;
@@ -199,6 +200,8 @@ public class AvunaHTTPD {
 		}
 	}
 	
+	public static long lastbipc = 0L;
+	
 	public static void main(String[] args) {
 		try {
 			if (args.length >= 1 && args[0].equals("cmd")) {
@@ -238,6 +241,7 @@ public class AvunaHTTPD {
 			HostRegistry.addHost(Protocol.HTTP, HostHTTP.class);
 			HostRegistry.addHost(Protocol.COM, HostCom.class);
 			HostRegistry.addHost(Protocol.DNS, HostDNS.class);
+			HostRegistry.addHost(Protocol.MAIL, HostMail.class);
 			hostsConfig = new Config("hosts", new File((String)mainConfig.get("hosts")), new ConfigFormat() {
 				
 				@Override
@@ -259,14 +263,6 @@ public class AvunaHTTPD {
 						HashMap<String, Object> host = (HashMap<String, Object>)map.get(key);
 						if (!host.containsKey("enabled")) host.put("enabled", (nc && key.equals("com")) ? "false" : "true");
 						if (!host.containsKey("protocol")) host.put("protocol", ((nd && key.equals("dns")) ? "dns" : ((nc && key.equals("com")) ? "com" : "http")));
-						if (!host.containsKey("port")) host.put("port", ((nd && key.equals("dns")) ? "53" : ((nc && key.equals("com")) ? "6049" : "80")));
-						if (!host.containsKey("ip")) host.put("ip", (nc && key.equals("com")) ? "127.0.0.1" : "0.0.0.0");
-						if (!host.containsKey("ssl")) host.put("ssl", new LinkedHashMap<String, Object>());
-						HashMap<String, Object> ssl = (HashMap<String, Object>)host.get("ssl");
-						if (!ssl.containsKey("enabled")) ssl.put("enabled", "false");
-						if (!ssl.containsKey("keyFile")) ssl.put("keyFile", fileManager.getBaseFile("ssl/keyFile").toString());
-						if (!ssl.containsKey("keystorePassword")) ssl.put("keystorePassword", "password");
-						if (!ssl.containsKey("keyPassword")) ssl.put("keyPassword", "password");
 						Protocol p = Protocol.fromString((String)host.get("protocol"));
 						if (p == null) {
 							Logger.log("Skipping Host: " + key + " due to invalid protocol!");
@@ -276,7 +272,7 @@ public class AvunaHTTPD {
 							continue;
 						}
 						try {
-							Host h = (Host)HostRegistry.getHost(p).getConstructors()[0].newInstance(key, (String)host.get("ip"), Integer.parseInt((String)host.get("port")), ssl.get("enabled").equals("true"), new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
+							Host h = (Host)HostRegistry.getHost(p).getConstructors()[0].newInstance(key);
 							h.formatConfig(host);
 							hosts.put(key, h);
 						}catch (Exception e) {

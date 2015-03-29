@@ -20,13 +20,11 @@ public class ThreadAccept extends Thread {
 	private static int nid = 1;
 	
 	public ThreadAccept(HostHTTP host, ServerSocket server, int cl) {
-		super("Avuna Accept Thread #" + nid++);
+		super("Avuna HTTP-Accept Thread #" + nid++);
 		this.server = server;
 		this.cl = cl;
 		this.host = host;
 	}
-	
-	private static long lastbipc = 0L;
 	
 	public void run() {
 		while (!server.isClosed()) {
@@ -36,8 +34,8 @@ public class ThreadAccept extends Thread {
 					s.close();
 					continue;
 				}
-				if (lastbipc <= System.currentTimeMillis()) {
-					lastbipc = System.currentTimeMillis() + 3600000L;
+				if (AvunaHTTPD.lastbipc <= System.currentTimeMillis()) {
+					AvunaHTTPD.lastbipc = System.currentTimeMillis() + 3600000L;
 					AvunaHTTPD.bannedIPs.clear();
 				}
 				if (AvunaHTTPD.bannedIPs.contains(s.getInetAddress().getHostAddress())) {

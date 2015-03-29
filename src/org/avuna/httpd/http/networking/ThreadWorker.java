@@ -12,7 +12,7 @@ public class ThreadWorker extends Thread {
 	private static int nid = 1;
 	
 	public ThreadWorker() {
-		super("Avuna Worker Thread #" + nid++);
+		super("Avuna HTTP-Worker Thread #" + nid++);
 		workers.add(this);
 	}
 	

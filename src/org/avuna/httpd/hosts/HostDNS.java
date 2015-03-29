@@ -11,8 +11,8 @@ import org.avuna.httpd.dns.UDPServer;
 
 public class HostDNS extends Host {
 	
-	public HostDNS(String name, String ip, int port, boolean isSSL, File keyFile, String keyPassword, String keystorePassword) {
-		super(name, ip, port, isSSL, keyFile, keyPassword, keystorePassword, Protocol.DNS);
+	public HostDNS(String name) {
+		super(name, Protocol.DNS);
 	}
 	
 	private String ip = null, dnsf = null;
@@ -20,6 +20,8 @@ public class HostDNS extends Host {
 	private int port;
 	
 	public void formatConfig(HashMap<String, Object> map) {
+		if (!map.containsKey("port")) map.put("port", "53");
+		if (!map.containsKey("ip")) map.put("ip", "0.0.0.0");
 		if (!map.containsKey("dnsf")) map.put("dnsf", AvunaHTTPD.fileManager.getBaseFile("dns.cfg").getAbsolutePath());
 		dnsf = (String)map.get("dnsf");
 		ip = (String)map.get("ip");

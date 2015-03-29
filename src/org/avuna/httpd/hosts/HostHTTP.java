@@ -19,8 +19,8 @@ public class HostHTTP extends Host {
 		vhosts.add(vhost);
 	}
 	
-	public HostHTTP(String name, String ip, int port, boolean isSSL, File keyFile, String keyPassword, String keystorePassword) {
-		super(name, ip, port, isSSL, keyFile, keyPassword, keystorePassword, Protocol.HTTP);
+	public HostHTTP(String name) {
+		super(name, Protocol.HTTP);
 	}
 	
 	public VHost getVHost(String host) {
@@ -52,6 +52,7 @@ public class HostHTTP extends Host {
 	}
 	
 	public void formatConfig(HashMap<String, Object> map) {
+		super.formatConfig(map);
 		if (!map.containsKey("errorpages")) map.put("errorpages", new LinkedHashMap<String, Object>());
 		if (!map.containsKey("index")) map.put("index", "index.class,index.php,index.html");
 		if (!map.containsKey("cacheClock")) map.put("cacheClock", "-1");

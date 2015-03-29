@@ -2,10 +2,10 @@ package org.avuna.httpd.hosts;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
-import java.net.SocketException;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -20,21 +20,12 @@ import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.util.Logger;
 
 public abstract class Host extends Thread {
-	protected final String ip, keyPassword, keystorePassword, name;
-	protected final File keyFile;
-	protected final int port;
-	protected final boolean isSSL;
+	protected final String name;
 	protected final Protocol protocol;
 	
-	public Host(String threadName, String ip, int port, boolean isSSL, File keyFile, String keyPassword, String keystorePassword, Protocol protocol) {
+	public Host(String threadName, Protocol protocol) {
 		super(threadName + " Host");
 		this.name = threadName;
-		this.ip = ip;
-		this.port = port;
-		this.isSSL = isSSL;
-		this.keyFile = keyFile;
-		this.keyPassword = keyPassword;
-		this.keystorePassword = keystorePassword;
 		this.protocol = protocol;
 	}
 	
@@ -46,13 +37,10 @@ public abstract class Host extends Thread {
 		return (LinkedHashMap<String, Object>)AvunaHTTPD.hostsConfig.get(name);
 	}
 	
-	public final void run() {
-		Logger.log("Starting " + name + "/" + protocol.name + " Server on " + ip + ":" + port);
-		try {
-			ServerSocket server = null;
-			if (!isSSL) {
-				server = new ServerSocket(port, 1000, InetAddress.getByName(ip));
-			}else {
+	public final ServerSocket makeServer(String ip, int port, boolean ssl, File keyFile, String keyPassword, String keystorePassword) throws IOException {
+		Logger.log("Starting " + name + "/" + protocol.name + " " + (ssl ? "TLS-" : "") + "Server on " + ip + ":" + port);
+		if (ssl) {
+			try {
 				KeyStore ks = KeyStore.getInstance("JKS");
 				InputStream ksIs = new FileInputStream(keyFile);
 				try {
@@ -76,7 +64,7 @@ public abstract class Host extends Thread {
 					}
 				}};
 				SSLContext sc = null;
-				String[] possibleProtocols = new String[]{"TLSv1.2", "TLSv1.1", "TLSv1", "TLSv1.0"};
+				String[] possibleProtocols = new String[]{"TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1", "TLSv1.0"};
 				String fp = "";
 				for (String protocol : possibleProtocols) {
 					try {
@@ -88,23 +76,44 @@ public abstract class Host extends Thread {
 				}
 				if (sc == null) {
 					Logger.log(name + ": No suitable TLS protocols found, please upgrade Java! Host not loaded.");
-					return;
+					return null;
 				}
 				sc.init(kmf.getKeyManagers(), trustAllCerts, new SecureRandom());
-				server = (SSLServerSocket)sc.getServerSocketFactory().createServerSocket(port, 1000, InetAddress.getByName(ip));
+				ServerSocket server = (SSLServerSocket)sc.getServerSocketFactory().createServerSocket(port, 1000, InetAddress.getByName(ip));
 				((SSLServerSocket)server).setEnabledProtocols(new String[]{fp});
+				return server;
+			}catch (Exception e) {
+				Logger.logError(e);
+				return null;
 			}
-			setup(server);
+		}else {
+			return new ServerSocket(port, 1000, InetAddress.getByName(ip));
+		}
+	}
+	
+	public void run() {
+		try {
+			LinkedHashMap<String, Object> cfg = getConfig();
+			LinkedHashMap<String, Object> ssl = (LinkedHashMap<String, Object>)cfg.get("ssl");
+			boolean isSSL = !(ssl == null || !ssl.get("enabled").equals("true"));
+			setup(makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("port")), isSSL, isSSL ? new File((String)ssl.get("keyFile")) : null, isSSL ? (String)ssl.get("keyPassword") : "", isSSL ? (String)ssl.get("keystorePassword") : ""));
 		}catch (Exception e) {
-			if (!(e instanceof SocketException)) Logger.logError(e);
-			Logger.log("Closing " + name + "/" + protocol.name + " Server on " + ip + ":" + port);
+			Logger.logError(e);
+			Logger.log("Closing " + name + "/" + protocol.name + " Server on " + (String)getConfig().get("ip") + ":" + (String)getConfig().get("port"));
 		}finally {
 			
 		}
 	}
 	
 	public void formatConfig(HashMap<String, Object> map) {
-		
+		if (!map.containsKey("port")) map.put("port", "80");
+		if (!map.containsKey("ip")) map.put("ip", "0.0.0.0");
+		if (!map.containsKey("ssl")) map.put("ssl", new LinkedHashMap<String, Object>());
+		HashMap<String, Object> ssl = (HashMap<String, Object>)map.get("ssl");
+		if (!ssl.containsKey("enabled")) ssl.put("enabled", "false");
+		if (!ssl.containsKey("keyFile")) ssl.put("keyFile", AvunaHTTPD.fileManager.getBaseFile("ssl/keyFile").toString());
+		if (!ssl.containsKey("keystorePassword")) ssl.put("keystorePassword", "password");
+		if (!ssl.containsKey("keyPassword")) ssl.put("keyPassword", "password");
 	}
 	
 	public String getHostname() {
@@ -112,7 +121,7 @@ public abstract class Host extends Thread {
 	}
 	
 	public int getPort() {
-		return port;
+		return Integer.parseInt((String)getConfig().get("port"));
 	}
 	
 	public abstract void setup(ServerSocket s);

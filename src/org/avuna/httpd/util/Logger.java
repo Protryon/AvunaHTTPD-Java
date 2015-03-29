@@ -23,7 +23,12 @@ public class Logger {
 	private final static SimpleDateFormat timestamp = new SimpleDateFormat("HH:mm:ss");
 	
 	public static void logError(Throwable e) {
-		INSTANCE.cache("[" + timestamp.format(new Date()) + "] ");
+		if (INSTANCE == null) {
+			System.out.println("[" + timestamp.format(new Date()) + "] ");
+			e.printStackTrace();
+			return;
+		}
+		INSTANCE.cache("[-DATE-] ");
 		e.printStackTrace(INSTANCE.cache);
 	}
 	
