@@ -87,31 +87,32 @@ public class AvunaHTTPD {
 				fout.close();
 			}
 		}else {
+			String ll = System.getProperty("line.separator");
 			File f = fileManager.getBaseFile("run.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("nohup java -jar \"" + us.getAbsolutePath() + "\" \"" + fileManager.getBaseFile("main.cfg").getAbsolutePath() + "\" >& /dev/null &").getBytes());
+				fout.write(("#!/bin/bash" + ll + "nohup java -jar \"" + us.getAbsolutePath() + "\" \"" + fileManager.getBaseFile("main.cfg").getAbsolutePath() + "\" >& /dev/null &").getBytes());
 				fout.flush();
 				fout.close();
 			}
 			f = fileManager.getBaseFile("kill.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("pkill -f " + us.getName() + "").getBytes());
+				fout.write(("#!/bin/bash" + ll + "pkill -f " + us.getName() + "").getBytes());
 				fout.flush();
 				fout.close();
 			}
 			f = fileManager.getBaseFile("restart.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("sh \"" + new File(us.getParentFile(), "kill.sh").getAbsolutePath() + "\" & sh \"" + new File(us.getParentFile(), "run.sh").getAbsolutePath() + "\"").getBytes());
+				fout.write(("#!/bin/bash" + ll + "sh \"" + new File(us.getParentFile(), "kill.sh").getAbsolutePath() + "\" & sh \"" + new File(us.getParentFile(), "run.sh").getAbsolutePath() + "\"").getBytes());
 				fout.flush();
 				fout.close();
 			}
 			f = fileManager.getBaseFile("cmd.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("java -jar \"" + us.getAbsolutePath() + "\" cmd").getBytes());
+				fout.write(("#!/bin/bash" + ll + "java -jar \"" + us.getAbsolutePath() + "\" cmd").getBytes());
 				fout.flush();
 				fout.close();
 			}
