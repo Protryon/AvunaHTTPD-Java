@@ -10,12 +10,16 @@ import org.avuna.httpd.plugins.base.fcgi.packets.FCGIPacket;
 import org.avuna.httpd.util.Logger;
 
 public class FCGIConnection extends Thread {
-	private final Socket s;
-	private final DataOutputStream out;
-	private final DataInputStream in;
+	private Socket s;
+	private DataOutputStream out;
+	private DataInputStream in;
+	private final String ip;
+	private final int port;
 	
 	public FCGIConnection(String ip, int port) throws IOException {
 		super("FCGI Thread");
+		this.ip = ip;
+		this.port = port;
 		s = new Socket(ip, port);
 		out = new DataOutputStream(s.getOutputStream());
 		out.flush();
@@ -51,13 +55,23 @@ public class FCGIConnection extends Thread {
 				}
 			}
 		}catch (SocketException e) {
-			Logger.log("FCGI Connection closed! Command reload to attempt to reconnect!");
+			Logger.log("FCGI Connection closed, reconnecting!");
 		}catch (Exception e) {
 			Logger.logError(e);
 		}finally {
 			if (s != null) try {
 				s.close();
-			}catch (IOException e) {
+			}catch (IOException e2) {
+				Logger.logError(e2);
+			}
+			try {
+				Thread.sleep(1000L);
+				s = new Socket(ip, port);
+				out = new DataOutputStream(s.getOutputStream());
+				out.flush();
+				in = new DataInputStream(s.getInputStream());
+				run();
+			}catch (Exception e) {
 				Logger.logError(e);
 			}
 		}

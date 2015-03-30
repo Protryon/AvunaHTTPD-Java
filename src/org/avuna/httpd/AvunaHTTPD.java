@@ -87,7 +87,7 @@ public class AvunaHTTPD {
 				fout.close();
 			}
 		}else {
-			String ll = System.getProperty("line.separator");
+			String ll = new String(new byte[]{0x13});
 			File f = fileManager.getBaseFile("run.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
@@ -105,7 +105,7 @@ public class AvunaHTTPD {
 			f = fileManager.getBaseFile("restart.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("#!/bin/bash" + ll + "sh \"" + new File(us.getParentFile(), "kill.sh").getAbsolutePath() + "\" & sh \"" + new File(us.getParentFile(), "run.sh").getAbsolutePath() + "\"").getBytes());
+				fout.write(("#!/bin/bash" + ll + "sh \"" + new File(us.getParentFile(), "kill.sh").getAbsolutePath() + "\" && sh \"" + new File(us.getParentFile(), "run.sh").getAbsolutePath() + "\"").getBytes());
 				fout.flush();
 				fout.close();
 			}
@@ -222,7 +222,7 @@ public class AvunaHTTPD {
 			}catch (Exception e) {
 			}
 			final File cfg = new File(!unpack && args.length > 0 ? args[0] : (us == null ? (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\avuna\\main.cfg" : "/etc/avuna/main.cfg") : (new File(us.getParentFile(), "main.cfg").getAbsolutePath())));
-			checkPerms(cfg.getParentFile());
+			// checkPerms(cfg.getParentFile());
 			mainConfig = new Config("main", cfg, new ConfigFormat() {
 				public void format(HashMap<String, Object> map) {
 					File dir = null;
@@ -304,11 +304,11 @@ public class AvunaHTTPD {
 			unpack();
 			loadUnpacked();
 			Logger.log("Loaded Configs");
+			Logger.log("Loading Plugins");
+			BaseLoader.loadBases();
 			if (unpack) {
 				return;
 			}
-			Logger.log("Loading Plugins");
-			BaseLoader.loadBases();
 			Logger.log("Loading Connection Handling");
 			for (Host h : hosts.values()) {
 				h.start();
@@ -318,7 +318,6 @@ public class AvunaHTTPD {
 				while (true) {
 					for (Host h : hosts.values()) {
 						if (!h.loaded) {
-							System.out.println(h.getClass().getName());
 							Thread.sleep(1L);
 							continue major;
 						}

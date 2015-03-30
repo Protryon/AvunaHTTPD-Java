@@ -25,6 +25,7 @@ public class PatchAuth extends Patch {
 	
 	@Override
 	public void formatConfig(HashMap<String, Object> map) {
+		super.formatConfig(map);
 		auths = new ArrayList<Auth>();
 		HashMap<String, Object> authList;
 		if (!map.containsKey("authList")) {

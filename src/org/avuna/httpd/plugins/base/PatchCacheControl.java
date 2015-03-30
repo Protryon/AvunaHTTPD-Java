@@ -18,6 +18,7 @@ public class PatchCacheControl extends Patch {
 	
 	@Override
 	public void formatConfig(HashMap<String, Object> json) {
+		super.formatConfig(json);
 		if (!json.containsKey("maxage")) json.put("maxage", "604800");
 		if (!json.containsKey("cache")) json.put("cache", "text/css;application/javascript;image/*");
 	}

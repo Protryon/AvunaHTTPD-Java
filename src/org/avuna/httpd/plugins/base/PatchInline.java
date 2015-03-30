@@ -28,6 +28,7 @@ public class PatchInline extends Patch {
 	
 	@Override
 	public void formatConfig(HashMap<String, Object> json) {
+		super.formatConfig(json);
 		if (!json.containsKey("user-agents")) json.put("user-agents", "gecko,chrom,webkit,opera,konqueror,trident");
 		if (!json.containsKey("sizeLimit")) json.put("sizeLimit", "32768");
 		uas = ((String)json.get("user-agents")).trim().split(",");

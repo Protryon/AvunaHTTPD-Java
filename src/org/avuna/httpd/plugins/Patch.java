@@ -15,13 +15,18 @@ public abstract class Patch {
 	
 	public final String name;
 	
-	public abstract void formatConfig(HashMap<String, Object> map);
+	public void formatConfig(HashMap<String, Object> map) {
+		if (!map.containsKey("enabled")) map.put("enabled", "true");
+	}
+	
+	public void load() {
+		
+	}
 	
 	public Patch(String name) {
 		this.name = name;
 		pcfg = new Config(name, new File(AvunaHTTPD.fileManager.getPlugin(this), "plugin.cfg"), new ConfigFormat() {
 			public void format(HashMap<String, Object> map) {
-				if (!map.containsKey("enabled")) map.put("enabled", "true");
 				formatConfig(map);
 			}
 		});

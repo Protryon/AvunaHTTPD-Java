@@ -14,6 +14,7 @@ public class PatchChunked extends Patch {
 	
 	@Override
 	public void formatConfig(HashMap<String, Object> map) {
+		super.formatConfig(map);
 		if (!map.containsKey("minsize")) map.put("minsize", "10485760");// 10mb
 	}
 	

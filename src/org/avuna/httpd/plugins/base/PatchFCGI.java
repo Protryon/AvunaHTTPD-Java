@@ -27,6 +27,10 @@ public class PatchFCGI extends Patch {
 		reload();
 	}
 	
+	public void load() {
+		
+	}
+	
 	public void reload() {
 		for (FCGIConnection fcgi : fcgis.values()) {
 			try {
@@ -46,6 +50,7 @@ public class PatchFCGI extends Patch {
 				fcgis.put((String)subb.get("mime-types"), conn);
 				conn.start();
 			}catch (Exception e) {
+				fcgis.put((String)subb.get("mime-types"), null);
 				Logger.logError(e);
 				Logger.log("FCGI server(" + (String)subb.get("ip") + ":" + (String)subb.get("port") + ") NOT accepting connections, disabling FCGI.");
 			}
@@ -56,6 +61,7 @@ public class PatchFCGI extends Patch {
 	
 	@Override
 	public void formatConfig(HashMap<String, Object> json) {
+		if (!json.containsKey("enabled")) json.put("enabled", "false");
 		if (!json.containsKey("php")) json.put("php", new LinkedHashMap<String, Object>());
 		for (Object sub : json.values()) {
 			if (!(sub instanceof LinkedHashMap<?, ?>)) {

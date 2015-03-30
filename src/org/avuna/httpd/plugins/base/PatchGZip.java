@@ -19,7 +19,7 @@ public class PatchGZip extends Patch {
 	
 	@Override
 	public void formatConfig(HashMap<String, Object> json) {
-		
+		super.formatConfig(json);
 	}
 	
 	@Override

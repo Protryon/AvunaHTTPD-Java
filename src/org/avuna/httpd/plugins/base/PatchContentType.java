@@ -14,7 +14,7 @@ public class PatchContentType extends Patch {
 	
 	@Override
 	public void formatConfig(HashMap<String, Object> json) {
-		
+		super.formatConfig(json);
 	}
 	
 	@Override

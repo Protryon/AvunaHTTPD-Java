@@ -215,6 +215,7 @@ public class PatchJavaLoader extends Patch {
 	
 	@Override
 	public void formatConfig(HashMap<String, Object> json) {
+		super.formatConfig(json);
 		if (!json.containsKey("lib")) json.put("lib", "lib");
 	}
 	

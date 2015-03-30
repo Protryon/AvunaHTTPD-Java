@@ -8,6 +8,7 @@ import org.avuna.httpd.util.Logger;
 public class PatchRegistry {
 	
 	public static void registerPatch(Patch p) {
+		if (!p.pcfg.containsKey("enabled") || !p.pcfg.get("enabled").equals("true")) return;
 		Logger.log("Loading patch " + p.name);
 		patchs.add(p);
 	}

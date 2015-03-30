@@ -30,6 +30,7 @@ public class PatchSecurity extends Patch {
 	
 	@Override
 	public void formatConfig(HashMap<String, Object> map) {
+		super.formatConfig(map);
 		if (!map.containsKey("minDrop")) map.put("minDrop", "100");
 		minDrop = Integer.parseInt((String)map.get("minDrop"));
 	}
