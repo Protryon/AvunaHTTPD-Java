@@ -258,10 +258,10 @@ public class AvunaHTTPD {
 						map.put("com", new LinkedHashMap<String, Object>());
 						nc = true;
 					}
-					if (!map.containsKey("dns")) {
-						map.put("dns", new LinkedHashMap<String, Object>());
-						nd = true;
-					}
+					// if (!map.containsKey("dns")) {
+					// map.put("dns", new LinkedHashMap<String, Object>());
+					// nd = true;
+					// }
 					for (String key : map.keySet()) {
 						HashMap<String, Object> host = (HashMap<String, Object>)map.get(key);
 						if (!host.containsKey("enabled")) host.put("enabled", (nc && key.equals("com")) ? "false" : "true");
