@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.networking.Packet;
@@ -19,25 +20,45 @@ import org.avuna.httpd.plugins.base.fcgi.FCGIConnection;
 import org.avuna.httpd.plugins.base.fcgi.FCGISession;
 import org.avuna.httpd.util.Logger;
 
-public class PatchPHP extends Patch {
-	private FCGIConnection conn;
+public class PatchFCGI extends Patch {
 	
-	public PatchPHP(String name) {
+	public PatchFCGI(String name) {
 		super(name);
 		reload();
 	}
 	
 	public void reload() {
-		try {
-			if (this.conn != null && !this.conn.isClosed()) {
-				this.conn.close();
+		for (FCGIConnection fcgi : fcgis.values()) {
+			try {
+				fcgi.close();
+			}catch (IOException e) {
+				Logger.logError(e);
 			}
-			this.conn = new FCGIConnection((String)pcfg.get("ip"), Integer.parseInt((String)pcfg.get("port")));
-			this.conn.start();
-		}catch (IOException e) {
-			Logger.logError(e);
-			this.conn = null;
-			Logger.log("FCGI server NOT accepting connections, disabling FCGI.");
+		}
+		fcgis.clear();
+		for (Object sub : pcfg.values()) {
+			LinkedHashMap<String, Object> subb = (LinkedHashMap<String, Object>)sub;
+			try {
+				FCGIConnection conn = new FCGIConnection((String)subb.get("ip"), Integer.parseInt((String)subb.get("port")));
+				fcgis.put((String)subb.get("mime-types"), conn);
+				conn.start();
+			}catch (Exception e) {
+				Logger.logError(e);
+				Logger.log("FCGI server(" + (String)subb.get("ip") + ":" + (String)subb.get("port") + ") NOT accepting connections, disabling FCGI.");
+			}
+		}
+	}
+	
+	private HashMap<String, FCGIConnection> fcgis = new HashMap<String, FCGIConnection>();
+	
+	@Override
+	public void formatConfig(HashMap<String, Object> json) {
+		if (!json.containsKey("php")) json.put("php", new LinkedHashMap<String, Object>());
+		for (Object sub : json.values()) {
+			LinkedHashMap<String, Object> subb = (LinkedHashMap<String, Object>)sub;
+			if (!subb.containsKey("ip")) subb.put("ip", "127.0.0.1");
+			if (!subb.containsKey("port")) subb.put("port", "9000");
+			if (!subb.containsKey("mime-types")) subb.put("mime-types", "application/x-php");
 		}
 	}
 	
@@ -53,7 +74,20 @@ public class PatchPHP extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return response.headers.hasHeader("Content-Type") && response.headers.getHeader("Content-Type").equals("application/x-php") && response.body != null && data != null;
+		if (!response.headers.hasHeader("Content-Type") || data == null) return false;
+		String ct = response.headers.getHeader("Content-Type");
+		boolean gct = false;
+		major:
+		for (String key : fcgis.keySet()) {
+			String[] pcts = key.split(",");
+			for (String pct : pcts) {
+				if (pct.trim().equals(ct)) {
+					gct = true;
+					break major;
+				}
+			}
+		}
+		return gct;
 	}
 	
 	@Override
@@ -76,6 +110,19 @@ public class PatchPHP extends Patch {
 				get = "";
 			}
 			// ProcessBuilder pb = new ProcessBuilder((String)pcfg.get("cmd"));
+			FCGIConnection conn = null;
+			String ct = response.headers.getHeader("Content-Type");
+			major:
+			for (String key : fcgis.keySet()) {
+				String[] pcts = key.split(",");
+				for (String pct : pcts) {
+					if (pct.trim().equals(ct)) {
+						conn = fcgis.get(key);
+						break major;
+					}
+				}
+			}
+			if (conn == null) return new byte[0];
 			FCGISession session = new FCGISession(conn);
 			session.start();
 			// pb.environment().start();
@@ -165,12 +212,6 @@ public class PatchPHP extends Patch {
 			Logger.logError(e); // TODO: throws HTMLException?
 		}
 		return null;// TODO: to prevent PHP leaks
-	}
-	
-	@Override
-	public void formatConfig(HashMap<String, Object> json) {
-		if (!json.containsKey("ip")) json.put("ip", "127.0.0.1");
-		if (!json.containsKey("port")) json.put("port", "9000"); // TODO: hosts, contenttype association, etc
 	}
 	
 }

@@ -23,7 +23,7 @@ public class BaseLoader {
 		// server side languages
 		PatchRegistry.registerPatch(new PatchJavaLoader("JavaLoader"));
 		// PatchRegistry.registerPatch(new PatchJWSL("JWSL")); deprecated
-		PatchRegistry.registerPatch(new PatchPHP("PHP"));
+		PatchRegistry.registerPatch(new PatchFCGI("PHP"));
 		
 		PatchRegistry.registerPatch(new PatchInline("Inline")); // TODO: perhaps before ETag? probably
 		

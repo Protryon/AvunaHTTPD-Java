@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Scanner;
@@ -51,6 +52,10 @@ public class Config {
 	
 	public Set<String> keySet() {
 		return cm.keySet();
+	}
+	
+	public Collection<Object> values() {
+		return cm.values();
 	}
 	
 	public void set(String name, Object value) {
