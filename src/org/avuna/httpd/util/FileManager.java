@@ -105,9 +105,9 @@ public class FileManager {
 	
 	public Resource getErrorPage(RequestPacket request, String reqTarget, StatusCode status, String info) {
 		HashMap<String, Object> errorPages = (HashMap<String, Object>)request.host.getHost().getConfig().get("errorpages");
-		if (errorPages.containsKey(status.getStatus())) {
+		if (errorPages.containsKey(status.getStatus() + "")) {
 			try {
-				String path = (String)errorPages.get(status.getStatus());
+				String path = (String)errorPages.get(status.getStatus() + "");
 				Resource resource = getResource(path, request);
 				if (resource != null) {
 					if (resource.type.startsWith("text")) {
