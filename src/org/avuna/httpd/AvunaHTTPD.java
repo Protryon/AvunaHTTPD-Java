@@ -30,7 +30,7 @@ import org.avuna.httpd.util.FileManager;
 import org.avuna.httpd.util.Logger;
 
 public class AvunaHTTPD {
-	public static final String VERSION = "1.0.9";
+	public static final String VERSION = "1.1.0";
 	public static Config mainConfig, hostsConfig;
 	private static Config dnsConfig;
 	public static final FileManager fileManager = new FileManager();
@@ -220,7 +220,7 @@ public class AvunaHTTPD {
 				us = new File(AvunaHTTPD.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
 			}catch (Exception e) {
 			}
-			final File cfg = new File(!unpack && args.length > 0 ? args[0] : (us == null ? (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\avuna\\httpd\\main.cfg" : "/etc/avuna/httpd/main.cfg") : (new File(us.getParentFile(), "main.cfg").getAbsolutePath())));
+			final File cfg = new File(!unpack && args.length > 0 ? args[0] : (us == null ? (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\avuna\\main.cfg" : "/etc/avuna/main.cfg") : (new File(us.getParentFile(), "main.cfg").getAbsolutePath())));
 			checkPerms(cfg.getParentFile());
 			mainConfig = new Config("main", cfg, new ConfigFormat() {
 				public void format(HashMap<String, Object> map) {

@@ -3,6 +3,7 @@ package org.avuna.httpd.hosts;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -19,6 +20,8 @@ import org.avuna.httpd.mail.smtp.SMTPHandler;
 import org.avuna.httpd.mail.smtp.SMTPWork;
 import org.avuna.httpd.mail.smtp.ThreadAcceptSMTP;
 import org.avuna.httpd.mail.smtp.ThreadWorkerSMTP;
+import org.avuna.httpd.mail.sync.HardDriveSync;
+import org.avuna.httpd.mail.sync.Sync;
 import org.avuna.httpd.util.Logger;
 
 public class HostMail extends Host {
@@ -30,6 +33,8 @@ public class HostMail extends Host {
 	public HostMail(String name) {
 		super(name, Protocol.MAIL);
 	}
+	
+	public Sync sync;
 	
 	public void clearWorkSMTP() {
 		workQueueSMTP.clear();
@@ -94,9 +99,11 @@ public class HostMail extends Host {
 	}
 	
 	public void run() {
-		registerAccount("test@example.com", "test123");
 		try {
 			LinkedHashMap<String, Object> cfg = getConfig();
+			sync = new HardDriveSync(this);
+			sync.load(accounts);
+			// registerAccount("test@example.com", "test123");
 			LinkedHashMap<String, Object> ssl = (LinkedHashMap<String, Object>)cfg.get("ssl");
 			ServerSocket smtp = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("smtp-port")), false, new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
 			ServerSocket imap = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("imap-port")), false, new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
@@ -131,7 +138,11 @@ public class HostMail extends Host {
 			}
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 				public void run() {
-					
+					try {
+						sync.save(accounts);
+					}catch (IOException e) {
+						Logger.logError(e);
+					}
 				}
 			});
 		}catch (Exception e) {
