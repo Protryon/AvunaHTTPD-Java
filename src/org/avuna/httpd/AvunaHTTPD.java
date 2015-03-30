@@ -211,10 +211,10 @@ public class AvunaHTTPD {
 				return;
 			}
 			if (System.getProperty("user.name").contains("root")) {
-				System.out.println("[WARNING] Running as root.");
+				System.out.println("[NOTIFY] Running as root, will load servers and attempt de-escalate.");
 			}
 			System.setProperty("line.separator", crlf);
-			boolean unpack = args.length == 1 && args[0].equals("unpack");
+			final boolean unpack = args.length == 1 && args[0].equals("unpack");
 			File us = null;
 			try {
 				us = new File(AvunaHTTPD.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
@@ -234,6 +234,8 @@ public class AvunaHTTPD {
 					if (!map.containsKey("plugins")) map.put("plugins", new File(dir, "plugins").toString());
 					if (!map.containsKey("logs")) map.put("logs", new File(dir, "logs").toString());
 					if (!map.containsKey("javac")) map.put("javac", "javac");
+					if (!System.getProperty("os.name").toLowerCase().contains("windows")) if (!map.containsKey("uid")) map.put("uid", unpack ? "6833" : "1");
+					if (!System.getProperty("os.name").toLowerCase().contains("windows")) if (!map.containsKey("gid")) map.put("gid", unpack ? "6833" : "1");
 				}
 			});
 			mainConfig.load();
@@ -309,6 +311,24 @@ public class AvunaHTTPD {
 			Logger.log("Loading Connection Handling");
 			for (Host h : hosts.values()) {
 				h.start();
+			}
+			if (!System.getProperty("os.name").toLowerCase().contains("windows") && System.getProperty("user.name").contains("root") && !mainConfig.get("uid").equals("1")) {
+				major:
+				while (true) {
+					for (Host h : hosts.values()) {
+						if (!h.loaded) {
+							System.out.println(h.getClass().getName());
+							Thread.sleep(1L);
+							continue major;
+						}
+					}
+					break;
+				}
+				CLib.setuid(Integer.parseInt((String)mainConfig.get("uid")));
+				CLib.setgid(Integer.parseInt((String)mainConfig.get("gid")));
+				Logger.log("[NOTIFY] De-escalated to uid " + CLib.getuid());
+			}else if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
+				Logger.log("[NOTIFY] We did NOT de-escalate, currently running as uid " + CLib.getuid());
 			}
 		}catch (Exception e) {
 			if (Logger.INSTANCE == null) {

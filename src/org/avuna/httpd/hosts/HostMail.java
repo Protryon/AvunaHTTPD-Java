@@ -138,7 +138,7 @@ public class HostMail extends Host {
 			Logger.logError(e);
 			Logger.log("Closing " + name + "/" + protocol.name + " Server on " + (String)getConfig().get("ip") + ":" + (String)getConfig().get("port"));
 		}finally {
-			
+			loaded = true;
 		}
 	}
 	

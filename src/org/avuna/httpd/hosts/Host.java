@@ -37,6 +37,8 @@ public abstract class Host extends Thread {
 		return (LinkedHashMap<String, Object>)AvunaHTTPD.hostsConfig.get(name);
 	}
 	
+	public boolean loaded = false;
+	
 	public final ServerSocket makeServer(String ip, int port, boolean ssl, File keyFile, String keyPassword, String keystorePassword) throws IOException {
 		Logger.log("Starting " + name + "/" + protocol.name + " " + (ssl ? "TLS-" : "") + "Server on " + ip + ":" + port);
 		if (ssl) {
@@ -101,7 +103,7 @@ public abstract class Host extends Thread {
 			Logger.logError(e);
 			Logger.log("Closing " + name + "/" + protocol.name + " Server on " + (String)getConfig().get("ip") + ":" + (String)getConfig().get("port"));
 		}finally {
-			
+			loaded = true;
 		}
 	}
 	
