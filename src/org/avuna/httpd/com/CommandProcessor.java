@@ -11,9 +11,12 @@ import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostHTTP;
+import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.hosts.VHost;
 import org.avuna.httpd.http.j2p.JavaToPHP;
+import org.avuna.httpd.mail.mailbox.EmailAccount;
 import org.avuna.httpd.plugins.PatchRegistry;
 import org.avuna.httpd.plugins.base.PatchOverride;
 import org.avuna.httpd.plugins.javaloader.PatchJavaLoader;
@@ -145,24 +148,41 @@ public class CommandProcessor {
 			}
 			out.println("Restarting...");
 		}else if (command.equals("select")) {
-			if (cargs.length != 2) {
+			if (cargs.length != 2 && cargs.length != 1) {
 				out.println("Invalid arguments. (host, vhost)");
 				return;
 			}
 			selectedHost = cargs[0];
-			selectedVHost = cargs[1];
-			out.println("Selected " + selectedHost + "/" + selectedVHost + "!");
+			if (cargs.length == 2) selectedVHost = cargs[1];
+			out.println("Selected " + selectedHost + (cargs.length == 2 ? ("/" + selectedVHost) : "") + "!");
+		}else if (command.equals("register")) {
+			Host host = AvunaHTTPD.hosts.get(selectedHost);
+			if (!(host instanceof HostMail)) {
+				out.println("Not a mail host!");
+				return;
+			}
+			if (cargs.length != 2) {
+				out.println("Invalid arguments. (email, password)");
+				return;
+			}
+			((HostMail)host).accounts.add(new EmailAccount(cargs[0], cargs[1]));
+			out.println("Registered " + cargs[0] + "!");
 		}else if (command.equals("jhtmldir")) {
 			if (cargs.length != 2) {
 				out.println("Invalid arguments. (input[dir], output[html])");
 				return;
 			}
 			try {
-				HostHTTP phost = (HostHTTP)AvunaHTTPD.hosts.get(selectedHost);
-				if (phost == null) {
+				Host ghost = (Host)AvunaHTTPD.hosts.get(selectedHost);
+				if (ghost == null) {
 					out.println("Invalid Selected Host (select)");
 					return;
 				}
+				if (!(ghost instanceof HostHTTP)) {
+					out.println("Not a http host!");
+					return;
+				}
+				HostHTTP phost = (HostHTTP)ghost;
 				VHost host = phost.getVHostByName(selectedVHost);
 				File temp = null;
 				PrintWriter ps = new PrintWriter(new FileOutputStream(cargs[1]));
@@ -180,11 +200,16 @@ public class CommandProcessor {
 				return;
 			}
 			try {
-				HostHTTP phost = (HostHTTP)AvunaHTTPD.hosts.get(selectedHost);
-				if (phost == null) {
+				Host ghost = (Host)AvunaHTTPD.hosts.get(selectedHost);
+				if (ghost == null) {
 					out.println("Invalid Selected Host (select)");
 					return;
 				}
+				if (!(ghost instanceof HostHTTP)) {
+					out.println("Not a http host!");
+					return;
+				}
+				HostHTTP phost = (HostHTTP)ghost;
 				VHost host = phost.getVHostByName(selectedVHost);
 				File sc2 = null;
 				Scanner scan2 = new Scanner(new FileInputStream(sc2 = new File(host.getHTDocs(), cargs[0])));
@@ -224,11 +249,16 @@ public class CommandProcessor {
 				out.println("Invalid arguments. (input, output[optional])");
 				return;
 			}
-			HostHTTP phost = (HostHTTP)AvunaHTTPD.hosts.get(selectedHost);
-			if (phost == null) {
+			Host ghost = (Host)AvunaHTTPD.hosts.get(selectedHost);
+			if (ghost == null) {
 				out.println("Invalid Selected Host (select)");
 				return;
 			}
+			if (!(ghost instanceof HostHTTP)) {
+				out.println("Not a http host!");
+				return;
+			}
+			HostHTTP phost = (HostHTTP)ghost;
 			VHost host = phost.getVHostByName(selectedVHost);
 			try {
 				File sc2 = null;
@@ -255,11 +285,16 @@ public class CommandProcessor {
 			out.println("JPHP completed.");
 		}else if (command.equals("jcomp")) {
 			boolean all = cargs.length < 1;
-			HostHTTP phost = (HostHTTP)AvunaHTTPD.hosts.get(selectedHost);
-			if (phost == null) {
+			Host ghost = (Host)AvunaHTTPD.hosts.get(selectedHost);
+			if (ghost == null) {
 				out.println("Invalid Selected Host (select)");
 				return;
 			}
+			if (!(ghost instanceof HostHTTP)) {
+				out.println("Not a http host!");
+				return;
+			}
+			HostHTTP phost = (HostHTTP)ghost;
 			VHost host = phost.getVHostByName(selectedVHost);
 			String sep = System.getProperty("os.name").toLowerCase().contains("windows") ? ";" : ":";
 			File us = null;
@@ -362,6 +397,7 @@ public class CommandProcessor {
 			out.println("jphp      - attempts to roughly convert PHP->Java, will require fine tuning");
 			out.println("flushjl   - attempts to clear JavaLoaders, and reload them.");
 			out.println("shell     - runs a shell on the host computer.");
+			out.println("mem       - shows memory stats");
 			out.println("help      - lists these commands + version");
 			out.println("");
 			out.println("Avuna HTTPD Version " + AvunaHTTPD.VERSION);
