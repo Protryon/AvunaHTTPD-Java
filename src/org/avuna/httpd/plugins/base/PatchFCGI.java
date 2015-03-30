@@ -37,6 +37,9 @@ public class PatchFCGI extends Patch {
 		}
 		fcgis.clear();
 		for (Object sub : pcfg.values()) {
+			if (!(sub instanceof LinkedHashMap<?, ?>)) {
+				continue;
+			}
 			LinkedHashMap<String, Object> subb = (LinkedHashMap<String, Object>)sub;
 			try {
 				FCGIConnection conn = new FCGIConnection((String)subb.get("ip"), Integer.parseInt((String)subb.get("port")));
@@ -55,6 +58,9 @@ public class PatchFCGI extends Patch {
 	public void formatConfig(HashMap<String, Object> json) {
 		if (!json.containsKey("php")) json.put("php", new LinkedHashMap<String, Object>());
 		for (Object sub : json.values()) {
+			if (!(sub instanceof LinkedHashMap<?, ?>)) {
+				continue;
+			}
 			LinkedHashMap<String, Object> subb = (LinkedHashMap<String, Object>)sub;
 			if (!subb.containsKey("ip")) subb.put("ip", "127.0.0.1");
 			if (!subb.containsKey("port")) subb.put("port", "9000");
