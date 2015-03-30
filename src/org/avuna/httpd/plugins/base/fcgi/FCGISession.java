@@ -1,12 +1,13 @@
 package org.avuna.httpd.plugins.base.fcgi;
 
 import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import org.avuna.httpd.plugins.base.fcgi.packets.Begin;
 import org.avuna.httpd.plugins.base.fcgi.packets.EmptyParam;
 import org.avuna.httpd.plugins.base.fcgi.packets.FCGIPacket;
 import org.avuna.httpd.plugins.base.fcgi.packets.Input;
-import org.avuna.httpd.plugins.base.fcgi.packets.NameValue11;
+import org.avuna.httpd.plugins.base.fcgi.packets.Params;
 import org.avuna.httpd.plugins.base.fcgi.packets.Stream;
 
 public class FCGISession implements IFCGIListener {
@@ -32,20 +33,31 @@ public class FCGISession implements IFCGIListener {
 		conn.write(this, new Begin(Role.FCGI_RESPONDER, id));
 	}
 	
+	private ByteArrayOutputStream pout = new ByteArrayOutputStream();
+	private DataOutputStream dpout = new DataOutputStream(pout);
+	
 	public void param(String name, String value) throws IOException {
 		if (fp) {
 			throw new IOException("Params are already finished!");
 		}
-		if (value.length() < 128) {
-			conn.write(this, new NameValue11(name, value, id));
+		if (name.length() < 128) {
+			dpout.write(name.length());
 		}else {
-			// conn.write(this, new NameValue14(name, value, id));
+			dpout.writeInt(name.length() | 0x80000000);
 		}
+		if (value.length() < 128) {
+			dpout.write(value.length());
+		}else {
+			dpout.writeInt(value.length() | 0x80000000);
+		}
+		dpout.write(name.getBytes());
+		dpout.write(value.getBytes());
 	}
 	
 	private boolean fp = false;
 	
 	public void finishParams() throws IOException {
+		conn.write(this, new Params(pout.toByteArray(), id));
 		conn.write(this, new EmptyParam(id));
 		fp = true;
 	}

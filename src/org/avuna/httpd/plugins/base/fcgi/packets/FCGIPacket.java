@@ -69,6 +69,8 @@ public abstract class FCGIPacket {
 		}
 		in.readFully(new byte[pl]);
 		packet.id = id;
+		System.out.println("    {" + type + ", " + id + ", " + pl + "}");
+		
 		return packet;
 	}
 	
@@ -92,6 +94,7 @@ public abstract class FCGIPacket {
 		out.writeShort(id);
 		writeContent(tout);
 		byte[] b = bout.toByteArray();
+		System.out.println("{" + type + ", " + id + ", " + b.length + "}");
 		out.writeShort(b.length);
 		out.write(0);
 		out.write(0);

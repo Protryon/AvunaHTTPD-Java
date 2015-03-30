@@ -5,39 +5,32 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import org.avuna.httpd.plugins.base.fcgi.Type;
 
-public class NameValue11 extends FCGIPacket {
-	public String name = "";
-	public String value = "";
+public class Params extends FCGIPacket {
+	public byte[] data;
 	
-	protected NameValue11() {
+	protected Params() {
 		super(Type.FCGI_PARAMS);
 	}
 	
-	public NameValue11(String name, String value, int id) {
+	public Params(byte[] data, int id) {
 		super(Type.FCGI_PARAMS, id);
-		this.name = name;
-		this.value = value;
+		this.data = data;
 	}
 	
-	public NameValue11(DataInputStream in, int l) throws IOException {
+	public Params(DataInputStream in, int l) throws IOException {
 		super(Type.FCGI_PARAMS);
 		readContent(in, l);
 	}
 	
 	@Override
 	protected void readContent(DataInputStream in, int l) throws IOException {
-		int nl = in.read();
-		int vl = in.read();
-		name = readUTF(in, nl);
-		value = readUTF(in, vl);
+		// TODO: unnecessary, but for a universal api, yes
 	}
 	
 	@Override
 	protected void writeContent(DataOutputStream out) throws IOException {
-		out.write(name.length());
-		out.write(value.length());
-		out.write(name.getBytes());
-		out.write(value.getBytes());
+		// System.out.println(AvunaHTTPD.fileManager.bytesToHex(data));
+		out.write(data);
 	}
 	
 }
