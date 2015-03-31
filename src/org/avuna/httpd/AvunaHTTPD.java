@@ -229,8 +229,8 @@ public class AvunaHTTPD {
 					if (!map.containsKey("plugins")) map.put("plugins", new File(dir, "plugins").toString());
 					if (!map.containsKey("logs")) map.put("logs", new File(dir, "logs").toString());
 					if (!map.containsKey("javac")) map.put("javac", "javac");
-					if (!System.getProperty("os.name").toLowerCase().contains("windows")) if (!map.containsKey("uid")) map.put("uid", unpack ? "6833" : "1");
-					if (!System.getProperty("os.name").toLowerCase().contains("windows")) if (!map.containsKey("gid")) map.put("gid", unpack ? "6833" : "1");
+					if (!System.getProperty("os.name").toLowerCase().contains("windows")) if (!map.containsKey("uid")) map.put("uid", unpack ? "6833" : "0");
+					if (!System.getProperty("os.name").toLowerCase().contains("windows")) if (!map.containsKey("gid")) map.put("gid", unpack ? "6833" : "0");
 				}
 			});
 			mainConfig.load();
@@ -310,7 +310,7 @@ public class AvunaHTTPD {
 			for (Host h : hosts.values()) {
 				h.start();
 			}
-			if (!System.getProperty("os.name").toLowerCase().contains("windows") && System.getProperty("user.name").contains("root") && !mainConfig.get("uid").equals("1")) {
+			if (!System.getProperty("os.name").toLowerCase().contains("windows") && System.getProperty("user.name").contains("root") && !mainConfig.get("uid").equals("0")) {
 				major:
 				while (true) {
 					for (Host h : hosts.values()) {
