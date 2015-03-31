@@ -72,7 +72,6 @@ public class FCGIConnection extends Thread implements IFCGIManager {
 		try {
 			while (!s.isClosed() && !closing) {
 				boolean sleep = true;
-				System.out.println(in.available());
 				if (in.available() > 0) {
 					sleep = false;
 					FCGIPacket recv = FCGIPacket.read(in);
