@@ -58,7 +58,7 @@ public abstract class FCGIPacket {
 			// TODO: not read
 			break;
 		case FCGI_GET_VALUES_RESULT:
-			// TODO: read
+			packet = new GetValuesResult(in, cl);
 			break;
 		case FCGI_UNKCOWN_TYPE:
 			// TODO: read

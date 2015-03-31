@@ -15,9 +15,12 @@ import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
+import org.avuna.httpd.http.networking.Work;
 import org.avuna.httpd.plugins.Patch;
 import org.avuna.httpd.plugins.base.fcgi.FCGIConnection;
+import org.avuna.httpd.plugins.base.fcgi.FCGIConnectionManagerNMPX;
 import org.avuna.httpd.plugins.base.fcgi.FCGISession;
+import org.avuna.httpd.plugins.base.fcgi.IFCGIManager;
 import org.avuna.httpd.util.Logger;
 
 public class PatchFCGI extends Patch {
@@ -32,7 +35,7 @@ public class PatchFCGI extends Patch {
 	}
 	
 	public void reload() {
-		for (FCGIConnection fcgi : fcgis.values()) {
+		for (IFCGIManager fcgi : fcgis.values()) {
 			try {
 				fcgi.close();
 			}catch (IOException e) {
@@ -46,9 +49,30 @@ public class PatchFCGI extends Patch {
 			}
 			LinkedHashMap<String, Object> subb = (LinkedHashMap<String, Object>)sub;
 			try {
-				FCGIConnection conn = new FCGIConnection((String)subb.get("ip"), Integer.parseInt((String)subb.get("port")));
-				fcgis.put((String)subb.get("mime-types"), conn);
-				conn.start();
+				String ip = (String)subb.get("ip");
+				int port = Integer.parseInt((String)subb.get("port"));
+				FCGIConnection sett = new FCGIConnection(ip, port);
+				sett.start();
+				boolean cmpx = false;
+				sett.getSettings();
+				int i = 0;
+				while (!sett.gotSettings) {
+					i++;
+					if (i > 10000) {
+						break;
+					}
+					Thread.sleep(0L, 100000);
+				}
+				cmpx = sett.canMultiplex;
+				sett.close();
+				IFCGIManager mgr = null;
+				if (cmpx) {
+					mgr = new FCGIConnection(ip, port);
+				}else {
+					mgr = new FCGIConnectionManagerNMPX(ip, port);
+				}
+				fcgis.put((String)subb.get("mime-types"), mgr);
+				mgr.start();
 			}catch (Exception e) {
 				fcgis.put((String)subb.get("mime-types"), null);
 				Logger.logError(e);
@@ -57,7 +81,7 @@ public class PatchFCGI extends Patch {
 		}
 	}
 	
-	private HashMap<String, FCGIConnection> fcgis = new HashMap<String, FCGIConnection>();
+	private HashMap<String, IFCGIManager> fcgis = new HashMap<String, IFCGIManager>();
 	
 	@Override
 	public void formatConfig(HashMap<String, Object> json) {
@@ -129,7 +153,13 @@ public class PatchFCGI extends Patch {
 				String[] pcts = key.split(",");
 				for (String pct : pcts) {
 					if (pct.trim().equals(ct)) {
-						conn = fcgis.get(key);
+						IFCGIManager fcgi = fcgis.get(key);
+						if (fcgi instanceof FCGIConnection) {
+							conn = (FCGIConnection)fcgi;
+						}else {
+							FCGIConnectionManagerNMPX fcmx = (FCGIConnectionManagerNMPX)fcgi;
+							conn = fcmx.getNMPX();
+						}
 						break major;
 					}
 				}
@@ -183,8 +213,19 @@ public class PatchFCGI extends Patch {
 				// pbout.flush();
 			}
 			session.finishReq();
+			int i = 0;
 			while (!session.isDone()) {
 				try {
+					Work work = request.work;
+					if (work == null && request.parent != null) {
+						work = request.parent.work;
+					}
+					if (work != null && work.s.isClosed()) {
+						session.abort();
+						break;
+					}
+					i++;
+					if (i > 100000) break;
 					Thread.sleep(0L, 100000);
 				}catch (InterruptedException e) {
 					Logger.logError(e);

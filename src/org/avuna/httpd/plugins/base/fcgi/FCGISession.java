@@ -3,6 +3,7 @@ package org.avuna.httpd.plugins.base.fcgi;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import org.avuna.httpd.plugins.base.fcgi.packets.Abort;
 import org.avuna.httpd.plugins.base.fcgi.packets.Begin;
 import org.avuna.httpd.plugins.base.fcgi.packets.EmptyParam;
 import org.avuna.httpd.plugins.base.fcgi.packets.FCGIPacket;
@@ -97,6 +98,13 @@ public class FCGISession implements IFCGIListener {
 	
 	public byte[] getResponse() {
 		return response.toByteArray();
+	}
+	
+	public void abort() throws IOException {
+		conn.write(this, new Abort(id));
+		// ids[id - 1] = false;
+		// conn.disassemble(this);
+		// done = true;
 	}
 	
 	private boolean done = false;

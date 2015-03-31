@@ -87,7 +87,7 @@ public class AvunaHTTPD {
 				fout.close();
 			}
 		}else {
-			String ll = new String(new byte[]{0x13});
+			String ll = new String(new byte[]{0x10, 0x10});
 			File f = fileManager.getBaseFile("run.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
@@ -122,15 +122,9 @@ public class AvunaHTTPD {
 	public static void unpack() {
 		try {
 			setupScripts();
-			String[] unpacks = new String[]{"mime.txt", "run.sh", "kill.sh", "restart.sh", "cmd.sh", "run.bat", "kill.bat", "restart.bat", "cmd.bat"};
+			String[] unpacks = new String[]{"mime.txt"};
 			String os = System.getProperty("os.name").toLowerCase();
 			for (String up : unpacks) {
-				if (up.endsWith(".sh") && !(os.contains("nux") || os.contains("nix") || os.contains("mac"))) {
-					continue;
-				}
-				if (up.endsWith(".bat") && !os.contains("windows")) {
-					continue;
-				}
 				File mime = fileManager.getBaseFile(up);
 				if (!mime.exists()) {
 					Logger.log("Unpacking " + up + "...");
