@@ -30,7 +30,7 @@ import org.avuna.httpd.util.FileManager;
 import org.avuna.httpd.util.Logger;
 
 public class AvunaHTTPD {
-	public static final String VERSION = "1.1.1";
+	public static final String VERSION = "1.1.3";
 	public static Config mainConfig, hostsConfig;
 	private static Config dnsConfig;
 	public static final FileManager fileManager = new FileManager();
