@@ -45,6 +45,10 @@ public class HostHTTP extends Host {
 		return vhosts;
 	}
 	
+	public static void unpack() {
+		
+	}
+	
 	public void setupFolders() {
 		for (VHost vhost : vhosts) {
 			vhost.setupFolders();

@@ -40,7 +40,6 @@ public class SMTPHandler {
 						String up = new String(DatatypeConverter.parseBase64Binary(line)).substring(1);
 						String username = up.substring(0, up.indexOf(new String(new byte[]{0})));
 						String password = up.substring(username.length() + 1);
-						System.out.println(username + ":" + password);
 						EmailAccount us = null;
 						for (EmailAccount e : host.accounts) {
 							if (e.email.equals(username) && e.password.equals(password)) {
@@ -49,7 +48,7 @@ public class SMTPHandler {
 							}
 						}
 						if (us != null) {
-							focus.writeLine(250, "OK");
+							focus.writeLine(235, "OK");
 							focus.authUser = us;
 							focus.state = 2;
 						}else {
@@ -57,6 +56,27 @@ public class SMTPHandler {
 						}
 					}else {
 						focus.writeLine(501, "Syntax error in parameters or arguments");
+					}
+				}else if (line.toUpperCase().startsWith("LOGIN")) {
+					focus.writeLine(334, "VXNlcm5hbWU6");
+					String u64 = focus.in.readLine().trim();
+					String username = new String(DatatypeConverter.parseBase64Binary(u64));
+					focus.writeLine(334, "UGFzc3dvcmQ6");
+					String p64 = focus.in.readLine().trim();
+					String password = new String(DatatypeConverter.parseBase64Binary(p64));
+					EmailAccount us = null;
+					for (EmailAccount e : host.accounts) {
+						if (e.email.equals(username) && e.password.equals(password)) {
+							us = e;
+							break;
+						}
+					}
+					if (us != null) {
+						focus.writeLine(235, "OK");
+						focus.authUser = us;
+						focus.state = 2;
+					}else {
+						focus.writeLine(535, "authentication failed");
 					}
 				}else {
 					focus.writeLine(501, "Syntax error in parameters or arguments");

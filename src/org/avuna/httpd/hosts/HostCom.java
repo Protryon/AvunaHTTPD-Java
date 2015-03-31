@@ -10,6 +10,10 @@ public class HostCom extends Host {
 		super(name, Protocol.COM);
 	}
 	
+	public static void unpack() {
+		
+	}
+	
 	private String[] auth = null;
 	private String ip = null;
 	private int port;

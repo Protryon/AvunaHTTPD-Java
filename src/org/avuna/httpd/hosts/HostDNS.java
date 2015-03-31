@@ -1,6 +1,7 @@
 package org.avuna.httpd.hosts;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
@@ -8,6 +9,7 @@ import org.avuna.httpd.dns.RecordHolder;
 import org.avuna.httpd.dns.TCPServer;
 import org.avuna.httpd.dns.ThreadDNSWorker;
 import org.avuna.httpd.dns.UDPServer;
+import org.avuna.httpd.util.Logger;
 
 public class HostDNS extends Host {
 	
@@ -18,6 +20,14 @@ public class HostDNS extends Host {
 	private String ip = null, dnsf = null;
 	private int twc, mc;
 	private int port;
+	
+	public static void unpack() {
+		try {
+			AvunaHTTPD.fileManager.getBaseFile("dns.cfg").createNewFile();
+		}catch (IOException e) {
+			Logger.logError(e);
+		}
+	}
 	
 	public void formatConfig(HashMap<String, Object> map) {
 		if (!map.containsKey("port")) map.put("port", "53");

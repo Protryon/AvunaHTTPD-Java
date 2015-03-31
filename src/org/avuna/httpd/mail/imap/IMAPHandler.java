@@ -43,6 +43,38 @@ public class IMAPHandler {
 			}
 			
 		});
+		commands.add(new IMAPCommand("login", 0, 0) {
+			
+			@Override
+			public void run(IMAPWork focus, String letters, String[] args) throws IOException {
+				String[] cargs = StringFormatter.congealBySurroundings(args, "\"", "\"");
+				for (int i = 0; i < cargs.length; i++) {
+					if (cargs[i].startsWith("\"") && cargs[i].endsWith("\"")) {
+						cargs[i] = cargs[i].substring(1, cargs[i].length() - 1);
+					}
+				}
+				if (cargs.length == 2) {
+					EmailAccount us = null;
+					for (EmailAccount e : host.accounts) {
+						if (e.email.equals(cargs[0]) && e.password.equals(cargs[1])) {
+							us = e;
+							break;
+						}
+					}
+					if (us != null) {
+						focus.writeLine(focus, letters, "OK");
+						focus.authUser = us;
+						focus.state = 2;
+					}else {
+						focus.writeLine(focus, letters, "NO Authenticate Failed.");
+						focus.state = 0;
+					}
+				}else {
+					focus.writeLine(focus, letters, "BAD " + cargs.length + " arguments, not 2.");
+				}
+			}
+			
+		});
 		commands.add(new IMAPCommand("authenticate", 0, 0) {
 			
 			@Override
@@ -65,7 +97,7 @@ public class IMAPHandler {
 				String username = up.substring(0, up.indexOf(new String(new byte[]{0})));
 				String password = up.substring(username.length() + 1);
 				String letters2 = focus.authMethod.substring(5);
-				System.out.println(username + ":" + password);
+				// System.out.println(username + ":" + password);
 				EmailAccount us = null;
 				for (EmailAccount e : host.accounts) {
 					if (e.email.equals(username) && e.password.equals(password)) {

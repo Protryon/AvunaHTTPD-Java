@@ -1,5 +1,7 @@
 package org.avuna.httpd.dns;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -34,6 +36,21 @@ public class RecordHolder {
 						fd = Util.ipToByte(data);
 					}else if (type == Type.AAAA) {
 						fd = Util.ip6ToByte(data);
+					}else if (type == Type.MX) {
+						if (!data.contains(" ")) {
+							Logger.log("[WARNING] MALFORMED MX! Skipping.");
+							continue;
+						}
+						int priority = Integer.parseInt(data.substring(0, data.indexOf(" ")));
+						ByteArrayOutputStream mxf = new ByteArrayOutputStream();
+						DataOutputStream mxfd = new DataOutputStream(mxf);
+						mxfd.writeShort(priority);
+						String[] dspl = data.substring(data.indexOf(" ") + 1).split("\\.");
+						for (String d : dspl) {
+							mxfd.write(d.length());
+							mxfd.write(d.getBytes());
+						}
+						fd = mxf.toByteArray();
 					}else {
 						fd = data.getBytes(); // TODO: ???
 					}

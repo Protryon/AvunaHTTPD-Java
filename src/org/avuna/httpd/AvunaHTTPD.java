@@ -87,7 +87,7 @@ public class AvunaHTTPD {
 				fout.close();
 			}
 		}else {
-			String ll = new String(new byte[]{0x10, 0x10});
+			String ll = new String(new byte[]{0x0A, 0x0A});
 			File f = fileManager.getBaseFile("run.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
@@ -239,6 +239,9 @@ public class AvunaHTTPD {
 			HostRegistry.addHost(Protocol.COM, HostCom.class);
 			HostRegistry.addHost(Protocol.DNS, HostDNS.class);
 			HostRegistry.addHost(Protocol.MAIL, HostMail.class);
+			if (unpack) {
+				HostRegistry.unpack();
+			}
 			hostsConfig = new Config("hosts", new File((String)mainConfig.get("hosts")), new ConfigFormat() {
 				
 				@Override

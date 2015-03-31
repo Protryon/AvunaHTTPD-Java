@@ -70,6 +70,10 @@ public class HostMail extends Host {
 		new File((String)getConfig().get("folder")).mkdirs();
 	}
 	
+	public static void unpack() {
+		AvunaHTTPD.fileManager.getBaseFile("mail").mkdirs();
+	}
+	
 	public final ArrayList<EmailAccount> accounts = new ArrayList<EmailAccount>();
 	
 	public void formatConfig(HashMap<String, Object> map) {
