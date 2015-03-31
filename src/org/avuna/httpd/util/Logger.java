@@ -48,9 +48,12 @@ public class Logger {
 		
 		public void run() {
 			while (true) {
-				String cache = cacheAccess.toString().replace("-DATE-", timestamp.format(new Date()));
-				cacheAccess.getBuffer().setLength(0);
-				locallog(cache);
+				if (ps != null) {
+					String cache = cacheAccess.toString().replace("-DATE-", timestamp.format(new Date()));
+					cacheAccess.getBuffer().setLength(0);
+					System.out.print(cache);
+					ps.print(cache);
+				}
 				try {
 					Thread.sleep(1000L);
 				}catch (InterruptedException e) {
@@ -59,9 +62,4 @@ public class Logger {
 			}
 		}
 	};
-	
-	private void locallog(String line) {
-		System.out.print(line);
-		ps.print(line);
-	}
 }
