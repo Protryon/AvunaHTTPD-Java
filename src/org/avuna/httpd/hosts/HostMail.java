@@ -84,7 +84,7 @@ public class HostMail extends Host {
 		if (!ssl.containsKey("keyFile")) ssl.put("keyFile", AvunaHTTPD.fileManager.getBaseFile("ssl/keyFile").toString());
 		if (!ssl.containsKey("keystorePassword")) ssl.put("keystorePassword", "password");
 		if (!ssl.containsKey("keyPassword")) ssl.put("keyPassword", "password");
-		if (!map.containsKey("domains")) map.put("domain", "example.com,example.org");
+		if (!map.containsKey("domain")) map.put("domain", "example.com,example.org");
 		if (!map.containsKey("folder")) map.put("folder", AvunaHTTPD.fileManager.getBaseFile("mail"));
 		if (!map.containsKey("acceptThreadCount")) map.put("acceptThreadCount", "2");
 		if (!map.containsKey("workerThreadCount")) map.put("workerThreadCount", "8");
