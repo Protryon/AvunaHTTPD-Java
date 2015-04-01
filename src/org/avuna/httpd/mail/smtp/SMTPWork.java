@@ -1,5 +1,6 @@
 package org.avuna.httpd.mail.smtp;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -21,12 +22,16 @@ public class SMTPWork {
 	public int tos = 0;
 	public ArrayList<String> rcptTo = new ArrayList<String>();
 	public ArrayList<String> data = new ArrayList<String>();
+	public ByteArrayOutputStream sslprep = null;
 	
 	public SMTPWork(Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
 		this.s = s;
 		this.in = in;
 		this.out = out;
 		this.ssl = ssl;
+		if (ssl) {
+			sslprep = new ByteArrayOutputStream();
+		}
 	}
 	
 	public void writeMLine(int response, String data) throws IOException {

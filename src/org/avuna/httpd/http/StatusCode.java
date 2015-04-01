@@ -17,6 +17,11 @@ public class StatusCode {
 	public static final StatusCode PARTIAL_CONTENT = new StatusCode(206, "Partial Content");
 	
 	/**
+	 * Status 101 Switching Protocols
+	 */
+	public static final StatusCode SWITCHING_PROTOCOLS = new StatusCode(101, "Switching Protocols");
+	
+	/**
 	 * Status 401 Unauthorized
 	 */
 	public static final StatusCode UNAUTHORIZED = new StatusCode(401, "Unauthorized");

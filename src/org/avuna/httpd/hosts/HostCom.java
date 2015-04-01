@@ -21,7 +21,7 @@ public class HostCom extends Host {
 	public void formatConfig(HashMap<String, Object> map) {
 		if (!map.containsKey("port")) map.put("port", "6049");
 		if (!map.containsKey("ip")) map.put("ip", "127.0.0.1");
-		super.formatConfig(map);
+		// super.formatConfig(map);
 		if (!map.containsKey("doAuth")) map.put("doAuth", "true");
 		if (!map.containsKey("auth")) map.put("auth", "");
 		if (!map.get("doAuth").equals("true")) {

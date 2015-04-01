@@ -55,6 +55,8 @@ public class HostHTTP extends Host {
 		}
 	}
 	
+	public boolean http2 = false;
+	
 	public void formatConfig(HashMap<String, Object> map) {
 		super.formatConfig(map);
 		if (!map.containsKey("errorpages")) map.put("errorpages", new LinkedHashMap<String, Object>());
@@ -64,10 +66,12 @@ public class HostHTTP extends Host {
 		if (!map.containsKey("connThreadCount")) map.put("connThreadCount", "12");
 		if (!map.containsKey("workerThreadCount")) map.put("workerThreadCount", "32");
 		if (!map.containsKey("maxConnections")) map.put("maxConnections", "-1");
+		if (!map.containsKey("http2")) map.put("http2", "false");
 		tac = Integer.parseInt((String)map.get("acceptThreadCount"));
 		tcc = Integer.parseInt((String)map.get("connThreadCount"));
 		twc = Integer.parseInt((String)map.get("workerThreadCount"));
 		mc = Integer.parseInt((String)map.get("maxConnections"));
+		http2 = map.get("http2").equals("true");
 		if (!map.containsKey("vhosts")) map.put("vhosts", new LinkedHashMap<String, Object>());
 		HashMap<String, Object> vhosts = (HashMap<String, Object>)map.get("vhosts");
 		if (!vhosts.containsKey("main")) vhosts.put("main", new LinkedHashMap<String, Object>());

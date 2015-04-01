@@ -21,6 +21,15 @@ public class ThreadWorkerIMAP extends Thread {
 		keepRunning = false;
 	}
 	
+	public static String safeRead(IMAPWork focus) throws IOException {
+		String line = focus.in.readLine().trim();
+		if (focus.sslprep != null) {
+			line = focus.sslprep.toString() + line;
+			focus.sslprep.reset();
+		}
+		return line;
+	}
+	
 	public void run() {
 		while (keepRunning) {
 			IMAPWork focus = host.workQueueIMAP.poll();
@@ -38,6 +47,22 @@ public class ThreadWorkerIMAP extends Thread {
 			boolean canAdd = true;
 			boolean readd = false;
 			try {
+				if (focus.ssl && focus.in.available() == 0) {
+					focus.s.setSoTimeout(1);
+					try {
+						int sp = focus.in.read();
+						if (sp == -1) {
+							focus.s.close();
+							readd = false;
+							continue;
+						}
+						focus.sslprep.write(sp);
+					}catch (SocketTimeoutException e) {
+						
+					}finally {
+						focus.s.setSoTimeout(1000);
+					}
+				}
 				if (focus.in.available() == 0) {
 					if (focus.sns == 0L) {
 						focus.sns = System.nanoTime() + 10000000000L;
@@ -73,7 +98,7 @@ public class ThreadWorkerIMAP extends Thread {
 						}
 					}
 				}else if (focus.in.available() > 0) {
-					String line = focus.in.readLine().trim();
+					String line = safeRead(focus);
 					focus.tos = 0;
 					readd = true;
 					System.out.println(focus.hashCode() + ": " + line);

@@ -223,17 +223,18 @@ public class CommandProcessor {
 				temp.getParentFile().mkdirs();
 				temp.createNewFile();
 				ps = new PrintStream(new FileOutputStream(temp));
-				ps.println("import com.javaprophet.javawebserver.plugins.javaloader.HTMLBuilder;");
-				ps.println("import com.javaprophet.javawebserver.networking.packets.RequestPacket;");
-				ps.println("import com.javaprophet.javawebserver.networking.packets.ResponsePacket;");
-				ps.println("import com.javaprophet.javawebserver.plugins.javaloader.JavaLoaderPrint;");
+				ps.println("import org.avuna.httpd.plugins.javaloader.HTMLBuilder;");
+				ps.println("import org.avuna.httpd.http.networking.packets.RequestPacket;");
+				ps.println("import org.avuna.httpd.http.networking.packets.ResponsePacket;");
+				ps.println("import org.avuna.httpd.plugins.javaloader.JavaLoaderPrint;");
 				ps.println();
 				ps.println("public class " + (cargs.length == 2 ? temp.getName().substring(0, temp.getName().indexOf(".")) : sc2.getName().substring(0, sc2.getName().indexOf("."))) + " extends JavaLoaderPrint {");
-				ps.println("    public void generate(HTMLBuilder out, ResponsePacket response, RequestPacket request) {");
+				ps.println("    public boolean generate(HTMLBuilder out, ResponsePacket response, RequestPacket request) {");
 				while (scan2.hasNextLine()) {
 					String line = scan2.nextLine().trim();
 					ps.println("        " + "out.println(\"" + line.replace("\\", "\\\\").replace("\"", "\\\"") + "\");");
 				}
+				ps.println("    return true;");
 				ps.println("    }");
 				ps.println("}");
 				ps.flush();

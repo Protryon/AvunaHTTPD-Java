@@ -1,5 +1,6 @@
 package org.avuna.httpd.mail.imap;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -20,12 +21,16 @@ public class IMAPWork {
 	public boolean isExamine = false;
 	public long sns = 0L;
 	public int tos = 0;
+	public ByteArrayOutputStream sslprep = null;
 	
 	public IMAPWork(Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
 		this.s = s;
 		this.in = in;
 		this.out = out;
 		this.ssl = ssl;
+		if (ssl) {
+			sslprep = new ByteArrayOutputStream();
+		}
 	}
 	
 	public void writeLine(IMAPWork w, String id, String data) throws IOException {

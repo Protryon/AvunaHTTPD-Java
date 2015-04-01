@@ -35,6 +35,7 @@ public class RequestPacket extends Packet {
 	public HashMap<String, String> get = new HashMap<String, String>();
 	public HashMap<String, String> post = new HashMap<String, String>();
 	public HashMap<String, String> cookie = new HashMap<String, String>();
+	public boolean http2Upgrade = false;
 	
 	public RequestPacket clone() {
 		RequestPacket ret = new RequestPacket();
@@ -108,12 +109,25 @@ public class RequestPacket extends Packet {
 		return writer.toString();
 	}
 	
-	public static RequestPacket read(DataInputStream in) throws IOException {
+	private static String readLine(byte[] sslprep, DataInputStream in) throws IOException {
+		if (sslprep == null) return readLine(in);
+		ByteArrayOutputStream writer = new ByteArrayOutputStream();
+		writer.write(sslprep);
+		int i = in.read();
+		while (i != AvunaHTTPD.crlfb[0] && i != -1) {
+			writer.write(i);
+			i = in.read();
+		}
+		if (AvunaHTTPD.crlfb.length == 2) in.read();
+		return writer.toString();
+	}
+	
+	public static RequestPacket read(byte[] sslprep, DataInputStream in) throws IOException {
 		long start = System.nanoTime();
 		RequestPacket incomingRequest = new RequestPacket();
 		String reqLine = "";
 		long pir = System.nanoTime();
-		reqLine = readLine(in).trim();
+		reqLine = readLine(sslprep, in).trim();
 		int b = reqLine.indexOf(" ");
 		if (b == -1) {
 			return null;

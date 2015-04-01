@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostHTTP;
+import org.avuna.httpd.http.Method;
 import org.avuna.httpd.util.Logger;
 
 public class ThreadConnection extends Thread {
@@ -117,6 +118,22 @@ public class ThreadConnection extends Thread {
 						focus.out.flush();
 					}
 				}
+				if (focus.ssl && focus.in.available() == 0) {
+					focus.s.setSoTimeout(1);
+					try {
+						int sp = focus.in.read();
+						if (sp == -1) {
+							focus.s.close();
+							readd = false;
+							continue;
+						}
+						focus.sslprep.write(sp);
+					}catch (SocketTimeoutException e) {
+						
+					}finally {
+						focus.s.setSoTimeout(1000);
+					}
+				}
 				if (focus.in.available() == 0) {
 					if (focus.sns == 0L) {
 						focus.sns = System.nanoTime() + 10000000000L;
@@ -160,11 +177,15 @@ public class ThreadConnection extends Thread {
 				}else if (focus.in.available() > 0) { // TODO: fix pipelining?
 					focus.sns = 0L;
 					long ps = System.nanoTime();
-					RequestPacket incomingRequest = RequestPacket.read(focus.in);
+					RequestPacket incomingRequest = RequestPacket.read(focus.sslprep != null ? focus.sslprep.toByteArray() : null, focus.in);
+					if (focus.sslprep != null) focus.sslprep.reset();
 					long benchStart = System.nanoTime();
 					if (incomingRequest == null) {
 						focus.s.close();
 						continue;
+					}
+					if (incomingRequest.method == Method.PRI && incomingRequest.target.equals("*") && incomingRequest.httpVersion.equals("HTTP/2.0")) {
+						
 					}
 					String host = incomingRequest.headers.hasHeader("Host") ? incomingRequest.headers.getHeader("Host") : "";
 					incomingRequest.work = focus;
@@ -175,6 +196,15 @@ public class ThreadConnection extends Thread {
 					incomingRequest.userPort = focus.s.getPort();
 					incomingRequest.order = focus.nreqid++;
 					incomingRequest.child = new ResponsePacket();
+					if (incomingRequest.host.getHost().http2) {
+						if (incomingRequest.ssl) {
+							
+						}else {
+							if (incomingRequest.headers.hasHeader("Upgrade") && incomingRequest.headers.hasHeader("HTTP2-Settings") && incomingRequest.headers.getHeader("Upgrade").contains("h2c")) {
+								incomingRequest.http2Upgrade = true;
+							}
+						}
+					}
 					focus.outQueue.add(incomingRequest.child);
 					long set = System.nanoTime();
 					// code

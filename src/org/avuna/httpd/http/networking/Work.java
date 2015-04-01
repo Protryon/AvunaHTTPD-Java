@@ -1,5 +1,6 @@
 package org.avuna.httpd.http.networking;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
@@ -15,7 +16,7 @@ public class Work {
 	public int tos = 0;
 	public long sns = 0L;
 	public int nreqid = 1;
-	
+	public ByteArrayOutputStream sslprep = null;
 	public ArrayBlockingQueue<ResponsePacket> outQueue = new ArrayBlockingQueue<ResponsePacket>(16);
 	
 	// public ResponsePacket[] pipeline = new ResponsePacket[32];
@@ -26,5 +27,8 @@ public class Work {
 		this.in = in;
 		this.out = out;
 		this.ssl = ssl;
+		if (ssl) {
+			sslprep = new ByteArrayOutputStream();
+		}
 	}
 }
