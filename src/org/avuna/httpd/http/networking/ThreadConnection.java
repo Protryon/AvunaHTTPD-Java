@@ -218,6 +218,13 @@ public class ThreadConnection extends Thread {
 				if (readd & canAdd) {
 					workQueue.add(focus);
 				}
+				if (workQueue.size() < 10000) { // idle fix
+					try {
+						Thread.sleep(0L, 100000);
+					}catch (InterruptedException e) {
+						Logger.logError(e);
+					}
+				}
 			}
 		}
 	}

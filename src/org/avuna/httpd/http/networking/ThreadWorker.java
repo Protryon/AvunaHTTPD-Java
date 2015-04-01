@@ -131,6 +131,14 @@ public class ThreadWorker extends Thread {
 						Logger.logError(ex);
 					}
 				}
+			}finally {
+				if (workQueue.size() < 10000) { // idle fix
+					try {
+						Thread.sleep(0L, 100000);
+					}catch (InterruptedException e) {
+						Logger.logError(e);
+					}
+				}
 			}
 		}
 	}
