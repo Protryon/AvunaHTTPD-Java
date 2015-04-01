@@ -72,6 +72,7 @@ public abstract class Host extends Thread {
 					try {
 						sc = SSLContext.getInstance(protocol);
 						fp = protocol;
+						break;
 					}catch (NoSuchAlgorithmException e) {
 						continue;
 					}
@@ -81,8 +82,18 @@ public abstract class Host extends Thread {
 					return null;
 				}
 				sc.init(kmf.getKeyManagers(), trustAllCerts, new SecureRandom());
+				
 				ServerSocket server = (SSLServerSocket)sc.getServerSocketFactory().createServerSocket(port, 1000, InetAddress.getByName(ip));
 				((SSLServerSocket)server).setEnabledProtocols(new String[]{fp});
+				((SSLServerSocket)server).setNeedClientAuth(false);
+				((SSLServerSocket)server).setWantClientAuth(false);
+				// ((SSLServerSocket)server).setEnabledCipherSuites(((SSLServerSocket)server).getSupportedCipherSuites());
+				// for (String sup : ((SSLServerSocket)server).getSupportedCipherSuites()) {
+				// System.out.println("Supported: " + sup);
+				// }
+				// for (String sup : ((SSLServerSocket)server).getEnabledCipherSuites()) {
+				// System.out.println("Enabled: " + sup);
+				// }
 				return server;
 			}catch (Exception e) {
 				Logger.logError(e);

@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLSocket;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.plugins.PatchRegistry;
@@ -35,18 +36,18 @@ public class ThreadAcceptSMTP extends Thread {
 			try {
 				Socket s = server.accept();
 				if (cl >= 0 && host.getQueueSizeSMTP() >= cl) {
-					s.close();
-					continue;
+					// s.close();
+					// continue;
 				}
 				if (AvunaHTTPD.lastbipc <= System.currentTimeMillis()) {
 					AvunaHTTPD.lastbipc = System.currentTimeMillis() + 3600000L;
 					AvunaHTTPD.bannedIPs.clear();
 				}
 				if (AvunaHTTPD.bannedIPs.contains(s.getInetAddress().getHostAddress())) {
-					s.close();
-					continue;
+					// s.close();
+					// continue;
 				}
-				s.setSoTimeout(1000);
+				// s.setSoTimeout(1000);
 				if (PatchRegistry.getPatchForClass(PatchSecurity.class).pcfg.get("enabled").equals("true")) {
 					int minDrop = Integer.parseInt((String)PatchRegistry.getPatchForClass(PatchSecurity.class).pcfg.get("minDrop"));
 					int chance = 0;
@@ -54,16 +55,22 @@ public class ThreadAcceptSMTP extends Thread {
 						chance += sec.check(s.getInetAddress().getHostAddress());
 					}
 					if (chance >= minDrop) {
-						s.close();
-						AvunaHTTPD.bannedIPs.add(s.getInetAddress().getHostAddress());
-						continue;
+						// s.close();
+						// AvunaHTTPD.bannedIPs.add(s.getInetAddress().getHostAddress());
+						// continue;
 					}
 				}
+				
+				if (server instanceof SSLServerSocket) {
+					((SSLSocket)s).startHandshake();
+				}
+				Thread.sleep(10000L);
 				DataOutputStream out = new DataOutputStream(s.getOutputStream());
 				out.flush();
 				DataInputStream in = new DataInputStream(s.getInputStream());
 				out.write(("220 " + ((String)host.getConfig().get("domain")).split(",")[0] + " ESMTP Avuna-HTTPD" + AvunaHTTPD.crlf).getBytes());
 				out.flush();
+				s.setSoTimeout(1000);
 				host.addWorkSMTP(s, in, out, server instanceof SSLServerSocket);
 			}catch (Exception e) {
 				Logger.logError(e);
