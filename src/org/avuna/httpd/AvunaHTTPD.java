@@ -220,7 +220,6 @@ public class AvunaHTTPD {
 						dir = new File((String)map.get("dir"));
 					}
 					if (!map.containsKey("hosts")) map.put("hosts", new File(dir, "hosts.cfg").toString());
-					if (!map.containsKey("plugins")) map.put("plugins", new File(dir, "plugins").toString());
 					if (!map.containsKey("logs")) map.put("logs", new File(dir, "logs").toString());
 					if (!map.containsKey("javac")) map.put("javac", "javac");
 					if (!System.getProperty("os.name").toLowerCase().contains("windows")) if (!map.containsKey("uid")) map.put("uid", unpack ? "6833" : "0");
