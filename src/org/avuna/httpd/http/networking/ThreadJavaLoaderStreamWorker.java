@@ -2,7 +2,7 @@ package org.avuna.httpd.http.networking;
 
 import java.io.IOException;
 import java.net.SocketException;
-import org.avuna.httpd.plugins.javaloader.JavaLoaderStream;
+import org.avuna.httpd.http.plugins.javaloader.JavaLoaderStream;
 import org.avuna.httpd.util.Logger;
 
 public class ThreadJavaLoaderStreamWorker extends Thread {

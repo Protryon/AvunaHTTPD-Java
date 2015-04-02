@@ -16,10 +16,10 @@ import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.hosts.VHost;
 import org.avuna.httpd.http.j2p.JavaToPHP;
+import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.http.plugins.base.PatchOverride;
+import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
 import org.avuna.httpd.mail.mailbox.EmailAccount;
-import org.avuna.httpd.plugins.PatchRegistry;
-import org.avuna.httpd.plugins.base.PatchOverride;
-import org.avuna.httpd.plugins.javaloader.PatchJavaLoader;
 import org.avuna.httpd.util.Logger;
 
 /**

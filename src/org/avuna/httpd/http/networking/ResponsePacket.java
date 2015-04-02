@@ -7,7 +7,7 @@ import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.Method;
 import org.avuna.httpd.http.Resource;
-import org.avuna.httpd.plugins.javaloader.JavaLoaderStream;
+import org.avuna.httpd.http.plugins.javaloader.JavaLoaderStream;
 import org.avuna.httpd.util.Logger;
 
 /**

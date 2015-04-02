@@ -8,10 +8,10 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
-import org.avuna.httpd.plugins.PatchRegistry;
-import org.avuna.httpd.plugins.base.PatchSecurity;
-import org.avuna.httpd.plugins.javaloader.JavaLoaderSecurity;
-import org.avuna.httpd.plugins.javaloader.PatchJavaLoader;
+import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.http.plugins.base.PatchSecurity;
+import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSecurity;
+import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
 import org.avuna.httpd.util.Logger;
 
 /**

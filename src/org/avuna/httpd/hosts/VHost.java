@@ -3,7 +3,7 @@ package org.avuna.httpd.hosts;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
-import org.avuna.httpd.plugins.javaloader.JavaLoaderSession;
+import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSession;
 
 public class VHost {
 	private final HostHTTP host;

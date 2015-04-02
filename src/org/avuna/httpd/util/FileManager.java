@@ -11,13 +11,13 @@ import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.networking.RequestPacket;
+import org.avuna.httpd.http.plugins.Patch;
+import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.http.plugins.base.PatchChunked;
+import org.avuna.httpd.http.plugins.base.PatchGZip;
+import org.avuna.httpd.http.plugins.base.PatchInline;
+import org.avuna.httpd.http.plugins.javaloader.lib.HTMLCache;
 import org.avuna.httpd.http.util.OverrideConfig;
-import org.avuna.httpd.plugins.Patch;
-import org.avuna.httpd.plugins.PatchRegistry;
-import org.avuna.httpd.plugins.base.PatchChunked;
-import org.avuna.httpd.plugins.base.PatchGZip;
-import org.avuna.httpd.plugins.base.PatchInline;
-import org.avuna.httpd.plugins.javaloader.lib.HTMLCache;
 
 public class FileManager {
 	public FileManager() {
