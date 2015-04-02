@@ -1,7 +1,7 @@
 package org.avuna.httpd.http.plugins.javaloader.security;
 
+import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.http.networking.RequestPacket;
-import org.avuna.httpd.http.networking.ThreadConnection;
 import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSecurity;
 
 public class JLSBFlood extends JavaLoaderSecurity {
@@ -25,7 +25,7 @@ public class JLSBFlood extends JavaLoaderSecurity {
 	@Override
 	public int check(String ip) {
 		if (!enabled) return 0;
-		int ips = ThreadConnection.getConnectionsForIP(ip);
+		int ips = HostHTTP.getConnectionsForIP(ip);
 		if (ips > maxConcurrentConns) {
 			return returnWeight;
 		}

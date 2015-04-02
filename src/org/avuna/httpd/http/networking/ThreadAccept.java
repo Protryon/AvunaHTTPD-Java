@@ -30,7 +30,7 @@ public class ThreadAccept extends Thread {
 		while (!server.isClosed()) {
 			try {
 				Socket s = server.accept();
-				if (cl >= 0 && ThreadWorker.getQueueSize() >= cl) {
+				if (cl >= 0 && host.sizeQueue() >= cl) {
 					s.close();
 					continue;
 				}
@@ -52,14 +52,14 @@ public class ThreadAccept extends Thread {
 					if (chance >= minDrop) {
 						s.close();
 						AvunaHTTPD.bannedIPs.add(s.getInetAddress().getHostAddress());
-						ThreadConnection.clearIPs(s.getInetAddress().getHostAddress());
+						host.clearIPs(s.getInetAddress().getHostAddress());
 						continue;
 					}
 				}
 				DataOutputStream out = new DataOutputStream(s.getOutputStream());
 				out.flush();
 				DataInputStream in = new DataInputStream(s.getInputStream());
-				ThreadConnection.addWork(host, s, in, out, server instanceof SSLServerSocket);
+				host.addWork(host, s, in, out, server instanceof SSLServerSocket);
 			}catch (Exception e) {
 				Logger.logError(e);
 			}

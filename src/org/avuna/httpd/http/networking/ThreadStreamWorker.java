@@ -4,6 +4,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.SocketException;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.util.Logger;
@@ -12,11 +13,13 @@ public class ThreadStreamWorker extends Thread {
 	private final Work work;
 	private final RequestPacket req;
 	private final ResponsePacket resp;
+	private final HostHTTP host;
 	
-	public ThreadStreamWorker(Work work, RequestPacket req, ResponsePacket resp) {
+	public ThreadStreamWorker(HostHTTP host, Work work, RequestPacket req, ResponsePacket resp) {
 		this.work = work;
 		this.req = req;
 		this.resp = resp;
+		this.host = host;
 		this.setDaemon(true);
 	}
 	
@@ -55,15 +58,15 @@ public class ThreadStreamWorker extends Thread {
 			}
 			cos.finish();
 			// cos.close();
-			ThreadConnection.readdWork(work);
+			host.readdWork(work);
 		}catch (IOException e) {
 			if (!(e instanceof SocketException)) Logger.logError(e);
 		}finally {
 			String ip = work.s.getInetAddress().getHostAddress();
-			Integer cur = ThreadConnection.connIPs.get(ip);
+			Integer cur = host.connIPs.get(ip);
 			if (cur == null) cur = 1;
 			cur -= 1;
-			ThreadConnection.connIPs.put(ip, cur);
+			host.connIPs.put(ip, cur);
 			Logger.log(ip + " closed.");
 			try {
 				if (fin != null) fin.close();

@@ -12,7 +12,6 @@ import org.avuna.httpd.http.Method;
 import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
-import org.avuna.httpd.http.networking.ThreadWorker;
 import org.avuna.httpd.http.plugins.Patch;
 import org.avuna.httpd.util.Logger;
 import sun.misc.BASE64Encoder;
@@ -267,7 +266,7 @@ public class PatchInline extends Patch {
 			subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
 			reqs[i] = subreq;
 		}
-		ResponsePacket[] resps = ThreadWorker.processSubRequests(reqs);
+		ResponsePacket[] resps = request.host.getHost().processSubRequests(reqs);
 		if (greqs) {
 			SubReq[] srsn = new SubReq[subreqs.length];
 			ResponsePacket[] respsn = new ResponsePacket[resps.length];

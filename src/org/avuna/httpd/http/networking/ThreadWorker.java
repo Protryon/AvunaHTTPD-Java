@@ -2,60 +2,19 @@ package org.avuna.httpd.http.networking;
 
 import java.io.IOException;
 import java.net.SocketException;
-import java.util.ArrayList;
-import java.util.concurrent.ArrayBlockingQueue;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.util.Logger;
 
 public class ThreadWorker extends Thread {
 	private static int nid = 1;
+	private final HostHTTP host;
 	
-	public ThreadWorker() {
+	public ThreadWorker(HostHTTP host) {
 		super("Avuna HTTP-Worker Thread #" + nid++);
-		workers.add(this);
-	}
-	
-	public static void clearWork() {
-		workQueue.clear();
-	}
-	
-	private static ArrayList<ThreadWorker> workers = new ArrayList<ThreadWorker>();
-	private static ArrayBlockingQueue<RequestPacket> workQueue;
-	
-	public static void addWork(RequestPacket req) {
-		workQueue.add(req);
-	}
-	
-	public static void initQueue() {
-		workQueue = new ArrayBlockingQueue<RequestPacket>(1000000);
-	}
-	
-	public static ResponsePacket[] processSubRequests(RequestPacket... reqs) {
-		ResponsePacket[] resps = new ResponsePacket[reqs.length];
-		for (int i = 0; i < resps.length; i++) {
-			resps[i] = new ResponsePacket();
-			reqs[i].child = resps[i];
-			resps[i].request = reqs[i];
-		}
-		for (int i = 0; i < resps.length; i++) {
-			addWork(reqs[i]);
-		}
-		major:
-		while (true) {
-			for (ResponsePacket resp : resps) {
-				if (!resp.done) {
-					try {
-						Thread.sleep(0L, 100000); // TODO: longer? smarter?
-					}catch (InterruptedException e) {
-						Logger.logError(e);
-					}
-					continue major;
-				}
-			}
-			break;
-		}
-		return resps;
+		this.host = host;
+		host.workers.add(this);
 	}
 	
 	private boolean keepRunning = true;
@@ -64,13 +23,9 @@ public class ThreadWorker extends Thread {
 		keepRunning = false;
 	}
 	
-	public static int getQueueSize() {
-		return workQueue.size();
-	}
-	
 	public void run() {
 		while (keepRunning) {
-			RequestPacket incomingRequest = workQueue.poll();
+			RequestPacket incomingRequest = host.pollReqQueue();
 			if (incomingRequest == null) {
 				try {
 					Thread.sleep(1L);
@@ -132,7 +87,7 @@ public class ThreadWorker extends Thread {
 					}
 				}
 			}finally {
-				if (workQueue.size() < 10000) { // idle fix
+				if (host.sizeReqQueue() < 10000) { // idle fix
 					try {
 						Thread.sleep(0L, 100000);
 					}catch (InterruptedException e) {

@@ -1,14 +1,8 @@
 package org.avuna.httpd.http.networking;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.concurrent.ArrayBlockingQueue;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.http.Method;
@@ -16,49 +10,12 @@ import org.avuna.httpd.util.Logger;
 
 public class ThreadConnection extends Thread {
 	private static int nid = 1;
+	private final HostHTTP host;
 	
-	public ThreadConnection() {
+	public ThreadConnection(HostHTTP host) {
 		super("Avuna Connection Thread #" + nid++);
-		conns.add(this);
-	}
-	
-	public static void clearWork() {
-		workQueue.clear();
-	}
-	
-	private static ArrayList<ThreadConnection> conns = new ArrayList<ThreadConnection>();
-	private static ArrayBlockingQueue<Work> workQueue;
-	protected static HashMap<String, Integer> connIPs = new HashMap<String, Integer>();
-	
-	public static void initQueue(int connlimit) {
-		workQueue = new ArrayBlockingQueue<Work>(connlimit);
-	}
-	
-	public static int getConnectionsForIP(String ip) {
-		return connIPs.containsKey(ip) ? connIPs.get(ip) : 0;
-	}
-	
-	public static void addWork(HostHTTP host, Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
-		String ip = s.getInetAddress().getHostAddress();
-		Integer cur = connIPs.get(ip);
-		if (cur == null) cur = 0;
-		cur += 1;
-		connIPs.put(ip, cur);
-		workQueue.add(new Work(host, s, in, out, ssl));
-		Logger.log(ip + " connected to " + host.getHostname() + ".");
-	}
-	
-	public static void clearIPs(String ip) {
-		for (Object worko : workQueue.toArray()) {
-			Work work = (Work)worko;
-			if (work.s.getInetAddress().getHostAddress().equals(ip)) {
-				workQueue.remove(work);
-			}
-		}
-	}
-	
-	public static void readdWork(Work work) {
-		workQueue.add(work);
+		this.host = host;
+		host.conns.add(this);
 	}
 	
 	private boolean keepRunning = true;
@@ -67,15 +24,9 @@ public class ThreadConnection extends Thread {
 		keepRunning = false;
 	}
 	
-	public static int getQueueSize() {
-		return workQueue.size();
-	}
-	
-	public static final ArrayList<Thread> subworkers = new ArrayList<Thread>();
-	
 	public void run() {
 		while (keepRunning) {
-			Work focus = workQueue.poll();
+			Work focus = host.pollQueue();
 			if (focus == null) {
 				try {
 					Thread.sleep(1L);
@@ -86,10 +37,10 @@ public class ThreadConnection extends Thread {
 			}
 			if (focus.s.isClosed()) {
 				String ip = focus.s.getInetAddress().getHostAddress();
-				Integer cur = connIPs.get(ip);
+				Integer cur = host.connIPs.get(ip);
 				if (cur == null) cur = 1;
 				cur -= 1;
-				connIPs.put(ip, cur);
+				host.connIPs.put(ip, cur);
 				Logger.log(ip + " closed.");
 				continue;
 			}
@@ -101,14 +52,14 @@ public class ThreadConnection extends Thread {
 					focus.outQueue.poll();
 					boolean t = peek.reqTransfer;
 					if (peek.reqStream != null) {
-						ThreadJavaLoaderStreamWorker sw = new ThreadJavaLoaderStreamWorker(focus, peek.request, peek, peek.reqStream);
-						subworkers.add(sw);
+						ThreadJavaLoaderStreamWorker sw = new ThreadJavaLoaderStreamWorker(host, focus, peek.request, peek, peek.reqStream);
+						host.subworkers.add(sw);
 						sw.start();
 						readd = false;
 						canAdd = false;
 					}else if (t && peek.body != null) {
-						ThreadStreamWorker sw = new ThreadStreamWorker(focus, peek.request, peek);
-						subworkers.add(sw);
+						ThreadStreamWorker sw = new ThreadStreamWorker(host, focus, peek.request, peek);
+						host.subworkers.add(sw);
 						sw.start();
 						readd = false;
 						canAdd = false;
@@ -138,7 +89,7 @@ public class ThreadConnection extends Thread {
 					if (focus.sns == 0L) {
 						focus.sns = System.nanoTime() + 10000000000L;
 						readd = true;
-						if (workQueue.isEmpty()) {
+						if (host.emptyQueue()) {
 							try {
 								Thread.sleep(1L);
 							}catch (InterruptedException e) {
@@ -148,7 +99,7 @@ public class ThreadConnection extends Thread {
 						continue;
 					}else {
 						if (focus.sns >= System.nanoTime()) {
-							boolean sleep = workQueue.isEmpty();
+							boolean sleep = host.emptyQueue();
 							if (AvunaHTTPD.bannedIPs.contains(focus.s.getInetAddress().getHostAddress())) {
 								focus.s.close();
 							}else {
@@ -166,10 +117,10 @@ public class ThreadConnection extends Thread {
 							readd = false;
 							focus.s.close();
 							String ip = focus.s.getInetAddress().getHostAddress();
-							Integer cur = connIPs.get(ip);
+							Integer cur = host.connIPs.get(ip);
 							if (cur == null) cur = 1;
 							cur -= 1;
-							connIPs.put(ip, cur);
+							host.connIPs.put(ip, cur);
 							Logger.log(ip + " closed.");
 							continue;
 						}
@@ -208,7 +159,7 @@ public class ThreadConnection extends Thread {
 					focus.outQueue.add(incomingRequest.child);
 					long set = System.nanoTime();
 					// code
-					ThreadWorker.addWork(incomingRequest);
+					this.host.addWork(incomingRequest);
 					readd = true;
 				}else if (focus.blockTimeout) {
 					readd = true;
@@ -227,10 +178,10 @@ public class ThreadConnection extends Thread {
 							Logger.logError(ex);
 						}
 						String ip = focus.s.getInetAddress().getHostAddress();
-						Integer cur = connIPs.get(ip);
+						Integer cur = host.connIPs.get(ip);
 						if (cur == null) cur = 1;
 						cur -= 1;
-						connIPs.put(ip, cur);
+						host.connIPs.put(ip, cur);
 						Logger.log(ip + " closed.");
 						readd = false;
 					}
@@ -247,18 +198,18 @@ public class ThreadConnection extends Thread {
 						Logger.logError(ex);
 					}
 					String ip = focus.s.getInetAddress().getHostAddress();
-					Integer cur = connIPs.get(ip);
+					Integer cur = host.connIPs.get(ip);
 					if (cur == null) cur = 1;
 					cur -= 1;
-					connIPs.put(ip, cur);
+					host.connIPs.put(ip, cur);
 					Logger.log(ip + " closed.");
 					readd = false;
 				}
 			}finally {
 				if (readd & canAdd) {
-					workQueue.add(focus);
+					host.readdWork(focus);
 				}
-				if (workQueue.size() < 10000) { // idle fix
+				if (host.sizeQueue() < 10000) { // idle fix
 					try {
 						Thread.sleep(0L, 100000);
 					}catch (InterruptedException e) {
