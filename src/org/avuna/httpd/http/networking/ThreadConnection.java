@@ -210,6 +210,9 @@ public class ThreadConnection extends Thread {
 					// code
 					ThreadWorker.addWork(incomingRequest);
 					readd = true;
+				}else if (focus.blockTimeout) {
+					readd = true;
+					focus.sns = 0L;
 				}
 			}catch (SocketTimeoutException e) {
 				if (!focus.blockTimeout) {
@@ -231,6 +234,9 @@ public class ThreadConnection extends Thread {
 						Logger.log(ip + " closed.");
 						readd = false;
 					}
+				}else {
+					readd = true;
+					focus.sns = 0L;
 				}
 			}catch (Exception e) {
 				if (!(e instanceof SocketTimeoutException)) {

@@ -32,6 +32,10 @@ public class VHost {
 		this.parent = null;
 	}
 	
+	public boolean isChild() {
+		return parent != null;
+	}
+	
 	public void initJLS(URL[] url) {
 		if (this.parent == null) {
 			this.jls = new JavaLoaderSession(this, url);

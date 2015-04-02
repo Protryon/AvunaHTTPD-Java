@@ -113,6 +113,7 @@ public class PatchJavaLoader extends Patch {
 				if (!(host instanceof HostHTTP)) continue;
 				HostHTTP host2 = (HostHTTP)host;
 				for (VHost vhost : host2.getVHosts()) {
+					if (vhost.isChild()) continue;
 					vhost.initJLS(new URL[]{vhost.getHTDocs().toURI().toURL()});
 					recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 				}
