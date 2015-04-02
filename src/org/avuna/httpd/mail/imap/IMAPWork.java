@@ -8,6 +8,7 @@ import java.net.Socket;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.mail.mailbox.EmailAccount;
 import org.avuna.httpd.mail.mailbox.Mailbox;
+import org.avuna.httpd.util.Logger;
 
 public class IMAPWork {
 	public final Socket s;
@@ -34,7 +35,7 @@ public class IMAPWork {
 	}
 	
 	public void writeLine(IMAPWork w, String id, String data) throws IOException {
-		System.out.println(w.hashCode() + ": " + id + " " + data);
+		Logger.log(w.hashCode() + ": " + id + " " + data);
 		w.out.write(((id.length() > 0 ? (id + " ") : "") + data + AvunaHTTPD.crlf).getBytes());
 	}
 }

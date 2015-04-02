@@ -26,7 +26,6 @@ public class BaseLoader {
 		PatchRegistry.registerPatch(new PatchFCGI("FCGI"));
 		
 		PatchRegistry.registerPatch(new PatchInline("Inline")); // TODO: perhaps before ETag? probably
-		
 		// caching
 		PatchRegistry.registerPatch(new PatchETag("ETag"));
 		

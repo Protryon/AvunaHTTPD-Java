@@ -101,7 +101,7 @@ public class ThreadWorkerIMAP extends Thread {
 					String line = safeRead(focus);
 					focus.tos = 0;
 					readd = true;
-					System.out.println(focus.hashCode() + ": " + line);
+					Logger.log(focus.hashCode() + ": " + line);
 					String cmd;
 					String letters;
 					String[] args;

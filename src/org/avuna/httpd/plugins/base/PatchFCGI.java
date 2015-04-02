@@ -213,23 +213,28 @@ public class PatchFCGI extends Patch {
 				// pbout.flush();
 			}
 			session.finishReq();
-			int i = 0;
-			while (!session.isDone()) {
-				try {
-					Work work = request.work;
-					if (work == null && request.parent != null) {
-						work = request.parent.work;
+			request.work.blockTimeout = true;
+			try {
+				int i = 0;
+				while (!session.isDone()) {
+					try {
+						Work work = request.work;
+						if (work == null && request.parent != null) {
+							work = request.parent.work;
+						}
+						if (work != null && work.s.isClosed()) {
+							session.abort();
+							break;
+						}
+						i++;
+						if (i > 600000) break;
+						Thread.sleep(0L, 100000);
+					}catch (InterruptedException e) {
+						Logger.logError(e);
 					}
-					if (work != null && work.s.isClosed()) {
-						session.abort();
-						break;
-					}
-					i++;
-					if (i > 100000) break;
-					Thread.sleep(0L, 100000);
-				}catch (InterruptedException e) {
-					Logger.logError(e);
 				}
+			}finally {
+				request.work.blockTimeout = false;
 			}
 			Scanner s = new Scanner(new ByteArrayInputStream(session.getResponse()));
 			boolean tt = true;

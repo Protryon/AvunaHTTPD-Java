@@ -134,7 +134,7 @@ public class ThreadConnection extends Thread {
 						focus.s.setSoTimeout(1000);
 					}
 				}
-				if (focus.in.available() == 0) {
+				if (focus.in.available() == 0 && !focus.blockTimeout) {
 					if (focus.sns == 0L) {
 						focus.sns = System.nanoTime() + 10000000000L;
 						readd = true;
@@ -212,11 +212,29 @@ public class ThreadConnection extends Thread {
 					readd = true;
 				}
 			}catch (SocketTimeoutException e) {
-				focus.tos++;
-				if (focus.tos < 10) {
-					readd = true;
-				}else {
-					// Logger.logError(e);
+				if (!focus.blockTimeout) {
+					focus.tos++;
+					if (focus.tos < 10) {
+						readd = true;
+					}else {
+						// Logger.logError(e);
+						try {
+							focus.s.close();
+						}catch (IOException ex) {
+							Logger.logError(ex);
+						}
+						String ip = focus.s.getInetAddress().getHostAddress();
+						Integer cur = connIPs.get(ip);
+						if (cur == null) cur = 1;
+						cur -= 1;
+						connIPs.put(ip, cur);
+						Logger.log(ip + " closed.");
+						readd = false;
+					}
+				}
+			}catch (Exception e) {
+				if (!(e instanceof SocketTimeoutException)) {
+					if (!(e instanceof SocketException || e instanceof StringIndexOutOfBoundsException)) Logger.logError(e);
 					try {
 						focus.s.close();
 					}catch (IOException ex) {
@@ -230,20 +248,6 @@ public class ThreadConnection extends Thread {
 					Logger.log(ip + " closed.");
 					readd = false;
 				}
-			}catch (Exception e) {
-				if (!(e instanceof SocketException || e instanceof StringIndexOutOfBoundsException)) Logger.logError(e);
-				try {
-					focus.s.close();
-				}catch (IOException ex) {
-					Logger.logError(ex);
-				}
-				String ip = focus.s.getInetAddress().getHostAddress();
-				Integer cur = connIPs.get(ip);
-				if (cur == null) cur = 1;
-				cur -= 1;
-				connIPs.put(ip, cur);
-				Logger.log(ip + " closed.");
-				readd = false;
 			}finally {
 				if (readd & canAdd) {
 					workQueue.add(focus);

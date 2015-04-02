@@ -18,6 +18,7 @@ public class Work {
 	public int nreqid = 1;
 	public ByteArrayOutputStream sslprep = null;
 	public ArrayBlockingQueue<ResponsePacket> outQueue = new ArrayBlockingQueue<ResponsePacket>(16);
+	public boolean blockTimeout = false;
 	
 	// public ResponsePacket[] pipeline = new ResponsePacket[32];
 	
