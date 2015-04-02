@@ -239,9 +239,10 @@ public class AvunaHTTPD {
 			HostRegistry.addHost(Protocol.COM, HostCom.class);
 			HostRegistry.addHost(Protocol.DNS, HostDNS.class);
 			HostRegistry.addHost(Protocol.MAIL, HostMail.class);
-			if (unpack) {
-				HostRegistry.unpack();
-			}
+			HostHTTP.unpack();
+			HostCom.unpack();
+			HostDNS.unpack();
+			HostMail.unpack();
 			hostsConfig = new Config("hosts", new File((String)mainConfig.get("hosts")), new ConfigFormat() {
 				
 				@Override
@@ -285,15 +286,6 @@ public class AvunaHTTPD {
 			});
 			hostsConfig.load();
 			hostsConfig.save();
-			Runtime.getRuntime().addShutdownHook(new Thread() {
-				public void run() {
-					Logger.log("Softly Terminating!");
-					AvunaHTTPD.patchBus.preExit();
-					if (AvunaHTTPD.mainConfig != null) {
-						AvunaHTTPD.mainConfig.save();
-					}
-				}
-			});
 			setupFolders();
 			File lf = new File(fileManager.getLogs(), "" + (System.currentTimeMillis() / 1000L));
 			lf.createNewFile();
@@ -301,14 +293,10 @@ public class AvunaHTTPD {
 			unpack();
 			loadUnpacked();
 			Logger.log("Loaded Configs");
-			Logger.log("Loading Plugins");
+			Logger.log("Loading Base Plugins");
 			BaseLoader.loadBases();
 			if (unpack) {
 				return;
-			}
-			Logger.log("Loading Connection Handling");
-			for (Host h : hosts.values()) {
-				h.start();
 			}
 			if (!System.getProperty("os.name").toLowerCase().contains("windows") && System.getProperty("user.name").contains("root") && !mainConfig.get("uid").equals("0")) {
 				major:
@@ -327,6 +315,21 @@ public class AvunaHTTPD {
 			}else if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
 				Logger.log("[NOTIFY] We did NOT de-escalate, currently running as uid " + CLib.getuid());
 			}
+			Logger.log("Loading Connection Handling");
+			for (Host h : hosts.values()) {
+				h.start();
+			}
+			Logger.log("Loading Custom Plugins");
+			BaseLoader.loadCustoms();
+			Runtime.getRuntime().addShutdownHook(new Thread() {
+				public void run() {
+					Logger.log("Softly Terminating!");
+					AvunaHTTPD.patchBus.preExit();
+					if (AvunaHTTPD.mainConfig != null) {
+						AvunaHTTPD.mainConfig.save();
+					}
+				}
+			});
 		}catch (Exception e) {
 			if (Logger.INSTANCE == null) {
 				e.printStackTrace();

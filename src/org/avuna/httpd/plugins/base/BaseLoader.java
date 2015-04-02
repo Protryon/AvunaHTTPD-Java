@@ -25,7 +25,7 @@ public class BaseLoader {
 		// PatchRegistry.registerPatch(new PatchJWSL("JWSL")); deprecated
 		PatchRegistry.registerPatch(new PatchFCGI("FCGI"));
 		
-		PatchRegistry.registerPatch(new PatchInline("Inline")); // TODO: perhaps before ETag? probably
+		PatchRegistry.registerPatch(new PatchInline("Inline"));
 		// caching
 		PatchRegistry.registerPatch(new PatchETag("ETag"));
 		
@@ -37,6 +37,9 @@ public class BaseLoader {
 		// special
 		PatchRegistry.registerPatch(new PatchContentLength("ContentLength"));
 		
+	}
+	
+	public static void loadCustoms() {
 		PatchClassLoader pcl = new PatchClassLoader();
 		pcl.loadPlugins(AvunaHTTPD.fileManager.getPlugins());
 	}
