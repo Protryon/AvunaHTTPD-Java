@@ -138,4 +138,8 @@ public abstract class Host extends Thread {
 	}
 	
 	public abstract void setup(ServerSocket s);
+	
+	public void preExit() {
+		
+	}
 }

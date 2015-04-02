@@ -14,11 +14,11 @@ import org.avuna.httpd.http.plugins.PatchRegistry;
 
 public class PatchGetPostHead extends Patch {
 	
-	public PatchGetPostHead(String name) {
-		super(name);
-		PatchRegistry.registerMethod(Method.GET, this);
-		PatchRegistry.registerMethod(Method.POST, this);
-		PatchRegistry.registerMethod(Method.HEAD, this);
+	public PatchGetPostHead(String name, PatchRegistry registry) {
+		super(name, registry);
+		registry.registerMethod(Method.GET, this);
+		registry.registerMethod(Method.POST, this);
+		registry.registerMethod(Method.HEAD, this);
 	}
 	
 	@Override

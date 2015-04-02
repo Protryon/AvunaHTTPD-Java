@@ -11,10 +11,10 @@ public class PatchClassLoader extends ClassLoader {
 		super();
 	}
 	
-	public void loadPlugins(File dir) {
+	public void loadPlugins(PatchRegistry registry, File dir) {
 		for (File f : dir.listFiles()) {
 			if (f.isDirectory()) {
-				loadPlugins(f);
+				loadPlugins(registry, f);
 			}else if (f.getName().endsWith(".class")) {
 				try {
 					FileInputStream fin = new FileInputStream(f);
@@ -32,7 +32,7 @@ public class PatchClassLoader extends ClassLoader {
 					Class<?> patchClass = defineClass(j, 0, j.length);
 					javaLoaders.put(patchClass.getName(), patchClass);
 					if (patchClass.isAssignableFrom(Patch.class)) { // TODO: patch priority
-						PatchRegistry.registerPatch((Patch)patchClass.getDeclaredConstructor(String.class).newInstance(patchClass.getName().substring(patchClass.getName().lastIndexOf(".") + 1)));
+						registry.registerPatch((Patch)patchClass.getDeclaredConstructor(String.class).newInstance(patchClass.getName().substring(patchClass.getName().lastIndexOf(".") + 1)));
 					}
 				}catch (Exception e) {
 					Logger.logError(e);

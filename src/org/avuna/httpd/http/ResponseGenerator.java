@@ -50,7 +50,7 @@ public class ResponseGenerator {
 			}
 			long ah3 = System.nanoTime();
 			// Now we handle all of our patches such as php or jhtml which fill in the response.
-			if (!AvunaHTTPD.patchBus.processMethod(request, response)) {
+			if (!request.host.getHost().patchBus.processMethod(request, response)) {
 				generateDefaultResponse(response, StatusCode.NOT_YET_IMPLEMENTED);
 				response.body = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.NOT_YET_IMPLEMENTED, "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
 				return false;

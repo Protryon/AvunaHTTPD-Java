@@ -5,11 +5,12 @@ import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
+import org.avuna.httpd.http.plugins.PatchRegistry;
 
 public class PatchContentLength extends Patch {
 	
-	public PatchContentLength(String name) {
-		super(name);
+	public PatchContentLength(String name, PatchRegistry registry) {
+		super(name, registry);
 	}
 	
 	@Override

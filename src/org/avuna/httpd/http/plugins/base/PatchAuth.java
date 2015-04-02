@@ -14,13 +14,14 @@ import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
+import org.avuna.httpd.http.plugins.PatchRegistry;
 import org.avuna.httpd.util.Logger;
 import sun.misc.BASE64Decoder;
 
 public class PatchAuth extends Patch {
 	
-	public PatchAuth(String name) {
-		super(name);
+	public PatchAuth(String name, PatchRegistry registry) {
+		super(name, registry);
 	}
 	
 	@Override

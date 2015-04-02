@@ -1,46 +1,46 @@
 package org.avuna.httpd.http.plugins.base;
 
-import org.avuna.httpd.AvunaHTTPD;
+import java.io.File;
 import org.avuna.httpd.http.plugins.PatchClassLoader;
 import org.avuna.httpd.http.plugins.PatchRegistry;
 import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
 
 public class BaseLoader {
-	public static void loadBases() {
+	public static void loadBases(PatchRegistry registry) {
 		// sec
-		PatchRegistry.registerPatch(new PatchSecurity("Security"));
-		PatchRegistry.registerPatch(new PatchOverride("Override"));
+		registry.registerPatch(new PatchSecurity("Security", registry));
+		registry.registerPatch(new PatchOverride("Override", registry));
 		// special
 		// PatchRegistry.registerPatch(new PatchEnforceRedirect("EnforceRedirect")); deprecated
 		// PatchRegistry.registerPatch(new PatchMultiHost("MultiHost")); deprecated
-		PatchRegistry.registerPatch(new PatchContentType("ContentType"));
-		PatchRegistry.registerPatch(new PatchCacheControl("CacheControl"));
+		registry.registerPatch(new PatchContentType("ContentType", registry));
+		registry.registerPatch(new PatchCacheControl("CacheControl", registry));
 		// methods
-		PatchRegistry.registerPatch(new PatchGetPostHead("GetPostHead"));
+		registry.registerPatch(new PatchGetPostHead("GetPostHead", registry));
 		
-		PatchRegistry.registerPatch(new PatchAuth("Auth"));
+		registry.registerPatch(new PatchAuth("Auth", registry));
 		
 		// server side languages
-		PatchRegistry.registerPatch(new PatchJavaLoader("JavaLoader"));
+		registry.registerPatch(new PatchJavaLoader("JavaLoader", registry));
 		// PatchRegistry.registerPatch(new PatchJWSL("JWSL")); deprecated
-		PatchRegistry.registerPatch(new PatchFCGI("FCGI"));
+		registry.registerPatch(new PatchFCGI("FCGI", registry));
 		
-		PatchRegistry.registerPatch(new PatchInline("Inline"));
+		registry.registerPatch(new PatchInline("Inline", registry));
 		// caching
-		PatchRegistry.registerPatch(new PatchETag("ETag"));
+		registry.registerPatch(new PatchETag("ETag", registry));
 		
 		// transfer/encoding
-		PatchRegistry.registerPatch(new PatchGZip("GZip"));
+		registry.registerPatch(new PatchGZip("GZip", registry));
 		
-		PatchRegistry.registerPatch(new PatchChunked("Chunked"));
+		registry.registerPatch(new PatchChunked("Chunked", registry));
 		
 		// special
-		PatchRegistry.registerPatch(new PatchContentLength("ContentLength"));
+		registry.registerPatch(new PatchContentLength("ContentLength", registry));
 		
 	}
 	
-	public static void loadCustoms() {
+	public static void loadCustoms(PatchRegistry registry, File plugins) {
 		PatchClassLoader pcl = new PatchClassLoader();
-		pcl.loadPlugins(AvunaHTTPD.fileManager.getPlugins());
+		pcl.loadPlugins(registry, plugins);
 	}
 }

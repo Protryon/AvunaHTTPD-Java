@@ -7,12 +7,14 @@ import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 
 public class PatchBus {
-	public PatchBus() {
-		
+	private final PatchRegistry registry;
+	
+	public PatchBus(PatchRegistry registry) {
+		this.registry = registry;
 	}
 	
 	public boolean processMethod(RequestPacket request, ResponsePacket response) {
-		Patch handler = PatchRegistry.registeredMethods.get(request.method);
+		Patch handler = registry.registeredMethods.get(request.method);
 		if (handler != null && handler.pcfg.get("enabled").equals("true")) {
 			handler.processMethod(request, response);
 			return true;
@@ -21,7 +23,7 @@ public class PatchBus {
 	}
 	
 	public void setupFolders() {
-		for (Patch patch : PatchRegistry.patchs) {
+		for (Patch patch : registry.patchs) {
 			if (patch.pcfg.get("enabled").equals("true")) {
 				AvunaHTTPD.fileManager.getPlugin(patch).mkdirs();
 			}
@@ -29,7 +31,7 @@ public class PatchBus {
 	}
 	
 	public void processPacket(Packet p) {
-		for (Patch patch : PatchRegistry.patchs) {
+		for (Patch patch : registry.patchs) {
 			if (patch.pcfg.get("enabled").equals("true") && patch.shouldProcessPacket(p)) {
 				patch.processPacket(p);
 				if (p.drop) return;
@@ -39,7 +41,7 @@ public class PatchBus {
 	
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		byte[] rres = data;
-		for (Patch patch : PatchRegistry.patchs) {
+		for (Patch patch : registry.patchs) {
 			// long start = System.nanoTime();
 			if (patch.pcfg.get("enabled").equals("true") && patch.shouldProcessResponse(response, request, rres)) {
 				rres = patch.processResponse(response, request, rres);
@@ -53,13 +55,13 @@ public class PatchBus {
 	}
 	
 	public void preExit() {
-		for (Patch patch : PatchRegistry.patchs) {
+		for (Patch patch : registry.patchs) {
 			patch.preExit();
 		}
 	}
 	
 	public void reload() throws IOException {
-		for (Patch patch : PatchRegistry.patchs) {
+		for (Patch patch : registry.patchs) {
 			patch.reload();
 		}
 	}

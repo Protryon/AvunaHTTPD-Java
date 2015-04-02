@@ -16,12 +16,17 @@ import org.avuna.httpd.http.networking.ThreadAccept;
 import org.avuna.httpd.http.networking.ThreadConnection;
 import org.avuna.httpd.http.networking.ThreadWorker;
 import org.avuna.httpd.http.networking.Work;
+import org.avuna.httpd.http.plugins.PatchBus;
+import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.http.plugins.base.BaseLoader;
 import org.avuna.httpd.util.Logger;
 
 public class HostHTTP extends Host {
 	
 	private ArrayList<VHost> vhosts = new ArrayList<VHost>();
 	private int tac, tcc, twc, mc;
+	public final PatchRegistry registry;
+	public final PatchBus patchBus;
 	
 	public void addVHost(VHost vhost) {
 		vhosts.add(vhost);
@@ -29,6 +34,18 @@ public class HostHTTP extends Host {
 	
 	public HostHTTP(String name) {
 		super(name, Protocol.HTTP);
+		this.registry = new PatchRegistry(this);
+		patchBus = new PatchBus(registry);
+	}
+	
+	public void loadBases() {
+		Logger.log("Loading Base Plugins for " + name);
+		BaseLoader.loadBases(registry);
+	}
+	
+	public void loadCustoms() {
+		Logger.log("Loading Custom Plugins for " + name);
+		BaseLoader.loadCustoms(registry, new File((String)getConfig().get("plugins")));
 	}
 	
 	public VHost getVHost(String host) {
@@ -126,10 +143,16 @@ public class HostHTTP extends Host {
 		workQueue.add(work);
 	}
 	
+	public void preExit() {
+		patchBus.preExit();
+	}
+	
 	public void setupFolders() {
 		for (VHost vhost : vhosts) {
 			vhost.setupFolders();
 		}
+		new File((String)getConfig().get("plugins")).mkdirs();
+		patchBus.setupFolders();
 	}
 	
 	public void clearReqWork() {
@@ -186,6 +209,7 @@ public class HostHTTP extends Host {
 		if (!map.containsKey("workerThreadCount")) map.put("workerThreadCount", "32");
 		if (!map.containsKey("maxConnections")) map.put("maxConnections", "-1");
 		if (!map.containsKey("http2")) map.put("http2", "false");
+		if (!map.containsKey("plugins")) map.put("plugins", AvunaHTTPD.fileManager.getBaseFile("plugins").toString());
 		tac = Integer.parseInt((String)map.get("acceptThreadCount"));
 		tcc = Integer.parseInt((String)map.get("connThreadCount"));
 		twc = Integer.parseInt((String)map.get("workerThreadCount"));

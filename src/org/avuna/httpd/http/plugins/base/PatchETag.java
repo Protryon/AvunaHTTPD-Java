@@ -9,11 +9,12 @@ import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
+import org.avuna.httpd.http.plugins.PatchRegistry;
 
 public class PatchETag extends Patch {
 	
-	public PatchETag(String name) {
-		super(name);
+	public PatchETag(String name, PatchRegistry registry) {
+		super(name, registry);
 	}
 	
 	@Override

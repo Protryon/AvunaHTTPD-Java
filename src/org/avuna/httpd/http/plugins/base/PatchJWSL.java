@@ -6,11 +6,12 @@ import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
+import org.avuna.httpd.http.plugins.PatchRegistry;
 
 public class PatchJWSL extends Patch {
 	
-	public PatchJWSL(String name) {
-		super(name);
+	public PatchJWSL(String name, PatchRegistry registry) {
+		super(name, registry);
 	}
 	
 	@Override

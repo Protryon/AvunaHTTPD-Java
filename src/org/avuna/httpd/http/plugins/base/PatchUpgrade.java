@@ -7,11 +7,12 @@ import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
+import org.avuna.httpd.http.plugins.PatchRegistry;
 
 public class PatchUpgrade extends Patch {
 	
-	public PatchUpgrade(String name) {
-		super(name);
+	public PatchUpgrade(String name, PatchRegistry registry) {
+		super(name, registry);
 	}
 	
 	@Override

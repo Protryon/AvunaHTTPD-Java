@@ -10,14 +10,15 @@ import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
+import org.avuna.httpd.http.plugins.PatchRegistry;
 import org.avuna.httpd.http.util.CompiledDirective;
 import org.avuna.httpd.http.util.OverrideConfig;
 import org.avuna.httpd.util.Logger;
 
 public class PatchOverride extends Patch {
 	
-	public PatchOverride(String name) {
-		super(name);
+	public PatchOverride(String name, PatchRegistry registry) {
+		super(name, registry);
 	}
 	
 	@Override

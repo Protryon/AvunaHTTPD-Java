@@ -8,11 +8,12 @@ import java.io.IOException;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.hosts.Host;
+import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.plugins.Patch;
-import org.avuna.httpd.http.plugins.PatchRegistry;
 import org.avuna.httpd.http.plugins.base.PatchChunked;
 import org.avuna.httpd.http.plugins.base.PatchGZip;
 import org.avuna.httpd.http.plugins.base.PatchInline;
@@ -44,8 +45,8 @@ public class FileManager {
 		return dir == null ? (dir = new File((String)AvunaHTTPD.mainConfig.get("dir"))) : dir;
 	}
 	
-	public File getPlugins() {
-		return plugins == null ? (plugins = new File((String)AvunaHTTPD.mainConfig.get("plugins"))) : plugins;
+	public File getPlugins(HostHTTP host) {
+		return plugins == null ? (plugins = new File((String)host.getConfig().get("plugins"))) : plugins;
 	}
 	
 	public File getLogs() {
@@ -53,10 +54,10 @@ public class FileManager {
 	}
 	
 	public File getPlugin(Patch p) {
-		if (!plugin.containsKey(p.name)) {
-			plugin.put(p.name, new File(getPlugins(), p.name));
+		if (!plugin.containsKey(p.hashCode() + "" + p.registry.host.hashCode())) {
+			plugin.put(p.hashCode() + "" + p.registry.host.hashCode(), new File(getPlugins(p.registry.host), p.name));
 		}
-		return plugin.get(p.name);
+		return plugin.get(p.hashCode() + "" + p.registry.host.hashCode());
 	}
 	
 	public File getBaseFile(String name) {
@@ -83,8 +84,13 @@ public class FileManager {
 			tbCache.remove(delKeys[i]);
 		}
 		cConfigCache.clear();
-		((PatchInline)PatchRegistry.getPatchForClass(PatchInline.class)).clearCache();
-		((PatchGZip)PatchRegistry.getPatchForClass(PatchGZip.class)).clearCache();
+		for (Host host : AvunaHTTPD.hosts.values()) {
+			if (host instanceof HostHTTP) {
+				((PatchInline)((HostHTTP)host).registry.getPatchForClass(PatchInline.class)).clearCache();
+				((PatchGZip)((HostHTTP)host).registry.getPatchForClass(PatchGZip.class)).clearCache();
+			}
+		}
+		
 	}
 	
 	public void flushjl() throws IOException {
@@ -264,7 +270,7 @@ public class FileManager {
 						tbCache.remove(delKeys[i]);
 					}
 					cConfigCache.clear();
-					((PatchInline)PatchRegistry.getPatchForClass(PatchInline.class)).clearCache();
+					((PatchInline)request.host.getHost().registry.getPatchForClass(PatchInline.class)).clearCache();
 				}
 			}
 			if (resource == null) {
@@ -284,7 +290,7 @@ public class FileManager {
 						if (i > 0) {
 							bout.write(buf, 0, i);
 						}
-						PatchChunked chunked = (PatchChunked)PatchRegistry.getPatchForClass(PatchChunked.class);
+						PatchChunked chunked = (PatchChunked)request.host.getHost().registry.getPatchForClass(PatchChunked.class);
 						if (chunked.pcfg.get("enabled").equals("true") && bout.size() > Integer.parseInt((String)chunked.pcfg.get("minsize")) && !ext.startsWith("application")) {
 							bout.reset();
 							tooBig = true;

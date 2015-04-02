@@ -36,11 +36,11 @@ public class PatchJavaLoader extends Patch {
 	
 	private Config config = null;
 	
-	public PatchJavaLoader(String name) {
-		super(name);
+	public PatchJavaLoader(String name, PatchRegistry registry) {
+		super(name, registry);
 		log("Loading JavaLoader Config & Security");
 		try {
-			secjlcl = new JavaLoaderClassLoader(new URL[]{AvunaHTTPD.fileManager.getPlugin(PatchRegistry.getPatchForClass(PatchSecurity.class)).toURI().toURL()}, this.getClass().getClassLoader());
+			secjlcl = new JavaLoaderClassLoader(new URL[]{AvunaHTTPD.fileManager.getPlugin(registry.getPatchForClass(PatchSecurity.class)).toURI().toURL()}, this.getClass().getClassLoader());
 		}catch (MalformedURLException e1) {
 			e1.printStackTrace();
 		}
@@ -55,7 +55,7 @@ public class PatchJavaLoader extends Patch {
 			e1.printStackTrace();
 		}
 		config.save();
-		((PatchSecurity)PatchRegistry.getPatchForClass(PatchSecurity.class)).loadBases(this);
+		((PatchSecurity)registry.getPatchForClass(PatchSecurity.class)).loadBases(this);
 		log("Loading JavaLoader Libs");
 		try {
 			lib = new File(AvunaHTTPD.fileManager.getMainDir(), (String)pcfg.get("lib"));
@@ -85,7 +85,7 @@ public class PatchJavaLoader extends Patch {
 					recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 				}
 			}
-			PatchSecurity ps = (PatchSecurity)PatchRegistry.getPatchForClass(PatchSecurity.class);
+			PatchSecurity ps = (PatchSecurity)registry.getPatchForClass(PatchSecurity.class);
 			if (ps.pcfg.get("enabled").equals("true")) {
 				recurLoad(null, AvunaHTTPD.fileManager.getPlugin(ps));
 			}
@@ -108,7 +108,7 @@ public class PatchJavaLoader extends Patch {
 			System.gc();
 			Thread.sleep(1000L);
 			sessions.clear();
-			((PatchSecurity)PatchRegistry.getPatchForClass(PatchSecurity.class)).loadBases(this);
+			((PatchSecurity)registry.getPatchForClass(PatchSecurity.class)).loadBases(this);
 			for (Host host : AvunaHTTPD.hosts.values()) {
 				if (!(host instanceof HostHTTP)) continue;
 				HostHTTP host2 = (HostHTTP)host;
@@ -118,7 +118,7 @@ public class PatchJavaLoader extends Patch {
 					recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 				}
 			}
-			PatchSecurity ps = (PatchSecurity)PatchRegistry.getPatchForClass(PatchSecurity.class);
+			PatchSecurity ps = (PatchSecurity)registry.getPatchForClass(PatchSecurity.class);
 			if (ps.pcfg.get("enabled").equals("true")) {
 				recurLoad(null, AvunaHTTPD.fileManager.getPlugin(ps));
 			}

@@ -17,6 +17,7 @@ import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.networking.Work;
 import org.avuna.httpd.http.plugins.Patch;
+import org.avuna.httpd.http.plugins.PatchRegistry;
 import org.avuna.httpd.http.plugins.base.fcgi.FCGIConnection;
 import org.avuna.httpd.http.plugins.base.fcgi.FCGIConnectionManagerNMPX;
 import org.avuna.httpd.http.plugins.base.fcgi.FCGISession;
@@ -25,8 +26,8 @@ import org.avuna.httpd.util.Logger;
 
 public class PatchFCGI extends Patch {
 	
-	public PatchFCGI(String name) {
-		super(name);
+	public PatchFCGI(String name, PatchRegistry registry) {
+		super(name, registry);
 		reload();
 	}
 	

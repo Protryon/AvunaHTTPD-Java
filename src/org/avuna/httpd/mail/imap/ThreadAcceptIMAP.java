@@ -7,10 +7,6 @@ import java.net.Socket;
 import javax.net.ssl.SSLServerSocket;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
-import org.avuna.httpd.http.plugins.PatchRegistry;
-import org.avuna.httpd.http.plugins.base.PatchSecurity;
-import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSecurity;
-import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
 import org.avuna.httpd.util.Logger;
 
 /**
@@ -47,18 +43,18 @@ public class ThreadAcceptIMAP extends Thread {
 					continue;
 				}
 				s.setSoTimeout(1000);
-				if (PatchRegistry.getPatchForClass(PatchSecurity.class).pcfg.get("enabled").equals("true")) {
-					int minDrop = Integer.parseInt((String)PatchRegistry.getPatchForClass(PatchSecurity.class).pcfg.get("minDrop"));
-					int chance = 0;
-					for (JavaLoaderSecurity sec : PatchJavaLoader.security) {
-						chance += sec.check(s.getInetAddress().getHostAddress());
-					}
-					if (chance >= minDrop) {
-						s.close();
-						AvunaHTTPD.bannedIPs.add(s.getInetAddress().getHostAddress());
-						continue;
-					}
-				}
+				// if (PatchRegistry.getPatchForClass(PatchSecurity.class).pcfg.get("enabled").equals("true")) {
+				// int minDrop = Integer.parseInt((String)PatchRegistry.getPatchForClass(PatchSecurity.class).pcfg.get("minDrop"));
+				// int chance = 0;
+				// for (JavaLoaderSecurity sec : PatchJavaLoader.security) {
+				// chance += sec.check(s.getInetAddress().getHostAddress());
+				// }
+				// if (chance >= minDrop) {
+				// s.close();
+				// AvunaHTTPD.bannedIPs.add(s.getInetAddress().getHostAddress());
+				// continue;
+				// }
+				// }
 				DataOutputStream out = new DataOutputStream(s.getOutputStream());
 				out.flush();
 				DataInputStream in = new DataInputStream(s.getInputStream());

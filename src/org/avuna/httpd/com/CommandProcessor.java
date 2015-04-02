@@ -16,7 +16,6 @@ import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.hosts.VHost;
 import org.avuna.httpd.http.j2p.JavaToPHP;
-import org.avuna.httpd.http.plugins.PatchRegistry;
 import org.avuna.httpd.http.plugins.base.PatchOverride;
 import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
 import org.avuna.httpd.mail.mailbox.EmailAccount;
@@ -114,18 +113,28 @@ public class CommandProcessor {
 			// Reloads our patches and config
 			try {
 				AvunaHTTPD.fileManager.clearCache();
-				((PatchOverride)PatchRegistry.getPatchForClass(PatchOverride.class)).flush();
+				Host host = AvunaHTTPD.hosts.get(selectedHost);
+				if (!(host instanceof HostHTTP)) {
+					out.println("Not a http host!");
+				}else {
+					((PatchOverride)((HostHTTP)host).registry.getPatchForClass(PatchOverride.class)).flush();
+					((HostHTTP)host).patchBus.reload();
+				}
 				AvunaHTTPD.mainConfig.load();
-				AvunaHTTPD.patchBus.reload();
 			}catch (Exception e) {
 				Logger.logError(e);
 				e.printStackTrace(out);
 			}
-			out.println("Avuna Reloaded! This does NOT update all configs, but it reloads most of them and flushes the cache. Doesn't flush the JavaLoader cache, for that use jlflush.");
+			out.println("Avuna<" + selectedHost + "> Reloaded! This does NOT update all configs, but it reloads most of them and flushes the cache. Doesn't flush the JavaLoader cache, for that use jlflush.");
 		}else if (command.equals("flushjl")) {
 			// Reloads our patches and config
+			Host host = AvunaHTTPD.hosts.get(selectedHost);
+			if (!(host instanceof HostHTTP)) {
+				out.println("Not a http host!");
+				return;
+			}
 			try {
-				((PatchJavaLoader)PatchRegistry.getPatchForClass(PatchJavaLoader.class)).flushjl();
+				((PatchJavaLoader)((HostHTTP)host).registry.getPatchForClass(PatchJavaLoader.class)).flushjl();
 				AvunaHTTPD.fileManager.flushjl();
 			}catch (Exception e) {
 				Logger.logError(e);
@@ -136,7 +145,7 @@ public class CommandProcessor {
 			// Restarts our server completely
 			// TODO: Doesnt exit the program so maybe JVMBindException will occur?
 			try {
-				AvunaHTTPD.patchBus.preExit();
+				// ((HostHTTP)host).patchBus.preExit();
 				if (System.getProperty("os.name").contains("nux") || System.getProperty("os.name").contains("nix")) {
 					Runtime.getRuntime().exec("sh " + AvunaHTTPD.fileManager.getBaseFile("restart.sh"));
 				}else if (System.getProperty("os.name").toLowerCase().contains("windows")) {

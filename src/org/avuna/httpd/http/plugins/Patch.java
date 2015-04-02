@@ -14,6 +14,7 @@ import org.avuna.httpd.util.Logger;
 public abstract class Patch {
 	
 	public final String name;
+	public final PatchRegistry registry;
 	
 	public void formatConfig(HashMap<String, Object> map) {
 		if (!map.containsKey("enabled")) map.put("enabled", "true");
@@ -23,8 +24,9 @@ public abstract class Patch {
 		
 	}
 	
-	public Patch(String name) {
+	public Patch(String name, PatchRegistry registry) {
 		this.name = name;
+		this.registry = registry;
 		pcfg = new Config(name, new File(AvunaHTTPD.fileManager.getPlugin(this), "plugin.cfg"), new ConfigFormat() {
 			public void format(HashMap<String, Object> map) {
 				formatConfig(map);

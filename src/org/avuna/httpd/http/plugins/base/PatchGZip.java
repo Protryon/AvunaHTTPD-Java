@@ -9,12 +9,13 @@ import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
+import org.avuna.httpd.http.plugins.PatchRegistry;
 import org.avuna.httpd.util.Logger;
 
 public class PatchGZip extends Patch {
 	
-	public PatchGZip(String name) {
-		super(name);
+	public PatchGZip(String name, PatchRegistry registry) {
+		super(name, registry);
 	}
 	
 	@Override

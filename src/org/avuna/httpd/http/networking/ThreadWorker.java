@@ -40,7 +40,7 @@ public class ThreadWorker extends Thread {
 				boolean main = outgoingResponse.request.parent == null;
 				String add = main ? "" : "-SUB";
 				long benchStart = System.nanoTime();
-				AvunaHTTPD.patchBus.processPacket(incomingRequest);
+				host.patchBus.processPacket(incomingRequest);
 				if (incomingRequest.drop) {
 					incomingRequest.work.s.close();
 					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
@@ -49,7 +49,7 @@ public class ThreadWorker extends Thread {
 				long proc1 = System.nanoTime();
 				boolean cont = ResponseGenerator.process(incomingRequest, outgoingResponse);
 				long resp = System.nanoTime();
-				if (cont) AvunaHTTPD.patchBus.processPacket(outgoingResponse);
+				if (cont) host.patchBus.processPacket(outgoingResponse);
 				if (outgoingResponse.drop) {
 					incomingRequest.work.s.close();
 					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");

@@ -22,8 +22,6 @@ import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.hosts.HostRegistry;
 import org.avuna.httpd.hosts.Protocol;
-import org.avuna.httpd.http.plugins.PatchBus;
-import org.avuna.httpd.http.plugins.base.BaseLoader;
 import org.avuna.httpd.util.Config;
 import org.avuna.httpd.util.ConfigFormat;
 import org.avuna.httpd.util.FileManager;
@@ -33,7 +31,6 @@ public class AvunaHTTPD {
 	public static final String VERSION = "1.1.5";
 	public static Config mainConfig, hostsConfig;
 	public static final FileManager fileManager = new FileManager();
-	public static final PatchBus patchBus = new PatchBus();
 	public static final HashMap<String, String> extensionToMime = new HashMap<String, String>();
 	public static final String crlf = new String(new byte[]{13, 10});
 	public static final byte[] crlfb = new byte[]{13, 10};
@@ -41,11 +38,9 @@ public class AvunaHTTPD {
 	public static void setupFolders() {
 		fileManager.getMainDir().mkdirs();
 		fileManager.getLogs().mkdirs();
-		fileManager.getPlugins().mkdirs();
 		for (Host host : hosts.values()) {
 			host.setupFolders();
 		}
-		patchBus.setupFolders();
 	}
 	
 	public static void setupScripts() throws IOException {
@@ -292,8 +287,11 @@ public class AvunaHTTPD {
 			unpack();
 			loadUnpacked();
 			Logger.log("Loaded Configs");
-			Logger.log("Loading Base Plugins");
-			BaseLoader.loadBases();
+			for (Host host : hosts.values()) {
+				if (host instanceof HostHTTP) {
+					((HostHTTP)host).loadBases();
+				}
+			}
 			if (unpack) {
 				return;
 			}
@@ -314,16 +312,21 @@ public class AvunaHTTPD {
 			}else if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
 				Logger.log("[NOTIFY] We did NOT de-escalate, currently running as uid " + CLib.getuid());
 			}
+			for (Host host : hosts.values()) {
+				if (host instanceof HostHTTP) {
+					((HostHTTP)host).loadCustoms();
+				}
+			}
 			Logger.log("Loading Connection Handling");
 			for (Host h : hosts.values()) {
 				h.start();
 			}
-			Logger.log("Loading Custom Plugins");
-			BaseLoader.loadCustoms();
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 				public void run() {
 					Logger.log("Softly Terminating!");
-					AvunaHTTPD.patchBus.preExit();
+					for (Host h : hosts.values()) {
+						h.preExit();
+					}
 					if (AvunaHTTPD.mainConfig != null) {
 						AvunaHTTPD.mainConfig.save();
 					}

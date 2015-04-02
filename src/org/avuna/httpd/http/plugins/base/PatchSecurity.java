@@ -6,6 +6,7 @@ import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
+import org.avuna.httpd.http.plugins.PatchRegistry;
 import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSecurity;
 import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
 import org.avuna.httpd.http.plugins.javaloader.security.JLSBFlood;
@@ -15,8 +16,8 @@ import org.avuna.httpd.http.plugins.javaloader.security.JLSUA;
 
 public class PatchSecurity extends Patch {
 	
-	public PatchSecurity(String name) {
-		super(name);
+	public PatchSecurity(String name, PatchRegistry registry) {
+		super(name, registry);
 	}
 	
 	public void loadBases(PatchJavaLoader pjl) {

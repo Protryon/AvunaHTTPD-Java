@@ -45,7 +45,7 @@ public class ResponsePacket extends Packet {
 			// ResponsePacket thisClone = clone();
 			byte[] finalc = this.body == null ? null : this.body.data;
 			long ps2 = System.nanoTime();
-			finalc = AvunaHTTPD.patchBus.processResponse(this, this.request, finalc);
+			finalc = request.host.getHost().patchBus.processResponse(this, this.request, finalc);
 			if (this.drop) {
 				return null;
 			}
