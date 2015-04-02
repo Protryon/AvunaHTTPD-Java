@@ -113,7 +113,19 @@ public class SMTPHandler {
 		commands.add(new SMTPCommand("rcpt", 3, 4) {
 			public void run(SMTPWork focus, String line) throws IOException {
 				if (line.toLowerCase().startsWith("to:")) {
-					focus.rcptTo.add(line.substring(3).trim());
+					String to = line.substring(3).trim();
+					boolean local = false;
+					for (String domain : ((String)host.getConfig().get("domain")).split(",")) {
+						if (to.endsWith(domain) || (to.startsWith("<") && to.endsWith(">") && to.substring(1, to.length() - 1).endsWith(domain))) {
+							local = true;
+							break;
+						}
+					}
+					if (focus.state < 2 && !local) {
+						focus.writeLine(500, "Denied");
+						return;
+					}
+					focus.rcptTo.add(to);
 					focus.state = 4;
 					focus.writeLine(250, "OK");
 				}else {
