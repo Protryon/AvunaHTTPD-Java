@@ -38,6 +38,7 @@ public class FCGISession implements IFCGIListener {
 	private DataOutputStream dpout = new DataOutputStream(pout);
 	
 	public void param(String name, String value) throws IOException {
+		// Logger.log(this.hashCode() + " param: " + name + " = " + value);
 		if (fp) {
 			throw new IOException("Params are already finished!");
 		}

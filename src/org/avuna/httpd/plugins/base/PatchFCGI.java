@@ -168,7 +168,7 @@ public class PatchFCGI extends Patch {
 			FCGISession session = new FCGISession(conn);
 			session.start();
 			// pb.environment().start();
-			session.param("REQUEST_URI", rq);
+			session.param("REQUEST_URI", rq + (get.length() > 0 ? "?" + get : ""));
 			
 			rq = AvunaHTTPD.fileManager.correctForIndex(rq, request);
 			
@@ -183,7 +183,7 @@ public class PatchFCGI extends Patch {
 			session.param("REMOTE_PORT", request.userPort + "");
 			session.param("REQUEST_METHOD", request.method.name);
 			session.param("REDIRECT_STATUS", response.statusCode + "");
-			session.param("SCRIPT_NAME", rq.substring(rq.lastIndexOf("/")));
+			session.param("SCRIPT_NAME", rq);
 			session.param("SERVER_NAME", request.headers.getHeader("Host"));
 			int port = request.host.getHost().getPort();
 			session.param("SERVER_PORT", port + "");

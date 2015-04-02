@@ -21,7 +21,7 @@ public class IMAPHandler {
 			
 			@Override
 			public void run(IMAPWork focus, String letters, String[] args) throws IOException {
-				focus.writeLine(focus, "*", "CAPABILITY IMAP4rev1 AUTH=PLAIN LOGINDISABLED");
+				focus.writeLine(focus, "*", "CAPABILITY IMAP4rev1 AUTH=PLAIN AUTH=LOGIN");
 				focus.writeLine(focus, letters, "OK Capability completed.");
 			}
 			

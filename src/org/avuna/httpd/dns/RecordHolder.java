@@ -32,8 +32,17 @@ public class RecordHolder {
 					Type type = Type.getType(ls[1].toUpperCase());
 					String data = line.substring(ls[0].length() + ls[1].length() + 2).trim();
 					byte[] fd = null;
-					if (type == Type.A || type == Type.NS) {
+					if (type == Type.A) {
 						fd = Util.ipToByte(data);
+					}else if (type == Type.NS) {
+						ByteArrayOutputStream mxf = new ByteArrayOutputStream();
+						DataOutputStream mxfd = new DataOutputStream(mxf);
+						String[] dspl = data.substring(data.indexOf(" ") + 1).split("\\.");
+						for (String d : dspl) {
+							mxfd.write(d.length());
+							mxfd.write(d.getBytes());
+						}
+						fd = mxf.toByteArray();
 					}else if (type == Type.AAAA) {
 						fd = Util.ip6ToByte(data);
 					}else if (type == Type.MX) {
