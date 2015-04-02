@@ -86,7 +86,7 @@ public class PatchInline extends Patch {
 	};
 	
 	private static String processHREF(String parent, String href) {
-		String h = href;
+		String h = href.trim();
 		if (h.startsWith("http://") || h.startsWith("https://") || h.startsWith("//")) {
 			return null; // don't both with offsite stuff, will only increase response time TODO: onsite hard-linking?
 		}
@@ -165,6 +165,8 @@ public class PatchInline extends Patch {
 					String href = o.substring(o.indexOf("href=") + 5);
 					if (href.startsWith("\"")) {
 						href = href.substring(1, href.indexOf("\"", 1));
+					}else if (href.startsWith("'")) {
+						href = href.substring(1, href.indexOf("'", 1));
 					}else {
 						href = href.substring(0, href.indexOf(" "));
 					}
@@ -180,6 +182,8 @@ public class PatchInline extends Patch {
 					String href = o.substring(o.indexOf("src=") + 4);
 					if (href.startsWith("\"")) {
 						href = href.substring(1, href.indexOf("\"", 1));
+					}else if (href.startsWith("'")) {
+						href = href.substring(1, href.indexOf("'", 1));
 					}else {
 						href = href.substring(0, href.indexOf(" "));
 					}
@@ -195,6 +199,8 @@ public class PatchInline extends Patch {
 					String href = o.substring(o.indexOf("src=") + 4);
 					if (href.startsWith("\"")) {
 						href = href.substring(1, href.indexOf("\"", 1));
+					}else if (href.startsWith("'")) {
+						href = href.substring(1, href.indexOf("'", 1));
 					}else {
 						href = href.substring(0, href.indexOf(" "));
 					}
@@ -210,6 +216,8 @@ public class PatchInline extends Patch {
 					String href = o.substring(o.indexOf("src=") + 4);
 					if (href.startsWith("\"")) {
 						href = href.substring(1, href.indexOf("\"", 1));
+					}else if (href.startsWith("'")) {
+						href = href.substring(1, href.indexOf("'", 1));
 					}else {
 						href = href.substring(0, href.indexOf(" "));
 					}
