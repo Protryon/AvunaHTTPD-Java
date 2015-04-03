@@ -36,6 +36,7 @@ public class PatchFCGI extends Patch {
 	}
 	
 	public void reload() {
+		if (!pcfg.get("enabled").equals("true")) return;
 		for (IFCGIManager fcgi : fcgis.values()) {
 			try {
 				fcgi.close();
