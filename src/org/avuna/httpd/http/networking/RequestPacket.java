@@ -37,6 +37,10 @@ public class RequestPacket extends Packet {
 	public HashMap<String, String> cookie = new HashMap<String, String>();
 	public boolean http2Upgrade = false;
 	
+	public boolean isValidPost() {
+		return method == Method.POST && body != null && body.data != null;
+	}
+	
 	public RequestPacket clone() {
 		RequestPacket ret = new RequestPacket();
 		ret.headers = headers.clone();

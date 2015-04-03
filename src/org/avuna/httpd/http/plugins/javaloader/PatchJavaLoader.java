@@ -52,9 +52,8 @@ public class PatchJavaLoader extends Patch {
 		try {
 			config.load();
 		}catch (IOException e1) {
-			e1.printStackTrace();
+			Logger.logError(e1);
 		}
-		config.save();
 		((PatchSecurity)registry.getPatchForClass(PatchSecurity.class)).loadBases(this);
 		log("Loading JavaLoader Libs");
 		try {
@@ -92,6 +91,7 @@ public class PatchJavaLoader extends Patch {
 		}catch (Exception e) {
 			Logger.logError(e);
 		}
+		config.save();
 	}
 	
 	public void saveConfig() {
