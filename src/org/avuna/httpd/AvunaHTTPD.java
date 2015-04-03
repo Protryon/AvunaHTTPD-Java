@@ -300,12 +300,10 @@ public class AvunaHTTPD {
 					((HostHTTP)host).loadBases();
 				}
 			}
-			Logger.log("test1");
 			if (unpack) {
 				Logger.log("Unpack complete, terminating.");
 				System.exit(0);
 			}
-			Logger.log("test2");
 			Logger.log("Loading Connection Handling");
 			for (Host h : hosts.values()) {
 				h.start();
@@ -327,7 +325,6 @@ public class AvunaHTTPD {
 			}else if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
 				Logger.log("[NOTIFY] We did NOT de-escalate, currently running as uid " + CLib.getuid());
 			}
-			Logger.log("test4");
 			for (Host host : hosts.values()) {
 				if (host instanceof HostHTTP) {
 					((HostHTTP)host).loadCustoms();
