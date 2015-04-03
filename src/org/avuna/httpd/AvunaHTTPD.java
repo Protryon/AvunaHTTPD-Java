@@ -233,7 +233,9 @@ public class AvunaHTTPD {
 				}
 			});
 			mainConfig.load();
-			mainConfig.save();
+			if (unpack) {
+				mainConfig.save();
+			}
 			HostRegistry.addHost(Protocol.HTTP, HostHTTP.class);
 			HostRegistry.addHost(Protocol.COM, HostCom.class);
 			HostRegistry.addHost(Protocol.DNS, HostDNS.class);
