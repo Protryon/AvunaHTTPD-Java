@@ -34,15 +34,6 @@ public class RecordHolder {
 					byte[] fd = null;
 					if (type == Type.A) {
 						fd = Util.ipToByte(data);
-					}else if (type == Type.NS) {
-						ByteArrayOutputStream mxf = new ByteArrayOutputStream();
-						DataOutputStream mxfd = new DataOutputStream(mxf);
-						String[] dspl = data.substring(data.indexOf(" ") + 1).split("\\.");
-						for (String d : dspl) {
-							mxfd.write(d.length());
-							mxfd.write(d.getBytes());
-						}
-						fd = mxf.toByteArray();
 					}else if (type == Type.AAAA) {
 						fd = Util.ip6ToByte(data);
 					}else if (type == Type.MX) {
@@ -54,6 +45,15 @@ public class RecordHolder {
 						ByteArrayOutputStream mxf = new ByteArrayOutputStream();
 						DataOutputStream mxfd = new DataOutputStream(mxf);
 						mxfd.writeShort(priority);
+						String[] dspl = data.substring(data.indexOf(" ") + 1).split("\\.");
+						for (String d : dspl) {
+							mxfd.write(d.length());
+							mxfd.write(d.getBytes());
+						}
+						fd = mxf.toByteArray();
+					}else if (type == Type.PTR || type == Type.CNAME || type == Type.DNAME || type == Type.NS) {
+						ByteArrayOutputStream mxf = new ByteArrayOutputStream();
+						DataOutputStream mxfd = new DataOutputStream(mxf);
 						String[] dspl = data.substring(data.indexOf(" ") + 1).split("\\.");
 						for (String d : dspl) {
 							mxfd.write(d.length());

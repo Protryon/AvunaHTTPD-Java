@@ -1,7 +1,7 @@
 package org.avuna.httpd.dns;
 
 public enum Type {
-	A("A", 1), NS("NS", 2), MD("MD", 3), MF("MF", 4), CNAME("CNAME", 5), SOA("SOA", 6), MB("MB", 7), MG("MG", 8), MR("MR", 9), NULL("NULL", 10), WKS("WKS", 11), PTR("PTR", 12), HINFO("HINFO", 13), MINFO("MINFO", 14), MX("MX", 15), TXT("TXT", 16), AAAA("AAAA", 28), SRV("SRV", 33);
+	A("A", 1), NS("NS", 2), MD("MD", 3), MF("MF", 4), CNAME("CNAME", 5), SOA("SOA", 6), MB("MB", 7), MG("MG", 8), MR("MR", 9), NULL("NULL", 10), WKS("WKS", 11), PTR("PTR", 12), HINFO("HINFO", 13), MINFO("MINFO", 14), MX("MX", 15), TXT("TXT", 16), AAAA("AAAA", 28), SRV("SRV", 33), DNAME("DNAME", 39);
 	
 	public final String name;
 	public final int id;
