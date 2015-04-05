@@ -68,6 +68,9 @@ public class ThreadMWorker extends ThreadWorker {
 					ResponsePacket outgoingResponse = incomingRequest.child;
 					outgoingResponse.request = incomingRequest;
 					String line = readLine(incomingRequest.work.cn.in);
+					if (line.length() == 0) {
+						line = readLine(incomingRequest.work.cn.in);
+					}
 					if (line == null) {
 						VHostM vm = (VHostM)incomingRequest.host;
 						Socket s = new Socket(vm.ip, vm.port);
@@ -98,7 +101,7 @@ public class ThreadMWorker extends ThreadWorker {
 					if (outgoingResponse.headers.hasHeader("Content-Length")) {
 						byte[] data = new byte[Integer.parseInt(outgoingResponse.headers.getHeader("Content-Length"))];
 						incomingRequest.work.cn.in.readFully(data);
-						readLine(incomingRequest.work.cn.in);
+						// readLine(incomingRequest.work.cn.in);
 						outgoingResponse.body = new Resource(data, outgoingResponse.headers.hasHeader("Content-Type") ? outgoingResponse.headers.getHeader("Content-Type") : "text/html; charset=utf-8");
 						outgoingResponse.prewrite();
 						outgoingResponse.done = true;

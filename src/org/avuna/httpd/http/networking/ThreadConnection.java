@@ -5,6 +5,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostHTTP;
+import org.avuna.httpd.hosts.HostHTTPM;
 import org.avuna.httpd.http.Method;
 import org.avuna.httpd.util.Logger;
 
@@ -13,7 +14,7 @@ public class ThreadConnection extends Thread {
 	private final HostHTTP host;
 	
 	public ThreadConnection(HostHTTP host) {
-		super("Avuna Connection Thread #" + nid++);
+		super("Avuna " + (host instanceof HostHTTPM ? "HTTPM-" : "HTTP-") + "Connection Thread #" + nid++);
 		this.host = host;
 		host.conns.add(this);
 	}
