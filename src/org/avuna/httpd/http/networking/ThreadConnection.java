@@ -3,15 +3,15 @@ package org.avuna.httpd.http.networking;
 import java.io.IOException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.HostHTTPM;
-import org.avuna.httpd.http.Method;
 import org.avuna.httpd.util.Logger;
 
 public class ThreadConnection extends Thread {
 	private static int nid = 1;
-	private final HostHTTP host;
+	protected final HostHTTP host;
 	
 	public ThreadConnection(HostHTTP host) {
 		super("Avuna " + (host instanceof HostHTTPM ? "HTTPM-" : "HTTP-") + "Connection Thread #" + nid++);
@@ -19,7 +19,7 @@ public class ThreadConnection extends Thread {
 		host.conns.add(this);
 	}
 	
-	private boolean keepRunning = true;
+	protected boolean keepRunning = true;
 	
 	public void close() {
 		keepRunning = false;
@@ -48,32 +48,65 @@ public class ThreadConnection extends Thread {
 			boolean canAdd = true;
 			boolean readd = false;
 			try {
-				ResponsePacket peek;
-				while ((peek = focus.outQueue.peek()) != null && peek.done) {
-					focus.outQueue.poll();
-					boolean t = peek.reqTransfer;
-					if (peek.reqStream != null) {
-						ThreadJavaLoaderStreamWorker sw = new ThreadJavaLoaderStreamWorker(host, focus, peek.request, peek, peek.reqStream);
-						host.subworkers.add(sw);
-						sw.start();
-						readd = false;
-						canAdd = false;
-					}else if (peek.toStream != null) {
-						ThreadRawStreamWorker sw = new ThreadRawStreamWorker(host, focus, peek.request, peek, peek.toStream);
-						host.subworkers.add(sw);
-						sw.start();
-						readd = false;
-						canAdd = false;
-					}else if (t && peek.body != null) {
-						ThreadStreamWorker sw = new ThreadStreamWorker(host, focus, peek.request, peek);
-						host.subworkers.add(sw);
-						sw.start();
-						readd = false;
-						canAdd = false;
-					}else {
-						readd = true;
-						focus.out.write(peek.subwrite);
-						focus.out.flush();
+				if (focus.httpe) {
+					for (int i = 0; i < focus.asyncOutQueue.size(); i++) {
+						ResponsePacket peek = focus.asyncOutQueue.get(i);
+						if (peek.done) {
+							focus.asyncOutQueue.remove(i--);
+							boolean t = peek.reqTransfer;
+							if (peek.reqStream != null) {
+								ThreadJavaLoaderStreamWorker sw = new ThreadJavaLoaderStreamWorker(host, focus, peek.request, peek, peek.reqStream);
+								host.subworkers.add(sw);
+								sw.start();
+								readd = false;
+								canAdd = false;
+							}else if (peek.toStream != null) {
+								ThreadRawStreamWorker sw = new ThreadRawStreamWorker(host, focus, peek.request, peek, peek.toStream);
+								host.subworkers.add(sw);
+								sw.start();
+								readd = false;
+								canAdd = false;
+							}else if (t && peek.body != null) {
+								ThreadStreamWorker sw = new ThreadStreamWorker(host, focus, peek.request, peek);
+								host.subworkers.add(sw);
+								sw.start();
+								readd = false;
+								canAdd = false;
+							}else {
+								readd = true;
+								focus.out.write(peek.subwrite);
+								focus.out.flush();
+							}
+						}
+					}
+				}else {
+					ResponsePacket peek;
+					while ((peek = focus.outQueue.peek()) != null && peek.done) {
+						focus.outQueue.poll();
+						boolean t = peek.reqTransfer;
+						if (peek.reqStream != null) {
+							ThreadJavaLoaderStreamWorker sw = new ThreadJavaLoaderStreamWorker(host, focus, peek.request, peek, peek.reqStream);
+							host.subworkers.add(sw);
+							sw.start();
+							readd = false;
+							canAdd = false;
+						}else if (peek.toStream != null) {
+							ThreadRawStreamWorker sw = new ThreadRawStreamWorker(host, focus, peek.request, peek, peek.toStream);
+							host.subworkers.add(sw);
+							sw.start();
+							readd = false;
+							canAdd = false;
+						}else if (t && peek.body != null) {
+							ThreadStreamWorker sw = new ThreadStreamWorker(host, focus, peek.request, peek);
+							host.subworkers.add(sw);
+							sw.start();
+							readd = false;
+							canAdd = false;
+						}else {
+							readd = true;
+							focus.out.write(peek.subwrite);
+							focus.out.flush();
+						}
 					}
 				}
 				if (focus.ssl && focus.in.available() == 0) {
@@ -142,9 +175,7 @@ public class ThreadConnection extends Thread {
 						focus.s.close();
 						continue;
 					}
-					if (incomingRequest.method == Method.PRI && incomingRequest.target.equals("*") && incomingRequest.httpVersion.equals("HTTP/2.0")) {
-						
-					}
+					
 					String host = incomingRequest.headers.hasHeader("Host") ? incomingRequest.headers.getHeader("Host") : "";
 					incomingRequest.work = focus;
 					incomingRequest.host = focus.host.getVHost(host);
@@ -154,16 +185,15 @@ public class ThreadConnection extends Thread {
 					incomingRequest.userPort = focus.s.getPort();
 					incomingRequest.order = focus.nreqid++;
 					incomingRequest.child = new ResponsePacket();
-					if (incomingRequest.host.getHost().http2) {
-						if (incomingRequest.ssl) {
-							
-						}else {
-							if (incomingRequest.headers.hasHeader("Upgrade") && incomingRequest.headers.hasHeader("HTTP2-Settings") && incomingRequest.headers.getHeader("Upgrade").contains("h2c")) {
-								incomingRequest.http2Upgrade = true;
-							}
-						}
+					if (incomingRequest.headers.hasHeader("X-Req-ID")) {
+						focus.httpe = true;
+						focus.asyncOutQueue = new ArrayList<ResponsePacket>();
 					}
-					focus.outQueue.add(incomingRequest.child);
+					if (focus.httpe) {
+						focus.asyncOutQueue.add(incomingRequest.child);
+					}else {
+						focus.outQueue.add(incomingRequest.child);
+					}
 					long set = System.nanoTime();
 					// code
 					this.host.addWork(incomingRequest);

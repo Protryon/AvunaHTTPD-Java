@@ -42,6 +42,10 @@ public class ResponseGenerator {
 			// Logger.log("rg");
 			long start = System.nanoTime();
 			// response.headers.addHeader("Date", sdf.format(new Date())); timeless for optimization
+			if (request.work.httpe) {
+				response.headers.addHeader("X-Req-ID", request.headers.getHeader("X-Req-ID"));
+				response.headers.addHeader("X-Req-Target", request.target);
+			}
 			long ah = System.nanoTime();
 			response.headers.addHeader("Server", "Avuna/" + AvunaHTTPD.VERSION);
 			long ah2 = System.nanoTime();
