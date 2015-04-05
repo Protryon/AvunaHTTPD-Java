@@ -161,7 +161,7 @@ public class SMTPHandler {
 		
 		commands.add(new SMTPCommand("quit", 1, 100) {
 			public void run(SMTPWork focus, String line) throws IOException {
-				focus.writeLine(251, ((String)host.getConfig().get("domain")).split(",")[0] + " terminating connection.");
+				focus.writeLine(221, ((String)host.getConfig().get("domain")).split(",")[0] + " terminating connection.");
 				focus.s.close();
 			}
 		});
