@@ -6,6 +6,7 @@ import java.io.DataOutputStream;
 import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.avuna.httpd.hosts.HostHTTP;
+import org.avuna.httpd.http.networking.httpm.MasterConn;
 
 public class Work {
 	public final Socket s;
@@ -19,6 +20,7 @@ public class Work {
 	public ByteArrayOutputStream sslprep = null;
 	public ArrayBlockingQueue<ResponsePacket> outQueue = new ArrayBlockingQueue<ResponsePacket>(16);
 	public boolean blockTimeout = false;
+	public MasterConn cn = null;
 	
 	// public ResponsePacket[] pipeline = new ResponsePacket[32];
 	

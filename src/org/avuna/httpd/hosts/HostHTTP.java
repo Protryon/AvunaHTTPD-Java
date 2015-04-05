@@ -24,7 +24,9 @@ import org.avuna.httpd.util.Logger;
 public class HostHTTP extends Host {
 	
 	private ArrayList<VHost> vhosts = new ArrayList<VHost>();
-	private int tac, tcc, twc, mc;
+	protected int tac, tcc;
+	protected int twc;
+	protected int mc;
 	public final PatchRegistry registry;
 	public final PatchBus patchBus;
 	
@@ -34,6 +36,12 @@ public class HostHTTP extends Host {
 	
 	public HostHTTP(String name) {
 		super(name, Protocol.HTTP);
+		this.registry = new PatchRegistry(this);
+		patchBus = new PatchBus(registry);
+	}
+	
+	protected HostHTTP(String name, Protocol protocol) {
+		super(name, protocol);
 		this.registry = new PatchRegistry(this);
 		patchBus = new PatchBus(registry);
 	}
@@ -200,6 +208,10 @@ public class HostHTTP extends Host {
 	public boolean http2 = false;
 	
 	public void formatConfig(HashMap<String, Object> map) {
+		formatConfig(map, true);
+	}
+	
+	public void formatConfig(HashMap<String, Object> map, boolean loadVHosts) {
 		super.formatConfig(map);
 		if (!map.containsKey("errorpages")) map.put("errorpages", new LinkedHashMap<String, Object>());
 		if (!map.containsKey("index")) map.put("index", "index.class,index.php,index.html");
@@ -228,28 +240,30 @@ public class HostHTTP extends Host {
 				if (!vhost.containsKey("htsrc")) vhost.put("htsrc", AvunaHTTPD.fileManager.getBaseFile("htsrc").toString());
 			}
 		}
-		for (String vkey : vhosts.keySet()) {
-			HashMap<String, Object> ourvh = (HashMap<String, Object>)vhosts.get(vkey);
-			if (!ourvh.get("enabled").equals("true")) continue;
-			VHost vhost = null;
-			if (ourvh.containsKey("inheritjls")) {
-				VHost parent = null;
-				String ij = (String)ourvh.get("inheritjls");
-				for (Host host : AvunaHTTPD.hosts.values()) {
-					if (host.name.equals(ij.substring(0, ij.indexOf("/")))) {
-						parent = ((HostHTTP)host).getVHostByName(ij.substring(ij.indexOf("/") + 1));
+		if (loadVHosts) {
+			for (String vkey : vhosts.keySet()) {
+				HashMap<String, Object> ourvh = (HashMap<String, Object>)vhosts.get(vkey);
+				if (!ourvh.get("enabled").equals("true")) continue;
+				VHost vhost = null;
+				if (ourvh.containsKey("inheritjls")) {
+					VHost parent = null;
+					String ij = (String)ourvh.get("inheritjls");
+					for (Host host : AvunaHTTPD.hosts.values()) {
+						if (host.name.equals(ij.substring(0, ij.indexOf("/")))) {
+							parent = ((HostHTTP)host).getVHostByName(ij.substring(ij.indexOf("/") + 1));
+						}
 					}
+					if (parent == null) {
+						Logger.log("Invalid inheritjls! Skipping");
+						continue;
+					}
+					vhost = new VHost(this.getHostname() + "/" + vkey, this, (String)ourvh.get("host"), parent);
+				}else {
+					vhost = new VHost(this.getHostname() + "/" + vkey, this, new File((String)ourvh.get("htdocs")), new File((String)ourvh.get("htsrc")), (String)ourvh.get("host"));
 				}
-				if (parent == null) {
-					Logger.log("Invalid inheritjls! Skipping");
-					continue;
-				}
-				vhost = new VHost(this.getHostname() + "/" + vkey, this, (String)ourvh.get("host"), parent);
-			}else {
-				vhost = new VHost(this.getHostname() + "/" + vkey, this, new File((String)ourvh.get("htdocs")), new File((String)ourvh.get("htsrc")), (String)ourvh.get("host"));
+				vhost.setDebug(ourvh.get("debug").equals("true"));
+				this.addVHost(vhost);
 			}
-			vhost.setDebug(ourvh.get("debug").equals("true"));
-			this.addVHost(vhost);
 		}
 	}
 	

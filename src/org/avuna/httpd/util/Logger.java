@@ -33,7 +33,9 @@ public class Logger {
 	}
 	
 	public static void log(String line) {
-		INSTANCE.cacheLine("[-DATE-] " + line);
+		if (INSTANCE == null) {
+			System.out.println(line);
+		}else INSTANCE.cacheLine("[-DATE-] " + line);
 	}
 	
 	private void cacheLine(String line) {

@@ -19,6 +19,7 @@ import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostCom;
 import org.avuna.httpd.hosts.HostDNS;
 import org.avuna.httpd.hosts.HostHTTP;
+import org.avuna.httpd.hosts.HostHTTPM;
 import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.hosts.HostRegistry;
 import org.avuna.httpd.hosts.Protocol;
@@ -237,6 +238,7 @@ public class AvunaHTTPD {
 				mainConfig.save();
 			}
 			HostRegistry.addHost(Protocol.HTTP, HostHTTP.class);
+			HostRegistry.addHost(Protocol.HTTPM, HostHTTPM.class);
 			HostRegistry.addHost(Protocol.COM, HostCom.class);
 			HostRegistry.addHost(Protocol.DNS, HostDNS.class);
 			HostRegistry.addHost(Protocol.MAIL, HostMail.class);

@@ -8,8 +8,8 @@ import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.util.Logger;
 
 public class ThreadWorker extends Thread {
-	private static int nid = 1;
-	private final HostHTTP host;
+	protected static int nid = 1;
+	protected final HostHTTP host;
 	
 	public ThreadWorker(HostHTTP host) {
 		super("Avuna HTTP-Worker Thread #" + nid++);
@@ -17,7 +17,7 @@ public class ThreadWorker extends Thread {
 		host.workers.add(this);
 	}
 	
-	private boolean keepRunning = true;
+	protected boolean keepRunning = true;
 	
 	public void close() {
 		keepRunning = false;
@@ -43,7 +43,7 @@ public class ThreadWorker extends Thread {
 				host.patchBus.processPacket(incomingRequest);
 				if (incomingRequest.drop) {
 					incomingRequest.work.s.close();
-					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
+					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
 					continue;
 				}
 				long proc1 = System.nanoTime();
@@ -52,7 +52,7 @@ public class ThreadWorker extends Thread {
 				if (cont) host.patchBus.processPacket(outgoingResponse);
 				if (outgoingResponse.drop) {
 					incomingRequest.work.s.close();
-					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
+					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
 					continue;
 				}
 				long proc2 = System.nanoTime();
@@ -60,7 +60,7 @@ public class ThreadWorker extends Thread {
 				else outgoingResponse.subwrite();
 				if (outgoingResponse.drop) {
 					incomingRequest.work.s.close();
-					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.target + " returned DROPPED took: " + (outgoingResponse.bwt - benchStart) / 1000000D + " ms");
+					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " returned DROPPED took: " + (outgoingResponse.bwt - benchStart) / 1000000D + " ms");
 					continue;
 				}
 				outgoingResponse.done = true;
@@ -74,7 +74,7 @@ public class ThreadWorker extends Thread {
 				if (incomingRequest.host.getDebug()) {
 					Logger.log(AvunaHTTPD.crlf + incomingRequest.toString().trim());
 				}
-				Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase + " took: " + (outgoingResponse.bwt - benchStart) / 1000000D + " ms");
+				Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase + " took: " + (outgoingResponse.bwt - benchStart) / 1000000D + " ms");
 			}catch (Exception e) {
 				if (!(e instanceof SocketException || e instanceof StringIndexOutOfBoundsException)) {
 					Logger.logError(e);
