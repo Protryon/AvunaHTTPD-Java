@@ -116,7 +116,7 @@ public class SMTPHandler {
 					String to = line.substring(3).trim();
 					boolean local = false;
 					for (String domain : ((String)host.getConfig().get("domain")).split(",")) {
-						if (to.endsWith(domain) || (to.startsWith("<") && to.endsWith(">") && to.substring(1, to.length() - 1).endsWith(domain))) {
+						if (to.endsWith(domain) || (to.contains("<") && to.endsWith(">") && to.substring(to.indexOf("<") + 1, to.length() - 1).endsWith(domain))) {
 							local = true;
 							break;
 						}
