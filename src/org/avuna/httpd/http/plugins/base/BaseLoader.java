@@ -6,9 +6,14 @@ import org.avuna.httpd.http.plugins.PatchRegistry;
 import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
 
 public class BaseLoader {
-	public static void loadBases(PatchRegistry registry) {
+	public static void loadSecBase(PatchRegistry registry) {
 		// sec
 		registry.registerPatch(new PatchSecurity("Security", registry));
+	}
+	
+	public static void loadBases(PatchRegistry registry) {
+		// sec
+		loadSecBase(registry);
 		registry.registerPatch(new PatchOverride("Override", registry));
 		// special
 		// PatchRegistry.registerPatch(new PatchEnforceRedirect("EnforceRedirect")); deprecated

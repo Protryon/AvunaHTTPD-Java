@@ -42,7 +42,8 @@ public class ThreadAccept extends Thread {
 					continue;
 				}
 				s.setSoTimeout(1000);
-				if (host.registry.getPatchForClass(PatchSecurity.class).pcfg.get("enabled").equals("true")) {
+				PatchSecurity ps = (PatchSecurity)host.registry.getPatchForClass(PatchSecurity.class);
+				if (ps != null && ps.pcfg.get("enabled").equals("true")) {
 					int minDrop = Integer.parseInt((String)host.registry.getPatchForClass(PatchSecurity.class).pcfg.get("minDrop"));
 					int chance = 0;
 					for (JavaLoaderSecurity sec : PatchJavaLoader.security) {

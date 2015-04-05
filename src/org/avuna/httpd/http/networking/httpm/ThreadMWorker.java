@@ -9,6 +9,7 @@ import java.net.SocketException;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.VHostM;
+import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.networking.ThreadWorker;
@@ -65,8 +66,23 @@ public class ThreadMWorker extends ThreadWorker {
 					writ = System.nanoTime();
 					ResponsePacket outgoingResponse = incomingRequest.child;
 					outgoingResponse.request = incomingRequest;
-					String line;
-					line = readLine(incomingRequest.work.cn.in);
+					String line = readLine(incomingRequest.work.cn.in);
+					if (line == null) {
+						VHostM vm = (VHostM)incomingRequest.host;
+						Socket s = new Socket(vm.ip, vm.port);
+						DataOutputStream out = new DataOutputStream(s.getOutputStream());
+						out.flush();
+						DataInputStream in = new DataInputStream(s.getInputStream());
+						incomingRequest.work.cn = new MasterConn(s, out, in);
+						est = System.nanoTime();
+						incomingRequest.write(incomingRequest.work.cn.out);
+						incomingRequest.work.cn.out.flush();
+						writ = System.nanoTime();
+						line = readLine(incomingRequest.work.cn.in);
+						if (line == null) {
+							Logger.log("Reconnect failed, check VHost connection!");
+						}
+					}
 					int i = line.indexOf(" ");
 					outgoingResponse.httpVersion = line.substring(0, i);
 					i++;
@@ -81,8 +97,9 @@ public class ThreadMWorker extends ThreadWorker {
 					if (outgoingResponse.headers.hasHeader("Content-Length")) {
 						byte[] data = new byte[Integer.parseInt(outgoingResponse.headers.getHeader("Content-Length"))];
 						incomingRequest.work.cn.in.readFully(data);
-						Logger.log("1-" + readLine(incomingRequest.work.cn.in));
-						outgoingResponse.subwrite = data;
+						readLine(incomingRequest.work.cn.in);
+						outgoingResponse.body = new Resource(data, outgoingResponse.headers.hasHeader("Content-Type") ? outgoingResponse.headers.getHeader("Content-Type") : "text/html; charset=utf-8");
+						outgoingResponse.prewrite();
 						outgoingResponse.done = true;
 						outgoingResponse.bwt = System.nanoTime();
 					}else {
@@ -93,11 +110,11 @@ public class ThreadMWorker extends ThreadWorker {
 				}finally {
 				}
 				long cls = System.nanoTime();
-				Logger.log((est - benchStart) / 1000000D + " start-est");
-				Logger.log((writ - est) / 1000000D + " est-writ");
-				Logger.log((hdr - writ) / 1000000D + " writ-hdr");
-				Logger.log((incomingRequest.child.bwt - hdr) / 1000000D + " hdr-bwt");
-				Logger.log((cls - incomingRequest.child.bwt) / 1000000D + " bwt-cls");
+				// Logger.log((est - benchStart) / 1000000D + " start-est");
+				// Logger.log((writ - est) / 1000000D + " est-writ");
+				// Logger.log((hdr - writ) / 1000000D + " writ-hdr");
+				// Logger.log((incomingRequest.child.bwt - hdr) / 1000000D + " hdr-bwt");
+				// Logger.log((cls - incomingRequest.child.bwt) / 1000000D + " bwt-cls");
 				if (incomingRequest.host.getDebug()) {
 					Logger.log(AvunaHTTPD.crlf + incomingRequest.toString().trim());
 				}

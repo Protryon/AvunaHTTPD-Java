@@ -1,18 +1,27 @@
 package org.avuna.httpd.hosts;
 
-import java.io.File;
 import java.net.ServerSocket;
 import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.networking.ThreadAccept;
 import org.avuna.httpd.http.networking.ThreadConnection;
 import org.avuna.httpd.http.networking.httpm.ThreadMWorker;
+import org.avuna.httpd.http.plugins.base.BaseLoader;
 import org.avuna.httpd.util.Logger;
 
 public class HostHTTPM extends HostHTTP {
 	
 	public HostHTTPM(String name) {
 		super(name, Protocol.HTTPM);
+	}
+	
+	public void loadBases() {
+		Logger.log("Loading HTTPM Security");
+		BaseLoader.loadSecBase(registry);
+	}
+	
+	public void loadCustoms() {
+		
 	}
 	
 	public void formatConfig(HashMap<String, Object> map) {
@@ -52,7 +61,7 @@ public class HostHTTPM extends HostHTTP {
 				}
 				vhost = new VHostM(this.getHostname() + "/" + vkey, this, (String)ourvh.get("host"), parent, (String)ourvh.get("vhost-ip"), Integer.parseInt((String)ourvh.get("vhost-port")));
 			}else {
-				vhost = new VHostM(this.getHostname() + "/" + vkey, this, new File((String)ourvh.get("htdocs")), new File((String)ourvh.get("htsrc")), (String)ourvh.get("host"), (String)ourvh.get("vhost-ip"), Integer.parseInt((String)ourvh.get("vhost-port")));
+				vhost = new VHostM(this.getHostname() + "/" + vkey, this, (String)ourvh.get("host"), (String)ourvh.get("vhost-ip"), Integer.parseInt((String)ourvh.get("vhost-port")));
 			}
 			vhost.setDebug(ourvh.get("debug").equals("true"));
 			this.addVHost(vhost);

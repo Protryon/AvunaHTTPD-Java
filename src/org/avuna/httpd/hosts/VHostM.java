@@ -1,13 +1,12 @@
 package org.avuna.httpd.hosts;
 
-import java.io.File;
 
 public class VHostM extends VHost {
 	public final String ip;
 	public final int port;
 	
-	public VHostM(String name, HostHTTP host, File htdocs, File htsrc, String vhost, String ip, int port) {
-		super(name, host, htdocs, htsrc, vhost);
+	public VHostM(String name, HostHTTP host, String vhost, String ip, int port) {
+		super(name, host, null, null, vhost);
 		this.ip = ip;
 		this.port = port;
 	}

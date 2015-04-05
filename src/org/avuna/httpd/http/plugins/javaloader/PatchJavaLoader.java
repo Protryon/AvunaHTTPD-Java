@@ -76,13 +76,11 @@ public class PatchJavaLoader extends Patch {
 			}catch (Throwable t) {
 				Logger.logError(t);
 			}
-			for (Host host : AvunaHTTPD.hosts.values()) {
-				if (!(host instanceof HostHTTP)) continue;
-				HostHTTP host2 = (HostHTTP)host;
-				for (VHost vhost : host2.getVHosts()) {
-					vhost.initJLS(new URL[]{vhost.getHTDocs().toURI().toURL()});
-					recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
-				}
+			HostHTTP host2 = (HostHTTP)registry.host;
+			for (VHost vhost : host2.getVHosts()) {
+				if (vhost.getHTDocs() == null) continue;
+				vhost.initJLS(new URL[]{vhost.getHTDocs().toURI().toURL()});
+				recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 			}
 			PatchSecurity ps = (PatchSecurity)registry.getPatchForClass(PatchSecurity.class);
 			if (ps.pcfg.get("enabled").equals("true")) {

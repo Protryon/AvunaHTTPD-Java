@@ -30,7 +30,7 @@ public class PatchContentLength extends Patch {
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return !response.headers.hasHeader("Transfer-Encoding") && response.body != null && data != null;
+		return !response.headers.hasHeader("Transfer-Encoding");
 	}
 	
 	@Override
@@ -39,6 +39,8 @@ public class PatchContentLength extends Patch {
 		if (data != null) {
 			response.headers.addHeader("Content-Length", data.length + "");
 			if (!response.headers.hasHeader("Content-Type")) response.headers.addHeader("Content-Type", response.body.type);
+		}else {
+			response.headers.addHeader("Content-Length", "0");
 		}
 		return data;
 	}

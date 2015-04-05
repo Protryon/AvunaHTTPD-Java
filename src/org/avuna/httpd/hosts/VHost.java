@@ -72,8 +72,8 @@ public class VHost {
 	}
 	
 	public void setupFolders() {
-		htdocs.mkdirs();
-		htsrc.mkdirs();
+		if (htdocs != null) htdocs.mkdirs();
+		if (htsrc != null) htsrc.mkdirs();
 	}
 	
 	public File getHTDocs() {
