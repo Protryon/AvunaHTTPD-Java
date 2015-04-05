@@ -56,7 +56,7 @@ public class ThreadWorker extends Thread {
 					continue;
 				}
 				long proc2 = System.nanoTime();
-				if (main) outgoingResponse.prewrite();
+				if (main || outgoingResponse.request.parent.work.httpe) outgoingResponse.prewrite();
 				else outgoingResponse.subwrite();
 				if (outgoingResponse.drop) {
 					incomingRequest.work.s.close();
