@@ -121,8 +121,8 @@ public class SMTPHandler {
 							break;
 						}
 					}
-					if (focus.state < 2 && !local) {
-						focus.writeLine(500, "Denied");
+					if (focus.authUser == null && !local) {
+						focus.writeLine(535, "Denied");
 						return;
 					}
 					focus.rcptTo.add(to);
