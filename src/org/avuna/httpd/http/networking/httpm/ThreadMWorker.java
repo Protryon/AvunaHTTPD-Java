@@ -92,6 +92,7 @@ public class ThreadMWorker extends ThreadWorker {
 					while ((line = readLine(incomingRequest.work.cn.in)).length() > 0) {
 						outgoingResponse.headers.addHeader(line);
 					}
+					outgoingResponse.headers.addHeader("X-Forwarded-For", incomingRequest.work.s.getInetAddress().getHostAddress());
 					hdr = System.nanoTime();
 					
 					if (outgoingResponse.headers.hasHeader("Content-Length")) {
