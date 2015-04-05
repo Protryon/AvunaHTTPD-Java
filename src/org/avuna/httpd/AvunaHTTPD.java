@@ -296,7 +296,6 @@ public class AvunaHTTPD {
 			unpack();
 			loadUnpacked();
 			Logger.log("Loaded Configs");
-			Logger.log("test0");
 			for (Host host : hosts.values()) {
 				if (host instanceof HostHTTP) {
 					((HostHTTP)host).loadBases();
