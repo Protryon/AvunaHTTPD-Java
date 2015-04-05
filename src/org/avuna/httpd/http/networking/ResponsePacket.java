@@ -1,5 +1,6 @@
 package org.avuna.httpd.http.networking;
 
+import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -19,6 +20,7 @@ public class ResponsePacket extends Packet {
 	public RequestPacket request;
 	public JavaLoaderStream reqStream = null;
 	public boolean done = false;
+	public DataInputStream toStream = null;
 	
 	public byte[] serialize() {
 		return serialize(true, true);

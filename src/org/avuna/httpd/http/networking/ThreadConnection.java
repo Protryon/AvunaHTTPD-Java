@@ -57,6 +57,12 @@ public class ThreadConnection extends Thread {
 						sw.start();
 						readd = false;
 						canAdd = false;
+					}else if (peek.toStream != null) {
+						ThreadRawStreamWorker sw = new ThreadRawStreamWorker(host, focus, peek.request, peek, peek.toStream);
+						host.subworkers.add(sw);
+						sw.start();
+						readd = false;
+						canAdd = false;
 					}else if (t && peek.body != null) {
 						ThreadStreamWorker sw = new ThreadStreamWorker(host, focus, peek.request, peek);
 						host.subworkers.add(sw);

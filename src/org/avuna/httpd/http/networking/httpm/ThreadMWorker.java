@@ -60,6 +60,7 @@ public class ThreadMWorker extends ThreadWorker {
 				}
 				long est = 0L, writ = 0L, hdr = 0L;
 				try {
+					incomingRequest.headers.addHeader("X-Forwarded-For", incomingRequest.work.s.getInetAddress().getHostAddress());
 					est = System.nanoTime();
 					incomingRequest.write(incomingRequest.work.cn.out);
 					incomingRequest.work.cn.out.flush();
@@ -92,7 +93,6 @@ public class ThreadMWorker extends ThreadWorker {
 					while ((line = readLine(incomingRequest.work.cn.in)).length() > 0) {
 						outgoingResponse.headers.addHeader(line);
 					}
-					outgoingResponse.headers.addHeader("X-Forwarded-For", incomingRequest.work.s.getInetAddress().getHostAddress());
 					hdr = System.nanoTime();
 					
 					if (outgoingResponse.headers.hasHeader("Content-Length")) {
@@ -103,8 +103,12 @@ public class ThreadMWorker extends ThreadWorker {
 						outgoingResponse.prewrite();
 						outgoingResponse.done = true;
 						outgoingResponse.bwt = System.nanoTime();
+					}else if (outgoingResponse.headers.hasHeader("Transfer-Encoding") && outgoingResponse.headers.getHeader("Transfer-Encoding").contains("chunked")) {
+						outgoingResponse.toStream = incomingRequest.work.cn.in;
+						outgoingResponse.done = true;
+						outgoingResponse.bwt = System.nanoTime();
 					}else {
-						Logger.log("VHost streaming not yet supported!");
+						Logger.log("Data unforwardable/corrupted! No chunked or content-length specified.");
 					}
 				}catch (Exception e) {
 					Logger.logError(e);
