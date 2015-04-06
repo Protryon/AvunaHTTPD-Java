@@ -1,5 +1,7 @@
 package org.avuna.httpd.http2.hpack;
 
+import java.io.ByteArrayOutputStream;
+
 public class Huffman {
 	private static final String[] table = new String[]{//
 	"1111111111000", //
@@ -260,4 +262,31 @@ public class Huffman {
 			"11111111111111111111101110", //
 			"111111111111111111111111111111", //
 	};
+	
+	public byte[] encode(byte[] input) {
+		BitOutputStream bout = new BitOutputStream();
+		for (int i = 0; i < input.length; i++) {
+			bout.writeBinary(table[input[i]]);
+		}
+		bout.writeBinary(table[256]);
+		return bout.toByteArray();
+	}
+	
+	public byte[] decode(byte[] input) {
+		ByteArrayOutputStream buf = new ByteArrayOutputStream();
+		BitInputStream bin = new BitInputStream(input);
+		String bits = "";
+		do {
+			boolean bit = bin.readBit();
+			bits = bits + (bit ? "1" : "0");
+			for (int i = 0; i < table.length; i++) {
+				if (table[i].equals(bits)) {
+					if (i == 256) break;
+					buf.write(i);
+					bits = "";
+				}
+			}
+		}while (bin.available());
+		return buf.toByteArray();
+	}
 }
