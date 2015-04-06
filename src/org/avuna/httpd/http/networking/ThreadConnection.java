@@ -54,19 +54,20 @@ public class ThreadConnection extends Thread {
 						if (peek.done) {
 							focus.asyncOutQueue.remove(i--);
 							boolean t = peek.reqTransfer;
-							if (!focus.httpe && peek.reqStream != null) {
+							boolean canStream = focus.httpe ? !(host instanceof HostHTTPM) : true;
+							if (canStream && peek.reqStream != null) {
 								ThreadJavaLoaderStreamWorker sw = new ThreadJavaLoaderStreamWorker(host, focus, peek.request, peek, peek.reqStream);
 								host.subworkers.add(sw);
 								sw.start();
 								readd = false;
 								canAdd = false;
-							}else if (!focus.httpe && peek.toStream != null) {
+							}else if (canStream && peek.toStream != null) {
 								ThreadRawStreamWorker sw = new ThreadRawStreamWorker(host, focus, peek.request, peek, peek.toStream);
 								host.subworkers.add(sw);
 								sw.start();
 								readd = false;
 								canAdd = false;
-							}else if (!focus.httpe && t && peek.body != null) {
+							}else if (canStream && t && peek.body != null) {
 								ThreadStreamWorker sw = new ThreadStreamWorker(host, focus, peek.request, peek);
 								host.subworkers.add(sw);
 								sw.start();
