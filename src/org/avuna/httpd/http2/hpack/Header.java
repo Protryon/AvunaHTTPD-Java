@@ -12,4 +12,8 @@ public class Header {
 		this.name = name;
 		this.value = value;
 	}
+	
+	public int sizeHPACK() {
+		return name.length() + value.length() + 32;
+	}
 }

@@ -1,5 +1,7 @@
 package org.avuna.httpd.http2.hpack;
 
+import java.util.ArrayList;
+
 public class HPackTable {
 	public static Header[] staticTable = new Header[]{new Header("null", "null"), //
 			new Header(":authority", ""),//
@@ -64,4 +66,34 @@ public class HPackTable {
 			new Header("via", ""),//
 			new Header("www-authenticate", ""),//
 	};
+	private int maxSize = 0;
+	private ArrayList<Header> dynamicList = new ArrayList<Header>();
+	
+	public HPackTable(int maxSize) {
+		this.maxSize = maxSize;
+	}
+	
+	private int currentSize() {
+		int s = 0;
+		for (Header header : dynamicList) {
+			s += header.sizeHPACK();
+		}
+		return s;
+	}
+	
+	public void addEntry(Header header) {
+		while (currentSize() + header.sizeHPACK() > maxSize) {
+			dynamicList.remove(0);
+		}
+		dynamicList.add(header);
+	}
+	
+	public Header getEntry(int i) {
+		if (i < staticTable.length) {
+			return staticTable[i];
+		}else {
+			return dynamicList.get(i - staticTable.length);
+		}
+	}
+	
 }
