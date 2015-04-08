@@ -263,7 +263,11 @@ public class PatchInline extends Patch {
 			subreq.method = Method.GET;
 			subreq.body.data = null;
 			subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
-			if (!httpe) subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
+			if (!httpe) {
+				subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
+			}else {
+				subreq.headers.updateHeader("X-Req-ID", "-PUSH-");
+			}
 			reqs[ri++] = subreq;
 		}
 		if (ri < reqs.length) {

@@ -4,7 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.http.networking.httpm.MasterConn;
@@ -19,11 +19,11 @@ public class Work {
 	public long sns = 0L;
 	public int nreqid = 1;
 	public ByteArrayOutputStream sslprep = null;
-	public ArrayBlockingQueue<ResponsePacket> outQueue = new ArrayBlockingQueue<ResponsePacket>(16);
+	public ArrayBlockingQueue<ResponsePacket> outQueue = new ArrayBlockingQueue<ResponsePacket>(64);
 	public boolean blockTimeout = false;
 	public MasterConn cn = null;
 	public boolean httpe = false;
-	public ArrayList<ResponsePacket> asyncOutQueue;
+	public List<ResponsePacket> asyncOutQueue;
 	
 	// public ResponsePacket[] pipeline = new ResponsePacket[32];
 	

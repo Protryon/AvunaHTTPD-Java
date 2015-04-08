@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Collections;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.HostHTTPM;
@@ -51,7 +52,7 @@ public class ThreadConnection extends Thread {
 				if (focus.httpe) {
 					for (int i = 0; i < focus.asyncOutQueue.size(); i++) {
 						ResponsePacket peek = focus.asyncOutQueue.get(i);
-						if (peek.done) {
+						if (peek != null && peek.done) {
 							focus.asyncOutQueue.remove(i--);
 							boolean t = peek.reqTransfer;
 							boolean canStream = focus.httpe ? !(host instanceof HostHTTPM) : true;
@@ -186,9 +187,10 @@ public class ThreadConnection extends Thread {
 					incomingRequest.userPort = focus.s.getPort();
 					incomingRequest.order = focus.nreqid++;
 					incomingRequest.child = new ResponsePacket();
-					if (incomingRequest.headers.hasHeader("X-Req-ID")) {
+					incomingRequest.child.request = incomingRequest;
+					if (!focus.httpe && incomingRequest.headers.hasHeader("X-Req-ID")) {
 						focus.httpe = true;
-						focus.asyncOutQueue = new ArrayList<ResponsePacket>();
+						focus.asyncOutQueue = Collections.synchronizedList(new ArrayList<ResponsePacket>());
 					}
 					if (focus.httpe) {
 						focus.asyncOutQueue.add(incomingRequest.child);
