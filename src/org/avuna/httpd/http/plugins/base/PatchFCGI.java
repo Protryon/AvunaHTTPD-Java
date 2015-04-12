@@ -246,9 +246,8 @@ public class PatchFCGI extends Patch {
 				String line = s.nextLine().trim();
 				if (line.length() > 0) {
 					if (tt && line.contains(":")) {
-						String[] lt = line.split(":");
-						String hn = lt[0].trim();
-						String hd = lt[1].trim();
+						String hn = line.substring(0, line.indexOf(":")).trim();
+						String hd = line.substring(line.indexOf(":") + 1).trim();
 						if (hn.equals("Status")) {
 							response.statusCode = Integer.parseInt(hd.substring(0, hd.indexOf(" ")));
 							response.reasonPhrase = hd.substring(hd.indexOf(" ") + 1);
