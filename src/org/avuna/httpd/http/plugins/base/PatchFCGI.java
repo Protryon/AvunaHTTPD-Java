@@ -195,6 +195,7 @@ public class PatchFCGI extends Patch {
 			session.param("SCRIPT_FILENAME", AvunaHTTPD.fileManager.getAbsolutePath(rq, request).getAbsolutePath().replace("\\", "/"));
 			HashMap<String, ArrayList<String>> hdrs = request.headers.getHeaders();
 			for (String key : hdrs.keySet()) {
+				if (key.equalsIgnoreCase("Accept-Encoding")) continue;
 				for (String val : hdrs.get(key)) {
 					session.param("HTTP_" + key.toUpperCase().replace("-", "_"), val); // TODO: will break if multiple same-nameed headers are received
 				}
