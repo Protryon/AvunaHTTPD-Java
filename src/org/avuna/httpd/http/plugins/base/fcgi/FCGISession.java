@@ -14,7 +14,7 @@ import org.avuna.httpd.http.plugins.base.fcgi.packets.Stream;
 public class FCGISession implements IFCGIListener {
 	private static final boolean[] ids = new boolean[65534];
 	private int id = -1;
-	private ByteArrayOutputStream response = new ByteArrayOutputStream();
+	private ByteArrayOutputStream response = new ByteArrayOutputStream(), error = new ByteArrayOutputStream();
 	
 	private final FCGIConnection conn;
 	
@@ -101,6 +101,10 @@ public class FCGISession implements IFCGIListener {
 		return response.toByteArray();
 	}
 	
+	public byte[] getError() {
+		return error.toByteArray();
+	}
+	
 	public void abort() throws IOException {
 		conn.write(this, new Abort(id));
 		// ids[id - 1] = false;
@@ -117,9 +121,15 @@ public class FCGISession implements IFCGIListener {
 			conn.disassemble(this);
 			done = true;
 		}else {
-			if (packet.type == Type.FCGI_STDOUT || packet.type == Type.FCGI_STDERR) {
+			if (packet.type == Type.FCGI_STDOUT) {
 				try {
 					response.write(((Stream)packet).content);
+				}catch (IOException e) {
+					// doesnt happen
+				}
+			}else if (packet.type == Type.FCGI_STDERR) {
+				try {
+					error.write(((Stream)packet).content);
 				}catch (IOException e) {
 					// doesnt happen
 				}
