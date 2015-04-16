@@ -43,17 +43,8 @@ public class IMAPCommandFetch extends IMAPCommand {
 				String ret = e.uid + " FETCH (";
 				for (String s3 : tps) {
 					String s = s3.toLowerCase();
-					if (s.equals("uid")) {
-						ret += "UID " + e.uid;
-					}else if (s.equals("rfc822.size")) {
-						ret += "RFC822.SIZE " + e.data.length();
-					}else if (s.equals("flags")) {
-						ret += "FLAGS (";
-						for (String flag : e.flags) {
-							ret += flag + " ";
-						}
-						ret = ret.trim();
-						ret += ")";
+					if (s.equals("body")) {
+						
 					}else if (s.startsWith("body")) {
 						String mhd = "";
 						if (s.contains("[") && s.contains("]") && !(s.indexOf("]") == (s.indexOf("[") + 1))) {
@@ -104,6 +95,17 @@ public class IMAPCommandFetch extends IMAPCommand {
 						}
 						ret += s4 + " {" + (mhd.length() - 2) + "}" + AvunaHTTPD.crlf;
 						ret += mhd;
+					}else if (s.equals("uid")) {
+						ret += "UID " + e.uid;
+					}else if (s.equals("rfc822.size")) {
+						ret += "RFC822.SIZE " + e.data.length();
+					}else if (s.equals("flags")) {
+						ret += "FLAGS (";
+						for (String flag : e.flags) {
+							ret += flag + " ";
+						}
+						ret = ret.trim();
+						ret += ")";
 					}
 					ret += " ";
 				}

@@ -11,10 +11,10 @@ import org.avuna.httpd.mail.mailbox.Mailbox;
 import org.avuna.httpd.util.Logger;
 
 public class IMAPWork {
-	public final Socket s;
-	public final DataInputStream in;
-	public final DataOutputStream out;
-	public final boolean ssl;
+	public Socket s;
+	public DataInputStream in;
+	public DataOutputStream out;
+	public boolean ssl;
 	public int state = 0;
 	public String authMethod = "";
 	public EmailAccount authUser = null;

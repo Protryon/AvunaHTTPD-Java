@@ -13,7 +13,7 @@ public class IMAPCommandCapability extends IMAPCommand {
 	
 	@Override
 	public void run(IMAPWork focus, String letters, String[] args) throws IOException {
-		focus.writeLine(focus, "*", "CAPABILITY IMAP4rev1 AUTH=PLAIN AUTH=LOGIN");
+		focus.writeLine(focus, "*", "CAPABILITY IMAP4rev1 AUTH=PLAIN AUTH=LOGIN STARTTLS");
 		focus.writeLine(focus, letters, "OK Capability completed.");
 	}
 	

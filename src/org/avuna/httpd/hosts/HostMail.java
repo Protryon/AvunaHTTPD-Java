@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.concurrent.ArrayBlockingQueue;
+import javax.net.ssl.SSLServerSocketFactory;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.mail.imap.IMAPHandler;
 import org.avuna.httpd.mail.imap.IMAPWork;
@@ -109,12 +110,14 @@ public class HostMail extends Host {
 			sync.load(accounts);
 			// registerAccount("test@example.com", "test123");
 			LinkedHashMap<String, Object> ssl = (LinkedHashMap<String, Object>)cfg.get("ssl");
-			ServerSocket smtp = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("smtp-port")), false, new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
-			ServerSocket imap = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("imap-port")), false, new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
+			ServerSocket smtp = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("smtp-port")), false, null);
+			ServerSocket imap = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("imap-port")), false, null);
 			ServerSocket smtps = null, imaps = null;
 			if (ssl.get("enabled").equals("true")) {
-				smtps = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("smtp-tls-port")), true, new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
-				imaps = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("imap-tls-port")), true, new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
+				sslContext = makeSSLContext(new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
+				SSLServerSocketFactory sssf = sslContext.getServerSocketFactory();
+				smtps = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("smtp-tls-port")), true, sssf);
+				imaps = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("imap-tls-port")), true, sssf);
 			}
 			workQueueSMTP = new ArrayBlockingQueue<SMTPWork>(mc < 0 ? 1000000 : mc);
 			workQueueIMAP = new ArrayBlockingQueue<IMAPWork>(mc < 0 ? 1000000 : mc);

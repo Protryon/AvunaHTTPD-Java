@@ -1,5 +1,7 @@
 package org.avuna.httpd.mail.smtp;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import javax.xml.bind.DatatypeConverter;
@@ -22,10 +24,22 @@ public class SMTPHandler {
 			}
 		});
 		
+		commands.add(new SMTPCommand("starttls", 0, 100) {
+			public void run(SMTPWork focus, String line) throws IOException {
+				focus.writeLine(220, "Go ahead");
+				focus.s = host.sslContext.getSocketFactory().createSocket(focus.s, focus.s.getInetAddress().getHostAddress(), focus.s.getPort(), true);
+				focus.out = new DataOutputStream(focus.s.getOutputStream());
+				focus.out.flush();
+				focus.in = new DataInputStream(focus.s.getInputStream());
+				focus.ssl = true;
+			}
+		});
+		
 		commands.add(new SMTPCommand("ehlo", 0, 100) {
 			public void run(SMTPWork focus, String line) throws IOException {
 				focus.writeMLine(250, ((String)host.getConfig().get("domain")).split(",")[0]);
 				focus.writeMLine(250, "AUTH PLAIN LOGIN");
+				focus.writeMLine(250, "STARTTLS");
 				focus.writeLine(250, "AUTH=PLAIN LOGIN");
 				focus.state = 1;
 				focus.isExtended = true;

@@ -11,10 +11,10 @@ import org.avuna.httpd.mail.mailbox.EmailAccount;
 import org.avuna.httpd.util.Logger;
 
 public class SMTPWork {
-	public final Socket s;
-	public final DataInputStream in;
-	public final DataOutputStream out;
-	public final boolean ssl;
+	public Socket s;
+	public DataInputStream in;
+	public DataOutputStream out;
+	public boolean ssl;
 	public int state = 0;
 	public boolean isExtended = false;
 	public EmailAccount authUser = null;

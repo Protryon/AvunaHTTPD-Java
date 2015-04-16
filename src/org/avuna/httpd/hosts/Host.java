@@ -9,11 +9,12 @@ import java.net.ServerSocket;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import org.avuna.httpd.AvunaHTTPD;
@@ -39,61 +40,12 @@ public abstract class Host extends Thread {
 	
 	public boolean loaded = false;
 	
-	public final ServerSocket makeServer(String ip, int port, boolean ssl, File keyFile, String keyPassword, String keystorePassword) throws IOException {
+	public final ServerSocket makeServer(String ip, int port, boolean ssl, SSLServerSocketFactory sc) throws IOException {
 		Logger.log("Starting " + name + "/" + protocol.name + " " + (ssl ? "TLS-" : "") + "Server on " + ip + ":" + port);
 		if (ssl) {
 			try {
-				KeyStore ks = KeyStore.getInstance("JKS");
-				InputStream ksIs = new FileInputStream(keyFile);
-				try {
-					ks.load(ksIs, keystorePassword.toCharArray());
-				}finally {
-					if (ksIs != null) {
-						ksIs.close();
-					}
-				}
-				KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-				kmf.init(ks, keyPassword.toCharArray());
-				TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
-					public void checkClientTrusted(java.security.cert.X509Certificate[] certs, String authType) {
-					}
-					
-					public void checkServerTrusted(java.security.cert.X509Certificate[] certs, String authType) {
-					}
-					
-					public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-						return null;
-					}
-				}};
-				SSLContext sc = null;
-				String[] possibleProtocols = new String[]{"TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1", "TLSv1.0"};
-				String fp = "";
-				for (String protocol : possibleProtocols) {
-					try {
-						sc = SSLContext.getInstance(protocol);
-						fp = protocol;
-						break;
-					}catch (NoSuchAlgorithmException e) {
-						continue;
-					}
-				}
-				if (sc == null) {
-					Logger.log(name + ": No suitable TLS protocols found, please upgrade Java! Host not loaded.");
-					return null;
-				}
-				sc.init(kmf.getKeyManagers(), trustAllCerts, new SecureRandom());
-				
-				ServerSocket server = (SSLServerSocket)sc.getServerSocketFactory().createServerSocket(port, 1000, InetAddress.getByName(ip));
-				((SSLServerSocket)server).setEnabledProtocols(new String[]{fp});
-				((SSLServerSocket)server).setNeedClientAuth(false);
-				((SSLServerSocket)server).setWantClientAuth(false);
-				// ((SSLServerSocket)server).setEnabledCipherSuites(((SSLServerSocket)server).getSupportedCipherSuites());
-				// for (String sup : ((SSLServerSocket)server).getSupportedCipherSuites()) {
-				// System.out.println("Supported: " + sup);
-				// }
-				// for (String sup : ((SSLServerSocket)server).getEnabledCipherSuites()) {
-				// System.out.println("Enabled: " + sup);
-				// }
+				ServerSocket server = sc.createServerSocket(port, 1000, InetAddress.getByName(ip));
+				// ((SSLServerSocket)server).setEnabledProtocols(possibleProtocols);
 				return server;
 			}catch (Exception e) {
 				Logger.logError(e);
@@ -104,12 +56,66 @@ public abstract class Host extends Thread {
 		}
 	}
 	
+	public final SSLContext makeSSLContext(File keyFile, String keyPassword, String keystorePassword) throws IOException {
+		try {
+			KeyStore ks = KeyStore.getInstance("JKS");
+			InputStream ksIs = new FileInputStream(keyFile);
+			try {
+				ks.load(ksIs, keystorePassword.toCharArray());
+			}finally {
+				if (ksIs != null) {
+					ksIs.close();
+				}
+			}
+			KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
+			kmf.init(ks, keyPassword.toCharArray());
+			TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+				public void checkClientTrusted(X509Certificate[] certs, String authType) {
+				}
+				
+				public void checkServerTrusted(X509Certificate[] certs, String authType) {
+				}
+				
+				public X509Certificate[] getAcceptedIssuers() {
+					return null;
+				}
+			}};
+			SSLContext sc = null;
+			String[] possibleProtocols = new String[]{"TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1", "TLSv1.0"};
+			for (int i = 0; i < possibleProtocols.length; i++) {
+				try {
+					sc = SSLContext.getInstance(possibleProtocols[i]);
+					String[] tp = new String[possibleProtocols.length - i];
+					System.arraycopy(possibleProtocols, i, tp, 0, tp.length);
+					possibleProtocols = tp;
+					break;
+				}catch (NoSuchAlgorithmException e) {
+					continue;
+				}
+			}
+			if (sc == null) {
+				Logger.log(name + ": No suitable TLS protocols found, please upgrade Java! Host not loaded.");
+				return null;
+			}
+			sc.init(kmf.getKeyManagers(), trustAllCerts, new SecureRandom());
+			return sc;
+		}catch (Exception e) {
+			Logger.logError(e);
+			return null;
+		}
+	}
+	
+	public SSLContext sslContext = null;
+	
 	public void run() {
 		try {
 			LinkedHashMap<String, Object> cfg = getConfig();
 			LinkedHashMap<String, Object> ssl = (LinkedHashMap<String, Object>)cfg.get("ssl");
 			boolean isSSL = !(ssl == null || !ssl.get("enabled").equals("true"));
-			setup(makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("port")), isSSL, isSSL ? new File((String)ssl.get("keyFile")) : null, isSSL ? (String)ssl.get("keyPassword") : "", isSSL ? (String)ssl.get("keystorePassword") : ""));
+			if (isSSL) {
+				sslContext = makeSSLContext(new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
+			}
+			setup(makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("port")), isSSL, sslContext.getServerSocketFactory()));
 		}catch (Exception e) {
 			Logger.logError(e);
 			Logger.log("Closing " + name + "/" + protocol.name + " Server on " + (String)getConfig().get("ip") + ":" + (String)getConfig().get("port"));
