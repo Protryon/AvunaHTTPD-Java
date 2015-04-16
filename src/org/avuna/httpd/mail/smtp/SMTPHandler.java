@@ -1,9 +1,11 @@
 package org.avuna.httpd.mail.smtp;
 
+import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import javax.net.ssl.SSLSocket;
 import javax.xml.bind.DatatypeConverter;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
@@ -28,10 +30,15 @@ public class SMTPHandler {
 			public void run(SMTPWork focus, String line) throws IOException {
 				focus.writeLine(220, "Go ahead");
 				focus.s = host.sslContext.getSocketFactory().createSocket(focus.s, focus.s.getInetAddress().getHostAddress(), focus.s.getPort(), true);
+				((SSLSocket)focus.s).setUseClientMode(false);
+				((SSLSocket)focus.s).startHandshake();
 				focus.out = new DataOutputStream(focus.s.getOutputStream());
 				focus.out.flush();
 				focus.in = new DataInputStream(focus.s.getInputStream());
+				focus.sslprep = new ByteArrayOutputStream();
 				focus.ssl = true;
+				focus.state = 1;
+				focus.isExtended = true;
 			}
 		});
 		

@@ -79,6 +79,7 @@ public class HostMail extends Host {
 	
 	public void formatConfig(HashMap<String, Object> map) {
 		if (!map.containsKey("smtp-port")) map.put("smtp-port", "25");
+		if (!map.containsKey("smtp-mua-port")) map.put("smtp-mua-port", "587");
 		if (!map.containsKey("smtp-tls-port")) map.put("smtp-tls-port", "465");
 		if (!map.containsKey("imap-port")) map.put("imap-port", "143");
 		if (!map.containsKey("imap-tls-port")) map.put("imap-tls-port", "993");
@@ -111,6 +112,7 @@ public class HostMail extends Host {
 			// registerAccount("test@example.com", "test123");
 			LinkedHashMap<String, Object> ssl = (LinkedHashMap<String, Object>)cfg.get("ssl");
 			ServerSocket smtp = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("smtp-port")), false, null);
+			ServerSocket smtpmua = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("smtp-mua-port")), false, null);
 			ServerSocket imap = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("imap-port")), false, null);
 			ServerSocket smtps = null, imaps = null;
 			if (ssl.get("enabled").equals("true")) {
@@ -128,6 +130,7 @@ public class HostMail extends Host {
 			}
 			for (int i = 0; i < tac; i++) {
 				new ThreadAcceptSMTP(this, smtp, mc).start();
+				new ThreadAcceptSMTP(this, smtpmua, mc).start();
 				if (smtps != null) {
 					new ThreadAcceptSMTP(this, smtps, mc).start();
 				}

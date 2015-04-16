@@ -22,12 +22,12 @@ public class ThreadWorkerIMAP extends Thread {
 	}
 	
 	public static String safeRead(IMAPWork focus) throws IOException {
-		String line = focus.in.readLine().trim();
+		String line = focus.in.readLine();
 		if (focus.sslprep != null) {
 			line = focus.sslprep.toString() + line;
 			focus.sslprep.reset();
 		}
-		return line;
+		return line.trim();
 	}
 	
 	public void run() {
