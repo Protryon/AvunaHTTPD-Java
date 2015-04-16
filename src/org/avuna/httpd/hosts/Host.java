@@ -115,7 +115,7 @@ public abstract class Host extends Thread {
 			if (isSSL) {
 				sslContext = makeSSLContext(new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
 			}
-			setup(makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("port")), isSSL, sslContext.getServerSocketFactory()));
+			setup(makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("port")), isSSL, !isSSL ? null : sslContext.getServerSocketFactory()));
 		}catch (Exception e) {
 			Logger.logError(e);
 			Logger.log("Closing " + name + "/" + protocol.name + " Server on " + (String)getConfig().get("ip") + ":" + (String)getConfig().get("port"));
