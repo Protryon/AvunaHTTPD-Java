@@ -47,18 +47,22 @@ public class RecordHolder {
 						mxfd.writeShort(priority);
 						String[] dspl = data.substring(data.indexOf(" ") + 1).split("\\.");
 						for (String d : dspl) {
+							if (d.length() == 0) continue;
 							mxfd.write(d.length());
 							mxfd.write(d.getBytes());
 						}
+						mxfd.write(0);
 						fd = mxf.toByteArray();
 					}else if (type == Type.PTR || type == Type.CNAME || type == Type.DNAME || type == Type.NS) {
 						ByteArrayOutputStream mxf = new ByteArrayOutputStream();
 						DataOutputStream mxfd = new DataOutputStream(mxf);
 						String[] dspl = data.substring(data.indexOf(" ") + 1).split("\\.");
 						for (String d : dspl) {
+							if (d.length() == 0) continue;
 							mxfd.write(d.length());
 							mxfd.write(d.getBytes());
 						}
+						mxfd.write(0);
 						fd = mxf.toByteArray();
 					}else {
 						fd = data.getBytes(); // TODO: ???

@@ -109,6 +109,7 @@ public class ThreadDNSWorker extends Thread {
 					ArrayList<ResourceRecord> resps = new ArrayList<ResourceRecord>();
 					for (Question q : query.getQd()) {
 						boolean hasType = false;
+						// Logger.log("DNS: " + q.getDomain() + " for type# " + q.getType());
 						for (DNSRecord r : holder.getRecords()) {
 							if (!r.getType().matches(q.getType())) continue;
 							boolean matches = domainMatches(q.getDomain(), r.getDomain(), hasType);
@@ -122,6 +123,7 @@ public class ThreadDNSWorker extends Thread {
 								byte[] data = r.getData();
 								responseRecord.setLength(data.length);
 								responseRecord.setData(data);
+								// Logger.log("DNS: " + q.getDomain() + " for type# " + q.getType() + " returned " + AvunaHTTPD.fileManager.bytesToHex(responseRecord.getData()));
 								resps.add(responseRecord);
 							}
 							// System.out.println("Response for " + responseRecord.getDomain() + " data: " + new String(responseRecord.getData()));
