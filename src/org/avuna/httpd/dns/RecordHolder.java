@@ -64,6 +64,11 @@ public class RecordHolder {
 						}
 						mxfd.write(0);
 						fd = mxf.toByteArray();
+					}else if (type == Type.TXT) {
+						byte[] db = data.getBytes();
+						fd = new byte[db.length + 1];
+						fd[0] = (byte)db.length;
+						System.arraycopy(db, 0, fd, 1, db.length);
 					}else {
 						fd = data.getBytes(); // TODO: ???
 					}

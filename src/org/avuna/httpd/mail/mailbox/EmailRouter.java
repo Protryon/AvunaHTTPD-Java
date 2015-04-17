@@ -12,6 +12,7 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.InitialDirContext;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
+import org.avuna.httpd.util.Logger;
 
 public class EmailRouter {
 	public static void route(HostMail host, Email email) {
@@ -42,25 +43,37 @@ public class EmailRouter {
 					e.printStackTrace();
 				}
 				for (String mxr : mx) {
+					Logger.log("Trying " + mxr);
 					try {
 						Socket rs = new Socket(InetAddress.getByName(mxr), 25);
 						DataOutputStream out = new DataOutputStream(rs.getOutputStream());
 						out.flush();
 						DataInputStream in = new DataInputStream(rs.getInputStream());
+						Logger.log(in.readLine());
 						out.write(("EHLO " + doms[0] + AvunaHTTPD.crlf).getBytes());
+						Logger.log("EHLO " + doms[0]);
 						out.flush();
 						String line;
-						while (!(line = in.readLine()).startsWith("250 "));
+						while (!(line = in.readLine()).startsWith("250 "))
+							Logger.log(line);
 						out.write(("MAIL FROM: " + email.from + AvunaHTTPD.crlf).getBytes());
+						Logger.log("MAIL FROM: " + email.from);
 						out.flush();
+						Logger.log(in.readLine());
 						if (!to.startsWith("<")) to = "<" + to + ">";
 						out.write(("RCPT TO: " + to + AvunaHTTPD.crlf).getBytes());
+						Logger.log("RCPT TO: " + to);
 						out.flush();
+						Logger.log(in.readLine());
 						out.write(("DATA" + AvunaHTTPD.crlf).getBytes());
+						Logger.log("DATA");
 						out.flush();
+						Logger.log(in.readLine());
 						out.write(email.data.getBytes());
+						Logger.log(email.data);
 						out.write((AvunaHTTPD.crlf + "." + AvunaHTTPD.crlf).getBytes());
 						out.flush();
+						Logger.log(in.readLine());
 						rs.close();
 						break;
 					}catch (Exception e) {
