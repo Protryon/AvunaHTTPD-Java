@@ -33,6 +33,10 @@ public class IMAPCommandFetch extends IMAPCommand {
 			}else {
 				if (seq.equals("*")) {
 					toFetch.add(focus.selectedMailbox.emails.get(focus.selectedMailbox.emails.size() - 1));
+				}else if (seq.contains(",")) {
+					for (String ps : seq.split(",")) {
+						toFetch.add(focus.selectedMailbox.emails.get(Integer.parseInt(ps) - 1));
+					}
 				}else {
 					toFetch.add(focus.selectedMailbox.emails.get(Integer.parseInt(seq) - 1));
 				}
