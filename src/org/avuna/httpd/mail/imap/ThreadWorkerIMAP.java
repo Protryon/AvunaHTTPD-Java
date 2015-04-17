@@ -106,6 +106,7 @@ public class ThreadWorkerIMAP extends Thread {
 					String letters;
 					String[] args;
 					if (!(focus.state == 1)) {
+						if (!line.contains(" ") || line.length() == 0) continue;
 						letters = line.substring(0, line.indexOf(" "));
 						line = line.substring(letters.length() + 1);
 						cmd = line.substring(0, line.contains(" ") ? line.indexOf(" ") : line.length()).toLowerCase();
