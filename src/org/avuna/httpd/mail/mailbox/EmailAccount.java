@@ -20,7 +20,7 @@ public class EmailAccount {
 	public Mailbox getMailbox(String name) {
 		if (name.startsWith("\"")) name = name.substring(1, name.length() - 1);
 		for (Mailbox m : mailboxes) {
-			if (m.name.equals(name)) {
+			if (m.name.equalsIgnoreCase(name)) {
 				return m;
 			}
 		}

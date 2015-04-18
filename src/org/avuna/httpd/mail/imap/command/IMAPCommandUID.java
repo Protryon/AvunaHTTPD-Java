@@ -8,11 +8,13 @@ import org.avuna.httpd.mail.imap.IMAPWork;
 public class IMAPCommandUID extends IMAPCommand {
 	private final IMAPCommandFetch fetch;
 	private final IMAPCommandStore store;
+	private final IMAPCommandSearch search;
 	
-	public IMAPCommandUID(String comm, int minState, int maxState, HostMail host, IMAPCommandFetch fetch, IMAPCommandStore store) {
+	public IMAPCommandUID(String comm, int minState, int maxState, HostMail host, IMAPCommandFetch fetch, IMAPCommandStore store, IMAPCommandSearch search) {
 		super(comm, minState, maxState, host);
 		this.fetch = fetch;
 		this.store = store;
+		this.search = search;
 	}
 	
 	@Override
@@ -33,6 +35,14 @@ public class IMAPCommandUID extends IMAPCommand {
 					nargs[i] = args[i + 1];
 				}
 				store.run(focus, letters, nargs);
+			}else if (args[0].toLowerCase().equals("search")) {
+				String[] nargs = new String[args.length - 1];
+				for (int i = 0; i < nargs.length; i++) {
+					nargs[i] = args[i + 1];
+				}
+				search.run(focus, letters, nargs);
+			}else {
+				focus.writeLine(focus, letters, "BAD Missing Arguments.");
 			}
 		}else {
 			focus.writeLine(focus, letters, "BAD Missing Arguments.");

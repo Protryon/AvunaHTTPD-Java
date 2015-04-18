@@ -54,12 +54,13 @@ public class IMAPHandler {
 		commands.add(new IMAPCommandCheck("check", 3, 100, host));
 		commands.add(new IMAPCommandClose("close", 3, 100, host));
 		commands.add(new IMAPCommandExpunge("expunge", 3, 100, host));
-		commands.add(new IMAPCommandSearch("search", 3, 100, host));
+		final IMAPCommandSearch search;
+		commands.add(search = new IMAPCommandSearch("search", 3, 100, host));
 		final IMAPCommandFetch fetch;
 		commands.add(fetch = new IMAPCommandFetch("fetch", 3, 100, host));
 		final IMAPCommandStore store;
 		commands.add(store = new IMAPCommandStore("store", 3, 100, host));
 		commands.add(new IMAPCommandCopy("copy", 3, 100, host));
-		commands.add(new IMAPCommandUID("uid", 3, 100, host, fetch, store));
+		commands.add(new IMAPCommandUID("uid", 3, 100, host, fetch, store, search));
 	}
 }

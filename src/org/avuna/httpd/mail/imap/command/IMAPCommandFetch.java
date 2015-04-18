@@ -56,6 +56,8 @@ public class IMAPCommandFetch extends IMAPCommand {
 					String s = s3.toLowerCase();
 					if (s.equals("body")) {
 						
+					}else if (s.equals("bodystructure")) {
+						
 					}else if (s.startsWith("body") || s.equals("rfc822") || s.equals("rfc822.header") || s.equals("rfc822.text")) {
 						String mhd = "";
 						boolean peek = s.startsWith("body.peek") || s.startsWith("rfc822.header");
@@ -114,7 +116,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 											if (!line.contains(":")) continue;
 											String hn = line.substring(0, line.indexOf(":")).trim();
 											String hd = line.substring(line.indexOf(":") + 1).trim();
-											if (hn.equals("content-type")) {
+											if (hn.equalsIgnoreCase("content-type")) {
 												mhd += hd;
 											}
 										}else {
@@ -194,8 +196,6 @@ public class IMAPCommandFetch extends IMAPCommand {
 							if (mhd.length() >= max) mhd = mhd.substring(0, max);
 						}
 						ret += (sub > 0 ? mhd.substring(sub) : mhd);
-					}else if (s.equals("bodystructure")) {
-						
 					}else if (s.equals("envelope")) {
 						
 					}else if (s.equals("flags")) {
@@ -206,7 +206,21 @@ public class IMAPCommandFetch extends IMAPCommand {
 						ret = ret.trim();
 						ret += ")";
 					}else if (s.equals("internaldate")) {
-						
+						ret += "INTERNALDATE ";
+						Scanner ed = new Scanner(e.data);
+						while (ed.hasNextLine()) {
+							String line = ed.nextLine().trim();
+							if (line.length() > 0) {
+								if (!line.contains(":")) continue;
+								String hn = line.substring(0, line.indexOf(":")).trim();
+								String hd = line.substring(line.indexOf(":") + 1).trim();
+								if (hn.equalsIgnoreCase("date")) {
+									ret += hd;
+								}
+							}else {
+								break;
+							}
+						}
 					}else if (s.equals("rfc822.size")) {
 						ret += "RFC822.SIZE " + e.data.length();
 					}else if (s.equals("uid")) {
