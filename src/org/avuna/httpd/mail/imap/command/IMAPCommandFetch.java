@@ -173,15 +173,26 @@ public class IMAPCommandFetch extends IMAPCommand {
 							}
 						}
 						int sub = 0;
+						int max = -1;
 						String s5 = s.substring(s.indexOf("]"));
 						if (s5.startsWith("<")) {
-							sub = Integer.parseInt(s5.substring(1, s5.length() - 1));
+							if (s5.contains(".")) {
+								sub = Integer.parseInt(s5.substring(1, s5.indexOf(".")));
+								max = Integer.parseInt(s5.substring(s5.indexOf("."), s5.length() - 1));
+							}else sub = Integer.parseInt(s5.substring(1, s5.length() - 1));
 						}
 						String s4 = s3;
 						if (peek && s4.toLowerCase().startsWith("body.peek")) {
 							s4 = s4.substring(0, 4) + s4.substring(9);
 						}
 						ret += s4 + " {" + (mhd.length() - 2) + "}" + AvunaHTTPD.crlf;
+						if (sub > 0) {
+							if (sub >= mhd.length()) mhd = "";
+							else mhd = mhd.substring(sub);
+						}
+						if (max > 0) {
+							if (mhd.length() >= max) mhd = mhd.substring(0, max);
+						}
 						ret += (sub > 0 ? mhd.substring(sub) : mhd);
 					}else if (s.equals("bodystructure")) {
 						
