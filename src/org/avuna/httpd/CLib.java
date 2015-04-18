@@ -5,10 +5,10 @@ import com.sun.jna.Native;
 import com.sun.jna.Platform;
 
 public class CLib {
-	public static final int OK = 0;
-	public static final int ERROR = -1;
+	private static final int OK = 0;
+	private static final int ERROR = -1;
 	
-	public interface CLibrary extends Library {
+	private interface CLibrary extends Library {
 		CLibrary INSTANCE = (CLibrary)Native.loadLibrary((Platform.isWindows() ? "msvcrt" : "c"), CLibrary.class);
 		
 		int umask(int umask);

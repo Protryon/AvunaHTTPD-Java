@@ -193,6 +193,7 @@ public class AvunaHTTPD {
 	public static long lastbipc = 0L;
 	
 	public static void main(String[] args) {
+		if (!System.getProperty("os.name").toLowerCase().contains("windows")) CLib.setumask(077);
 		try {
 			if (args.length >= 1 && args[0].equals("cmd")) {
 				String ip = args.length >= 2 ? args[1] : "127.0.0.1";
