@@ -232,10 +232,10 @@ public class CommandProcessor {
 				temp.getParentFile().mkdirs();
 				temp.createNewFile();
 				ps = new PrintStream(new FileOutputStream(temp));
-				ps.println("import org.avuna.httpd.plugins.javaloader.HTMLBuilder;");
+				ps.println("import org.avuna.httpd.http.plugins.javaloader.HTMLBuilder;");
 				ps.println("import org.avuna.httpd.http.networking.packets.RequestPacket;");
 				ps.println("import org.avuna.httpd.http.networking.packets.ResponsePacket;");
-				ps.println("import org.avuna.httpd.plugins.javaloader.JavaLoaderPrint;");
+				ps.println("import org.avuna.httpd.http.plugins.javaloader.JavaLoaderPrint;");
 				ps.println();
 				ps.println("public class " + (cargs.length == 2 ? temp.getName().substring(0, temp.getName().indexOf(".")) : sc2.getName().substring(0, sc2.getName().indexOf("."))) + " extends JavaLoaderPrint {");
 				ps.println("    public boolean generate(HTMLBuilder out, ResponsePacket response, RequestPacket request) {");

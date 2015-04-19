@@ -38,7 +38,7 @@ public class CLib {
 	}
 	
 	public static int getuid() {
-		if (Platform.isWindows()) return -1;
+		if (Platform.isWindows()) return ERROR;
 		return CLibrary.INSTANCE.getuid();
 	}
 }
