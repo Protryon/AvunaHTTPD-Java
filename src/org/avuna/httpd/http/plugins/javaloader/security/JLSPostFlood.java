@@ -4,7 +4,7 @@ import org.avuna.httpd.http.Method;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSecurity;
 
-public class JLSBProxy extends JavaLoaderSecurity {
+public class JLSPostFlood extends JavaLoaderSecurity {
 	
 	private int returnWeight = 0;
 	private boolean enabled = true;

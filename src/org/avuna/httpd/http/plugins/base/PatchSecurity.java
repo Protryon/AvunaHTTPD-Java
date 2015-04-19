@@ -9,10 +9,11 @@ import org.avuna.httpd.http.plugins.Patch;
 import org.avuna.httpd.http.plugins.PatchRegistry;
 import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSecurity;
 import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
-import org.avuna.httpd.http.plugins.javaloader.security.JLSBFlood;
-import org.avuna.httpd.http.plugins.javaloader.security.JLSBProxy;
-import org.avuna.httpd.http.plugins.javaloader.security.JLSFlood;
-import org.avuna.httpd.http.plugins.javaloader.security.JLSUA;
+import org.avuna.httpd.http.plugins.javaloader.security.JLSConnectionFlood;
+import org.avuna.httpd.http.plugins.javaloader.security.JLSGetFlood;
+import org.avuna.httpd.http.plugins.javaloader.security.JLSPardon;
+import org.avuna.httpd.http.plugins.javaloader.security.JLSPostFlood;
+import org.avuna.httpd.http.plugins.javaloader.security.JLSUserAgent;
 
 public class PatchSecurity extends Patch {
 	
@@ -21,10 +22,11 @@ public class PatchSecurity extends Patch {
 	}
 	
 	public void loadBases(PatchJavaLoader pjl) {
-		pjl.loadBaseSecurity(new JLSBFlood());
-		pjl.loadBaseSecurity(new JLSBProxy());
-		pjl.loadBaseSecurity(new JLSFlood());
-		pjl.loadBaseSecurity(new JLSUA());
+		pjl.loadBaseSecurity(new JLSPardon());
+		pjl.loadBaseSecurity(new JLSConnectionFlood());
+		pjl.loadBaseSecurity(new JLSPostFlood());
+		pjl.loadBaseSecurity(new JLSGetFlood());
+		pjl.loadBaseSecurity(new JLSUserAgent());
 	}
 	
 	private int minDrop = 100;
@@ -49,6 +51,7 @@ public class PatchSecurity extends Patch {
 		RequestPacket req = (RequestPacket)packet;
 		int chance = 0;
 		for (JavaLoaderSecurity sec : PatchJavaLoader.security) {
+			chance += sec.check(req.userIP);
 			chance += sec.check(req);
 		}
 		if (chance >= minDrop) {

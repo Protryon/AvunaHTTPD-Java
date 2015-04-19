@@ -224,12 +224,6 @@ public class AvunaHTTPD {
 					if (!map.containsKey("hosts")) map.put("hosts", new File(dir, "hosts.cfg").toString());
 					if (!map.containsKey("logs")) map.put("logs", new File(dir, "logs").toString());
 					if (!map.containsKey("javac")) map.put("javac", "javac");
-					if (!map.containsKey("masterChild")) map.put("masterChild", "false");
-					if (System.getProperty("os.name").toLowerCase().contains("windows") && map.get("masterChild").equals("true")) {
-						Logger.log("You cannot use master child on Windows!");
-						map.put("masterChild", "false");
-					}
-					if (!map.containsKey("masterChildUIDPortStart")) map.put("masterChildUIDPortStart", "6844");
 					if (!System.getProperty("os.name").toLowerCase().contains("windows")) if (!map.containsKey("uid")) map.put("uid", unpack ? "6833" : "0");
 					if (!System.getProperty("os.name").toLowerCase().contains("windows")) if (!map.containsKey("gid")) map.put("gid", unpack ? "6833" : "0");
 				}

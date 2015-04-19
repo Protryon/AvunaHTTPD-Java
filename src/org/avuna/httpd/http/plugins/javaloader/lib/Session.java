@@ -49,4 +49,13 @@ public class Session {
 		data.put(name, value);
 		return this;
 	}
+	
+	public Session remove(String name) {
+		data.remove(name);
+		return this;
+	}
+	
+	public void clear() {
+		data.clear();
+	}
 }

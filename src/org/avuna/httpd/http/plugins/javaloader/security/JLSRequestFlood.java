@@ -3,19 +3,18 @@ package org.avuna.httpd.http.plugins.javaloader.security;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSecurity;
 
-public class JLSFlood extends JavaLoaderSecurity {
+public class JLSRequestFlood extends JavaLoaderSecurity {
 	
-	private int returnWeight = 0;
+	private int maxRequestPerSecond = 0, returnWeight = 0;
 	private boolean enabled = true;
-	private String regex = "";
 	
 	public void init() {
+		if (!pcfg.containsKey("maxRequestPerSecond")) pcfg.put("maxRequestPerSecond", "64");
 		if (!pcfg.containsKey("returnWeight")) pcfg.put("returnWeight", "100");
 		if (!pcfg.containsKey("enabled")) pcfg.put("enabled", "true");
-		if (!pcfg.containsKey("regex")) pcfg.put("regex", "/\\?[0-9a-zA-Z]{2,}");
+		this.maxRequestPerSecond = Integer.parseInt((String)pcfg.get("maxRequestPerSecond"));
 		this.returnWeight = Integer.parseInt((String)pcfg.get("returnWeight"));
 		this.enabled = pcfg.get("enabled").equals("true");
-		this.regex = (String)pcfg.get("regex");
 	}
 	
 	public void reload() {
@@ -23,17 +22,14 @@ public class JLSFlood extends JavaLoaderSecurity {
 	}
 	
 	@Override
-	public int check(RequestPacket req) {
+	public int check(String ip) {
 		if (!enabled) return 0;
-		if (req.target.matches(regex)) {
-			return returnWeight;
-		}
+		// TODO: make
 		return 0;
 	}
 	
 	@Override
-	public int check(String arg0) {
+	public int check(RequestPacket req) {
 		return 0;
 	}
-	
 }
