@@ -197,7 +197,7 @@ public class RequestPacket extends Packet {
 				}
 			}
 			ser.write(AvunaHTTPD.crlf.getBytes());
-			ser.write(body.data);
+			if (body != null) ser.write(body.data);
 			return ser.toByteArray();
 		}catch (Exception e) {
 			Logger.logError(e);
