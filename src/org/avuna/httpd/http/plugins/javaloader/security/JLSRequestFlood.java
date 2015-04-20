@@ -23,13 +23,16 @@ public class JLSRequestFlood extends JavaLoaderSecurity {
 	
 	@Override
 	public int check(String ip) {
-		if (!enabled) return 0;
-		// TODO: make
 		return 0;
 	}
 	
 	@Override
 	public int check(RequestPacket req) {
+		if (!enabled) return 0;
+		double rqps = (double)req.work.rqs / (((double)req.work.rqst - (double)System.currentTimeMillis()) / 1000D); // get connection time elapsed(from first request) in seconds, under the number of requests.
+		if (rqps > maxRequestPerSecond) { // if the average req/sec if >= the max,
+			return (int)(returnWeight * (rqps / (double)maxRequestPerSecond)); // return the amount over, will usually be 1*returnWeight. ex. if they got 128 rq/s, it would return 2*returnWeight by default
+		}
 		return 0;
 	}
 }

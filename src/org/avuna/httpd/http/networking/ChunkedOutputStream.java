@@ -9,9 +9,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.zip.GZIPOutputStream;
 import org.avuna.httpd.AvunaHTTPD;
-import org.avuna.httpd.http.Resource;
-import org.avuna.httpd.http.ResponseGenerator;
-import org.avuna.httpd.http.StatusCode;
 
 public class ChunkedOutputStream extends DataOutputStream {
 	private boolean gzip = false, flushed = false;
@@ -78,26 +75,10 @@ public class ChunkedOutputStream extends DataOutputStream {
 		bb.get(bas);
 		String hex = AvunaHTTPD.fileManager.bytesToHex(bas);
 		writing = true;
-		boolean httpe = toSend.request.work.httpe;
-		if (httpe) {
-			ResponsePacket subResponse = new ResponsePacket();
-			subResponse.bwt = System.nanoTime();
-			ResponseGenerator.generateDefaultResponse(subResponse, StatusCode.PARTIAL_CONTENT);
-			subResponse.headers.addHeader("X-Req-ID", toSend.headers.getHeader("X-Req-ID"));
-			ByteArrayOutputStream bout = new ByteArrayOutputStream();
-			bout.write((hex + AvunaHTTPD.crlf).getBytes());
-			bout.write(cache);
-			bout.write(AvunaHTTPD.crlf.getBytes());
-			subResponse.body = new Resource(bout.toByteArray(), "application/octet-stream");
-			subResponse.prewrite();
-			subResponse.done = true;
-			toSend.request.work.asyncOutQueue.add(subResponse);
-		}else {
-			super.write((hex + AvunaHTTPD.crlf).getBytes());
-			super.write(cache);
-			super.write(AvunaHTTPD.crlf.getBytes());
-			super.flush();
-		}
+		super.write((hex + AvunaHTTPD.crlf).getBytes());
+		super.write(cache);
+		super.write(AvunaHTTPD.crlf.getBytes());
+		super.flush();
 		writing = false;
 	}
 	

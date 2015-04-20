@@ -8,10 +8,12 @@ import org.avuna.httpd.http.plugins.Patch;
 import org.avuna.httpd.http.plugins.PatchRegistry;
 import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSecurity;
 import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
+import org.avuna.httpd.http.plugins.javaloader.security.JLSCompression;
 import org.avuna.httpd.http.plugins.javaloader.security.JLSConnectionFlood;
 import org.avuna.httpd.http.plugins.javaloader.security.JLSGetFlood;
 import org.avuna.httpd.http.plugins.javaloader.security.JLSPardon;
 import org.avuna.httpd.http.plugins.javaloader.security.JLSPostFlood;
+import org.avuna.httpd.http.plugins.javaloader.security.JLSRequestFlood;
 import org.avuna.httpd.http.plugins.javaloader.security.JLSUserAgent;
 import org.avuna.httpd.util.ConfigNode;
 
@@ -25,6 +27,8 @@ public class PatchSecurity extends Patch {
 		pjl.loadBaseSecurity(new JLSPardon());
 		pjl.loadBaseSecurity(new JLSConnectionFlood());
 		pjl.loadBaseSecurity(new JLSPostFlood());
+		pjl.loadBaseSecurity(new JLSCompression());
+		pjl.loadBaseSecurity(new JLSRequestFlood());
 		pjl.loadBaseSecurity(new JLSGetFlood());
 		pjl.loadBaseSecurity(new JLSUserAgent());
 	}

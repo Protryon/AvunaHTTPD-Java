@@ -145,11 +145,10 @@ public class PatchInline extends Patch {
 	
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		boolean httpe = request.work.httpe;
 		CRC32 process = new CRC32();
 		process.update(data);
 		long l = process.getValue();
-		if (!httpe && cdata.containsKey(l)) {
+		if (cdata.containsKey(l)) {
 			return cdata.get(l);
 		}
 		String html = new String(data); // TODO: encoding support
@@ -257,18 +256,14 @@ public class PatchInline extends Patch {
 		RequestPacket[] reqs = new RequestPacket[subreqs.length];
 		int ri = 0;
 		for (int i = 0; i < subreqs.length; i++) {
-			if (!httpe && subreqs[i].size > sizeLimit) continue;
+			if (subreqs[i].size > sizeLimit) continue;
 			RequestPacket subreq = request.clone();
 			subreq.parent = request;
 			subreq.target = subreqs[i].req;
 			subreq.method = Method.GET;
 			subreq.body.data = null;
 			subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
-			if (!httpe) {
-				subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
-			}else {
-				subreq.headers.updateHeader("X-Req-ID", "-PUSH-");
-			}
+			subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
 			reqs[ri++] = subreq;
 		}
 		if (ri < reqs.length) {
@@ -294,33 +289,26 @@ public class PatchInline extends Patch {
 			System.arraycopy(srsn, 0, subreqs, 0, nl);
 			System.arraycopy(respsn, 0, resps, 0, nl);
 		}
-		if (!httpe) {
-			int offset = 0;
-			for (int i = 0; i < resps.length; i++) {
-				if (resps[i] == null || resps[i].subwrite == null) continue;
-				SubReq sr = subreqs[i];
-				String base64 = "";
-				String cachePath = resps[i].request.host.getHostPath() + resps[i].request.target;
-				if (!cacheBase64.containsKey(cachePath)) {
-					base64 = new BASE64Encoder().encode(resps[i].subwrite).replace(AvunaHTTPD.crlf, "");
-					cacheBase64.put(cachePath, base64);
-				}else {
-					base64 = cacheBase64.get(cachePath);
-				}
-				String rep = "data:" + resps[i].headers.getHeader("Content-Type") + ";base64," + base64;
-				rep = sr.forig.replace(sr.orig, rep);
-				html = html.substring(0, sr.start + offset) + rep + html.substring(sr.end + offset);
-				offset += rep.length() - sr.forig.length();
+		int offset = 0;
+		for (int i = 0; i < resps.length; i++) {
+			if (resps[i] == null || resps[i].subwrite == null) continue;
+			SubReq sr = subreqs[i];
+			String base64 = "";
+			String cachePath = resps[i].request.host.getHostPath() + resps[i].request.target;
+			if (!cacheBase64.containsKey(cachePath)) {
+				base64 = new BASE64Encoder().encode(resps[i].subwrite).replace(AvunaHTTPD.crlf, "");
+				cacheBase64.put(cachePath, base64);
+			}else {
+				base64 = cacheBase64.get(cachePath);
 			}
-			byte[] hb = html.getBytes();
-			cdata.put(l, hb);
-			return hb;
-		}else {
-			for (int i = 0; i < resps.length; i++) {
-				request.work.asyncOutQueue.add(resps[i]);
-			}
-			return data;
+			String rep = "data:" + resps[i].headers.getHeader("Content-Type") + ";base64," + base64;
+			rep = sr.forig.replace(sr.orig, rep);
+			html = html.substring(0, sr.start + offset) + rep + html.substring(sr.end + offset);
+			offset += rep.length() - sr.forig.length();
 		}
+		byte[] hb = html.getBytes();
+		cdata.put(l, hb);
+		return hb;
 	}
 	
 	@Override
