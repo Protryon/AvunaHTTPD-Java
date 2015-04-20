@@ -14,6 +14,7 @@ import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
 import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 import sun.misc.BASE64Encoder;
 
@@ -27,12 +28,12 @@ public class PatchInline extends Patch {
 	private int sizeLimit = 32768;
 	
 	@Override
-	public void formatConfig(HashMap<String, Object> json) {
+	public void formatConfig(ConfigNode json) {
 		super.formatConfig(json);
-		if (!json.containsKey("user-agents")) json.put("user-agents", "gecko,chrom,webkit,opera,konqueror,trident");
-		if (!json.containsKey("sizeLimit")) json.put("sizeLimit", "32768");
-		uas = ((String)json.get("user-agents")).trim().split(",");
-		sizeLimit = Integer.parseInt((String)json.get("sizeLimit"));
+		if (!json.containsNode("user-agents")) json.insertNode("user-agents", "gecko,chrom,webkit,opera,konqueror,trident");
+		if (!json.containsNode("sizeLimit")) json.insertNode("sizeLimit", "32768");
+		uas = (json.getNode("user-agents").getValue()).trim().split(",");
+		sizeLimit = Integer.parseInt(json.getNode("sizeLimit").getValue());
 	}
 	
 	@Override

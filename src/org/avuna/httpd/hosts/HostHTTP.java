@@ -7,7 +7,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.networking.RequestPacket;
@@ -19,6 +18,7 @@ import org.avuna.httpd.http.networking.Work;
 import org.avuna.httpd.http.plugins.PatchBus;
 import org.avuna.httpd.http.plugins.PatchRegistry;
 import org.avuna.httpd.http.plugins.base.BaseLoader;
+import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 
 public class HostHTTP extends Host {
@@ -53,7 +53,7 @@ public class HostHTTP extends Host {
 	
 	public void loadCustoms() {
 		Logger.log("Loading Custom Plugins for " + name);
-		BaseLoader.loadCustoms(registry, new File((String)getConfig().get("plugins")));
+		BaseLoader.loadCustoms(registry, new File(getConfig().getNode("plugins").getValue()));
 	}
 	
 	public VHost getVHost(String host) {
@@ -159,7 +159,7 @@ public class HostHTTP extends Host {
 		for (VHost vhost : vhosts) {
 			vhost.setupFolders();
 		}
-		new File((String)getConfig().get("plugins")).mkdirs();
+		new File(getConfig().getNode("plugins").getValue()).mkdirs();
 		patchBus.setupFolders();
 	}
 	
@@ -207,47 +207,47 @@ public class HostHTTP extends Host {
 	
 	public boolean http2 = false;
 	
-	public void formatConfig(HashMap<String, Object> map) {
+	public void formatConfig(ConfigNode map) {
 		formatConfig(map, true);
 	}
 	
-	public void formatConfig(HashMap<String, Object> map, boolean loadVHosts) {
+	public void formatConfig(ConfigNode map, boolean loadVHosts) {
 		super.formatConfig(map);
-		if (!map.containsKey("errorpages")) map.put("errorpages", new LinkedHashMap<String, Object>());
-		if (!map.containsKey("index")) map.put("index", "index.class,index.php,index.html");
-		if (!map.containsKey("cacheClock")) map.put("cacheClock", "-1");
-		if (!map.containsKey("acceptThreadCount")) map.put("acceptThreadCount", "4");
-		if (!map.containsKey("connThreadCount")) map.put("connThreadCount", "12");
-		if (!map.containsKey("workerThreadCount")) map.put("workerThreadCount", "32");
-		if (!map.containsKey("maxConnections")) map.put("maxConnections", "-1");
-		if (!map.containsKey("http2")) map.put("http2", "false");
-		if (!map.containsKey("plugins")) map.put("plugins", AvunaHTTPD.fileManager.getBaseFile("plugins").toString());
-		tac = Integer.parseInt((String)map.get("acceptThreadCount"));
-		tcc = Integer.parseInt((String)map.get("connThreadCount"));
-		twc = Integer.parseInt((String)map.get("workerThreadCount"));
-		mc = Integer.parseInt((String)map.get("maxConnections"));
-		http2 = map.get("http2").equals("true");
-		if (!map.containsKey("vhosts")) map.put("vhosts", new LinkedHashMap<String, Object>());
-		HashMap<String, Object> vhosts = (HashMap<String, Object>)map.get("vhosts");
-		if (!vhosts.containsKey("main")) vhosts.put("main", new LinkedHashMap<String, Object>());
-		for (String vkey : vhosts.keySet()) {
-			HashMap<String, Object> vhost = (HashMap<String, Object>)vhosts.get(vkey);
-			if (!vhost.containsKey("enabled")) vhost.put("enabled", "true");
-			if (!vhost.containsKey("debug")) vhost.put("debug", "false");
-			if (!vhost.containsKey("host")) vhost.put("host", ".*");
-			if (!vhost.containsKey("inheritjls")) {
-				if (!vhost.containsKey("htdocs")) vhost.put("htdocs", AvunaHTTPD.fileManager.getBaseFile("htdocs").toString());
-				if (!vhost.containsKey("htsrc")) vhost.put("htsrc", AvunaHTTPD.fileManager.getBaseFile("htsrc").toString());
+		if (!map.containsNode("errorpages")) map.insertNode("errorpages");
+		if (!map.containsNode("index")) map.insertNode("index", "index.class,index.php,index.html");
+		if (!map.containsNode("cacheClock")) map.insertNode("cacheClock", "-1");
+		if (!map.containsNode("acceptThreadCount")) map.insertNode("acceptThreadCount", "4");
+		if (!map.containsNode("connThreadCount")) map.insertNode("connThreadCount", "12");
+		if (!map.containsNode("workerThreadCount")) map.insertNode("workerThreadCount", "32");
+		if (!map.containsNode("maxConnections")) map.insertNode("maxConnections", "-1");
+		if (!map.containsNode("http2")) map.insertNode("http2", "false");
+		if (!map.containsNode("plugins")) map.insertNode("plugins", AvunaHTTPD.fileManager.getBaseFile("plugins").toString());
+		tac = Integer.parseInt(map.getNode("acceptThreadCount").getValue());
+		tcc = Integer.parseInt(map.getNode("connThreadCount").getValue());
+		twc = Integer.parseInt(map.getNode("workerThreadCount").getValue());
+		mc = Integer.parseInt(map.getNode("maxConnections").getValue());
+		http2 = map.getNode("http2").getValue().equals("true");
+		if (!map.containsNode("vhosts")) map.insertNode("vhosts");
+		ConfigNode vhosts = map.getNode("vhosts");
+		if (!vhosts.containsNode("main")) vhosts.insertNode("main");
+		for (String vkey : vhosts.getSubnodes()) {
+			ConfigNode vhost = vhosts.getNode(vkey);
+			if (!vhost.containsNode("enabled")) vhost.insertNode("enabled", "true");
+			if (!vhost.containsNode("debug")) vhost.insertNode("debug", "false");
+			if (!vhost.containsNode("host")) vhost.insertNode("host", ".*");
+			if (!vhost.containsNode("inheritjls")) {
+				if (!vhost.containsNode("htdocs")) vhost.insertNode("htdocs", AvunaHTTPD.fileManager.getBaseFile("htdocs").toString());
+				if (!vhost.containsNode("htsrc")) vhost.insertNode("htsrc", AvunaHTTPD.fileManager.getBaseFile("htsrc").toString());
 			}
 		}
 		if (loadVHosts) {
-			for (String vkey : vhosts.keySet()) {
-				HashMap<String, Object> ourvh = (HashMap<String, Object>)vhosts.get(vkey);
-				if (!ourvh.get("enabled").equals("true")) continue;
+			for (String vkey : vhosts.getSubnodes()) {
+				ConfigNode ourvh = vhosts.getNode(vkey);
+				if (!ourvh.getNode("enabled").getValue().equals("true")) continue;
 				VHost vhost = null;
-				if (ourvh.containsKey("inheritjls")) {
+				if (ourvh.containsNode("inheritjls")) {
 					VHost parent = null;
-					String ij = (String)ourvh.get("inheritjls");
+					String ij = ourvh.getNode("inheritjls").getValue();
 					for (Host host : AvunaHTTPD.hosts.values()) {
 						if (host.name.equals(ij.substring(0, ij.indexOf("/")))) {
 							parent = ((HostHTTP)host).getVHostByName(ij.substring(ij.indexOf("/") + 1));
@@ -257,11 +257,11 @@ public class HostHTTP extends Host {
 						Logger.log("Invalid inheritjls! Skipping");
 						continue;
 					}
-					vhost = new VHost(this.getHostname() + "/" + vkey, this, (String)ourvh.get("host"), parent);
+					vhost = new VHost(this.getHostname() + "/" + vkey, this, ourvh.getNode("host").getValue(), parent);
 				}else {
-					vhost = new VHost(this.getHostname() + "/" + vkey, this, new File((String)ourvh.get("htdocs")), new File((String)ourvh.get("htsrc")), (String)ourvh.get("host"));
+					vhost = new VHost(this.getHostname() + "/" + vkey, this, new File(ourvh.getNode("htdocs").getValue()), new File(ourvh.getNode("htsrc").getValue()), ourvh.getNode("host").getValue());
 				}
-				vhost.setDebug(ourvh.get("debug").equals("true"));
+				vhost.setDebug(ourvh.getNode("debug").getValue().equals("true"));
 				this.addVHost(vhost);
 			}
 		}

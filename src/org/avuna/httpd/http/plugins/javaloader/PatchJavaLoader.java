@@ -14,7 +14,6 @@ import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.zip.CRC32;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.Host;
@@ -30,6 +29,7 @@ import org.avuna.httpd.http.plugins.javaloader.lib.DatabaseManager;
 import org.avuna.httpd.http.plugins.javaloader.lib.HTMLCache;
 import org.avuna.httpd.util.Config;
 import org.avuna.httpd.util.ConfigFormat;
+import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 
 public class PatchJavaLoader extends Patch {
@@ -45,7 +45,7 @@ public class PatchJavaLoader extends Patch {
 			e1.printStackTrace();
 		}
 		config = new Config(name, new File(getDirectory(), "config.cfg"), new ConfigFormat() {
-			public void format(HashMap<String, Object> map) {
+			public void format(ConfigNode map) {
 				
 			}
 		});
@@ -57,7 +57,7 @@ public class PatchJavaLoader extends Patch {
 		((PatchSecurity)registry.getPatchForClass(PatchSecurity.class)).loadBases(this);
 		log("Loading JavaLoader Libs");
 		try {
-			lib = new File(AvunaHTTPD.fileManager.getMainDir(), (String)pcfg.get("lib"));
+			lib = new File(AvunaHTTPD.fileManager.getMainDir(), pcfg.getNode("lib").getValue());
 			if (!lib.exists() || !lib.isDirectory()) {
 				lib.mkdirs();
 			}
@@ -83,7 +83,7 @@ public class PatchJavaLoader extends Patch {
 				recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 			}
 			PatchSecurity ps = (PatchSecurity)registry.getPatchForClass(PatchSecurity.class);
-			if (ps.pcfg.get("enabled").equals("true")) {
+			if (ps.pcfg.getNode("enabled").getValue().equals("true")) {
 				recurLoad(null, AvunaHTTPD.fileManager.getPlugin(ps));
 			}
 		}catch (Exception e) {
@@ -117,7 +117,7 @@ public class PatchJavaLoader extends Patch {
 				}
 			}
 			PatchSecurity ps = (PatchSecurity)registry.getPatchForClass(PatchSecurity.class);
-			if (ps.pcfg.get("enabled").equals("true")) {
+			if (ps.pcfg.getNode("enabled").getValue().equals("true")) {
 				recurLoad(null, AvunaHTTPD.fileManager.getPlugin(ps));
 			}
 		}catch (Exception e) {
@@ -155,16 +155,16 @@ public class PatchJavaLoader extends Patch {
 						}
 						Class<?> cls = (session == null ? secjlcl : session.getJLCL()).loadClass(name);
 						if (JavaLoader.class.isAssignableFrom(cls)) {
-							LinkedHashMap<String, Object> ocfg = null;
-							if (!config.containsKey(session.getVHost().getHostPath())) {
-								config.set(session.getVHost().getHostPath(), new LinkedHashMap<String, Object>());
+							ConfigNode ocfg = null;
+							if (!config.containsNode(session.getVHost().getHostPath())) {
+								config.insertNode(session.getVHost().getHostPath());
 							}
-							ocfg = (LinkedHashMap<String, Object>)config.get(session.getVHost().getHostPath());
-							if (!ocfg.containsKey(name)) {
-								ocfg.put(name, new LinkedHashMap<String, Object>());
+							ocfg = config.getNode(session.getVHost().getHostPath());
+							if (!ocfg.containsNode(name)) {
+								ocfg.insertNode(name);
 							}
 							JavaLoader jl = (JavaLoader)cls.newInstance();
-							jl.pcfg = (LinkedHashMap<String, Object>)ocfg.get(name);
+							jl.pcfg = ocfg.getNode(name);
 							jl.host = session == null ? null : session.getVHost();
 							jl.init();
 							if (jl.getType() == 3) {
@@ -185,15 +185,15 @@ public class PatchJavaLoader extends Patch {
 	}
 	
 	public void loadBaseSecurity(JavaLoaderSecurity sec) {
-		LinkedHashMap<String, Object> ocfg = null;
-		if (!config.containsKey("security")) {
-			config.set("security", new LinkedHashMap<String, Object>());
+		ConfigNode ocfg = null;
+		if (!config.containsNode("security")) {
+			config.insertNode("security");
 		}
-		ocfg = (LinkedHashMap<String, Object>)config.get("security");
-		if (!ocfg.containsKey(sec.getClass().getName())) {
-			ocfg.put(sec.getClass().getName(), new LinkedHashMap<String, Object>());
+		ocfg = config.getNode("security");
+		if (!ocfg.containsNode(sec.getClass().getName())) {
+			ocfg.insertNode(sec.getClass().getName());
 		}
-		sec.pcfg = (LinkedHashMap<String, Object>)ocfg.get(sec.getClass().getName());
+		sec.pcfg = ocfg.getNode(sec.getClass().getName());
 		sec.host = null;
 		sec.init();
 		security.add(sec);
@@ -213,9 +213,9 @@ public class PatchJavaLoader extends Patch {
 	public static File lib = null;
 	
 	@Override
-	public void formatConfig(HashMap<String, Object> json) {
+	public void formatConfig(ConfigNode json) {
 		super.formatConfig(json);
-		if (!json.containsKey("lib")) json.put("lib", "lib");
+		if (!json.containsNode("lib")) json.insertNode("lib", "lib");
 	}
 	
 	public void preExit() {
@@ -242,15 +242,15 @@ public class PatchJavaLoader extends Patch {
 		config.load();
 		for (JavaLoaderSession session : sessions) {
 			if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
-				LinkedHashMap<String, Object> ocfg = null;
-				if (!config.containsKey(session.getVHost().getHostPath())) {
-					config.set(session.getVHost().getHostPath(), new LinkedHashMap<String, Object>());
+				ConfigNode ocfg = null;
+				if (!config.containsNode(session.getVHost().getHostPath())) {
+					config.insertNode(session.getVHost().getHostPath());
 				}
-				ocfg = (LinkedHashMap<String, Object>)config.get(session.getVHost().getHostPath());
-				if (!ocfg.containsKey(jl.getClass().getName())) {
-					ocfg.put(jl.getClass().getName(), new LinkedHashMap<String, Object>());
+				ocfg = config.getNode(session.getVHost().getHostPath());
+				if (!ocfg.containsNode(jl.getClass().getName())) {
+					ocfg.insertNode(jl.getClass().getName());
 				}
-				jl.pcfg = (LinkedHashMap<String, Object>)ocfg.get(jl.getClass().getName());
+				jl.pcfg = ocfg.getNode(jl.getClass().getName());
 				jl.host = session == null ? null : session.getVHost();
 				jl.reload();
 			}
@@ -311,16 +311,16 @@ public class PatchJavaLoader extends Patch {
 				if (loaderClass == null || !JavaLoader.class.isAssignableFrom(loaderClass)) {
 					return null;
 				}
-				LinkedHashMap<String, Object> ocfg = null;
-				if (!config.containsKey(request.host.getHostPath())) {
-					config.set(request.host.getHostPath(), new LinkedHashMap<String, Object>());
+				ConfigNode ocfg = null;
+				if (!config.containsNode(request.host.getHostPath())) {
+					config.insertNode(request.host.getHostPath());
 				}
-				ocfg = (LinkedHashMap<String, Object>)config.get(request.host.getHostPath());
-				if (!ocfg.containsKey(name)) {
-					ocfg.put(name, new LinkedHashMap<String, Object>());
+				ocfg = config.getNode(request.host.getHostPath());
+				if (!ocfg.containsNode(name)) {
+					ocfg.insertNode(name);
 				}
 				loader = ((Class<? extends JavaLoader>)loaderClass).newInstance();
-				loader.pcfg = (LinkedHashMap<String, Object>)ocfg.get(name);
+				loader.pcfg = ocfg.getNode(name);
 				loader.host = request.host;
 				loader.init();
 				jls.put(name, loader);

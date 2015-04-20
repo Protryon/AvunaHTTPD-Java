@@ -21,7 +21,7 @@ public class EmailRouter {
 				to = to.substring(to.indexOf("<") + 1, to.indexOf(">"));
 			}
 			String dom = to.substring(to.indexOf("@") + 1);
-			String[] doms = ((String)host.getConfig().get("domain")).split(",");
+			String[] doms = host.getConfig().getNode("domain").getValue().split(",");
 			boolean local = false;
 			for (String dommie : doms) {
 				if (dommie.trim().equals(dom)) {

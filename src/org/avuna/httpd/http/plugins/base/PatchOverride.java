@@ -13,6 +13,7 @@ import org.avuna.httpd.http.plugins.Patch;
 import org.avuna.httpd.http.plugins.PatchRegistry;
 import org.avuna.httpd.http.util.CompiledDirective;
 import org.avuna.httpd.http.util.OverrideConfig;
+import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 
 public class PatchOverride extends Patch {
@@ -22,7 +23,7 @@ public class PatchOverride extends Patch {
 	}
 	
 	@Override
-	public void formatConfig(HashMap<String, Object> json) {
+	public void formatConfig(ConfigNode json) {
 		super.formatConfig(json);
 	}
 	

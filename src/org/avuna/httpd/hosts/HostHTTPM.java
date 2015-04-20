@@ -1,12 +1,12 @@
 package org.avuna.httpd.hosts;
 
 import java.net.ServerSocket;
-import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.networking.ThreadAccept;
 import org.avuna.httpd.http.networking.ThreadConnection;
 import org.avuna.httpd.http.networking.httpm.ThreadMWorker;
 import org.avuna.httpd.http.plugins.base.BaseLoader;
+import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 
 public class HostHTTPM extends HostHTTP {
@@ -24,32 +24,32 @@ public class HostHTTPM extends HostHTTP {
 		
 	}
 	
-	public void formatConfig(HashMap<String, Object> map) {
+	public void formatConfig(ConfigNode map) {
 		super.formatConfig(map, false);
-		HashMap<String, Object> vhosts = (HashMap<String, Object>)map.get("vhosts");
-		for (String vkey : vhosts.keySet()) {
-			HashMap<String, Object> vhost = (HashMap<String, Object>)vhosts.get(vkey);
-			if (!vhost.containsKey("enabled")) vhost.put("enabled", "true");
-			if (!vhost.containsKey("debug")) vhost.put("debug", "false");
-			if (!vhost.containsKey("host")) vhost.put("host", ".*");
-			vhost.remove("inheritjls");
-			vhost.remove("htdocs");
-			vhost.remove("htsrc");
-			if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
-				if (!vhost.containsKey("spawn")) vhost.put("spawn", "true");
-				if (!vhost.containsKey("uid")) vhost.put("uid", AvunaHTTPD.mainConfig.get("uid"));
-				if (!vhost.containsKey("gid")) vhost.put("gid", AvunaHTTPD.mainConfig.get("gid"));
-			}
-			if (!vhost.containsKey("vhost-ip")) vhost.put("vhost-ip", "127.0.0.1");
-			if (!vhost.containsKey("vhost-port")) vhost.put("vhost-port", "6844");
+		ConfigNode vhosts = map.getNode("vhosts");
+		for (String vkey : vhosts.getSubnodes()) {
+			ConfigNode vhost = vhosts.getNode(vkey);
+			if (!vhost.containsNode("enabled")) vhost.insertNode("enabled", "true");
+			if (!vhost.containsNode("debug")) vhost.insertNode("debug", "false");
+			if (!vhost.containsNode("host")) vhost.insertNode("host", ".*");
+			vhost.removeNode("inheritjls");
+			vhost.removeNode("htdocs");
+			vhost.removeNode("htsrc");
+			// if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
+			// if (!vhost.containsNode("spawn")) vhost.insertNode("spawn", "true");
+			// if (!vhost.containsNode("uid")) vhost.insertNode(AvunaHTTPD.mainConfig.get("uid"));
+			// if (!vhost.containsNode("gid")) vhost.insertNode(AvunaHTTPD.mainConfig.get("gid"));
+			// }
+			if (!vhost.containsNode("vhost-ip")) vhost.insertNode("vhost-ip", "127.0.0.1");
+			if (!vhost.containsNode("vhost-port")) vhost.insertNode("vhost-port", "6844");
 		}
-		for (String vkey : vhosts.keySet()) {
-			HashMap<String, Object> ourvh = (HashMap<String, Object>)vhosts.get(vkey);
-			if (!ourvh.get("enabled").equals("true")) continue;
+		for (String vkey : vhosts.getSubnodes()) {
+			ConfigNode ourvh = vhosts.getNode(vkey);
+			if (!ourvh.getNode("enabled").getValue().equals("true")) continue;
 			VHost vhost = null;
-			if (ourvh.containsKey("inheritjls")) {
+			if (ourvh.containsNode("inheritjls")) {
 				VHost parent = null;
-				String ij = (String)ourvh.get("inheritjls");
+				String ij = ourvh.getNode("inheritjls").getValue();
 				for (Host host : AvunaHTTPD.hosts.values()) {
 					if (host.name.equals(ij.substring(0, ij.indexOf("/")))) {
 						parent = ((HostHTTPM)host).getVHostByName(ij.substring(ij.indexOf("/") + 1));
@@ -59,11 +59,11 @@ public class HostHTTPM extends HostHTTP {
 					Logger.log("Invalid inheritjls! Skipping");
 					continue;
 				}
-				vhost = new VHostM(this.getHostname() + "/" + vkey, this, (String)ourvh.get("host"), parent, (String)ourvh.get("vhost-ip"), Integer.parseInt((String)ourvh.get("vhost-port")));
+				vhost = new VHostM(this.getHostname() + "/" + vkey, this, ourvh.getNode("host").getValue(), parent, ourvh.getNode("vhost-ip").getValue(), Integer.parseInt(ourvh.getNode("vhost-port").getValue()));
 			}else {
-				vhost = new VHostM(this.getHostname() + "/" + vkey, this, (String)ourvh.get("host"), (String)ourvh.get("vhost-ip"), Integer.parseInt((String)ourvh.get("vhost-port")));
+				vhost = new VHostM(this.getHostname() + "/" + vkey, this, ourvh.getNode("host").getValue(), ourvh.getNode("vhost-ip").getValue(), Integer.parseInt(ourvh.getNode("vhost-port").getValue()));
 			}
-			vhost.setDebug(ourvh.get("debug").equals("true"));
+			vhost.setDebug(ourvh.getNode("debug").getValue().equals("true"));
 			this.addVHost(vhost);
 		}
 	}

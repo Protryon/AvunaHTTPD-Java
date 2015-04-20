@@ -1,11 +1,11 @@
 package org.avuna.httpd.http.plugins.base;
 
-import java.util.HashMap;
 import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
 import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.util.ConfigNode;
 
 public class PatchContentLength extends Patch {
 	
@@ -14,7 +14,7 @@ public class PatchContentLength extends Patch {
 	}
 	
 	@Override
-	public void formatConfig(HashMap<String, Object> json) {
+	public void formatConfig(ConfigNode json) {
 		super.formatConfig(json);
 	}
 	

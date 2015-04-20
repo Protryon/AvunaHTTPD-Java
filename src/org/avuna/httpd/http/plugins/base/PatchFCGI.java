@@ -9,7 +9,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.networking.Packet;
@@ -22,21 +21,21 @@ import org.avuna.httpd.http.plugins.base.fcgi.FCGIConnection;
 import org.avuna.httpd.http.plugins.base.fcgi.FCGIConnectionManagerNMPX;
 import org.avuna.httpd.http.plugins.base.fcgi.FCGISession;
 import org.avuna.httpd.http.plugins.base.fcgi.IFCGIManager;
+import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 
 public class PatchFCGI extends Patch {
 	
 	public PatchFCGI(String name, PatchRegistry registry) {
 		super(name, registry);
-		reload();
 	}
 	
 	public void load() {
-		
+		reload();
 	}
 	
 	public void reload() {
-		if (!pcfg.get("enabled").equals("true")) return;
+		if (!pcfg.getNode("enabled").getValue().equals("true")) return;
 		for (IFCGIManager fcgi : fcgis.values()) {
 			try {
 				fcgi.close();
@@ -45,14 +44,12 @@ public class PatchFCGI extends Patch {
 			}
 		}
 		fcgis.clear();
-		for (Object sub : pcfg.values()) {
-			if (!(sub instanceof LinkedHashMap<?, ?>)) {
-				continue;
-			}
-			LinkedHashMap<String, Object> subb = (LinkedHashMap<String, Object>)sub;
+		for (String subs : pcfg.getSubnodes()) {
+			ConfigNode sub = pcfg.getNode(subs);
+			if (!sub.branching()) continue;
 			try {
-				String ip = (String)subb.get("ip");
-				int port = Integer.parseInt((String)subb.get("port"));
+				String ip = sub.getNode("ip").getValue();
+				int port = Integer.parseInt(sub.getNode("port").getValue());
 				FCGIConnection sett = new FCGIConnection(ip, port);
 				sett.start();
 				boolean cmpx = false;
@@ -73,12 +70,12 @@ public class PatchFCGI extends Patch {
 				}else {
 					mgr = new FCGIConnectionManagerNMPX(ip, port);
 				}
-				fcgis.put((String)subb.get("mime-types"), mgr);
+				fcgis.put(sub.getNode("mime-types").getValue(), mgr);
 				mgr.start();
 			}catch (Exception e) {
-				fcgis.put((String)subb.get("mime-types"), null);
+				fcgis.put(sub.getNode("mime-types").getValue(), null);
 				Logger.logError(e);
-				Logger.log("FCGI server(" + (String)subb.get("ip") + ":" + (String)subb.get("port") + ") NOT accepting connections, disabling FCGI.");
+				Logger.log("FCGI server(" + sub.getNode("ip").getValue() + ":" + sub.getNode("port").getValue() + ") NOT accepting connections, disabling FCGI.");
 			}
 		}
 	}
@@ -86,17 +83,15 @@ public class PatchFCGI extends Patch {
 	private HashMap<String, IFCGIManager> fcgis = new HashMap<String, IFCGIManager>();
 	
 	@Override
-	public void formatConfig(HashMap<String, Object> json) {
-		if (!json.containsKey("enabled")) json.put("enabled", "false");
-		if (!json.containsKey("php")) json.put("php", new LinkedHashMap<String, Object>());
-		for (Object sub : json.values()) {
-			if (!(sub instanceof LinkedHashMap<?, ?>)) {
-				continue;
-			}
-			LinkedHashMap<String, Object> subb = (LinkedHashMap<String, Object>)sub;
-			if (!subb.containsKey("ip")) subb.put("ip", "127.0.0.1");
-			if (!subb.containsKey("port")) subb.put("port", "9000");
-			if (!subb.containsKey("mime-types")) subb.put("mime-types", "application/x-php");
+	public void formatConfig(ConfigNode json) {
+		if (!json.containsNode("enabled")) json.insertNode("enabled", "false");
+		if (!json.containsNode("php")) json.insertNode("php");
+		for (String subb : json.getSubnodes()) {
+			ConfigNode sub = json.getNode(subb);
+			if (!sub.branching()) continue;
+			if (!sub.containsNode("ip")) sub.insertNode("ip", "127.0.0.1");
+			if (!sub.containsNode("port")) sub.insertNode("port", "9000");
+			if (!sub.containsNode("mime-types")) sub.insertNode("mime-types", "application/x-php");
 		}
 	}
 	

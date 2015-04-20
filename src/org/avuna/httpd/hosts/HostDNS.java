@@ -3,12 +3,12 @@ package org.avuna.httpd.hosts;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.dns.RecordHolder;
 import org.avuna.httpd.dns.TCPServer;
 import org.avuna.httpd.dns.ThreadDNSWorker;
 import org.avuna.httpd.dns.UDPServer;
+import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 
 public class HostDNS extends Host {
@@ -29,17 +29,17 @@ public class HostDNS extends Host {
 		}
 	}
 	
-	public void formatConfig(HashMap<String, Object> map) {
-		if (!map.containsKey("port")) map.put("port", "53");
-		if (!map.containsKey("ip")) map.put("ip", "0.0.0.0");
-		if (!map.containsKey("dnsf")) map.put("dnsf", AvunaHTTPD.fileManager.getBaseFile("dns.cfg").getAbsolutePath());
-		dnsf = (String)map.get("dnsf");
-		ip = (String)map.get("ip");
-		port = Integer.parseInt((String)map.get("port"));
-		if (!map.containsKey("workerThreadCount")) map.put("workerThreadCount", "8");
-		if (!map.containsKey("maxConnections")) map.put("maxConnections", "-1");
-		twc = Integer.parseInt((String)map.get("workerThreadCount"));
-		mc = Integer.parseInt((String)map.get("maxConnections"));
+	public void formatConfig(ConfigNode map) {
+		if (!map.containsNode("port")) map.insertNode("port", "53");
+		if (!map.containsNode("ip")) map.insertNode("ip", "0.0.0.0");
+		if (!map.containsNode("dnsf")) map.insertNode("dnsf", AvunaHTTPD.fileManager.getBaseFile("dns.cfg").getAbsolutePath());
+		dnsf = map.getNode("dnsf").getValue();
+		ip = map.getNode("ip").getValue();
+		port = Integer.parseInt(map.getNode("port").getValue());
+		if (!map.containsNode("workerThreadCount")) map.insertNode("workerThreadCount", "8");
+		if (!map.containsNode("maxConnections")) map.insertNode("maxConnections", "-1");
+		twc = Integer.parseInt(map.getNode("workerThreadCount").getValue());
+		mc = Integer.parseInt(map.getNode("maxConnections").getValue());
 	}
 	
 	public void setup(ServerSocket s) {

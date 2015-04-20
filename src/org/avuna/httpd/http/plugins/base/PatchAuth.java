@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.ResponseGenerator;
@@ -15,6 +13,7 @@ import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
 import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 import sun.misc.BASE64Decoder;
 
@@ -25,22 +24,20 @@ public class PatchAuth extends Patch {
 	}
 	
 	@Override
-	public void formatConfig(HashMap<String, Object> map) {
+	public void formatConfig(ConfigNode map) {
 		super.formatConfig(map);
 		auths = new ArrayList<Auth>();
-		HashMap<String, Object> authList;
-		if (!map.containsKey("authList")) {
-			map.put("authList", authList = new LinkedHashMap<String, Object>());
-		}else {
-			authList = (HashMap<String, Object>)map.get("authList");
+		if (!map.containsNode("authList")) {
+			map.insertNode("authList");
 		}
-		for (String key : authList.keySet()) {
-			HashMap<String, Object> auth = (HashMap<String, Object>)authList.get(key);
-			if (!auth.containsKey("userlist")) auth.put("userlist", "users.txt");
-			if (!auth.containsKey("cacheUsers")) auth.put("cacheUsers", "true");
-			if (!auth.containsKey("dirMatch")) auth.put("dirMatch", ".*");
-			if (!auth.containsKey("realm")) auth.put("realm", "Generic Auth Title");
-			auths.add(new Auth((String)auth.get("userlist"), ((String)auth.get("cacheUsers")).equals("true"), (String)auth.get("dirMatch"), (String)auth.get("realm")));
+		ConfigNode authList = map.getNode("authList");
+		for (String key : authList.getSubnodes()) {
+			ConfigNode auth = authList.getNode(key);
+			if (!auth.containsNode("userlist")) auth.insertNode("userlist", "users.txt");
+			if (!auth.containsNode("cacheUsers")) auth.insertNode("cacheUsers", "true");
+			if (!auth.containsNode("dirMatch")) auth.insertNode("dirMatch", ".*");
+			if (!auth.containsNode("realm")) auth.insertNode("realm", "Generic Auth Title");
+			auths.add(new Auth(auth.getNode("userlist").getValue(), (auth.getNode("cacheUsers").getValue()).equals("true"), auth.getNode("dirMatch").getValue(), auth.getNode("realm").getValue()));
 		}
 		
 	}

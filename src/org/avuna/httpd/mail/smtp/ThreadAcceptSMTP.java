@@ -62,7 +62,7 @@ public class ThreadAcceptSMTP extends Thread {
 				if (server instanceof SSLServerSocket) {
 					((SSLSocket)s).startHandshake();
 				}
-				out.write(("220 " + ((String)host.getConfig().get("domain")).split(",")[0] + " ESMTP Avuna-HTTPD" + AvunaHTTPD.crlf).getBytes());
+				out.write(("220 " + host.getConfig().getNode("domain").getValue().split(",")[0] + " ESMTP Avuna-HTTPD" + AvunaHTTPD.crlf).getBytes());
 				out.flush();
 				s.setSoTimeout(1000);
 				host.addWorkSMTP(s, in, out, server instanceof SSLServerSocket);

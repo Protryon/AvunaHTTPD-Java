@@ -20,7 +20,7 @@ public class HardDriveSync extends Sync {
 	
 	@Override
 	public void save(ArrayList<EmailAccount> accts) throws IOException {
-		File sync = new File((String)host.getConfig().get("folder"));
+		File sync = new File(host.getConfig().getNode("folder").getValue());
 		for (EmailAccount acct : accts) {
 			File tsync = new File(sync, acct.email.substring(acct.email.indexOf("@") + 1));
 			File acctf = new File(tsync, acct.email.substring(0, acct.email.indexOf("@")));
@@ -59,7 +59,7 @@ public class HardDriveSync extends Sync {
 	}
 	
 	public void load(ArrayList<EmailAccount> accts) throws IOException {
-		File sync = new File((String)host.getConfig().get("folder"));
+		File sync = new File(host.getConfig().getNode("folder").getValue());
 		if (!sync.isDirectory()) return;
 		for (File domf : sync.listFiles()) {
 			for (File acctf : domf.listFiles()) {

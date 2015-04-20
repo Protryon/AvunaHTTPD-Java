@@ -58,7 +58,7 @@ public class ThreadAcceptIMAP extends Thread {
 				DataOutputStream out = new DataOutputStream(s.getOutputStream());
 				out.flush();
 				DataInputStream in = new DataInputStream(s.getInputStream());
-				out.write(("* OK " + ((String)host.getConfig().get("domain")).split(",")[0] + " IMAP Avuna-HTTPD ready." + AvunaHTTPD.crlf).getBytes());
+				out.write(("* OK " + host.getConfig().getNode("domain").getValue().split(",")[0] + " IMAP Avuna-HTTPD ready." + AvunaHTTPD.crlf).getBytes());
 				out.flush();
 				host.addWorkIMAP(s, in, out, server instanceof SSLServerSocket);
 			}catch (Exception e) {

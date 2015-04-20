@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import javax.net.ssl.SSLServerSocketFactory;
 import org.avuna.httpd.AvunaHTTPD;
@@ -23,6 +21,7 @@ import org.avuna.httpd.mail.smtp.ThreadAcceptSMTP;
 import org.avuna.httpd.mail.smtp.ThreadWorkerSMTP;
 import org.avuna.httpd.mail.sync.HardDriveSync;
 import org.avuna.httpd.mail.sync.Sync;
+import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 
 public class HostMail extends Host {
@@ -68,7 +67,7 @@ public class HostMail extends Host {
 	}
 	
 	public void setupFolders() {
-		new File((String)getConfig().get("folder")).mkdirs();
+		new File(getConfig().getNode("folder").getValue()).mkdirs();
 	}
 	
 	public static void unpack() {
@@ -77,27 +76,27 @@ public class HostMail extends Host {
 	
 	public final ArrayList<EmailAccount> accounts = new ArrayList<EmailAccount>();
 	
-	public void formatConfig(HashMap<String, Object> map) {
-		if (!map.containsKey("smtp-port")) map.put("smtp-port", "25");
-		if (!map.containsKey("smtp-mua-port")) map.put("smtp-mua-port", "587");
-		if (!map.containsKey("smtp-tls-port")) map.put("smtp-tls-port", "465");
-		if (!map.containsKey("imap-port")) map.put("imap-port", "143");
-		if (!map.containsKey("imap-tls-port")) map.put("imap-tls-port", "993");
-		if (!map.containsKey("ip")) map.put("ip", "0.0.0.0");
-		if (!map.containsKey("ssl")) map.put("ssl", new LinkedHashMap<String, Object>());
-		HashMap<String, Object> ssl = (HashMap<String, Object>)map.get("ssl");
-		if (!ssl.containsKey("enabled")) ssl.put("enabled", "false");
-		if (!ssl.containsKey("keyFile")) ssl.put("keyFile", AvunaHTTPD.fileManager.getBaseFile("ssl/keyFile").toString());
-		if (!ssl.containsKey("keystorePassword")) ssl.put("keystorePassword", "password");
-		if (!ssl.containsKey("keyPassword")) ssl.put("keyPassword", "password");
-		if (!map.containsKey("domain")) map.put("domain", "example.com,example.org");
-		if (!map.containsKey("folder")) map.put("folder", AvunaHTTPD.fileManager.getBaseFile("mail"));
-		if (!map.containsKey("acceptThreadCount")) map.put("acceptThreadCount", "2");
-		if (!map.containsKey("workerThreadCount")) map.put("workerThreadCount", "8");
-		if (!map.containsKey("maxConnections")) map.put("maxConnections", "-1");
-		tac = Integer.parseInt((String)map.get("acceptThreadCount"));
-		twc = Integer.parseInt((String)map.get("workerThreadCount"));
-		mc = Integer.parseInt((String)map.get("maxConnections"));
+	public void formatConfig(ConfigNode map) {
+		if (!map.containsNode("smtp-port")) map.insertNode("smtp-port", "25");
+		if (!map.containsNode("smtp-mua-port")) map.insertNode("smtp-mua-port", "587");
+		if (!map.containsNode("smtp-tls-port")) map.insertNode("smtp-tls-port", "465");
+		if (!map.containsNode("imap-port")) map.insertNode("imap-port", "143");
+		if (!map.containsNode("imap-tls-port")) map.insertNode("imap-tls-port", "993");
+		if (!map.containsNode("ip")) map.insertNode("ip", "0.0.0.0");
+		if (!map.containsNode("ssl")) map.insertNode("ssl");
+		ConfigNode ssl = map.getNode("ssl");
+		if (!ssl.containsNode("enabled")) ssl.insertNode("enabled", "false");
+		if (!ssl.containsNode("keyFile")) ssl.insertNode("keyFile", AvunaHTTPD.fileManager.getBaseFile("ssl/keyFile").toString());
+		if (!ssl.containsNode("keystorePassword")) ssl.insertNode("keystorePassword", "password");
+		if (!ssl.containsNode("keyPassword")) ssl.insertNode("keyPassword", "password");
+		if (!map.containsNode("domain")) map.insertNode("domain", "example.com,example.org");
+		if (!map.containsNode("folder")) map.insertNode("folder", AvunaHTTPD.fileManager.getBaseFile("mail").toString());
+		if (!map.containsNode("acceptThreadCount")) map.insertNode("acceptThreadCount", "2");
+		if (!map.containsNode("workerThreadCount")) map.insertNode("workerThreadCount", "8");
+		if (!map.containsNode("maxConnections")) map.insertNode("maxConnections", "-1");
+		tac = Integer.parseInt(map.getNode("acceptThreadCount").getValue());
+		twc = Integer.parseInt(map.getNode("workerThreadCount").getValue());
+		mc = Integer.parseInt(map.getNode("maxConnections").getValue());
 	}
 	
 	public void registerAccount(String email, String password) {
@@ -106,20 +105,21 @@ public class HostMail extends Host {
 	
 	public void run() {
 		try {
-			LinkedHashMap<String, Object> cfg = getConfig();
+			ConfigNode cfg = getConfig();
 			sync = new HardDriveSync(this);
 			sync.load(accounts);
 			// registerAccount("test@example.com", "test123");
-			LinkedHashMap<String, Object> ssl = (LinkedHashMap<String, Object>)cfg.get("ssl");
-			ServerSocket smtp = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("smtp-port")), false, null);
-			ServerSocket smtpmua = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("smtp-mua-port")), false, null);
-			ServerSocket imap = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("imap-port")), false, null);
+			ConfigNode ssl = cfg.getNode("ssl");
+			String ip = cfg.getNode("ip").getValue();
+			ServerSocket smtp = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-port").getValue()), false, null);
+			ServerSocket smtpmua = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-mua-port").getValue()), false, null);
+			ServerSocket imap = makeServer(ip, Integer.parseInt(cfg.getNode("imap-port").getValue()), false, null);
 			ServerSocket smtps = null, imaps = null;
-			if (ssl.get("enabled").equals("true")) {
-				sslContext = makeSSLContext(new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
+			if (ssl.getNode("enabled").getValue().equals("true")) {
+				sslContext = makeSSLContext(new File(ssl.getNode("keyFile").getValue()), ssl.getNode("keyPassword").getValue(), ssl.getNode("keystorePassword").getValue());
 				SSLServerSocketFactory sssf = sslContext.getServerSocketFactory();
-				smtps = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("smtp-tls-port")), true, sssf);
-				imaps = makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("imap-tls-port")), true, sssf);
+				smtps = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-tls-port").getValue()), true, sssf);
+				imaps = makeServer(ip, Integer.parseInt(cfg.getNode("imap-tls-port").getValue()), true, sssf);
 			}
 			workQueueSMTP = new ArrayBlockingQueue<SMTPWork>(mc < 0 ? 1000000 : mc);
 			workQueueIMAP = new ArrayBlockingQueue<IMAPWork>(mc < 0 ? 1000000 : mc);
@@ -157,7 +157,7 @@ public class HostMail extends Host {
 			});
 		}catch (Exception e) {
 			Logger.logError(e);
-			Logger.log("Closing " + name + "/" + protocol.name + " Server on " + (String)getConfig().get("ip") + ":" + (String)getConfig().get("port"));
+			Logger.log("Closing " + name + "/" + protocol.name + " Server on " + getConfig().getNode("ip").getValue() + ":" + getConfig().getNode("port").getValue());
 		}finally {
 			loaded = true;
 		}

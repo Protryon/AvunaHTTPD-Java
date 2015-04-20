@@ -5,24 +5,19 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Scanner;
-import java.util.Set;
 
-public class Config {
+public class Config extends ConfigNode {
 	private final File cfg;
 	private ConfigFormat format = null;
-	private LinkedHashMap<String, Object> cm = new LinkedHashMap<String, Object>();
-	public final String name;
 	private final String iconf;
 	public static final HashMap<String, Config> configs = new HashMap<String, Config>();
 	
 	public Config(String name, File cfg, ConfigFormat format) {
+		super(name);
 		this.cfg = cfg;
 		this.format = format;
-		this.name = name;
 		this.iconf = null;
 		if (!cfg.exists()) {
 			save();
@@ -30,41 +25,17 @@ public class Config {
 		configs.put(name, this);
 	}
 	
-	public LinkedHashMap<String, Object> getMaster() {
-		return cm;
-	}
-	
 	public Config(String name, String conf, ConfigFormat format) {
+		super(name);
 		this.cfg = null;
 		this.format = format;
-		this.name = name;
 		this.iconf = conf;
 		configs.put(name, this);
 	}
 	
-	public boolean containsKey(String name) {
-		return cm.containsKey(name);
-	}
-	
-	public Object get(String name) {
-		return cm.get(name);
-	}
-	
-	public Set<String> keySet() {
-		return cm.keySet();
-	}
-	
-	public Collection<Object> values() {
-		return cm.values();
-	}
-	
-	public void set(String name, Object value) {
-		cm.put(name, value);
-	}
-	
 	private void format() {
 		if (format != null) {
-			format.format(cm);
+			format.format(this);
 		}
 	}
 	
@@ -74,7 +45,7 @@ public class Config {
 			save();
 		}
 		Scanner in = cfg == null ? new Scanner(iconf) : new Scanner(new FileInputStream(cfg));
-		readMap(cm, in);
+		readMap(this, in);
 		in.close();
 		format();
 	}
@@ -91,7 +62,7 @@ public class Config {
 	
 	private int pl = 0;
 	
-	private void readMap(LinkedHashMap<String, Object> map, Scanner in) {
+	private void readMap(ConfigNode map, Scanner in) {
 		while (in.hasNextLine()) {
 			String line = in.nextLine().trim();
 			if (line.contains("#")) {
@@ -101,9 +72,9 @@ public class Config {
 				String name = line.substring(0, line.length() - 1);
 				boolean base = pl++ == 0;
 				if (!base) {
-					LinkedHashMap<String, Object> nmap = new LinkedHashMap<String, Object>();
-					map.put(name, nmap);
-					readMap(nmap, in);
+					ConfigNode subnode = new ConfigNode(name);
+					map.insertNode(subnode);
+					readMap(subnode, in);
 				}
 			}else if (line.equals("}")) {
 				pl--;
@@ -111,20 +82,22 @@ public class Config {
 			}else if (line.contains("=")) {
 				String key = line.substring(0, line.indexOf("="));
 				String value = line.substring(key.length() + 1);
-				map.put(key, value);
+				map.insertNode(new ConfigNode(key, value));
 			}
 		}
 	}
 	
-	private void writeMap(String name, LinkedHashMap<String, Object> map, PrintStream out) {
-		out.println(getWTab() + name + "{");
+	private void writeMap(ConfigNode map, PrintStream out) {
+		String c2 = map.getComment();
+		out.println(getWTab() + map.getName() + "{" + (c2 != null ? " # " + c2 : ""));
 		tabLevel += 1;
-		for (String key : map.keySet()) {
-			Object o = map.get(key);
-			if (o.getClass().equals(map.getClass())) {
-				writeMap(key, (LinkedHashMap<String, Object>)o, out);
+		for (String key : map.getSubnodes()) {
+			ConfigNode o = map.getNode(key);
+			if (o.branching()) {
+				writeMap(o, out);
 			}else {
-				out.println(getWTab() + key + "=" + o);
+				String c = o.getComment();
+				out.println(getWTab() + key + "=" + o.getValue() + (c != null ? " # " + c : ""));
 			}
 		}
 		tabLevel -= 1;
@@ -142,7 +115,7 @@ public class Config {
 				cfg.createNewFile();
 			}
 			PrintStream out = new PrintStream(new FileOutputStream(cfg));
-			writeMap(name, cm, out);
+			writeMap(this, out);
 			out.flush();
 			out.close();
 		}catch (IOException e) {

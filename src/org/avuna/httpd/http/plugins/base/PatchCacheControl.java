@@ -1,11 +1,11 @@
 package org.avuna.httpd.http.plugins.base;
 
-import java.util.HashMap;
 import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
 import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.util.ConfigNode;
 
 public class PatchCacheControl extends Patch {
 	
@@ -18,15 +18,15 @@ public class PatchCacheControl extends Patch {
 	private int maxAge = 604800;
 	
 	@Override
-	public void formatConfig(HashMap<String, Object> json) {
+	public void formatConfig(ConfigNode json) {
 		super.formatConfig(json);
-		if (!json.containsKey("maxage")) json.put("maxage", "604800");
-		if (!json.containsKey("cache")) json.put("cache", "text/css;application/javascript;image/*");
+		if (!json.containsNode("maxage")) json.insertNode("maxage", "604800");
+		if (!json.containsNode("cache")) json.insertNode("cache", "text/css;application/javascript;image/*");
 	}
 	
 	public void reload() {
-		maxAge = Integer.parseInt((String)pcfg.get("maxage"));
-		cache = ((String)pcfg.get("cache")).split(";");
+		maxAge = Integer.parseInt((String)pcfg.getNode("maxage").getValue());
+		cache = ((String)pcfg.getNode("cache").getValue()).split(";");
 	}
 	
 	@Override

@@ -44,7 +44,7 @@ public class SMTPHandler {
 		
 		commands.add(new SMTPCommand("ehlo", 0, 100) {
 			public void run(SMTPWork focus, String line) throws IOException {
-				focus.writeMLine(250, ((String)host.getConfig().get("domain")).split(",")[0]);
+				focus.writeMLine(250, host.getConfig().getNode("domain").getValue().split(",")[0]);
 				focus.writeMLine(250, "AUTH PLAIN LOGIN");
 				focus.writeMLine(250, "STARTTLS");
 				focus.writeLine(250, "AUTH=PLAIN LOGIN");
@@ -109,7 +109,7 @@ public class SMTPHandler {
 			public void run(SMTPWork focus, String line) throws IOException {
 				if (line.toLowerCase().startsWith("from:")) {
 					focus.mailFrom = line.substring(5).trim();
-					String[] doms = ((String)host.getConfig().get("domain")).split(",");
+					String[] doms = host.getConfig().getNode("domain").getValue().split(",");
 					boolean gd = false;
 					for (String dom : doms) {
 						if (focus.mailFrom.endsWith(dom)) {
@@ -136,7 +136,7 @@ public class SMTPHandler {
 				if (line.toLowerCase().startsWith("to:")) {
 					String to = line.substring(3).trim();
 					boolean local = false;
-					for (String domain : ((String)host.getConfig().get("domain")).split(",")) {
+					for (String domain : host.getConfig().getNode("domain").getValue().split(",")) {
 						if (to.endsWith(domain) || (to.contains("<") && to.endsWith(">") && to.substring(to.indexOf("<") + 1, to.length() - 1).endsWith(domain))) {
 							local = true;
 							break;
@@ -182,7 +182,7 @@ public class SMTPHandler {
 		
 		commands.add(new SMTPCommand("quit", 1, 100) {
 			public void run(SMTPWork focus, String line) throws IOException {
-				focus.writeLine(221, ((String)host.getConfig().get("domain")).split(",")[0] + " terminating connection.");
+				focus.writeLine(221, host.getConfig().getNode("domain").getValue().split(",")[0] + " terminating connection.");
 				focus.s.close();
 			}
 		});

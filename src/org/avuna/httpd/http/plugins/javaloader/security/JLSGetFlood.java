@@ -10,12 +10,12 @@ public class JLSGetFlood extends JavaLoaderSecurity {
 	private String regex = "";
 	
 	public void init() {
-		if (!pcfg.containsKey("returnWeight")) pcfg.put("returnWeight", "100");
-		if (!pcfg.containsKey("enabled")) pcfg.put("enabled", "false");
-		if (!pcfg.containsKey("regex")) pcfg.put("regex", "/\\?[0-9a-zA-Z]{2,}");
-		this.returnWeight = Integer.parseInt((String)pcfg.get("returnWeight"));
-		this.enabled = pcfg.get("enabled").equals("true");
-		this.regex = (String)pcfg.get("regex");
+		if (!pcfg.containsNode("returnWeight")) pcfg.insertNode("returnWeight", "100");
+		if (!pcfg.containsNode("enabled")) pcfg.insertNode("enabled", "false");
+		if (!pcfg.containsNode("regex")) pcfg.insertNode("regex", "/\\?[0-9a-zA-Z]{2,}");
+		this.returnWeight = Integer.parseInt(pcfg.getNode("returnWeight").getValue());
+		this.enabled = pcfg.getNode("enabled").getValue().equals("true");
+		this.regex = pcfg.getNode("regex").getValue();
 	}
 	
 	public void reload() {

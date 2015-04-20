@@ -1,6 +1,5 @@
 package org.avuna.httpd.http.plugins.base;
 
-import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
@@ -14,6 +13,7 @@ import org.avuna.httpd.http.plugins.javaloader.security.JLSGetFlood;
 import org.avuna.httpd.http.plugins.javaloader.security.JLSPardon;
 import org.avuna.httpd.http.plugins.javaloader.security.JLSPostFlood;
 import org.avuna.httpd.http.plugins.javaloader.security.JLSUserAgent;
+import org.avuna.httpd.util.ConfigNode;
 
 public class PatchSecurity extends Patch {
 	
@@ -32,10 +32,10 @@ public class PatchSecurity extends Patch {
 	private int minDrop = 100;
 	
 	@Override
-	public void formatConfig(HashMap<String, Object> map) {
+	public void formatConfig(ConfigNode map) {
 		super.formatConfig(map);
-		if (!map.containsKey("minDrop")) map.put("minDrop", "100");
-		minDrop = Integer.parseInt((String)map.get("minDrop"));
+		if (!map.containsNode("minDrop")) map.insertNode("minDrop", "100");
+		minDrop = Integer.parseInt(map.getNode("minDrop").getValue());
 	}
 	
 	@Override

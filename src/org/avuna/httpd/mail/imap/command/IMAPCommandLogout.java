@@ -13,7 +13,7 @@ public class IMAPCommandLogout extends IMAPCommand {
 	
 	@Override
 	public void run(IMAPWork focus, String letters, String[] args) throws IOException {
-		focus.writeLine(focus, letters, "OK " + ((String)host.getConfig().get("domain")).split(",")[0] + " terminating connection.");
+		focus.writeLine(focus, letters, "OK " + host.getConfig().getNode("domain").getValue().split(",")[0] + " terminating connection.");
 		focus.s.close();
 	}
 	

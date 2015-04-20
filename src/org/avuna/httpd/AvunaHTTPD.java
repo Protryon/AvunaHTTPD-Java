@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import org.avuna.httpd.com.ComClient;
@@ -25,6 +24,7 @@ import org.avuna.httpd.hosts.HostRegistry;
 import org.avuna.httpd.hosts.Protocol;
 import org.avuna.httpd.util.Config;
 import org.avuna.httpd.util.ConfigFormat;
+import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.FileManager;
 import org.avuna.httpd.util.Logger;
 
@@ -214,18 +214,18 @@ public class AvunaHTTPD {
 			final File cfg = new File(!unpack && args.length > 0 ? args[0] : (us == null ? (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\avuna\\main.cfg" : "/etc/avuna/main.cfg") : (new File(us.getParentFile(), "main.cfg").getAbsolutePath())));
 			// checkPerms(cfg.getParentFile());
 			mainConfig = new Config("main", cfg, new ConfigFormat() {
-				public void format(HashMap<String, Object> map) {
+				public void format(ConfigNode map) {
 					File dir = null;
-					if (!map.containsKey("dir")) {
-						map.put("dir", (dir = cfg.getParentFile()).getAbsolutePath());
+					if (!map.containsNode("dir")) {
+						map.insertNode("dir", (dir = cfg.getParentFile()).getAbsolutePath());
 					}else {
-						dir = new File((String)map.get("dir"));
+						dir = new File(map.getNode("dir").getValue());
 					}
-					if (!map.containsKey("hosts")) map.put("hosts", new File(dir, "hosts.cfg").toString());
-					if (!map.containsKey("logs")) map.put("logs", new File(dir, "logs").toString());
-					if (!map.containsKey("javac")) map.put("javac", "javac");
-					if (!System.getProperty("os.name").toLowerCase().contains("windows")) if (!map.containsKey("uid")) map.put("uid", unpack ? "6833" : "0");
-					if (!System.getProperty("os.name").toLowerCase().contains("windows")) if (!map.containsKey("gid")) map.put("gid", unpack ? "6833" : "0");
+					if (!map.containsNode("hosts")) map.insertNode("hosts", new File(dir, "hosts.cfg").toString());
+					if (!map.containsNode("logs")) map.insertNode("logs", new File(dir, "logs").toString());
+					if (!map.containsNode("javac")) map.insertNode("javac", "javac");
+					if (!System.getProperty("os.name").toLowerCase().contains("windows")) if (!map.containsNode("uid")) map.insertNode("uid", unpack ? "6833" : "0");
+					if (!System.getProperty("os.name").toLowerCase().contains("windows")) if (!map.containsNode("gid")) map.insertNode("gid", unpack ? "6833" : "0");
 				}
 			});
 			mainConfig.load();
@@ -241,33 +241,33 @@ public class AvunaHTTPD {
 			HostCom.unpack();
 			HostDNS.unpack();
 			HostMail.unpack();
-			hostsConfig = new Config("hosts", new File((String)mainConfig.get("hosts")), new ConfigFormat() {
+			hostsConfig = new Config("hosts", new File(mainConfig.getNode("hosts").getValue()), new ConfigFormat() {
 				
 				@Override
-				public void format(HashMap<String, Object> map) {
+				public void format(ConfigNode map) {
 					boolean nm = false, nc = false, nd = false;
-					if (!map.containsKey("main")) {
-						map.put("main", new LinkedHashMap<String, Object>());
+					if (!map.containsNode("main")) {
+						map.insertNode("main");
 						nm = true;
 					}
-					if (!map.containsKey("com")) {
-						map.put("com", new LinkedHashMap<String, Object>());
+					if (!map.containsNode("com")) {
+						map.insertNode("com");
 						nc = true;
 					}
 					// if (!map.containsKey("dns")) {
 					// map.put("dns", new LinkedHashMap<String, Object>());
 					// nd = true;
 					// }
-					for (String key : map.keySet()) {
-						HashMap<String, Object> host = (HashMap<String, Object>)map.get(key);
-						if (!host.containsKey("enabled")) host.put("enabled", (nc && key.equals("com")) ? "false" : "true");
-						if (!host.containsKey("protocol")) host.put("protocol", ((nd && key.equals("dns")) ? "dns" : ((nc && key.equals("com")) ? "com" : "http")));
-						Protocol p = Protocol.fromString((String)host.get("protocol"));
+					for (String key : map.getSubnodes()) {
+						ConfigNode host = map.getNode(key);
+						if (!host.containsNode("enabled")) host.insertNode("enabled", (nc && key.equals("com")) ? "false" : "true");
+						if (!host.containsNode("protocol")) host.insertNode("protocol", ((nd && key.equals("dns")) ? "dns" : ((nc && key.equals("com")) ? "com" : "http")));
+						Protocol p = Protocol.fromString(host.getNode("protocol").getValue());
 						if (p == null) {
 							Logger.log("Skipping Host: " + key + " due to invalid protocol!");
 							continue;
 						}
-						if (!host.get("enabled").equals("true")) {
+						if (!host.getNode("enabled").getValue().equals("true")) {
 							continue;
 						}
 						try {
@@ -304,7 +304,7 @@ public class AvunaHTTPD {
 			for (Host h : hosts.values()) {
 				h.start();
 			}
-			if (!System.getProperty("os.name").toLowerCase().contains("windows") && System.getProperty("user.name").contains("root") && !mainConfig.get("uid").equals("0")) {
+			if (!System.getProperty("os.name").toLowerCase().contains("windows") && System.getProperty("user.name").contains("root") && !mainConfig.getNode("uid").getValue().equals("0")) {
 				major:
 				while (true) {
 					for (Host h : hosts.values()) {
@@ -315,8 +315,8 @@ public class AvunaHTTPD {
 					}
 					break;
 				}
-				CLib.setuid(Integer.parseInt((String)mainConfig.get("uid")));
-				CLib.setgid(Integer.parseInt((String)mainConfig.get("gid")));
+				CLib.setuid(Integer.parseInt(mainConfig.getNode("uid").getValue()));
+				CLib.setgid(Integer.parseInt(mainConfig.getNode("gid").getValue()));
 				Logger.log("[NOTIFY] De-escalated to uid " + CLib.getuid());
 			}else if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
 				Logger.log("[NOTIFY] We did NOT de-escalate, currently running as uid " + CLib.getuid());

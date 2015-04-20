@@ -320,7 +320,7 @@ public class CommandProcessor {
 			}
 			cp = cp.substring(0, cp.length() - 1);
 			ArrayList<String> cfs = new ArrayList<String>();
-			cfs.add((String)AvunaHTTPD.mainConfig.get("javac"));
+			cfs.add(AvunaHTTPD.mainConfig.getNode("javac").getValue());
 			cfs.add("-cp");
 			cfs.add(cp);
 			cfs.add("-d");

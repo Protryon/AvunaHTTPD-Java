@@ -11,12 +11,12 @@ public class JLSUserAgent extends JavaLoaderSecurity {
 	private String[] ua = null;
 	
 	public void init() {
-		if (!pcfg.containsKey("returnWeight")) pcfg.put("returnWeight", "100");
-		if (!pcfg.containsKey("enabled")) pcfg.put("enabled", "true");
-		if (!pcfg.containsKey("userAgents")) pcfg.put("userAgents", "wordpress,sql,php,scan");
-		this.returnWeight = Integer.parseInt((String)pcfg.get("returnWeight"));
-		this.enabled = pcfg.get("enabled").equals("true");
-		this.ua = ((String)pcfg.get("userAgents")).split(",");
+		if (!pcfg.containsNode("returnWeight")) pcfg.insertNode("returnWeight", "100");
+		if (!pcfg.containsNode("enabled")) pcfg.insertNode("enabled", "true");
+		if (!pcfg.containsNode("userAgents")) pcfg.insertNode("userAgents", "wordpress,sql,php,scan");
+		this.returnWeight = Integer.parseInt(pcfg.getNode("returnWeight").getValue());
+		this.enabled = pcfg.getNode("enabled").getValue().equals("true");
+		this.ua = pcfg.getNode("userAgents").getValue().split(",");
 	}
 	
 	public void reload(LinkedHashMap<String, Object> cfg) {

@@ -10,6 +10,7 @@ import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
 import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 
 public class PatchGZip extends Patch {
@@ -19,7 +20,7 @@ public class PatchGZip extends Patch {
 	}
 	
 	@Override
-	public void formatConfig(HashMap<String, Object> json) {
+	public void formatConfig(ConfigNode json) {
 		super.formatConfig(json);
 	}
 	

@@ -42,15 +42,15 @@ public class FileManager {
 	private HashMap<String, File> base = new HashMap<String, File>();
 	
 	public File getMainDir() {
-		return dir == null ? (dir = new File((String)AvunaHTTPD.mainConfig.get("dir"))) : dir;
+		return dir == null ? (dir = new File(AvunaHTTPD.mainConfig.getNode("dir").getValue())) : dir;
 	}
 	
 	public File getPlugins(HostHTTP host) {
-		return plugins == null ? (plugins = new File((String)host.getConfig().get("plugins"))) : plugins;
+		return plugins == null ? (plugins = new File(host.getConfig().getNode("plugins").getValue())) : plugins;
 	}
 	
 	public File getLogs() {
-		return logs == null ? (logs = new File((String)AvunaHTTPD.mainConfig.get("logs"))) : logs;
+		return logs == null ? (logs = new File(AvunaHTTPD.mainConfig.getNode("logs").getValue())) : logs;
 	}
 	
 	public File getPlugin(Patch p) {
@@ -110,10 +110,10 @@ public class FileManager {
 	}
 	
 	public Resource getErrorPage(RequestPacket request, String reqTarget, StatusCode status, String info) {
-		HashMap<String, Object> errorPages = (HashMap<String, Object>)request.host.getHost().getConfig().get("errorpages");
-		if (errorPages.containsKey(status.getStatus() + "")) {
+		ConfigNode errorPages = request.host.getHost().getConfig().getNode("errorpages");
+		if (errorPages.containsNode(status.getStatus() + "")) {
 			try {
-				String path = (String)errorPages.get(status.getStatus() + "");
+				String path = errorPages.getNode(status.getStatus() + "").getValue();
 				Resource resource = getResource(path, request);
 				if (resource != null) {
 					if (resource.type.startsWith("text")) {
@@ -157,7 +157,7 @@ public class FileManager {
 			if (request.overrideIndex != null) {
 				index = request.overrideIndex;
 			}else {
-				index = ((String)request.host.getHost().getConfig().get("index")).split(",");
+				index = request.host.getHost().getConfig().getNode("index").getValue().split(",");
 			}
 			for (String i : index) {
 				i = i.trim();
@@ -240,7 +240,7 @@ public class FileManager {
 			OverrideConfig directive = null;
 			if (cache.containsKey(nrt)) {
 				long t = System.currentTimeMillis();
-				long cc = Integer.parseInt(((String)request.host.getHost().getConfig().get("cacheClock")));
+				long cc = Integer.parseInt(request.host.getHost().getConfig().getNode("cacheClock").getValue());
 				if (request.overrideCache >= -1) {
 					cc = request.overrideCache;
 				}
@@ -291,7 +291,7 @@ public class FileManager {
 							bout.write(buf, 0, i);
 						}
 						PatchChunked chunked = (PatchChunked)request.host.getHost().registry.getPatchForClass(PatchChunked.class);
-						if (chunked.pcfg.get("enabled").equals("true") && bout.size() > Integer.parseInt((String)chunked.pcfg.get("minsize")) && !ext.startsWith("application")) {
+						if (chunked.pcfg.getNode("enabled").getValue().equals("true") && bout.size() > Integer.parseInt(chunked.pcfg.getNode("minsize").getValue()) && !ext.startsWith("application")) {
 							bout.reset();
 							tooBig = true;
 							break;

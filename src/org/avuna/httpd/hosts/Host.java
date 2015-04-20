@@ -10,14 +10,13 @@ import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 
 public abstract class Host extends Thread {
@@ -34,8 +33,8 @@ public abstract class Host extends Thread {
 		
 	}
 	
-	public final LinkedHashMap<String, Object> getConfig() {
-		return (LinkedHashMap<String, Object>)AvunaHTTPD.hostsConfig.get(name);
+	public final ConfigNode getConfig() {
+		return AvunaHTTPD.hostsConfig.getNode(name);
 	}
 	
 	public boolean loaded = false;
@@ -109,30 +108,30 @@ public abstract class Host extends Thread {
 	
 	public void run() {
 		try {
-			LinkedHashMap<String, Object> cfg = getConfig();
-			LinkedHashMap<String, Object> ssl = (LinkedHashMap<String, Object>)cfg.get("ssl");
-			boolean isSSL = !(ssl == null || !ssl.get("enabled").equals("true"));
+			ConfigNode cfg = getConfig();
+			ConfigNode ssl = cfg.getNode("ssl");
+			boolean isSSL = !(ssl == null || !ssl.getNode("enabled").getValue().equals("true"));
 			if (isSSL) {
-				sslContext = makeSSLContext(new File((String)ssl.get("keyFile")), (String)ssl.get("keyPassword"), (String)ssl.get("keystorePassword"));
+				sslContext = makeSSLContext(new File(ssl.getNode("keyFile").getValue()), ssl.getNode("keyPassword").getValue(), ssl.getNode("keystorePassword").getValue());
 			}
-			setup(makeServer((String)cfg.get("ip"), Integer.parseInt((String)cfg.get("port")), isSSL, !isSSL ? null : sslContext.getServerSocketFactory()));
+			setup(makeServer(cfg.getNode("ip").getValue(), Integer.parseInt(cfg.getNode("port").getValue()), isSSL, !isSSL ? null : sslContext.getServerSocketFactory()));
 		}catch (Exception e) {
 			Logger.logError(e);
-			Logger.log("Closing " + name + "/" + protocol.name + " Server on " + (String)getConfig().get("ip") + ":" + (String)getConfig().get("port"));
+			Logger.log("Closing " + name + "/" + protocol.name + " Server on " + getConfig().getNode("ip").getValue() + ":" + getConfig().getNode("port").getValue());
 		}finally {
 			loaded = true;
 		}
 	}
 	
-	public void formatConfig(HashMap<String, Object> map) {
-		if (!map.containsKey("port")) map.put("port", "80");
-		if (!map.containsKey("ip")) map.put("ip", "0.0.0.0");
-		if (!map.containsKey("ssl")) map.put("ssl", new LinkedHashMap<String, Object>());
-		HashMap<String, Object> ssl = (HashMap<String, Object>)map.get("ssl");
-		if (!ssl.containsKey("enabled")) ssl.put("enabled", "false");
-		if (!ssl.containsKey("keyFile")) ssl.put("keyFile", AvunaHTTPD.fileManager.getBaseFile("ssl/keyFile").toString());
-		if (!ssl.containsKey("keystorePassword")) ssl.put("keystorePassword", "password");
-		if (!ssl.containsKey("keyPassword")) ssl.put("keyPassword", "password");
+	public void formatConfig(ConfigNode map) {
+		if (!map.containsNode("port")) map.insertNode("port", "80");
+		if (!map.containsNode("ip")) map.insertNode("ip", "0.0.0.0");
+		if (!map.containsNode("ssl")) map.insertNode("ssl");
+		ConfigNode ssl = map.getNode("ssl");
+		if (!ssl.containsNode("enabled")) ssl.insertNode("enabled", "false");
+		if (!ssl.containsNode("keyFile")) ssl.insertNode("keyFile", AvunaHTTPD.fileManager.getBaseFile("ssl/keyFile").toString());
+		if (!ssl.containsNode("keystorePassword")) ssl.insertNode("keystorePassword", "password");
+		if (!ssl.containsNode("keyPassword")) ssl.insertNode("keyPassword", "password");
 	}
 	
 	public String getHostname() {
@@ -140,7 +139,7 @@ public abstract class Host extends Thread {
 	}
 	
 	public int getPort() {
-		return Integer.parseInt((String)getConfig().get("port"));
+		return Integer.parseInt((String)getConfig().getNode("port").getValue());
 	}
 	
 	public abstract void setup(ServerSocket s);

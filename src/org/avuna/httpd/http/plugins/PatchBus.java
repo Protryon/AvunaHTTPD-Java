@@ -15,7 +15,7 @@ public class PatchBus {
 	
 	public boolean processMethod(RequestPacket request, ResponsePacket response) {
 		Patch handler = registry.registeredMethods.get(request.method);
-		if (handler != null && handler.pcfg.get("enabled").equals("true")) {
+		if (handler != null && handler.pcfg.getNode("enabled").getValue().equals("true")) {
 			handler.processMethod(request, response);
 			return true;
 		}
@@ -24,7 +24,7 @@ public class PatchBus {
 	
 	public void setupFolders() {
 		for (Patch patch : registry.patchs) {
-			if (patch.pcfg.get("enabled").equals("true")) {
+			if (patch.pcfg.getNode("enabled").getValue().equals("true")) {
 				AvunaHTTPD.fileManager.getPlugin(patch).mkdirs();
 			}
 		}
@@ -32,7 +32,7 @@ public class PatchBus {
 	
 	public void processPacket(Packet p) {
 		for (Patch patch : registry.patchs) {
-			if (patch.pcfg.get("enabled").equals("true") && patch.shouldProcessPacket(p)) {
+			if (patch.pcfg.getNode("enabled").getValue().equals("true") && patch.shouldProcessPacket(p)) {
 				patch.processPacket(p);
 				if (p.drop) return;
 			}
@@ -43,7 +43,7 @@ public class PatchBus {
 		byte[] rres = data;
 		for (Patch patch : registry.patchs) {
 			// long start = System.nanoTime();
-			if (patch.pcfg.get("enabled").equals("true") && patch.shouldProcessResponse(response, request, rres)) {
+			if (patch.pcfg.getNode("enabled").getValue().equals("true") && patch.shouldProcessResponse(response, request, rres)) {
 				rres = patch.processResponse(response, request, rres);
 			}
 			// Logger.log(request.target + patch.name + ": " + (System.nanoTime() - start) / 1000000D + " ms");

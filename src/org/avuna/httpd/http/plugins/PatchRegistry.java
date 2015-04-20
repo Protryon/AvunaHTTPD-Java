@@ -14,8 +14,9 @@ public class PatchRegistry {
 	}
 	
 	public void registerPatch(Patch p) {
-		if (!p.pcfg.containsKey("enabled") || !p.pcfg.get("enabled").equals("true")) return;
+		if (!p.pcfg.containsNode("enabled") || !p.pcfg.getNode("enabled").getValue().equals("true")) return;
 		Logger.log("Loading patch " + p.name);
+		p.load();
 		patchs.add(p);
 	}
 	

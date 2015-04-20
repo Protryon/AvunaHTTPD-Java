@@ -10,10 +10,10 @@ public class JLSPostFlood extends JavaLoaderSecurity {
 	private boolean enabled = true;
 	
 	public void init() {
-		if (!pcfg.containsKey("returnWeight")) pcfg.put("returnWeight", "100");
-		if (!pcfg.containsKey("enabled")) pcfg.put("enabled", "true");
-		this.returnWeight = Integer.parseInt((String)pcfg.get("returnWeight"));
-		this.enabled = pcfg.get("enabled").equals("true");
+		if (!pcfg.containsNode("returnWeight")) pcfg.insertNode("returnWeight", "100");
+		if (!pcfg.containsNode("enabled")) pcfg.insertNode("enabled", "true");
+		this.returnWeight = Integer.parseInt(pcfg.getNode("returnWeight").getValue());
+		this.enabled = pcfg.getNode("enabled").getValue().equals("true");
 	}
 	
 	public void reload() {

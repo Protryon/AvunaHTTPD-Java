@@ -1,6 +1,5 @@
 package org.avuna.httpd.http.plugins.base;
 
-import java.util.HashMap;
 import java.util.zip.CRC32;
 import org.avuna.httpd.http.Method;
 import org.avuna.httpd.http.ResponseGenerator;
@@ -10,6 +9,7 @@ import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
 import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.util.ConfigNode;
 
 public class PatchETag extends Patch {
 	
@@ -18,7 +18,7 @@ public class PatchETag extends Patch {
 	}
 	
 	@Override
-	public void formatConfig(HashMap<String, Object> json) {
+	public void formatConfig(ConfigNode json) {
 		super.formatConfig(json);
 	}
 	

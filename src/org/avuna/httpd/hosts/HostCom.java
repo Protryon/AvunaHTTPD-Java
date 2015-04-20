@@ -1,8 +1,8 @@
 package org.avuna.httpd.hosts;
 
 import java.net.ServerSocket;
-import java.util.HashMap;
 import org.avuna.httpd.com.ComServer;
+import org.avuna.httpd.util.ConfigNode;
 
 public class HostCom extends Host {
 	
@@ -18,19 +18,19 @@ public class HostCom extends Host {
 	private String ip = null;
 	private int port;
 	
-	public void formatConfig(HashMap<String, Object> map) {
-		if (!map.containsKey("port")) map.put("port", "6049");
-		if (!map.containsKey("ip")) map.put("ip", "127.0.0.1");
+	public void formatConfig(ConfigNode map) {
+		if (!map.containsNode("port")) map.insertNode("port", "6049");
+		if (!map.containsNode("ip")) map.insertNode("ip", "127.0.0.1");
 		// super.formatConfig(map);
-		if (!map.containsKey("doAuth")) map.put("doAuth", "true");
-		if (!map.containsKey("auth")) map.put("auth", "");
-		if (!map.get("doAuth").equals("true")) {
+		if (!map.containsNode("doAuth")) map.insertNode("doAuth", "true");
+		if (!map.containsNode("auth")) map.insertNode("auth", "");
+		if (!map.getNode("doAuth").getValue().equals("true")) {
 			auth = null;
 		}else {
-			auth = ((String)map.get("auth")).split(",");
+			auth = (map.getNode("auth").getValue()).split(",");
 		}
-		ip = (String)map.get("ip");
-		port = Integer.parseInt((String)map.get("port"));
+		ip = map.getNode("ip").getValue();
+		port = Integer.parseInt(map.getNode("port").getValue());
 	}
 	
 	public void setup(ServerSocket s) {

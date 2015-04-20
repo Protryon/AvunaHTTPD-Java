@@ -1,7 +1,7 @@
 package org.avuna.httpd.http.plugins.javaloader;
 
-import java.util.LinkedHashMap;
 import org.avuna.httpd.hosts.VHost;
+import org.avuna.httpd.util.ConfigNode;
 
 public abstract class JavaLoader {
 	public JavaLoader() {
@@ -12,7 +12,7 @@ public abstract class JavaLoader {
 		
 	}
 	
-	public LinkedHashMap<String, Object> pcfg = null;
+	public ConfigNode pcfg = null;
 	public VHost host = null;
 	
 	public void init() {
