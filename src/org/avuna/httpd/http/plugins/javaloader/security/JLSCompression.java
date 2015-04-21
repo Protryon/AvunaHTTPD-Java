@@ -27,7 +27,7 @@ public class JLSCompression extends JavaLoaderSecurity {
 	@Override
 	public int check(RequestPacket req) {
 		if (!enabled) return 0;
-		if (!req.headers.getHeader("Accept-Encoding").contains("gzip")) {
+		if (!req.headers.hasHeader("Accept-Encoding") || !req.headers.getHeader("Accept-Encoding").contains("gzip")) {
 			return returnWeight;
 		}
 		return 0;
