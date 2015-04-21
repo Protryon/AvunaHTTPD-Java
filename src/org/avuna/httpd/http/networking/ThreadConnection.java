@@ -131,7 +131,7 @@ public class ThreadConnection extends Thread {
 							continue;
 						}
 					}
-				}else if (focus.in.available() > 0) { // TODO: fix pipelining?
+				}else if (focus.in.available() > 0) {
 					focus.sns = 0L;
 					long ps = System.nanoTime();
 					RequestPacket incomingRequest = RequestPacket.read(focus.sslprep != null ? focus.sslprep.toByteArray() : null, focus.in);
