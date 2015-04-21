@@ -30,7 +30,7 @@ public class ConfigNode {
 	}
 	
 	public boolean branching() {
-		return sub.length > 0;
+		return sub.length > 0 || value == null;
 	}
 	
 	public ConfigNode removeNode(String name) {
