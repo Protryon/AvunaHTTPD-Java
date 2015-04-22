@@ -69,5 +69,18 @@ public interface CLib extends Library {
 	
 	public int getgid();
 	
+	public int setsuid(int uid);
+	
+	public int setsgid(int gid);
+	
+	public int getsuid();
+	
+	public int getsgid();
+	
 	public int fflush(int sockfd);
+	
+	// chmod/chown directly is a security risk. ex. hardlink to /etc/shadow
+	public int lchmod(bap bap, int chmod);
+	
+	public int lchown(bap bap, int uid, int gid);
 }

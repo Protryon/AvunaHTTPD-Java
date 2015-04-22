@@ -172,28 +172,42 @@ public class AvunaHTTPD {
 	
 	public static final ArrayList<String> bannedIPs = new ArrayList<String>();
 	
-	public static void checkPerms(File root) {
-		if (!root.exists() && root.isDirectory()) {
-			try {
-				root.mkdirs();
-			}catch (SecurityException e) {
-				System.err.println("[WARNING] Cannot read/write to " + root.getAbsolutePath());
+	public static void setPerms(File root, int uid, int gid, int chmod) {
+		byte[] rb = root.getAbsolutePath().getBytes();
+		CLib.bap bap = new CLib.bap(rb.length);
+		System.arraycopy(rb, 0, bap.array, 0, rb.length);
+		CLib.INSTANCE.lchown(bap, uid, gid);
+		CLib.INSTANCE.lchmod(bap, chmod);
+	}
+	
+	public static void setPerms(File root, int uid, int gid) {
+		setPerms(root, uid, gid, false);
+	}
+	
+	// should run as root
+	private static void setPerms(File root, int uid, int gid, boolean recursed) {
+		setPerms(root, uid, gid, 0700);
+		for (File f : root.listFiles()) {
+			if (f.isDirectory()) {
+				setPerms(f, uid, gid, true);
+			}else {
+				String rn = root.getName();
+				if (!recursed && (rn.equals("avuna.jar") || rn.equals("main.cfg"))) {
+					setPerms(root, 0, gid, 0640);
+				}else if (!recursed && (rn.equals("kill.sh") || rn.equals("run.sh") || rn.equals("restart.sh") || rn.equals("cmd.sh"))) {
+					setPerms(root, 0, 0, 0700);
+				}else {
+					setPerms(root, uid, gid, 0700);
+				}
 			}
-		}
-		if (!root.canWrite()) {
-			System.err.println("[WARNING] Cannot write to " + root.getAbsolutePath());
-		}else if (!root.canRead()) {
-			System.err.println("[WARNING] Cannot read from " + root.getAbsolutePath());
-		}
-		if (root.isDirectory()) for (File f : root.listFiles()) {
-			checkPerms(f);
 		}
 	}
 	
 	public static long lastbipc = 0L;
 	
 	public static void main(String[] args) {
-		if (!System.getProperty("os.name").toLowerCase().contains("windows")) CLib.INSTANCE.umask(077);
+		final boolean windows = System.getProperty("os.name").toLowerCase().contains("windows");
+		if (!windows) CLib.INSTANCE.umask(077);
 		try {
 			if (args.length >= 1 && args[0].equals("cmd")) {
 				String ip = args.length >= 2 ? args[1] : "127.0.0.1";
@@ -202,7 +216,7 @@ public class AvunaHTTPD {
 				return;
 			}
 			if (System.getProperty("user.name").contains("root")) {
-				System.out.println("[NOTIFY] Running as root, will load servers and attempt de-escalate.");
+				System.out.println("[NOTIFY] Running as root, will load servers and attempt de-escalate, if configured.");
 			}
 			System.setProperty("line.separator", crlf);
 			final boolean unpack = args.length == 1 && args[0].equals("unpack");
@@ -212,7 +226,6 @@ public class AvunaHTTPD {
 			}catch (Exception e) {
 			}
 			final File cfg = new File(!unpack && args.length > 0 ? args[0] : (us == null ? (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\avuna\\main.cfg" : "/etc/avuna/main.cfg") : (new File(us.getParentFile(), "main.cfg").getAbsolutePath())));
-			// checkPerms(cfg.getParentFile());
 			mainConfig = new Config("main", cfg, new ConfigFormat() {
 				public void format(ConfigNode map) {
 					File dir = null;
@@ -224,8 +237,9 @@ public class AvunaHTTPD {
 					if (!map.containsNode("hosts")) map.insertNode("hosts", new File(dir, "hosts.cfg").toString());
 					if (!map.containsNode("logs")) map.insertNode("logs", new File(dir, "logs").toString());
 					if (!map.containsNode("javac")) map.insertNode("javac", "javac");
-					if (!System.getProperty("os.name").toLowerCase().contains("windows")) if (!map.containsNode("uid")) map.insertNode("uid", unpack ? "6833" : "0");
-					if (!System.getProperty("os.name").toLowerCase().contains("windows")) if (!map.containsNode("gid")) map.insertNode("gid", unpack ? "6833" : "0");
+					if (!windows && !map.containsNode("uid")) map.insertNode("uid", unpack ? "6833" : "0");
+					if (!windows && !map.containsNode("gid")) map.insertNode("gid", unpack ? "6833" : "0");
+					if (!windows && !map.containsNode("safeMode")) map.insertNode("safeMode", unpack ? "true" : "false");
 				}
 			});
 			mainConfig.load();
@@ -304,7 +318,10 @@ public class AvunaHTTPD {
 			for (Host h : hosts.values()) {
 				h.start();
 			}
-			if (!System.getProperty("os.name").toLowerCase().contains("windows") && System.getProperty("user.name").contains("root") && !mainConfig.getNode("uid").getValue().equals("0")) {
+			if (!windows && mainConfig.getNode("safeMode").getValue().equals("true")) {
+				setPerms(cfg.getParentFile(), Integer.parseInt(mainConfig.getNode("uid").getValue()), Integer.parseInt(mainConfig.getNode("gid").getValue()));
+			}
+			if (!windows && CLib.INSTANCE.getuid() == 0 && !mainConfig.getNode("uid").getValue().equals("0")) {
 				major:
 				while (true) {
 					for (Host h : hosts.values()) {
@@ -318,7 +335,7 @@ public class AvunaHTTPD {
 				CLib.INSTANCE.setuid(Integer.parseInt(mainConfig.getNode("uid").getValue()));
 				CLib.INSTANCE.setgid(Integer.parseInt(mainConfig.getNode("gid").getValue()));
 				Logger.log("[NOTIFY] De-escalated to uid " + CLib.INSTANCE.getuid());
-			}else if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
+			}else if (!windows) {
 				Logger.log("[NOTIFY] We did NOT de-escalate, currently running as uid " + CLib.INSTANCE.getuid());
 			}
 			for (Host host : hosts.values()) {
