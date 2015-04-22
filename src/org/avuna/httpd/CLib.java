@@ -1,44 +1,73 @@
 package org.avuna.httpd;
 
+import java.util.Arrays;
+import java.util.List;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.Platform;
+import com.sun.jna.Structure;
+import com.sun.jna.ptr.IntByReference;
 
-public class CLib {
-	private static final int OK = 0;
-	private static final int ERROR = -1;
+public interface CLib extends Library {
+	CLib INSTANCE = (CLib)Native.loadLibrary((Platform.isWindows() ? "msvcrt" : "c"), CLib.class);
 	
-	private interface CLibrary extends Library {
-		CLibrary INSTANCE = (CLibrary)Native.loadLibrary((Platform.isWindows() ? "msvcrt" : "c"), CLibrary.class);
+	public int socket(int domain, int type, int protocol);
+	
+	public int bind(int sockfd, sockaddr_un sockaddr, int len);
+	
+	public int listen(int sockfd, int backlog);
+	
+	public int accept(int sockfd, sockaddr_un sockaddr, IntByReference len);
+	
+	public int recv(int sockfd, bap byteArrayPointer, int len, int flags);
+	
+	public int send(int sockfd, bap byteArrayPointer, int len, int flags);
+	
+	public int read(int sockfd, bap byteArrayPointer, int len);
+	
+	public int write(int sockfd, bap byteArrayPointer, int len);
+	
+	public static class bap extends Structure {
 		
-		int umask(int umask);
+		public byte[] array;
 		
-		int setuid(int uid);
+		public bap(int size) {
+			array = new byte[size];
+		}
 		
-		int setgid(int gid);
+		@Override
+		protected List getFieldOrder() {
+			return Arrays.asList(new String[]{"array"});
+		}
 		
-		int getuid();
-		
-		int geteuid();
 	}
 	
-	public static int setumask(int umask) {
-		if (Platform.isWindows()) return OK;
-		return CLibrary.INSTANCE.umask(umask);
+	public int connect(int sockfd, sockaddr_un sockaddr, int len);
+	
+	public static class sockaddr_un extends Structure {
+		
+		public short sunfamily = 1;
+		public byte[] sunpath = new byte[108]; // must be 108 long.
+		
+		@Override
+		protected List getFieldOrder() {
+			return Arrays.asList(new String[]{"sunfamily", "sunpath"});
+		}
 	}
 	
-	public static int setuid(int uid) {
-		if (Platform.isWindows()) return OK;
-		return CLibrary.INSTANCE.setuid(uid);
-	}
+	public int ioctl(int sockfd, int mode, IntByReference count);
 	
-	public static int setgid(int gid) {
-		if (Platform.isWindows()) return OK;
-		return CLibrary.INSTANCE.setgid(gid);
-	}
+	public int close(int sockfd);
 	
-	public static int getuid() {
-		if (Platform.isWindows()) return ERROR;
-		return CLibrary.INSTANCE.getuid();
-	}
+	public int umask(int umask);
+	
+	public int setuid(int uid);
+	
+	public int setgid(int gid);
+	
+	public int getuid();
+	
+	public int getgid();
+	
+	public int fflush(int sockfd);
 }

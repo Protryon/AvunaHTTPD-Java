@@ -193,7 +193,7 @@ public class AvunaHTTPD {
 	public static long lastbipc = 0L;
 	
 	public static void main(String[] args) {
-		if (!System.getProperty("os.name").toLowerCase().contains("windows")) CLib.setumask(077);
+		if (!System.getProperty("os.name").toLowerCase().contains("windows")) CLib.INSTANCE.umask(077);
 		try {
 			if (args.length >= 1 && args[0].equals("cmd")) {
 				String ip = args.length >= 2 ? args[1] : "127.0.0.1";
@@ -315,11 +315,11 @@ public class AvunaHTTPD {
 					}
 					break;
 				}
-				CLib.setuid(Integer.parseInt(mainConfig.getNode("uid").getValue()));
-				CLib.setgid(Integer.parseInt(mainConfig.getNode("gid").getValue()));
-				Logger.log("[NOTIFY] De-escalated to uid " + CLib.getuid());
+				CLib.INSTANCE.setuid(Integer.parseInt(mainConfig.getNode("uid").getValue()));
+				CLib.INSTANCE.setgid(Integer.parseInt(mainConfig.getNode("gid").getValue()));
+				Logger.log("[NOTIFY] De-escalated to uid " + CLib.INSTANCE.getuid());
 			}else if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
-				Logger.log("[NOTIFY] We did NOT de-escalate, currently running as uid " + CLib.getuid());
+				Logger.log("[NOTIFY] We did NOT de-escalate, currently running as uid " + CLib.INSTANCE.getuid());
 			}
 			for (Host host : hosts.values()) {
 				if (host instanceof HostHTTP) {
