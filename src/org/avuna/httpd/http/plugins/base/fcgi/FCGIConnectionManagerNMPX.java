@@ -8,11 +8,19 @@ import java.util.List;
 public class FCGIConnectionManagerNMPX implements IFCGIManager {
 	private final String ip;
 	private final int port;
+	private final boolean unix;
 	private final List<AugFCGIConnection> vmpx = Collections.synchronizedList(new ArrayList<AugFCGIConnection>());
+	
+	public FCGIConnectionManagerNMPX(String unix) {
+		this.ip = unix;
+		this.port = -1;
+		this.unix = true;
+	}
 	
 	public FCGIConnectionManagerNMPX(String ip, int port) {
 		this.ip = ip;
 		this.port = port;
+		this.unix = false;
 	}
 	
 	public FCGIConnection getNMPX() throws IOException {
@@ -21,7 +29,7 @@ public class FCGIConnectionManagerNMPX implements IFCGIManager {
 			conn.taken = true;
 			return conn.conn;
 		}
-		FCGIConnection nc = new FCGIConnection(ip, port);
+		FCGIConnection nc = unix ? new FCGIConnection(ip) : new FCGIConnection(ip, port);
 		nc.start();
 		AugFCGIConnection anc = new AugFCGIConnection(nc);
 		anc.taken = true;

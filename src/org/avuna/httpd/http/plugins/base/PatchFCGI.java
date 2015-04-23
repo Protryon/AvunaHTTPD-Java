@@ -1,9 +1,5 @@
 package org.avuna.httpd.http.plugins.base;
 
-/**
- * This class is deprecated, as we have proper CGI functionality now.
- */
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -47,10 +43,11 @@ public class PatchFCGI extends Patch {
 		for (String subs : pcfg.getSubnodes()) {
 			ConfigNode sub = pcfg.getNode(subs);
 			if (!sub.branching()) continue;
+			boolean unix = sub.getNode("unix").getValue().equals("true");
 			try {
 				String ip = sub.getNode("ip").getValue();
 				int port = Integer.parseInt(sub.getNode("port").getValue());
-				FCGIConnection sett = new FCGIConnection(ip, port);
+				FCGIConnection sett = unix ? new FCGIConnection(ip) : new FCGIConnection(ip, port);
 				sett.start();
 				boolean cmpx = false;
 				sett.getSettings();
@@ -66,16 +63,16 @@ public class PatchFCGI extends Patch {
 				sett.close();
 				IFCGIManager mgr = null;
 				if (cmpx) {
-					mgr = new FCGIConnection(ip, port);
+					mgr = unix ? new FCGIConnection(ip) : new FCGIConnection(ip, port);
 				}else {
-					mgr = new FCGIConnectionManagerNMPX(ip, port);
+					mgr = unix ? new FCGIConnectionManagerNMPX(ip) : new FCGIConnectionManagerNMPX(ip, port);
 				}
 				fcgis.put(sub.getNode("mime-types").getValue(), mgr);
 				mgr.start();
 			}catch (Exception e) {
 				fcgis.put(sub.getNode("mime-types").getValue(), null);
 				Logger.logError(e);
-				Logger.log("FCGI server(" + sub.getNode("ip").getValue() + ":" + sub.getNode("port").getValue() + ") NOT accepting connections, disabling FCGI.");
+				Logger.log("FCGI server(" + sub.getNode("ip").getValue() + (unix ? "" : ":" + sub.getNode("port").getValue()) + ") NOT accepting connections, disabling FCGI.");
 			}
 		}
 	}
@@ -89,6 +86,7 @@ public class PatchFCGI extends Patch {
 		for (String subb : json.getSubnodes()) {
 			ConfigNode sub = json.getNode(subb);
 			if (!sub.branching()) continue;
+			if (!sub.containsNode("unix")) sub.insertNode("unix", "false", "set ip to the unix socket file, and port is ignored <to use unix sockets>");
 			if (!sub.containsNode("ip")) sub.insertNode("ip", "127.0.0.1");
 			if (!sub.containsNode("port")) sub.insertNode("port", "9000");
 			if (!sub.containsNode("mime-types")) sub.insertNode("mime-types", "application/x-php");

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import org.avuna.httpd.CLib;
 import org.avuna.httpd.CLib.sockaddr_un;
+import com.sun.jna.Native;
 import com.sun.jna.ptr.IntByReference;
 
 public class UnixServerSocket {
@@ -32,15 +33,15 @@ public class UnixServerSocket {
 	public void bind() throws IOException {
 		if (bound) throw new IOException("Already bound!");
 		sockfd = CLib.INSTANCE.socket(1, 1, 0);
-		if (sockfd < 0) throw new IOException("Socket failed to be created!");
+		if (sockfd < 0) throw new CException(Native.getLastError(), "socket failed native create");
 		byte[] fb = file.getBytes();
 		sockaddr_un sau = new sockaddr_un();
 		sau.sunpath = fb;
 		sau.sunfamily = 1;
 		int bind = CLib.INSTANCE.bind(sockfd, sau, fb.length + 2);
-		if (bind != 0) throw new IOException("Socket failed to bind!");
+		if (bind != 0) throw new CException(Native.getLastError(), "socket failed bind");
 		int listen = CLib.INSTANCE.listen(sockfd, 50);
-		if (bind != 0) throw new IOException("Socket failed to listen!");
+		if (bind != 0) throw new CException(Native.getLastError(), "socket failed listen");
 		bound = true;
 	}
 	
@@ -55,6 +56,6 @@ public class UnixServerSocket {
 	public void close() throws IOException {
 		closed = true;
 		int s = CLib.INSTANCE.close(sockfd);
-		if (s < 0) throw new IOException("Closing failed!");
+		if (s < 0) throw new CException(Native.getLastError(), "socket failed close");;
 	}
 }

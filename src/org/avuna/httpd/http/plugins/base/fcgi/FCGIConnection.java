@@ -12,13 +12,16 @@ import org.avuna.httpd.http.plugins.base.fcgi.packets.FCGIPacket;
 import org.avuna.httpd.http.plugins.base.fcgi.packets.GetValues;
 import org.avuna.httpd.http.plugins.base.fcgi.packets.GetValuesResult;
 import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.util.unixsocket.UnixSocket;
 
 public class FCGIConnection extends Thread implements IFCGIManager {
 	private Socket s;
+	private UnixSocket us;
 	private DataOutputStream out;
 	private DataInputStream in;
 	private final String ip;
 	private final int port;
+	private final boolean unix;
 	protected AugFCGIConnection aug = null;
 	
 	public FCGIConnection(String ip, int port) throws IOException {
@@ -29,6 +32,20 @@ public class FCGIConnection extends Thread implements IFCGIManager {
 		out = new DataOutputStream(s.getOutputStream());
 		out.flush();
 		in = new DataInputStream(s.getInputStream());
+		this.setDaemon(true);
+		unix = false;
+	}
+	
+	public FCGIConnection(String unixsock) throws IOException {
+		super("FCGI Thread");
+		this.ip = unixsock;
+		this.port = -1;
+		us = new UnixSocket(unixsock);
+		us.connect();
+		this.unix = true;
+		out = new DataOutputStream(us.getOutputStream());
+		out.flush();
+		in = new DataInputStream(us.getInputStream());
 		this.setDaemon(true);
 	}
 	
@@ -58,19 +75,20 @@ public class FCGIConnection extends Thread implements IFCGIManager {
 	}
 	
 	public boolean isClosed() {
-		return s.isClosed();
+		return unix ? us.isClosed() : s.isClosed();
 	}
 	
 	private boolean closing = false;
 	
 	public void close() throws IOException {
 		closing = true;
-		s.close();
+		if (unix) us.close();
+		else s.close();
 	}
 	
 	public void run() {
 		try {
-			while (!s.isClosed() && !closing) {
+			while (!isClosed() && !closing) {
 				boolean sleep = true;
 				if (in.available() > 0) {
 					sleep = false;
@@ -119,18 +137,26 @@ public class FCGIConnection extends Thread implements IFCGIManager {
 		}finally {
 			if (!closing) {
 				Logger.log("Reconnecting!");
-				if (s != null) try {
-					s.close();
+				try {
+					if (unix) us.close();
+					else s.close();
 				}catch (IOException e2) {
 					Logger.logError(e2);
 				}
 				try {
 					Thread.sleep(1000L);
 					outQueue.clear();
-					s = new Socket(ip, port);
-					out = new DataOutputStream(s.getOutputStream());
-					out.flush();
-					in = new DataInputStream(s.getInputStream());
+					if (unix) {
+						us = new UnixSocket(ip);
+						out = new DataOutputStream(us.getOutputStream());
+						out.flush();
+						in = new DataInputStream(us.getInputStream());
+					}else {
+						s = new Socket(ip, port);
+						out = new DataOutputStream(s.getOutputStream());
+						out.flush();
+						in = new DataInputStream(s.getInputStream());
+					}
 					run();
 				}catch (Exception e) {
 					Logger.logError(e);

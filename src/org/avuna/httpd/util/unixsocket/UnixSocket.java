@@ -2,6 +2,7 @@ package org.avuna.httpd.util.unixsocket;
 
 import java.io.IOException;
 import org.avuna.httpd.CLib;
+import com.sun.jna.Native;
 
 public class UnixSocket {
 	private int sockfd = -1;
@@ -26,13 +27,13 @@ public class UnixSocket {
 	public void connect() throws IOException {
 		if (connected) throw new IOException("Already connected!");
 		sockfd = CLib.INSTANCE.socket(1, 1, 0);
-		if (sockfd < 0) throw new IOException("Socket failed to be created!");
+		if (sockfd < 0) throw new CException(Native.getLastError(), "socket failed native create");
 		CLib.sockaddr_un sockaddr = new CLib.sockaddr_un();
 		byte[] fd = file.getBytes();
 		sockaddr.sunfamily = 1;
 		sockaddr.sunpath = fd;
 		int c = CLib.INSTANCE.connect(sockfd, sockaddr, fd.length + 2);
-		if (c != 0) throw new IOException("Socket failed to connect!");
+		if (c != 0) throw new CException(Native.getLastError(), "socket failed connect");
 		out = new UnixOutputStream(sockfd);
 		in = new UnixInputStream(sockfd);
 		connected = true;
@@ -48,9 +49,13 @@ public class UnixSocket {
 		return out;
 	}
 	
+	public boolean isClosed() {
+		return closed;
+	}
+	
 	public void close() throws IOException {
 		closed = true;
 		int s = CLib.INSTANCE.close(sockfd);
-		if (s < 0) throw new IOException("Closing failed!");
+		if (s < 0) throw new CException(Native.getLastError(), "socket failed close");
 	}
 }
