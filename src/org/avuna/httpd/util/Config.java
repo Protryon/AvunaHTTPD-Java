@@ -65,7 +65,9 @@ public class Config extends ConfigNode {
 	private void readMap(ConfigNode map, Scanner in) {
 		while (in.hasNextLine()) {
 			String line = in.nextLine().trim();
+			String comment = null;
 			if (line.contains("#")) {
+				comment = line.substring(line.indexOf("#") + 1).trim();
 				line = line.substring(0, line.indexOf("#")).trim();
 			}
 			if (line.endsWith("{")) {
@@ -73,7 +75,7 @@ public class Config extends ConfigNode {
 				boolean base = pl++ == 0;
 				if (!base) {
 					ConfigNode subnode = new ConfigNode(name);
-					map.insertNode(subnode);
+					map.insertNode(subnode).setComment(comment);
 					readMap(subnode, in);
 				}
 			}else if (line.equals("}")) {
@@ -82,7 +84,7 @@ public class Config extends ConfigNode {
 			}else if (line.contains("=")) {
 				String key = line.substring(0, line.indexOf("="));
 				String value = line.substring(key.length() + 1);
-				map.insertNode(new ConfigNode(key, value));
+				map.insertNode(new ConfigNode(key, value)).setComment(comment);
 			}
 		}
 	}
