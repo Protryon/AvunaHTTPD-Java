@@ -18,6 +18,7 @@ import javax.net.ssl.X509TrustManager;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.util.unixsocket.UnixServerSocket;
 
 public abstract class Host extends Thread {
 	protected final String name;
@@ -43,8 +44,7 @@ public abstract class Host extends Thread {
 		Logger.log("Starting " + name + "/" + protocol.name + " " + (ssl ? "TLS-" : "") + "Server on " + ip + ":" + port);
 		if (ssl) {
 			try {
-				ServerSocket server = sc.createServerSocket(port, 1000, InetAddress.getByName(ip));
-				// ((SSLServerSocket)server).setEnabledProtocols(possibleProtocols);
+				ServerSocket server = sc.createServerSocket(port, 50, InetAddress.getByName(ip));
 				return server;
 			}catch (Exception e) {
 				Logger.logError(e);
@@ -53,6 +53,11 @@ public abstract class Host extends Thread {
 		}else {
 			return new ServerSocket(port, 1000, InetAddress.getByName(ip));
 		}
+	}
+	
+	public final UnixServerSocket makeUnixServer(String file) throws IOException {
+		Logger.log("Starting " + name + "/" + protocol.name + " " + "Server on " + file);
+		return new UnixServerSocket(file);
 	}
 	
 	public final SSLContext makeSSLContext(File keyFile, String keyPassword, String keystorePassword) throws IOException {
@@ -114,7 +119,11 @@ public abstract class Host extends Thread {
 			if (isSSL) {
 				sslContext = makeSSLContext(new File(ssl.getNode("keyFile").getValue()), ssl.getNode("keyPassword").getValue(), ssl.getNode("keystorePassword").getValue());
 			}
-			setup(makeServer(cfg.getNode("ip").getValue(), Integer.parseInt(cfg.getNode("port").getValue()), isSSL, !isSSL ? null : sslContext.getServerSocketFactory()));
+			if (cfg.containsNode("unix") && cfg.getNode("unix").getValue().equals("true")) {
+				setup(makeUnixServer(cfg.getNode("ip").getValue()));
+			}else {
+				setup(makeServer(cfg.getNode("ip").getValue(), Integer.parseInt(cfg.getNode("port").getValue()), isSSL, !isSSL ? null : sslContext.getServerSocketFactory()));
+			}
 		}catch (Exception e) {
 			Logger.logError(e);
 			Logger.log("Closing " + name + "/" + protocol.name + " Server on " + getConfig().getNode("ip").getValue() + ":" + getConfig().getNode("port").getValue());
@@ -125,6 +134,7 @@ public abstract class Host extends Thread {
 	
 	public void formatConfig(ConfigNode map) {
 		if (!map.containsNode("port")) map.insertNode("port", "80");
+		if (!map.containsNode("unix")) map.insertNode("unix", "false", "set to true, and set ip to the socket file to use a unix socket. port is ignored. mostly used for shared hosting.");
 		if (!map.containsNode("ip")) map.insertNode("ip", "0.0.0.0");
 		if (!map.containsNode("ssl")) map.insertNode("ssl");
 		ConfigNode ssl = map.getNode("ssl");

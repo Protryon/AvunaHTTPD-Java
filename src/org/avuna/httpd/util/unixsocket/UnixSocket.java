@@ -1,10 +1,13 @@
 package org.avuna.httpd.util.unixsocket;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import org.avuna.httpd.CLib;
 import com.sun.jna.Native;
 
-public class UnixSocket {
+public class UnixSocket extends Socket {
 	private int sockfd = -1;
 	private String file = "";
 	private boolean connected = false, servermade = false, closed = false;
@@ -37,6 +40,14 @@ public class UnixSocket {
 		out = new UnixOutputStream(sockfd);
 		in = new UnixInputStream(sockfd);
 		connected = true;
+	}
+	
+	public InetAddress getInetAddress() {
+		try {
+			return InetAddress.getLocalHost();
+		}catch (UnknownHostException e) {
+			return null;
+		}
 	}
 	
 	public UnixInputStream getInputStream() throws IOException {

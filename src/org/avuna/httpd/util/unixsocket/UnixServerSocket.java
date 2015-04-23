@@ -2,12 +2,13 @@ package org.avuna.httpd.util.unixsocket;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.ServerSocket;
 import org.avuna.httpd.CLib;
 import org.avuna.httpd.CLib.sockaddr_un;
 import com.sun.jna.Native;
 import com.sun.jna.ptr.IntByReference;
 
-public class UnixServerSocket {
+public class UnixServerSocket extends ServerSocket {
 	private int sockfd = 0;
 	private boolean bound = false;
 	private String file = "";

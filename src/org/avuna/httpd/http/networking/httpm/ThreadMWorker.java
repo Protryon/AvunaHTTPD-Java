@@ -2,7 +2,6 @@ package org.avuna.httpd.http.networking.httpm;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketException;
@@ -14,6 +13,7 @@ import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.networking.ThreadWorker;
 import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.util.unixsocket.UnixSocket;
 
 public class ThreadMWorker extends ThreadWorker {
 	
@@ -52,40 +52,32 @@ public class ThreadMWorker extends ThreadWorker {
 				VHostM vh = (VHostM)incomingRequest.host;
 				long benchStart = System.nanoTime();
 				if (incomingRequest.work.cn == null) {
-					Socket s = new Socket(vh.ip, vh.port);
-					DataOutputStream out = new DataOutputStream(s.getOutputStream());
-					out.flush();
-					DataInputStream in = new DataInputStream(s.getInputStream()); // TODO: auth
-					incomingRequest.work.cn = new MasterConn(s, out, in);
+					incomingRequest.work.cn = vh.unix ? new MasterConn(new UnixSocket(vh.ip)) : new MasterConn(new Socket(vh.ip, vh.port));
 				}
 				long est = 0L, writ = 0L, hdr = 0L;
 				try {
 					incomingRequest.headers.addHeader("X-Forwarded-For", incomingRequest.work.s.getInetAddress().getHostAddress());
 					est = System.nanoTime();
-					incomingRequest.write(incomingRequest.work.cn.out);
-					incomingRequest.work.cn.out.flush();
+					incomingRequest.write(incomingRequest.work.cn.getOutputStream());
+					incomingRequest.work.cn.getOutputStream().flush();
 					writ = System.nanoTime();
 					ResponsePacket outgoingResponse = incomingRequest.child;
 					outgoingResponse.request = incomingRequest;
-					String line = readLine(incomingRequest.work.cn.in);
+					String line = readLine(incomingRequest.work.cn.getInputStream());
 					if (line == null) {
 						VHostM vm = (VHostM)incomingRequest.host;
-						Socket s = new Socket(vm.ip, vm.port);
-						DataOutputStream out = new DataOutputStream(s.getOutputStream());
-						out.flush();
-						DataInputStream in = new DataInputStream(s.getInputStream());
-						incomingRequest.work.cn = new MasterConn(s, out, in);
+						incomingRequest.work.cn = vh.unix ? new MasterConn(new UnixSocket(vh.ip)) : new MasterConn(new Socket(vh.ip, vh.port));
 						est = System.nanoTime();
-						incomingRequest.write(incomingRequest.work.cn.out);
-						incomingRequest.work.cn.out.flush();
+						incomingRequest.write(incomingRequest.work.cn.getOutputStream());
+						incomingRequest.work.cn.getOutputStream().flush();
 						writ = System.nanoTime();
-						line = readLine(incomingRequest.work.cn.in);
+						line = readLine(incomingRequest.work.cn.getInputStream());
 						if (line == null) {
 							Logger.log("Reconnect failed, check VHost connection!");
 						}
 					}
 					if (line.length() == 0) {
-						line = readLine(incomingRequest.work.cn.in);
+						line = readLine(incomingRequest.work.cn.getInputStream());
 					}
 					int i = line.indexOf(" ");
 					outgoingResponse.httpVersion = line.substring(0, i);
@@ -93,21 +85,21 @@ public class ThreadMWorker extends ThreadWorker {
 					outgoingResponse.statusCode = Integer.parseInt(line.substring(i, (i = line.indexOf(" ", i))));
 					i++;
 					outgoingResponse.reasonPhrase = line.substring(i);
-					while ((line = readLine(incomingRequest.work.cn.in)).length() > 0) {
+					while ((line = readLine(incomingRequest.work.cn.getInputStream())).length() > 0) {
 						outgoingResponse.headers.addHeader(line);
 					}
 					hdr = System.nanoTime();
 					
 					if (outgoingResponse.headers.hasHeader("Content-Length")) {
 						byte[] data = new byte[Integer.parseInt(outgoingResponse.headers.getHeader("Content-Length"))];
-						incomingRequest.work.cn.in.readFully(data);
+						incomingRequest.work.cn.getInputStream().readFully(data);
 						// readLine(incomingRequest.work.cn.in);
 						outgoingResponse.body = new Resource(data, outgoingResponse.headers.hasHeader("Content-Type") ? outgoingResponse.headers.getHeader("Content-Type") : "text/html; charset=utf-8");
 						outgoingResponse.prewrite();
 						outgoingResponse.done = true;
 						outgoingResponse.bwt = System.nanoTime();
 					}else if (outgoingResponse.headers.hasHeader("Transfer-Encoding") && outgoingResponse.headers.getHeader("Transfer-Encoding").contains("chunked")) {
-						outgoingResponse.toStream = incomingRequest.work.cn.in;
+						outgoingResponse.toStream = incomingRequest.work.cn.getInputStream();
 						outgoingResponse.done = true;
 						outgoingResponse.bwt = System.nanoTime();
 					}else {

@@ -40,29 +40,15 @@ public class HostHTTPM extends HostHTTP {
 			// if (!vhost.containsNode("uid")) vhost.insertNode(AvunaHTTPD.mainConfig.get("uid"));
 			// if (!vhost.containsNode("gid")) vhost.insertNode(AvunaHTTPD.mainConfig.get("gid"));
 			// }
+			if (!AvunaHTTPD.windows && !vhost.containsNode("vhost-unix")) vhost.insertNode("vhost-unix", "false", "enabled unix socket. if true, set the ip to the unix socket file, port is ignored.");
 			if (!vhost.containsNode("vhost-ip")) vhost.insertNode("vhost-ip", "127.0.0.1");
 			if (!vhost.containsNode("vhost-port")) vhost.insertNode("vhost-port", "6844");
 		}
 		for (String vkey : vhosts.getSubnodes()) {
 			ConfigNode ourvh = vhosts.getNode(vkey);
 			if (!ourvh.getNode("enabled").getValue().equals("true")) continue;
-			VHost vhost = null;
-			if (ourvh.containsNode("inheritjls")) {
-				VHost parent = null;
-				String ij = ourvh.getNode("inheritjls").getValue();
-				for (Host host : AvunaHTTPD.hosts.values()) {
-					if (host.name.equals(ij.substring(0, ij.indexOf("/")))) {
-						parent = ((HostHTTPM)host).getVHostByName(ij.substring(ij.indexOf("/") + 1));
-					}
-				}
-				if (parent == null) {
-					Logger.log("Invalid inheritjls! Skipping");
-					continue;
-				}
-				vhost = new VHostM(this.getHostname() + "/" + vkey, this, ourvh.getNode("host").getValue(), parent, ourvh.getNode("vhost-ip").getValue(), Integer.parseInt(ourvh.getNode("vhost-port").getValue()));
-			}else {
-				vhost = new VHostM(this.getHostname() + "/" + vkey, this, ourvh.getNode("host").getValue(), ourvh.getNode("vhost-ip").getValue(), Integer.parseInt(ourvh.getNode("vhost-port").getValue()));
-			}
+			boolean unix = !AvunaHTTPD.windows && ourvh.getNode("unix").getValue().equals("true");
+			VHost vhost = new VHostM(this.getHostname() + "/" + vkey, this, unix, ourvh.getNode("host").getValue(), ourvh.getNode("vhost-ip").getValue(), Integer.parseInt(ourvh.getNode("vhost-port").getValue()));
 			vhost.setDebug(ourvh.getNode("debug").getValue().equals("true"));
 			this.addVHost(vhost);
 		}

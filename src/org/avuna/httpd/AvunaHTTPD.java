@@ -204,16 +204,30 @@ public class AvunaHTTPD {
 	}
 	
 	public static long lastbipc = 0L;
+	public static final boolean windows = System.getProperty("os.name").toLowerCase().contains("windows");
 	
 	public static void main(String[] args) {
-		final boolean windows = System.getProperty("os.name").toLowerCase().contains("windows");
 		if (!windows) CLib.INSTANCE.umask(077);
 		try {
-			if (args.length >= 1 && args[0].equals("cmd")) {
-				String ip = args.length >= 2 ? args[1] : "127.0.0.1";
-				int port = args.length >= 3 ? Integer.parseInt(args[2]) : 6049;
-				ComClient.run(ip, port);
-				return;
+			if (args.length >= 1) {
+				if (args[0].equals("cmd")) {
+					String ip = args.length >= 2 ? args[1] : "127.0.0.1";
+					int port = args.length >= 3 ? Integer.parseInt(args[2]) : 6049;
+					ComClient.run(ip, port);
+					return;
+				}else if (args[0].equals("ucmd")) {
+					if (windows) {
+						System.out.println("MUST be on a unix system!");
+						return;
+					}
+					if (args.length != 2) {
+						System.out.println("MUST specify unix socket file!");
+						return;
+					}
+					ComClient.runUnix(args[1]);
+					return;
+				}
+				
 			}
 			if (System.getProperty("user.name").contains("root")) {
 				System.out.println("[NOTIFY] Running as root, will load servers and attempt de-escalate, if configured.");

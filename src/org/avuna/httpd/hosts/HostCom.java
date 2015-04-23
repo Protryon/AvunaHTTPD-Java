@@ -21,6 +21,7 @@ public class HostCom extends Host {
 	public void formatConfig(ConfigNode map) {
 		if (!map.containsNode("port")) map.insertNode("port", "6049");
 		if (!map.containsNode("ip")) map.insertNode("ip", "127.0.0.1");
+		if (!map.containsNode("unix")) map.insertNode("unix", "false", "set to true, and set ip to the socket file to use a unix socket. port is ignored. mostly used for shared hosting.");
 		// super.formatConfig(map);
 		if (!map.containsNode("doAuth")) map.insertNode("doAuth", "true");
 		if (!map.containsNode("auth")) map.insertNode("auth", "");
