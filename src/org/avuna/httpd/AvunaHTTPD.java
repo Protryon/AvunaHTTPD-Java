@@ -28,7 +28,6 @@ import org.avuna.httpd.util.ConfigFormat;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.FileManager;
 import org.avuna.httpd.util.Logger;
-import com.sun.jna.Native;
 
 public class AvunaHTTPD {
 	public static final String VERSION = "1.1.9";
@@ -189,13 +188,13 @@ public class AvunaHTTPD {
 	}
 	
 	public static void setPerms(File root, int uid, int gid, int chmod) {
-		Logger.log("Setting " + root.getAbsolutePath() + " to " + uid + ":" + gid + " chmod " + chmod);
+		// Logger.log("Setting " + root.getAbsolutePath() + " to " + uid + ":" + gid + " chmod " + chmod);
 		byte[] rb = root.getAbsolutePath().getBytes();
 		CLib.bap bap = new CLib.bap(rb.length);
 		System.arraycopy(rb, 0, bap.array, 0, rb.length);
 		if (isSymlink(bap)) return;
 		int ch = CLib.INSTANCE.chmod(bap, chmod);
-		Logger.log("lchmod returned: " + ch + (ch == -1 ? " error code: " + Native.getLastError() : ""));
+		// Logger.log("lchmod returned: " + ch + (ch == -1 ? " error code: " + Native.getLastError() : ""));
 		CLib.INSTANCE.lchown(bap, uid, gid);
 	}
 	
