@@ -1,4 +1,4 @@
-package org.avuna.httpd;
+package org.avuna.httpd.util;
 
 import java.util.Arrays;
 import java.util.List;

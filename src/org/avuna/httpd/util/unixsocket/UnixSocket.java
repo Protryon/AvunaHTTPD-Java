@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import org.avuna.httpd.CLib;
+import org.avuna.httpd.util.CLib;
 import com.sun.jna.Native;
 
 public class UnixSocket extends Socket {

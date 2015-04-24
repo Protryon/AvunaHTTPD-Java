@@ -3,8 +3,8 @@ package org.avuna.httpd.util.unixsocket;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
-import org.avuna.httpd.CLib;
-import org.avuna.httpd.CLib.sockaddr_un;
+import org.avuna.httpd.util.CLib;
+import org.avuna.httpd.util.CLib.sockaddr_un;
 import com.sun.jna.Native;
 import com.sun.jna.ptr.IntByReference;
 

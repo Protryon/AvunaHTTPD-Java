@@ -2,8 +2,8 @@ package org.avuna.httpd.util.unixsocket;
 
 import java.io.IOException;
 import java.io.OutputStream;
-import org.avuna.httpd.CLib;
-import org.avuna.httpd.CLib.bap;
+import org.avuna.httpd.util.CLib;
+import org.avuna.httpd.util.CLib.bap;
 import com.sun.jna.Native;
 
 public class UnixOutputStream extends OutputStream {
