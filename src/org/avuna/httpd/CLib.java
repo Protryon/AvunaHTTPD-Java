@@ -79,8 +79,10 @@ public interface CLib extends Library {
 	
 	public int fflush(int sockfd);
 	
-	// chmod/chown directly is a security risk. ex. hardlink to /etc/shadow
-	public int lchmod(bap bap, int chmod);
+	public int readlink(bap path, bap buf, int bufsize);
+	
+	// dont use unless verified not symlink, otherwise escalation ensues.
+	public int chmod(bap bap, int chmod);
 	
 	public int lchown(bap bap, int uid, int gid);
 }

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import org.avuna.httpd.CLib.bap;
 import org.avuna.httpd.com.ComClient;
 import org.avuna.httpd.com.CommandProcessor;
 import org.avuna.httpd.dns.RecordHolder;
@@ -27,6 +28,7 @@ import org.avuna.httpd.util.ConfigFormat;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.FileManager;
 import org.avuna.httpd.util.Logger;
+import com.sun.jna.Native;
 
 public class AvunaHTTPD {
 	public static final String VERSION = "1.1.9";
@@ -172,12 +174,29 @@ public class AvunaHTTPD {
 	
 	public static final ArrayList<String> bannedIPs = new ArrayList<String>();
 	
+	public static boolean isSymlink(File f) {
+		if (windows) return false;
+		byte[] rb = f.getAbsolutePath().getBytes();
+		CLib.bap bap = new CLib.bap(rb.length);
+		System.arraycopy(rb, 0, bap.array, 0, rb.length);
+		return isSymlink(bap);
+	}
+	
+	private static boolean isSymlink(bap f) {
+		bap bap = new bap(255);
+		int length = CLib.INSTANCE.readlink(f, bap, 255);
+		return length >= 0;
+	}
+	
 	public static void setPerms(File root, int uid, int gid, int chmod) {
+		Logger.log("Setting " + root.getAbsolutePath() + " to " + uid + ":" + gid + " chmod " + chmod);
 		byte[] rb = root.getAbsolutePath().getBytes();
 		CLib.bap bap = new CLib.bap(rb.length);
 		System.arraycopy(rb, 0, bap.array, 0, rb.length);
+		if (isSymlink(bap)) return;
+		int ch = CLib.INSTANCE.chmod(bap, chmod);
+		Logger.log("lchmod returned: " + ch + (ch == -1 ? " error code: " + Native.getLastError() : ""));
 		CLib.INSTANCE.lchown(bap, uid, gid);
-		CLib.INSTANCE.lchmod(bap, chmod);
 	}
 	
 	public static void setPerms(File root, int uid, int gid) {
@@ -186,28 +205,33 @@ public class AvunaHTTPD {
 	
 	// should run as root
 	private static void setPerms(File root, int uid, int gid, boolean recursed) {
+		CLib.INSTANCE.umask(0000);
 		setPerms(root, uid, gid, 0700);
 		for (File f : root.listFiles()) {
 			if (f.isDirectory()) {
 				setPerms(f, uid, gid, true);
 			}else {
-				String rn = root.getName();
-				if (!recursed && (rn.equals("avuna.jar") || rn.equals("main.cfg"))) {
-					setPerms(root, 0, gid, 0640);
-				}else if (!recursed && (rn.equals("kill.sh") || rn.equals("run.sh") || rn.equals("restart.sh") || rn.equals("cmd.sh"))) {
-					setPerms(root, 0, 0, 0700);
+				if (uid == 0 && gid == 0) {
+					setPerms(f, 0, 0, 0700);
 				}else {
-					setPerms(root, uid, gid, 0700);
+					String rn = f.getName();
+					if (!recursed && (rn.equals("avuna.jar") || rn.equals("main.cfg"))) {
+						setPerms(f, 0, gid, 0640);
+					}else if (!recursed && (rn.equals("kill.sh") || rn.equals("run.sh") || rn.equals("restart.sh") || rn.equals("cmd.sh"))) {
+						setPerms(f, 0, 0, 0700);
+					}else {
+						setPerms(f, uid, gid, 0700);
+					}
 				}
 			}
 		}
+		CLib.INSTANCE.umask(0077);
 	}
 	
 	public static long lastbipc = 0L;
 	public static final boolean windows = System.getProperty("os.name").toLowerCase().contains("windows");
 	
 	public static void main(String[] args) {
-		if (!windows) CLib.INSTANCE.umask(077);
 		try {
 			if (args.length >= 1) {
 				if (args[0].equals("cmd")) {
@@ -253,7 +277,7 @@ public class AvunaHTTPD {
 					if (!map.containsNode("javac")) map.insertNode("javac", "javac");
 					if (!windows && !map.containsNode("uid")) map.insertNode("uid", unpack ? "6833" : "0");
 					if (!windows && !map.containsNode("gid")) map.insertNode("gid", unpack ? "6833" : "0");
-					if (!windows && !map.containsNode("safeMode")) map.insertNode("safeMode", unpack ? "true" : "false");
+					if (!windows && !map.containsNode("safeMode")) map.insertNode("safeMode", "true");
 				}
 			});
 			mainConfig.load();
