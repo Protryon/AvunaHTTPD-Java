@@ -1,1 +1,0 @@
-javaw -jar "C:\Users\Max\workspace\AvunaHTTPD\bin" "C:\Users\Max\workspace\AvunaHTTPD\main.cfg"
