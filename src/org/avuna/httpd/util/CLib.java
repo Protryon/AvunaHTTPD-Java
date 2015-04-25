@@ -79,6 +79,8 @@ public interface CLib extends Library {
 	
 	public int fflush(int sockfd);
 	
+	public int __xstat64(int ver, bap path, bap statdump);
+	
 	public int readlink(bap path, bap buf, int bufsize);
 	
 	// dont use unless verified not symlink, otherwise escalation ensues.

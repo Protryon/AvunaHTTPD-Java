@@ -1,6 +1,7 @@
 package org.avuna.httpd.util;
 
 import java.io.File;
+import java.nio.ByteBuffer;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.util.CLib.bap;
 
@@ -10,22 +11,43 @@ public class SafeMode {
 		byte[] rb = f.getAbsolutePath().getBytes();
 		CLib.bap bap = new CLib.bap(rb.length);
 		System.arraycopy(rb, 0, bap.array, 0, rb.length);
-		return isSymlink(bap);
+		return isSymlink(bap, f.isFile());
 	}
 	
-	private static boolean isSymlink(bap f) {
+	private static boolean isHardlink(bap f, boolean isFile) {
+		if (!isFile) return false; // folders CANNOT be hardlinked, but do return the number of subfolders(+1 or 2)
+		bap bap = new bap(1024);
+		int s = CLib.INSTANCE.__xstat64(1, f, bap);
+		if (s == -1) {
+			// Logger.log("hle: " + Native.getLastError());
+		}
+		ByteBuffer bb = ByteBuffer.allocate(4);
+		bb.order(java.nio.ByteOrder.LITTLE_ENDIAN);
+		bb.put(0, bap.array[13]);
+		bb.put(0, bap.array[14]);
+		bb.put(0, bap.array[15]);
+		bb.put(0, bap.array[16]);
+		int hcount = bb.getInt(0);
+		// Logger.log(hcount + "");
+		return hcount != 1;
+	}
+	
+	private static boolean isSymlink(bap f, boolean isFile) {
 		bap bap = new bap(255);
 		int length = CLib.INSTANCE.readlink(f, bap, 255);
-		return length >= 0;
+		boolean hl = isHardlink(f, isFile);
+		// Logger.log("" + (length) + " hl = " + hl);
+		return length >= 0 || hl;
 	}
 	
-	public static void setPerms(File root, int uid, int gid, int chmod) {
+	public static void setPerms(File root, int uid, int gid, int chmod) { // TODO: block ALL crontab + chroot
 		// Logger.log("Setting " + root.getAbsolutePath() + " to " + uid + ":" + gid + " chmod " + chmod);
+		// Logger.log(root.getAbsolutePath());
 		byte[] rb = root.getAbsolutePath().getBytes();
 		CLib.bap bap = new CLib.bap(rb.length);
 		System.arraycopy(rb, 0, bap.array, 0, rb.length);
-		if (isSymlink(bap)) return;
-		int ch = CLib.INSTANCE.chmod(bap, chmod);
+		if (isSymlink(bap, root.isFile())) return;
+		CLib.INSTANCE.chmod(bap, chmod);
 		// Logger.log("lchmod returned: " + ch + (ch == -1 ? " error code: " + Native.getLastError() : ""));
 		CLib.INSTANCE.lchown(bap, uid, gid);
 	}
