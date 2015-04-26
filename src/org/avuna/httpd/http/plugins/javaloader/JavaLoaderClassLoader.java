@@ -6,8 +6,9 @@ import java.util.HashMap;
 import org.avuna.httpd.util.Logger;
 
 public class JavaLoaderClassLoader extends URLClassLoader {
+	
 	public JavaLoaderClassLoader(URL[] url, ClassLoader parent) {
-		super(url);
+		super(url, parent);
 	}
 	
 	private HashMap<String, Class<?>> javaLoaders = new HashMap<String, Class<?>>();

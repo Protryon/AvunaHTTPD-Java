@@ -144,16 +144,19 @@ public class PatchJavaLoader extends Patch {
 								bout.write(buf, 0, i);
 							}
 						}
+						fin.close();
 						byte[] b = bout.toByteArray();
 						bout = null;
 						String name = "";
 						try {
 							name = (session == null ? secjlcl : session.getJLCL()).addClass(b);
 						}catch (LinkageError er) {
-							// Logger.logError(er);
+							Logger.logError(er);
 							continue;
 						}
 						Class<?> cls = (session == null ? secjlcl : session.getJLCL()).loadClass(name);
+						Logger.log(cls.getClassLoader() + " - " + JavaLoader.class.getClassLoader());
+						Logger.log(JavaLoader.class.isAssignableFrom(cls) + " - " + cls + " - " + cls.getSuperclass().getName());
 						if (JavaLoader.class.isAssignableFrom(cls)) {
 							ConfigNode ocfg = null;
 							if (!config.containsNode(session.getVHost().getHostPath())) {

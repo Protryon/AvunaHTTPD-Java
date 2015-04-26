@@ -153,26 +153,9 @@ public class IMAPCommandSearch extends IMAPCommand {
 			}
 		}else {
 			try {
-				ArrayList<Integer> valid = new ArrayList<Integer>();
-				String[] seqs = com.split(",");
-				for (String seq : seqs) {
-					if (seq.contains(":")) {
-						int i = Integer.parseInt(seq.substring(0, seq.indexOf(":"))) - 1;
-						String f = seq.substring(seq.indexOf(":") + 1);
-						int f2 = f.equals("*") ? focus.selectedMailbox.emails.size() : Integer.parseInt(f) - 1;
-						for (; i < f2; i++) {
-							valid.add(i);
-						}
-					}else {
-						if (seq.equals("*")) {
-							valid.add(focus.selectedMailbox.emails.size() - 1);
-						}else {
-							valid.add(Integer.parseInt(seq) - 1);
-						}
-					}
-				}
+				ArrayList<Email> toFetch = focus.selectedMailbox.getByIdentifier(com);
 				for (int i = 0; i < emails.size(); i++) {
-					if (!valid.contains(emails.get(i).uid)) {
+					if (!toFetch.contains(emails.get(i))) {
 						emails.remove(i--);
 					}
 				}

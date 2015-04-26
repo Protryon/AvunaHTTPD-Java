@@ -21,24 +21,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 	@Override
 	public void run(IMAPWork focus, String letters, String[] args) throws IOException {
 		if (args.length >= 2) {
-			String[] seqs = args[0].split(",");
-			ArrayList<Email> toFetch = new ArrayList<Email>();
-			for (String seq : seqs) {
-				if (seq.contains(":")) {
-					int i = Integer.parseInt(seq.substring(0, seq.indexOf(":"))) - 1;
-					String f = seq.substring(seq.indexOf(":") + 1);
-					int f2 = f.equals("*") ? focus.selectedMailbox.emails.size() : Integer.parseInt(f) - 1;
-					for (; i < f2; i++) {
-						toFetch.add(focus.selectedMailbox.emails.get(i));
-					}
-				}else {
-					if (seq.equals("*")) {
-						toFetch.add(focus.selectedMailbox.emails.get(focus.selectedMailbox.emails.size() - 1));
-					}else {
-						toFetch.add(focus.selectedMailbox.emails.get(Integer.parseInt(seq) - 1));
-					}
-				}
-			}
+			ArrayList<Email> toFetch = focus.selectedMailbox.getByIdentifier(args[0]);
 			String tp = args[1];
 			if (tp.startsWith("(")) tp = tp.substring(1, tp.length() - 1);
 			String[] tps = tp.split(" ");

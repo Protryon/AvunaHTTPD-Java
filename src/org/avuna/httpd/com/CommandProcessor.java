@@ -307,12 +307,18 @@ public class CommandProcessor {
 			HostHTTP phost = (HostHTTP)ghost;
 			VHost host = phost.getVHostByName(selectedVHost);
 			String sep = System.getProperty("os.name").toLowerCase().contains("windows") ? ";" : ":";
-			File us = null;
+			String us = null;
 			try {
-				us = new File(AvunaHTTPD.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
+				String fp = AvunaHTTPD.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+				us = fp;
 			}catch (Exception e) {
+				Logger.logError(e);
 			}
-			String cp = us.toString() + sep + host.getHTDocs().toString() + sep + host.getHTSrc().toString() + sep + PatchJavaLoader.lib.toString() + sep;
+			if (us.equals("./")) {
+				us = new File("avuna.jar").getAbsolutePath();
+				Logger.log(us);
+			}
+			String cp = new File(us).getAbsolutePath() + sep + host.getHTDocs().toString() + sep + host.getHTSrc().toString() + sep + PatchJavaLoader.lib.toString() + sep;
 			for (File f : PatchJavaLoader.lib.listFiles()) {
 				if (!f.isDirectory() && f.getName().endsWith(".jar")) {
 					cp += f.toString() + sep;
