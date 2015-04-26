@@ -9,12 +9,14 @@ public class IMAPCommandUID extends IMAPCommand {
 	private final IMAPCommandFetch fetch;
 	private final IMAPCommandStore store;
 	private final IMAPCommandSearch search;
+	private final IMAPCommandCopy copy;
 	
-	public IMAPCommandUID(String comm, int minState, int maxState, HostMail host, IMAPCommandFetch fetch, IMAPCommandStore store, IMAPCommandSearch search) {
+	public IMAPCommandUID(String comm, int minState, int maxState, HostMail host, IMAPCommandFetch fetch, IMAPCommandStore store, IMAPCommandSearch search, IMAPCommandCopy copy) {
 		super(comm, minState, maxState, host);
 		this.fetch = fetch;
 		this.store = store;
 		this.search = search;
+		this.copy = copy;
 	}
 	
 	@Override
@@ -41,6 +43,12 @@ public class IMAPCommandUID extends IMAPCommand {
 					nargs[i] = args[i + 1];
 				}
 				search.run(focus, letters, nargs);
+			}else if (args[0].toLowerCase().equals("copy")) {
+				String[] nargs = new String[args.length - 1];
+				for (int i = 0; i < nargs.length; i++) {
+					nargs[i] = args[i + 1];
+				}
+				copy.run(focus, letters, nargs);
 			}else {
 				focus.writeLine(focus, letters, "BAD Missing Arguments.");
 			}

@@ -42,7 +42,7 @@ public class IMAPCommandStore extends IMAPCommand {
 						}else if (flag.equals("\\Unseen")) {
 							e.flags.remove("\\Seen");
 						}
-						e.flags.add(flag);
+						if (!e.flags.contains(flag)) e.flags.add(flag);
 					}
 				}else if (fc.startsWith("-")) {
 					for (String flag : flags) {

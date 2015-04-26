@@ -102,7 +102,7 @@ public class HardDriveSync extends Sync {
 									String data = new String(dba);
 									Email e = new Email(data, uid, from);
 									for (String flag : fla) {
-										e.flags.add(flag);
+										if (!e.flags.contains(flag)) e.flags.add(flag);
 									}
 									for (String to : toa) {
 										e.to.add(to);

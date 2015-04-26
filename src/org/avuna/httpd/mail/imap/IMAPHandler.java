@@ -60,7 +60,8 @@ public class IMAPHandler {
 		commands.add(fetch = new IMAPCommandFetch("fetch", 3, 100, host));
 		final IMAPCommandStore store;
 		commands.add(store = new IMAPCommandStore("store", 3, 100, host));
-		commands.add(new IMAPCommandCopy("copy", 3, 100, host));
-		commands.add(new IMAPCommandUID("uid", 3, 100, host, fetch, store, search));
+		final IMAPCommandCopy copy;
+		commands.add(copy = new IMAPCommandCopy("copy", 3, 100, host));
+		commands.add(new IMAPCommandUID("uid", 3, 100, host, fetch, store, search, copy));
 	}
 }
