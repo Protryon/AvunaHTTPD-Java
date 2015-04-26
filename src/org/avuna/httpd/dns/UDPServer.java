@@ -13,10 +13,13 @@ public class UDPServer extends Thread implements IServer {
 		super("DNS UDPServer");
 	}
 	
+	public boolean bound = false;
+	
 	public void run() {
 		DatagramSocket server = null;
 		try {
 			server = new DatagramSocket(53);
+			bound = true;
 			while (!server.isClosed()) {
 				byte[] rec = new byte[1024];
 				final DatagramPacket receive = new DatagramPacket(rec, rec.length);
@@ -27,6 +30,7 @@ public class UDPServer extends Thread implements IServer {
 			Logger.logError(e);
 		}finally {
 			if (server != null) server.close();
+			bound = true;
 		}
 	}
 }

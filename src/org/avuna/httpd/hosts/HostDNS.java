@@ -55,5 +55,11 @@ public class HostDNS extends Host {
 		udp.start();
 		TCPServer tcp = new TCPServer(s);
 		tcp.start();
+		while (!udp.bound)
+			try {
+				Thread.sleep(1L);
+			}catch (InterruptedException e) {
+				Logger.logError(e);
+			}
 	}
 }
