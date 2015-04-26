@@ -151,7 +151,7 @@ public class PatchJavaLoader extends Patch {
 						try {
 							name = (session == null ? secjlcl : session.getJLCL()).addClass(b);
 						}catch (LinkageError er) {
-							Logger.logError(er);
+							// Logger.logError(er);
 							continue;
 						}
 						Class<?> cls = (session == null ? secjlcl : session.getJLCL()).loadClass(name);
