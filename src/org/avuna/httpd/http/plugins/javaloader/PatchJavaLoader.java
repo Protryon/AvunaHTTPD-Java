@@ -155,6 +155,7 @@ public class PatchJavaLoader extends Patch {
 							continue;
 						}
 						Class<?> cls = (session == null ? secjlcl : session.getJLCL()).loadClass(name);
+						Logger.log(cls.getClassLoader() + " - " + JavaLoader.class.getClassLoader());
 						if (JavaLoader.class.isAssignableFrom(cls)) {
 							ConfigNode ocfg = null;
 							if (!config.containsNode(session.getVHost().getHostPath())) {
