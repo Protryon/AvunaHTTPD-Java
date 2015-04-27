@@ -152,6 +152,11 @@ public class FileManager {
 	public File getAbsolutePath(String reqTarget, RequestPacket request) {
 		lwi = false;
 		File abs = new File(request.host.getHTDocs(), URLDecoder.decode(reqTarget));
+		String abspr = abs.getAbsolutePath();
+		String htd = request.host.getHTDocs().getAbsolutePath();
+		if (!abspr.startsWith(htd)) {
+			return null;
+		}
 		if (abs.isDirectory()) {
 			String[] index = null;
 			if (request.overrideIndex != null) {
@@ -275,10 +280,10 @@ public class FileManager {
 			}
 			if (resource == null) {
 				File abs = getAbsolutePath(rt, request);
-				if (!cConfigCache.containsKey(superdir)) {
+				if (!cConfigCache.containsKey(superdir) && abs != null) {
 					directive = loadDirective(new File(abs.getParentFile(), ".override"), superdir);
 				}
-				if (abs.exists()) {
+				if (abs != null && abs.exists()) {
 					ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
 					ext = AvunaHTTPD.extensionToMime.containsKey(ext) ? AvunaHTTPD.extensionToMime.get(ext) : "application/octet-stream";
 					FileInputStream fin = new FileInputStream(abs);

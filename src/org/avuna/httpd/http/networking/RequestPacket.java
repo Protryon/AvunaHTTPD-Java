@@ -139,6 +139,18 @@ public class RequestPacket extends Packet {
 		long rlr = System.nanoTime();
 		incomingRequest.method = Method.get(reqLine.substring(0, b));
 		incomingRequest.target = reqLine.substring(b + 1, b = reqLine.indexOf(" ", b + 1));
+		String[] spl = incomingRequest.target.split("/");
+		if (!incomingRequest.target.startsWith("/")) {
+			incomingRequest.drop = true;
+			incomingRequest.drop = true;
+			return incomingRequest;
+		}
+		for (String sp : spl) {
+			if (sp.equals("..") || sp.equals(".")) {
+				incomingRequest.drop = true;
+				return incomingRequest;
+			}
+		}
 		incomingRequest.httpVersion = reqLine.substring(b + 1);
 		long ss = System.nanoTime();
 		Headers headers = incomingRequest.headers;
