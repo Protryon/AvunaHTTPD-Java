@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -70,7 +68,6 @@ public class CommandProcessor {
 	 * @throws Exception an exception gets thrown when something doesn't work out well.
 	 */
 	public static void process(String command, final PrintStream out, final Scanner scan) throws Exception {
-		se = false;
 		// Fancy command parsing right here
 		String[] cargs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1).split(" ") : new String[0];
 		if (cargs.length > 0) {
@@ -348,59 +345,6 @@ public class CommandProcessor {
 			out.println("JCOMP completed.");
 		}else if (command.equals("mem")) {
 			out.println(((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1048576) + "/" + (Runtime.getRuntime().totalMemory() / 1048576) + " (MB) memory used.");
-		}else if (command.equals("shell")) {
-			if (targs.length() > 0) {
-				Thread temp = null;
-				Thread temp2 = null;
-				try {
-					Process proc = Runtime.getRuntime().exec(targs);
-					final InputStream pin = proc.getInputStream();
-					final OutputStream pout = proc.getOutputStream();
-					final Scanner s = new Scanner(pin);
-					se = true;
-					temp = new Thread() {
-						public void run() {
-							while (se && scan.hasNextLine()) {
-								try {
-									String line = scan.nextLine();
-									out.println(line);
-									if (line.equals("exit")) {
-										se = false;
-										continue;
-									}else {
-										pout.write((line + AvunaHTTPD.crlf).getBytes());
-										pout.flush();
-									}
-								}catch (IOException e) {
-									Logger.logError(e);
-								}
-							}
-						}
-					};
-					temp.start();
-					temp2 = new Thread() {
-						public void run() {
-							while (se && s.hasNextLine()) {
-								out.println(s.nextLine());
-							}
-							se = false;
-						}
-					};
-					temp2.start();
-					while (se) {
-						Thread.sleep(10L);
-					}
-				}catch (Exception e) {
-					Logger.logError(e);
-					e.printStackTrace(out);
-				}finally {
-					if (temp != null) temp.interrupt();
-					if (temp2 != null) temp2.interrupt();
-				}
-				out.println("Finished Execution.");
-			}else {
-				out.println("Invalid arguments. (exec)");
-			}
 		}else if (command.equals("help")) {
 			out.println("Commands:");
 			out.println("exit/stop - exits Avuna");
@@ -412,7 +356,6 @@ public class CommandProcessor {
 			out.println("jcomp     - compiles all(or specified) files in the htsrc folder to the htdocs folder");
 			out.println("jphp      - attempts to roughly convert PHP->Java, will require fine tuning");
 			out.println("flushjl   - attempts to clear JavaLoaders, and reload them.");
-			out.println("shell     - runs a shell on the host computer.");
 			out.println("mem       - shows memory stats");
 			out.println("help      - lists these commands + version");
 			out.println("");
@@ -421,11 +364,6 @@ public class CommandProcessor {
 			out.println("Unknown Command: " + command + " - Use help command.");
 		}
 	}
-	
-	/**
-	 * WTf
-	 */
-	private static boolean se = false;
 	
 	/**
 	 * Needs comp
