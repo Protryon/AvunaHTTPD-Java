@@ -29,6 +29,11 @@ public class HostHTTP extends Host {
 	protected int mc;
 	public final PatchRegistry registry;
 	public final PatchBus patchBus;
+	private int maxPostSize = 65535;
+	
+	public int getMaxPostSize() {
+		return maxPostSize;
+	}
 	
 	public void addVHost(VHost vhost) {
 		vhosts.add(vhost);
@@ -216,6 +221,8 @@ public class HostHTTP extends Host {
 		if (!map.containsNode("errorpages")) map.insertNode("errorpages");
 		if (!map.containsNode("index")) map.insertNode("index", "index.class,index.php,index.html");
 		if (!map.containsNode("cacheClock")) map.insertNode("cacheClock", "-1");
+		if (!map.containsNode("maxPostSize")) map.insertNode("maxPostSize", "65535", "max post size in KB");
+		this.maxPostSize = Integer.parseInt(map.getNode("maxPostSize").getValue());
 		if (!map.containsNode("acceptThreadCount")) map.insertNode("acceptThreadCount", "4");
 		if (!map.containsNode("connThreadCount")) map.insertNode("connThreadCount", "12");
 		if (!map.containsNode("workerThreadCount")) map.insertNode("workerThreadCount", "32");

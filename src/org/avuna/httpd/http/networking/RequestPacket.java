@@ -9,6 +9,7 @@ import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.VHost;
 import org.avuna.httpd.http.Headers;
 import org.avuna.httpd.http.Method;
@@ -126,7 +127,7 @@ public class RequestPacket extends Packet {
 		return writer.toString();
 	}
 	
-	public static RequestPacket read(byte[] sslprep, DataInputStream in) throws IOException {
+	public static RequestPacket read(byte[] sslprep, DataInputStream in, HostHTTP host) throws IOException {
 		long start = System.nanoTime();
 		RequestPacket incomingRequest = new RequestPacket();
 		String reqLine = "";
@@ -183,7 +184,8 @@ public class RequestPacket extends Packet {
 			// TODO: if needed, reimplement properly
 			
 		}else if (hcl) {
-			bbody = new byte[Integer.parseInt(headers.getHeader("Content-Length"))];
+			int cl = Integer.parseInt(headers.getHeader("Content-Length"));
+			if (cl > host.getMaxPostSize()) bbody = new byte[cl];
 			in.readFully(bbody);
 		}
 		long pb = System.nanoTime();

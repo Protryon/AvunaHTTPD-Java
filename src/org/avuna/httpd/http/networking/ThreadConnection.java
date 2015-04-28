@@ -134,7 +134,7 @@ public class ThreadConnection extends Thread {
 				}else if (focus.in.available() > 0) {
 					focus.sns = 0L;
 					long ps = System.nanoTime();
-					RequestPacket incomingRequest = RequestPacket.read(focus.sslprep != null ? focus.sslprep.toByteArray() : null, focus.in);
+					RequestPacket incomingRequest = RequestPacket.read(focus.sslprep != null ? focus.sslprep.toByteArray() : null, focus.in, host);
 					if (focus.sslprep != null) focus.sslprep.reset();
 					long benchStart = System.nanoTime();
 					if (incomingRequest == null) {
