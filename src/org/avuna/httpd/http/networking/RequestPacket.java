@@ -185,7 +185,7 @@ public class RequestPacket extends Packet {
 			
 		}else if (hcl) {
 			int cl = Integer.parseInt(headers.getHeader("Content-Length"));
-			if (cl > host.getMaxPostSize()) {
+			if (cl > host.getMaxPostSize() * 1024) {
 				// TODO: perhaps pipe out a 503 internal server error or a post size too big
 				return null;
 			}
