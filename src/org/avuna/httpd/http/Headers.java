@@ -102,7 +102,7 @@ public class Headers {
 	public void removeHeaders(String name) {
 		String[] keys = headers.keySet().toArray(new String[]{});
 		for (int i = 0; i < keys.length; i++) {
-			if (keys[i].equals(name)) {
+			if (keys[i].equalsIgnoreCase(name)) {
 				headers.remove(keys[i]);
 			}
 		}
@@ -116,7 +116,7 @@ public class Headers {
 	 */
 	public boolean hasHeader(String name) {
 		for (String header : headers.keySet()) {
-			if (header.equals(name)) {
+			if (header.equalsIgnoreCase(name)) {
 				return true;
 			}
 		}
