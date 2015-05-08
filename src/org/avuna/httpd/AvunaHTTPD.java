@@ -31,7 +31,7 @@ import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.SafeMode;
 
 public class AvunaHTTPD {
-	public static final String VERSION = "1.2.0";
+	public static final String VERSION = "1.2.1";
 	public static Config mainConfig, hostsConfig;
 	public static final FileManager fileManager = new FileManager();
 	public static final HashMap<String, String> extensionToMime = new HashMap<String, String>();
@@ -48,17 +48,11 @@ public class AvunaHTTPD {
 	
 	public static void setupScripts() throws IOException {
 		String os = System.getProperty("os.name").toLowerCase();
-		File us = null;
-		try {
-			us = new File(AvunaHTTPD.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-		}catch (Exception e) {
-		}
-		if (us == null) return;
 		if (os.contains("windows")) {
 			File f = fileManager.getBaseFile("run.bat");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("javaw -jar \"" + us.getAbsolutePath() + "\" \"" + fileManager.getBaseFile("main.cfg").getAbsolutePath() + "\"").getBytes());
+				fout.write(("javaw -jar \"" + fileManager.getBaseFile("avuna.jar").getAbsolutePath() + "\" \"" + fileManager.getBaseFile("main.cfg").getAbsolutePath() + "\"").getBytes());
 				fout.flush();
 				fout.close();
 			}
@@ -79,7 +73,7 @@ public class AvunaHTTPD {
 			f = fileManager.getBaseFile("cmd.bat");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("java -jar \"" + us.getAbsolutePath() + "\" cmd").getBytes());
+				fout.write(("java -jar \"" + fileManager.getBaseFile("avuna.jar").getAbsolutePath() + "\" cmd").getBytes());
 				fout.flush();
 				fout.close();
 			}
@@ -88,28 +82,28 @@ public class AvunaHTTPD {
 			File f = fileManager.getBaseFile("run.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("#!/bin/bash" + ll + ll + "nohup java -jar \"" + us.getAbsolutePath() + "\" \"" + fileManager.getBaseFile("main.cfg").getAbsolutePath() + "\" >& /dev/null &").getBytes());
+				fout.write(("#!/bin/bash" + ll + ll + "nohup java -jar \"" + fileManager.getBaseFile("avuna.jar").getAbsolutePath() + "\" \"" + fileManager.getBaseFile("main.cfg").getAbsolutePath() + "\" >& /dev/null &").getBytes());
 				fout.flush();
 				fout.close();
 			}
 			f = fileManager.getBaseFile("kill.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("#!/bin/bash" + ll + ll + "pkill -f " + us.getName() + "").getBytes());
+				fout.write(("#!/bin/bash" + ll + ll + "pkill -f " + fileManager.getBaseFile("avuna.jar").getAbsolutePath() + "").getBytes());
 				fout.flush();
 				fout.close();
 			}
 			f = fileManager.getBaseFile("restart.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("#!/bin/bash" + ll + ll + "" + new File(us.getParentFile(), "kill.sh").getAbsolutePath() + ll + new File(us.getParentFile(), "run.sh").getAbsolutePath()).getBytes());
+				fout.write(("#!/bin/bash" + ll + ll + "" + fileManager.getBaseFile("kill.sh").getAbsolutePath() + ll + fileManager.getBaseFile("run.sh").getAbsolutePath()).getBytes());
 				fout.flush();
 				fout.close();
 			}
 			f = fileManager.getBaseFile("cmd.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
-				fout.write(("#!/bin/bash" + ll + "java -jar \"" + us.getAbsolutePath() + "\" cmd").getBytes());
+				fout.write(("#!/bin/bash" + ll + "java -jar \"" + fileManager.getBaseFile("avuna.jar").getAbsolutePath() + "\" cmd").getBytes());
 				fout.flush();
 				fout.close();
 			}
@@ -120,7 +114,6 @@ public class AvunaHTTPD {
 		try {
 			setupScripts();
 			String[] unpacks = new String[]{"mime.txt"};
-			String os = System.getProperty("os.name").toLowerCase();
 			for (String up : unpacks) {
 				File mime = fileManager.getBaseFile(up);
 				if (!mime.exists()) {
@@ -296,6 +289,7 @@ public class AvunaHTTPD {
 			}
 			if (unpack) {
 				Logger.log("Unpack complete, terminating.");
+				Logger.flush();
 				System.exit(0);
 			}
 			Logger.log("Loading Connection Handling");
@@ -336,6 +330,7 @@ public class AvunaHTTPD {
 					if (AvunaHTTPD.mainConfig != null) {
 						AvunaHTTPD.mainConfig.save();
 					}
+					Logger.flush();
 				}
 			});
 		}catch (Exception e) {

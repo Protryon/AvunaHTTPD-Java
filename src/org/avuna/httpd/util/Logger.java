@@ -46,7 +46,7 @@ public class Logger {
 		cache.print(str);
 	}
 	
-	public final Thread logThread = new Thread("Log Flush Thread") {
+	private final Thread logThread = new Thread("Log Flush Thread") {
 		
 		public void run() {
 			while (true) {
@@ -59,9 +59,13 @@ public class Logger {
 				try {
 					Thread.sleep(1000L);
 				}catch (InterruptedException e) {
-					Logger.logError(e);
+					// Logger.logError(e);
 				}
 			}
 		}
 	};
+	
+	public static void flush() {
+		INSTANCE.logThread.interrupt();
+	}
 }
