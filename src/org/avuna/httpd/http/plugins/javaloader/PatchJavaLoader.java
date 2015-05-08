@@ -167,7 +167,6 @@ public class PatchJavaLoader extends Patch {
 							JavaLoader jl = (JavaLoader)cls.newInstance();
 							jl.pcfg = ocfg.getNode(name);
 							jl.host = session == null ? null : session.getVHost();
-							jl.init();
 							if (jl.getType() == 3) {
 								security.add((JavaLoaderSecurity)jl);
 							}else {
@@ -176,6 +175,7 @@ public class PatchJavaLoader extends Patch {
 								session.getLoadedClasses().put(crc.getValue() + "", name);
 								session.getJLS().put(name, jl);
 							}
+							jl.init();
 						}
 					}
 				}
