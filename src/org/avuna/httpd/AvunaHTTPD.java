@@ -327,9 +327,6 @@ public class AvunaHTTPD {
 					for (Host h : hosts.values()) {
 						h.preExit();
 					}
-					if (AvunaHTTPD.mainConfig != null) {
-						AvunaHTTPD.mainConfig.save();
-					}
 					Logger.flush();
 				}
 			});
