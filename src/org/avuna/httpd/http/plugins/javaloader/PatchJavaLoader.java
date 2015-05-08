@@ -128,11 +128,12 @@ public class PatchJavaLoader extends Patch {
 	protected static ArrayList<JavaLoaderSession> sessions = new ArrayList<JavaLoaderSession>();
 	
 	public void recurLoad(JavaLoaderSession session, File dir) {
-		try {
-			for (File f : dir.listFiles()) {
-				if (f.isDirectory()) {
-					recurLoad(session, f);
-				}else {
+		
+		for (File f : dir.listFiles()) {
+			if (f.isDirectory()) {
+				recurLoad(session, f);
+			}else {
+				try {
 					if (f.getName().endsWith(".class")) {
 						ByteArrayOutputStream bout = new ByteArrayOutputStream();
 						FileInputStream fin = new FileInputStream(f);
@@ -178,11 +179,12 @@ public class PatchJavaLoader extends Patch {
 							jl.init();
 						}
 					}
+				}catch (Exception e) {
+					Logger.logError(e);
 				}
 			}
-		}catch (Exception e) {
-			Logger.logError(e);
 		}
+		
 	}
 	
 	public void loadBaseSecurity(JavaLoaderSecurity sec) {
