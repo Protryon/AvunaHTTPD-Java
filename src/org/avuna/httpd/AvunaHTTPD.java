@@ -196,7 +196,7 @@ public class AvunaHTTPD {
 				System.out.println("[NOTIFY] Running as root, will load servers and attempt de-escalate, if configured.");
 			}
 			System.setProperty("line.separator", crlf);
-			final boolean unpack = args.length == 1 && args[0].equals("unpack");
+			final boolean unpack = args[0].equals("unpack");
 			File us = null;
 			try {
 				us = new File(AvunaHTTPD.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
