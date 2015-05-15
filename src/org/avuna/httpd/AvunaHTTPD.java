@@ -202,7 +202,15 @@ public class AvunaHTTPD {
 				us = new File(AvunaHTTPD.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
 			}catch (Exception e) {
 			}
-			final File cfg = new File(!unpack && args.length > 0 ? args[0] : (us == null ? (System.getProperty("os.name").toLowerCase().contains("windows") ? "C:\\avuna\\main.cfg" : "/etc/avuna/main.cfg") : (new File(us.getParentFile(), "main.cfg").getAbsolutePath())));
+			File fcfg = null;
+			if ((unpack && args.length == 2) || (!unpack && args.length == 1)) {
+				fcfg = new File(args[unpack ? 1 : 0]);
+			}else if (us != null) {
+				fcfg = new File(us.getParentFile(), "main.cfg");
+			}else {
+				fcfg = new File((windows ? "C:\\avuna\\main.cfg" : "/etc/avuna/main.cfg"));
+			}
+			final File cfg = fcfg;
 			mainConfig = new Config("main", cfg, new ConfigFormat() {
 				public void format(ConfigNode map) {
 					File dir = null;
