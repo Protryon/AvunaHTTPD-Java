@@ -60,19 +60,20 @@ public class SafeMode {
 	 * @param gid
 	 */
 	public static void setPerms(File root, int uid, int gid) {
+		CLib.INSTANCE.umask(0000);
 		setPerms(root, uid, gid, false);
+		CLib.INSTANCE.umask(0077);
 	}
 	
 	// should run as root
 	private static void setPerms(File root, int uid, int gid, boolean recursed) {
-		CLib.INSTANCE.umask(0000);
-		setPerms(root, uid, gid, 0700);
+		setPerms(root, uid, gid, 0711);
 		for (File f : root.listFiles()) {
 			if (f.isDirectory()) {
 				setPerms(f, uid, gid, true);
 			}else {
 				if (uid == 0 && gid == 0) {
-					setPerms(f, 0, 0, 0700);
+					setPerms(f, 0, 0, 0711);
 				}else {
 					String rn = f.getName();
 					if (!recursed && (rn.equals("avuna.jar") || rn.equals("main.cfg"))) {
@@ -85,6 +86,5 @@ public class SafeMode {
 				}
 			}
 		}
-		CLib.INSTANCE.umask(0077);
 	}
 }
