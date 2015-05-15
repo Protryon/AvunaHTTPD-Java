@@ -52,6 +52,13 @@ public class SafeMode {
 		CLib.INSTANCE.lchown(bap, uid, gid);
 	}
 	
+	/**
+	 * should only be used on an avuna root directory with std perms.
+	 * 
+	 * @param root
+	 * @param uid
+	 * @param gid
+	 */
 	public static void setPerms(File root, int uid, int gid) {
 		setPerms(root, uid, gid, false);
 	}
