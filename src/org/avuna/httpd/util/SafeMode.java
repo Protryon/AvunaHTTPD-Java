@@ -47,9 +47,12 @@ public class SafeMode {
 		CLib.bap bap = new CLib.bap(rb.length);
 		System.arraycopy(rb, 0, bap.array, 0, rb.length);
 		if (isSymlink(bap, root.isFile())) return;
+		CLib.INSTANCE.umask(0000);
 		CLib.INSTANCE.chmod(bap, chmod);
 		// Logger.log("lchmod returned: " + ch + (ch == -1 ? " error code: " + Native.getLastError() : ""));
 		CLib.INSTANCE.lchown(bap, uid, gid);
+		CLib.INSTANCE.umask(0077);
+		
 	}
 	
 	/**
@@ -60,9 +63,7 @@ public class SafeMode {
 	 * @param gid
 	 */
 	public static void setPerms(File root, int uid, int gid) {
-		CLib.INSTANCE.umask(0000);
 		setPerms(root, uid, gid, false);
-		CLib.INSTANCE.umask(0077);
 	}
 	
 	// should run as root

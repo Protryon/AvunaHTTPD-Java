@@ -192,7 +192,7 @@ public class AvunaHTTPD {
 				}
 				
 			}
-			if (System.getProperty("user.name").contains("root")) {
+			if (!windows && CLib.INSTANCE.getuid() == 0) {
 				System.out.println("[NOTIFY] Running as root, will load servers and attempt de-escalate, if configured.");
 			}
 			System.setProperty("line.separator", crlf);
