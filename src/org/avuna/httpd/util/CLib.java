@@ -69,13 +69,13 @@ public interface CLib extends Library {
 	
 	public int getgid();
 	
-	public int setsuid(int uid);
+	public int seteuid(int uid);
 	
-	public int setsgid(int gid);
+	public int geteuid();
 	
-	public int getsuid();
+	public int setegid(int uid);
 	
-	public int getsgid();
+	public int getegid();
 	
 	public int fflush(int sockfd);
 	
