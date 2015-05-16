@@ -189,6 +189,28 @@ public class AvunaHTTPD {
 					}
 					ComClient.runUnix(args[1]);
 					return;
+				}else if (args[0].equals("setid")) {
+					if (windows) {
+						System.out.println("Unix only!");
+						return;
+					}
+					if (args.length < 4) {
+						System.out.println("Usage: setid <uid> <gid> <exec...>");
+						return;
+					}
+					System.out.println("setuid = " + CLib.INSTANCE.setuid(Integer.parseInt(args[1])));
+					System.out.println("setgid = " + CLib.INSTANCE.setuid(Integer.parseInt(args[2])));
+					String[] rargs = new String[args.length - 3];
+					System.arraycopy(args, 3, rargs, 0, rargs.length);
+					ProcessBuilder pb = new ProcessBuilder(rargs);
+					pb.redirectErrorStream(true);
+					Process p = pb.start();
+					p.waitFor();
+					InputStream in = p.getInputStream();
+					while (in.available() > 0) {
+						System.out.append((char)in.read());
+					}
+					return;
 				}
 				
 			}
