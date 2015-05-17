@@ -40,6 +40,7 @@ public class ThreadStreamWorker extends Thread {
 					}
 				}
 			}
+			@SuppressWarnings("resource")
 			ChunkedOutputStream cos = new ChunkedOutputStream(work.out, resp, resp.headers.hasHeader("Content-Encoding") && resp.headers.getHeader("Content-Encoding").contains("gzip"));
 			cos.writeHeaders();
 			int i = 1;
@@ -63,10 +64,10 @@ public class ThreadStreamWorker extends Thread {
 			if (!(e instanceof SocketException)) Logger.logError(e);
 		}finally {
 			String ip = work.s.getInetAddress().getHostAddress();
-			Integer cur = host.connIPs.get(ip);
+			Integer cur = HostHTTP.connIPs.get(ip);
 			if (cur == null) cur = 1;
 			cur -= 1;
-			host.connIPs.put(ip, cur);
+			HostHTTP.connIPs.put(ip, cur);
 			Logger.log(ip + " closed.");
 			try {
 				if (fin != null) fin.close();

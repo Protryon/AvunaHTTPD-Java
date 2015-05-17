@@ -53,8 +53,8 @@ public class IMAPCommandSearch extends IMAPCommand {
 		return Integer.parseInt(spl[0]) + (mo * 40) + (Integer.parseInt(spl[2]) * 400);
 	}
 	
-	private static int getDateRFC(String date) {
-		date = date.substring(date.indexOf(",") + 1).trim();
+	private static int getDateRFC(String sdate) {
+		String date = sdate.substring(sdate.indexOf(",") + 1).trim();
 		int day = Integer.parseInt(date.substring(0, date.indexOf(" ")));
 		date = date.substring(date.indexOf(" ") + 1);
 		String mos = date.substring(0, date.indexOf(" ")).toLowerCase();
@@ -112,6 +112,7 @@ public class IMAPCommandSearch extends IMAPCommand {
 						hb = true;
 					}
 				}
+				hs.close();
 				if (!hb) emails.remove(i--);
 			}
 		}else if (com.startsWith("before ")) {
@@ -131,6 +132,7 @@ public class IMAPCommandSearch extends IMAPCommand {
 						hb = true;
 					}
 				}
+				hs.close();
 				if (!hb) emails.remove(i--);
 			}
 		}else if (com.startsWith("since ")) {
@@ -169,8 +171,9 @@ public class IMAPCommandSearch extends IMAPCommand {
 	}
 	
 	@Override
-	public void run(IMAPWork focus, String letters, String[] args) throws IOException {
-		args = StringFormatter.congealBySurroundings(args, "\"", "\"");
+	public void run(IMAPWork focus, String letters, String[] cargs) throws IOException {
+		String[] args = StringFormatter.congealBySurroundings(cargs, "\"", "\"");
+		@SuppressWarnings("unchecked")
 		ArrayList<Email> emails = (ArrayList<Email>)focus.selectedMailbox.emails.clone();
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i].toLowerCase().replace("\"", "");

@@ -43,15 +43,11 @@ public class ResponsePacket extends Packet {
 	
 	public byte[] serialize(boolean data, boolean head) {
 		try {
-			long ps1 = System.nanoTime();
-			// ResponsePacket thisClone = clone();
 			byte[] finalc = this.body == null ? null : this.body.data;
-			long ps2 = System.nanoTime();
 			finalc = request.host.getHost().patchBus.processResponse(this, this.request, finalc);
 			if (this.drop) {
 				return null;
 			}
-			long start = System.nanoTime();
 			StringBuilder ser = new StringBuilder();
 			if (head) {
 				ser.append((this.httpVersion + " " + this.statusCode + " " + this.reasonPhrase + AvunaHTTPD.crlf));
@@ -80,9 +76,6 @@ public class ResponsePacket extends Packet {
 			byte[] total = new byte[cachedSerialize.length + add.length];
 			System.arraycopy(cachedSerialize, 0, total, 0, cachedSerialize.length);
 			System.arraycopy(add, 0, total, cachedSerialize.length, add.length);
-			// cachedPacket = this;
-			long end = System.nanoTime();
-			// System.out.println("serialize: " + ((end - start) / 1000000D) + ", " + ((start - ps2) / 1000000D) + ", " + ((ps2 - ps1) / 1000000D) + " ms");
 			return total;
 		}catch (Exception e) {
 			Logger.logError(e);
@@ -139,9 +132,7 @@ public class ResponsePacket extends Packet {
 	}
 	
 	public void write(DataOutputStream out, boolean deprecated) throws IOException {
-		long start = System.nanoTime();
 		byte[] write = serialize(request.method != Method.HEAD, true);
-		long as = System.nanoTime();
 		this.bwt = System.nanoTime();
 		if (write == null) {
 			return;
@@ -152,11 +143,5 @@ public class ResponsePacket extends Packet {
 			write = null;
 			out.flush();
 		}
-		long pw = System.nanoTime();
-		
-		long ret = System.nanoTime();
-		// Logger.log((as - start) / 1000000D + " start-as");
-		// Logger.log((pw - as) / 1000000D + " as-pw");
-		// Logger.log((ret - pw) / 1000000D + " pw-ret");
 	}
 }

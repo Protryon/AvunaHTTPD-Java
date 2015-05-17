@@ -128,16 +128,13 @@ public class RequestPacket extends Packet {
 	}
 	
 	public static RequestPacket read(byte[] sslprep, DataInputStream in, HostHTTP host) throws IOException {
-		long start = System.nanoTime();
 		RequestPacket incomingRequest = new RequestPacket();
 		String reqLine = "";
-		long pir = System.nanoTime();
 		reqLine = readLine(sslprep, in).trim();
 		int b = reqLine.indexOf(" ");
 		if (b == -1) {
 			return null;
 		}
-		long rlr = System.nanoTime();
 		incomingRequest.method = Method.get(reqLine.substring(0, b));
 		incomingRequest.target = reqLine.substring(b + 1, b = reqLine.indexOf(" ", b + 1));
 		String[] spl = incomingRequest.target.split("/");
@@ -153,7 +150,6 @@ public class RequestPacket extends Packet {
 			}
 		}
 		incomingRequest.httpVersion = reqLine.substring(b + 1);
-		long ss = System.nanoTime();
 		Headers headers = incomingRequest.headers;
 		int hdr = 0;
 		while (true) {
@@ -164,12 +160,10 @@ public class RequestPacket extends Packet {
 				headers.addHeader(headerLine);
 				hdr++;
 			}
-			long he = System.nanoTime();
 			if (hdr > 100) {
 				break;
 			}
 		}
-		long ph = System.nanoTime();
 		boolean chunked = false;
 		boolean htc = headers.hasHeader("Transfer-Encoding");
 		boolean hcl = headers.hasHeader("Content-Length");
@@ -192,15 +186,7 @@ public class RequestPacket extends Packet {
 			bbody = new byte[cl];
 			in.readFully(bbody);
 		}
-		long pb = System.nanoTime();
 		incomingRequest.body = new Resource(bbody, headers.hasHeader("Content-Type") ? headers.getHeader("Content-Type") : "application/octet-stream");
-		long cur = System.nanoTime();
-		// Logger.log((pir - start) / 1000000D + " start-pir");
-		// Logger.log((rlr - pir) / 1000000D + " pir-rlr");
-		// Logger.log((ss - rlr) / 1000000D + " rlr-ss");
-		// Logger.log((ph - ss) / 1000000D + " ss-ph");
-		// Logger.log((pb - ph) / 1000000D + " ph-pb");
-		// Logger.log((cur - pb) / 1000000D + " pb-cur");
 		return incomingRequest;
 	}
 	

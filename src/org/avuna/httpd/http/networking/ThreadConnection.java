@@ -133,10 +133,8 @@ public class ThreadConnection extends Thread {
 					}
 				}else if (focus.in.available() > 0) {
 					focus.sns = 0L;
-					long ps = System.nanoTime();
 					RequestPacket incomingRequest = RequestPacket.read(focus.sslprep != null ? focus.sslprep.toByteArray() : null, focus.in, host);
 					if (focus.sslprep != null) focus.sslprep.reset();
-					long benchStart = System.nanoTime();
 					if (incomingRequest == null) {
 						focus.s.close();
 						continue;
@@ -153,7 +151,6 @@ public class ThreadConnection extends Thread {
 					incomingRequest.child = new ResponsePacket();
 					incomingRequest.child.request = incomingRequest;
 					focus.outQueue.add(incomingRequest.child);
-					long set = System.nanoTime();
 					if (focus.rqst == 0L) {
 						focus.rqst = System.currentTimeMillis();
 					}

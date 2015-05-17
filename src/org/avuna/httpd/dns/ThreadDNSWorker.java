@@ -78,7 +78,6 @@ public class ThreadDNSWorker extends Thread {
 				continue;
 			}
 			try {
-				long s = System.nanoTime();
 				Query query = null;
 				if (focus.UDP) {
 					query = new Query(((WorkUDP)focus).query);
@@ -89,9 +88,6 @@ public class ThreadDNSWorker extends Thread {
 					query = new Query(qb);
 				}
 				if (query != null && !query.getHeader().isQr()) {
-					for (Question q : query.getQd()) {
-						// System.out.println("Request for " + q.getDomain());
-					}
 					Header qh = query.getHeader();
 					Header header = new Header();
 					header.setId(qh.getId());

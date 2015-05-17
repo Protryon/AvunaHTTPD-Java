@@ -48,7 +48,6 @@ public class PatchGetPostHead extends Patch {
 	
 	@Override
 	public void processMethod(RequestPacket request, ResponsePacket response) {
-		long start = System.nanoTime();
 		Resource resource = AvunaHTTPD.fileManager.getResource(request.target, request);
 		if (resource == null) {
 			ResponseGenerator.generateDefaultResponse(response, StatusCode.NOT_FOUND);
@@ -64,7 +63,6 @@ public class PatchGetPostHead extends Patch {
 				get = rt.substring(rt.indexOf("?"));
 				rt = rt.substring(0, rt.indexOf("?"));
 			}
-			long rtd = System.nanoTime();
 			if (resource.wasDir && !rt.endsWith("/")) {
 				ResponseGenerator.generateDefaultResponse(response, StatusCode.PERM_REDIRECT); // TODO: not relative
 				response.headers.addHeader("Location", rt + "/" + get);

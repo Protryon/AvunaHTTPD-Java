@@ -52,6 +52,7 @@ public class CommandProcessor {
 					for (String line : lines) {
 						sw.println(line);
 					}
+					s.close();
 				}catch (IOException e) {
 					Logger.logError(e);
 				}
@@ -62,14 +63,14 @@ public class CommandProcessor {
 	/**
 	 * Processes our command
 	 * 
-	 * @param command the command to process
+	 * @param com the command to process
 	 * @param out the output to write to
 	 * @param scan the scanner to read from
 	 * @throws Exception an exception gets thrown when something doesn't work out well.
 	 */
-	public static void process(String command, final PrintStream out, final Scanner scan) throws Exception {
+	public static void process(String com, final PrintStream out, final Scanner scan) throws Exception {
 		// Fancy command parsing right here
-		String[] cargs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1).split(" ") : new String[0];
+		String[] cargs = com.contains(" ") ? com.substring(com.indexOf(" ") + 1).split(" ") : new String[0];
 		if (cargs.length > 0) {
 			String[] tcargs = new String[cargs.length];
 			int nl = 0;
@@ -98,8 +99,7 @@ public class CommandProcessor {
 			cargs = new String[nl];
 			System.arraycopy(tcargs, 0, cargs, 0, nl);
 		}
-		String targs = command.contains(" ") ? command.substring(command.indexOf(" ") + 1) : "";
-		command = command.contains(" ") ? command.substring(0, command.indexOf(" ")) : command;
+		String command = com.contains(" ") ? com.substring(0, com.indexOf(" ")) : com;
 		
 		// If else statements here, no usage of switch as the server should support JDK/JRE 6.45 (or laziness)
 		if (command.equals("exit") || command.equals("stop")) {
@@ -188,8 +188,6 @@ public class CommandProcessor {
 					out.println("Not a http host!");
 					return;
 				}
-				HostHTTP phost = (HostHTTP)ghost;
-				VHost host = phost.getVHostByName(selectedVHost);
 				File temp = null;
 				PrintWriter ps = new PrintWriter(new FileOutputStream(cargs[1]));
 				recurseHTML(ps, temp = new File(cargs[0]), temp);
