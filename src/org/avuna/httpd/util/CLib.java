@@ -36,7 +36,7 @@ public interface CLib extends Library {
 		}
 		
 		@Override
-		protected List getFieldOrder() {
+		protected List<String> getFieldOrder() {
 			return Arrays.asList(new String[]{"array"});
 		}
 		
@@ -50,7 +50,7 @@ public interface CLib extends Library {
 		public byte[] sunpath = new byte[108]; // must be 108 long.
 		
 		@Override
-		protected List getFieldOrder() {
+		protected List<String> getFieldOrder() {
 			return Arrays.asList(new String[]{"sunfamily", "sunpath"});
 		}
 	}

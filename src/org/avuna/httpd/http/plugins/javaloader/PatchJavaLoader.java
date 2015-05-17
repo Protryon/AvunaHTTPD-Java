@@ -9,8 +9,6 @@ import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -62,7 +60,7 @@ public class PatchJavaLoader extends Patch {
 				lib.mkdirs();
 			}
 			URLClassLoader sysloader = (URLClassLoader)ClassLoader.getSystemClassLoader();
-			Class sysclass = URLClassLoader.class;
+			Class<URLClassLoader> sysclass = URLClassLoader.class;
 			
 			try {
 				Method method = sysclass.getDeclaredMethod("addURL", URL.class);
@@ -200,15 +198,6 @@ public class PatchJavaLoader extends Patch {
 		sec.host = null;
 		sec.init();
 		security.add(sec);
-	}
-	
-	private static MessageDigest md5 = null;
-	static {
-		try {
-			md5 = MessageDigest.getInstance("MD5");
-		}catch (NoSuchAlgorithmException e) {
-			Logger.logError(e);;
-		}
 	}
 	
 	public static ArrayList<JavaLoaderSecurity> security = new ArrayList<JavaLoaderSecurity>();

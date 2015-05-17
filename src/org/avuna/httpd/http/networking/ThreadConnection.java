@@ -37,10 +37,10 @@ public class ThreadConnection extends Thread {
 			}
 			if (focus.s.isClosed()) {
 				String ip = focus.s.getInetAddress().getHostAddress();
-				Integer cur = host.connIPs.get(ip);
+				Integer cur = HostHTTP.connIPs.get(ip);
 				if (cur == null) cur = 1;
 				cur -= 1;
-				host.connIPs.put(ip, cur);
+				HostHTTP.connIPs.put(ip, cur);
 				Logger.log(ip + " closed.");
 				continue;
 			}
@@ -123,10 +123,10 @@ public class ThreadConnection extends Thread {
 							readd = false;
 							focus.s.close();
 							String ip = focus.s.getInetAddress().getHostAddress();
-							Integer cur = host.connIPs.get(ip);
+							Integer cur = HostHTTP.connIPs.get(ip);
 							if (cur == null) cur = 1;
 							cur -= 1;
-							host.connIPs.put(ip, cur);
+							HostHTTP.connIPs.put(ip, cur);
 							Logger.log(ip + " closed.");
 							continue;
 						}
@@ -177,10 +177,10 @@ public class ThreadConnection extends Thread {
 							Logger.logError(ex);
 						}
 						String ip = focus.s.getInetAddress().getHostAddress();
-						Integer cur = host.connIPs.get(ip);
+						Integer cur = HostHTTP.connIPs.get(ip);
 						if (cur == null) cur = 1;
 						cur -= 1;
-						host.connIPs.put(ip, cur);
+						HostHTTP.connIPs.put(ip, cur);
 						Logger.log(ip + " closed.");
 						readd = false;
 					}
@@ -197,10 +197,10 @@ public class ThreadConnection extends Thread {
 						Logger.logError(ex);
 					}
 					String ip = focus.s.getInetAddress().getHostAddress();
-					Integer cur = host.connIPs.get(ip);
+					Integer cur = HostHTTP.connIPs.get(ip);
 					if (cur == null) cur = 1;
 					cur -= 1;
-					host.connIPs.put(ip, cur);
+					HostHTTP.connIPs.put(ip, cur);
 					Logger.log(ip + " closed.");
 					readd = false;
 				}
