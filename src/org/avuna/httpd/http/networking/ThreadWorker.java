@@ -28,7 +28,7 @@ public class ThreadWorker extends Thread {
 			RequestPacket incomingRequest = host.pollReqQueue();
 			if (incomingRequest == null) {
 				try {
-					Thread.sleep(1L);
+					Thread.sleep(2L, 500000);
 				}catch (InterruptedException e) {
 					Logger.logError(e);
 				}
@@ -46,16 +46,13 @@ public class ThreadWorker extends Thread {
 					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
 					continue;
 				}
-				long proc1 = System.nanoTime();
 				boolean cont = ResponseGenerator.process(incomingRequest, outgoingResponse);
-				long resp = System.nanoTime();
 				if (cont) host.patchBus.processPacket(outgoingResponse);
 				if (outgoingResponse.drop) {
 					incomingRequest.work.s.close();
 					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
 					continue;
 				}
-				long proc2 = System.nanoTime();
 				if (main) outgoingResponse.prewrite();
 				else outgoingResponse.subwrite();
 				if (outgoingResponse.drop) {
@@ -87,7 +84,7 @@ public class ThreadWorker extends Thread {
 					}
 				}
 			}finally {
-				if (host.sizeReqQueue() < 10000) { // idle fix
+				if (host.sizeReqQueue() < 10000) {
 					try {
 						Thread.sleep(0L, 100000);
 					}catch (InterruptedException e) {
