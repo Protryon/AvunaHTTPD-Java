@@ -198,10 +198,8 @@ public class AvunaHTTPD {
 						System.out.println("Usage: setid <uid> <gid> <exec...>");
 						return;
 					}
-					CLib.INSTANCE.setuid(Integer.parseInt(args[1]));
-					CLib.INSTANCE.setgid(Integer.parseInt(args[2]));
-					System.out.println("setuid = " + CLib.INSTANCE.getuid());
-					System.out.println("setgid = " + CLib.INSTANCE.getgid());
+					System.out.println("setuid = " + CLib.INSTANCE.getuid() + " (wanted " + args[1] + ")");
+					System.out.println("setgid = " + CLib.INSTANCE.getgid() + " (wanted " + args[2] + ")");
 					String[] rargs = new String[args.length - 3];
 					System.arraycopy(args, 3, rargs, 0, rargs.length);
 					ProcessBuilder pb = new ProcessBuilder(rargs);
@@ -220,7 +218,7 @@ public class AvunaHTTPD {
 				System.out.println("[NOTIFY] Running as root, will load servers and attempt de-escalate, if configured.");
 			}
 			System.setProperty("line.separator", crlf);
-			final boolean unpack = args[0].equals("unpack");
+			final boolean unpack = args.length >= 1 && args[0].equals("unpack");
 			File us = null;
 			try {
 				us = new File(AvunaHTTPD.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
