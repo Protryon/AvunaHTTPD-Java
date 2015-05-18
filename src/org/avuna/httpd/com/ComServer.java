@@ -62,6 +62,7 @@ public class ComServer extends Thread {
 					out.flush();
 					Scanner scan = new Scanner(in);
 					PrintStream ps = new PrintStream(out);
+					CommandContext context = AvunaHTTPD.commandRegistry.newContext(ps, scan);
 					ip = s.getInetAddress().getHostAddress();
 					String user = "";
 					while (!s.isClosed()) {
@@ -108,7 +109,7 @@ public class ComServer extends Thread {
 							}
 						}else {
 							Logger.log("com[" + s.getInetAddress().getHostAddress() + "]: " + cs);
-							CommandProcessor.process(cs, ps, scan);
+							AvunaHTTPD.commandRegistry.processCommand(cs, context);
 							ps.println("Command Completed.");
 						}
 						ps.flush();

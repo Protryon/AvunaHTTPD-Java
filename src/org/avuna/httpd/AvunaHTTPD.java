@@ -12,7 +12,19 @@ import java.util.HashMap;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import org.avuna.httpd.com.ComClient;
-import org.avuna.httpd.com.CommandProcessor;
+import org.avuna.httpd.com.CommandContext;
+import org.avuna.httpd.com.CommandRegistry;
+import org.avuna.httpd.com.base.CommandComp;
+import org.avuna.httpd.com.base.CommandExit;
+import org.avuna.httpd.com.base.CommandHTML;
+import org.avuna.httpd.com.base.CommandHTMLDir;
+import org.avuna.httpd.com.base.CommandHelp;
+import org.avuna.httpd.com.base.CommandMem;
+import org.avuna.httpd.com.base.CommandPHP;
+import org.avuna.httpd.com.base.CommandRegister;
+import org.avuna.httpd.com.base.CommandReload;
+import org.avuna.httpd.com.base.CommandRestart;
+import org.avuna.httpd.com.base.CommandSelect;
 import org.avuna.httpd.dns.RecordHolder;
 import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostCom;
@@ -37,6 +49,21 @@ public class AvunaHTTPD {
 	public static final HashMap<String, String> extensionToMime = new HashMap<String, String>();
 	public static final String crlf = new String(new byte[]{13, 10});
 	public static final byte[] crlfb = new byte[]{13, 10};
+	public static final CommandRegistry commandRegistry = new CommandRegistry();
+	static {
+		commandRegistry.registerCommand(new CommandHelp(), "help");
+		commandRegistry.registerCommand(new CommandExit(), "exit", "stop");
+		commandRegistry.registerCommand(new CommandComp(), "comp");
+		commandRegistry.registerCommand(new CommandHTML(), "html");
+		commandRegistry.registerCommand(new CommandHTMLDir(), "htmldir");
+		commandRegistry.registerCommand(new CommandMem(), "mem");
+		commandRegistry.registerCommand(new CommandPHP(), "php");
+		commandRegistry.registerCommand(new CommandRegister(), "register");
+		commandRegistry.registerCommand(new CommandReload(), "reload");
+		commandRegistry.registerCommand(new CommandRestart(), "restart");
+		commandRegistry.registerCommand(new CommandSelect(), "select");
+	}
+	public static final CommandContext mainCommandContext = commandRegistry.newContext(System.out, new Scanner(System.in));
 	
 	public static void setupFolders() {
 		fileManager.getMainDir().mkdirs();
@@ -371,7 +398,7 @@ public class AvunaHTTPD {
 		while (scan.hasNextLine()) {
 			try {
 				String command = scan.nextLine();
-				CommandProcessor.process(command, System.out, scan);
+				commandRegistry.processCommand(command, mainCommandContext);
 			}catch (NoSuchElementException fe) {
 				break;
 			}catch (Exception e) {
