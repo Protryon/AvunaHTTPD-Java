@@ -225,8 +225,18 @@ public class AvunaHTTPD {
 						System.out.println("Usage: setid <uid> <gid> <exec...>");
 						return;
 					}
-					System.out.println("setuid = " + CLib.INSTANCE.getuid() + " (wanted " + args[1] + ")");
-					System.out.println("setgid = " + CLib.INSTANCE.getgid() + " (wanted " + args[2] + ")");
+					int wuid = Integer.parseInt(args[1]);
+					int wgid = Integer.parseInt(args[2]);
+					CLib.INSTANCE.setuid(wuid);
+					CLib.INSTANCE.setgid(wgid);
+					int uid = CLib.INSTANCE.getuid();
+					int gid = CLib.INSTANCE.getgid();
+					System.out.println("setuid = " + uid + " (wanted " + wuid + ")");
+					System.out.println("setgid = " + gid + " (wanted " + wgid + ")");
+					if (uid != wuid || gid != wgid) {
+						System.out.println("Failed to de-escalate, terminating!");
+						return;
+					}
 					String[] rargs = new String[args.length - 3];
 					System.arraycopy(args, 3, rargs, 0, rargs.length);
 					ProcessBuilder pb = new ProcessBuilder(rargs);
