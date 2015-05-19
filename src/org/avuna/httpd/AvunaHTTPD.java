@@ -197,6 +197,64 @@ public class AvunaHTTPD {
 	public static long lastbipc = 0L;
 	public static final boolean windows = System.getProperty("os.name").toLowerCase().contains("windows");
 	
+	/**
+	 * This is the main method for running Avuna
+	 * <p>
+	 * If first arg is "cmd" attach remote access service {@link ComClient#run(String, int)}
+	 * <br>
+	 * Optional args (cmd {@code ip} {@code port}): 
+	 * <ul>
+	 * <li>ip - formated "x.x.x.x" (default: 127.0.0.1)
+	 * <li>port - integer (default: 6049)
+	 * </ul>
+	 * <p>
+	 * If first arg is "ucmd" attach remote access service (cmd via unix socket) {@link ComClient#runUnix(String)}
+	 * <br>
+	 * Optional args (ucmd {@code path/to/socket}):
+	 * <ul>
+	 * <li>unix socket file path
+	 * </ul>
+	 * <p>
+	 * If first arg is "setid" process executable command with de-escalated privileges via {@link ProcessBuilder}
+	 * <br>
+	 * Required args (setid {@code uid} {@code gid} {@code exec...}):
+	 * <ul>
+	 * <li>uid - user id to use
+	 * <li>gid - group id to use
+	 * <li>exec... - executable command + arguments
+	 * </ul>
+	 * If first arg is "unpack" or single argument (hopefully a file name) import and store in main.cfg otherwise get
+	 * "main.cfg" from either executable parent directory or C:\Avuna\ or /etc/Avuna/
+	 * <p>
+	 * main.cfg file is verified via {@link Config#Config(String, File, ConfigFormat)} and creates if necessary, main.cfg, adding missing elements with default values.
+	 * main.cfg as {@link #mainConfig} is loaded, optionally saved if "unpack" arg used.
+	 * <p>
+	 * Extend Host Protocol types with {@link HostRegistry#addHost(Protocol, Class)} and create any required directories
+	 * or files via {@link HostDNS#unpack()} {@link HostHTTP#unpack()} {@link HostHTTPM#unpack()} or {@link HostMail#unpack()}
+	 * <p>
+	 * hosts.cfg file is verified via {@link Config#Config(String, File, ConfigFormat)} and creates if necessary, hosts.cfg, adding missing elements with default values.
+	 * hosts.cfg as {@link #hostsConfig} is loaded and saved.
+	 * <p>
+	 * Create default directories via {@link #setupFolders()}
+	 * <p>
+	 * Create new log file for each host in {@link #hostsConfig} and start {@link Logger#INSTANCE} add host configs to log. Load base plug-ins {@link HostHTTP#loadBases()}
+	 * if host types contain "http". If first arg "unpack", then exit.
+	 * <p>
+	 * Start each host in {@link #hostsConfig} from hosts.values via {@link Host#start()}
+	 * <p>
+	 * Set SafeMode if {@link #mainConfig} safemode is true via {@link SafeMode#setPerms(File, int, int)}
+	 * <p>
+	 * Check if started as root user (uid=0). Wait for hosts to load. Check if {@link CLib#INSTANCE} uid & gid have been changed to values in {@link #mainConfig}.
+	 * Log de-escalation status of process.
+	 * <p>
+	 * If host types include "http" load custom plug-ins {@link HostHTTP#loadCustoms()}
+	 * <p>
+	 * Set {@link Runtime#addShutdownHook(Thread)}
+	 * <p>
+	 * Start command line processor {@link Scanner#hasNextLine()}, {@link Scanner#nextLine()}, {@link CommandRegistry#processCommand(String, CommandContext)}
+	 * 
+	 * @param args string array arguments to run Avuna
+	 */
 	public static void main(String[] args) {
 		try {
 			if (args.length >= 1) {
