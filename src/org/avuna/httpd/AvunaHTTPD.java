@@ -361,7 +361,7 @@ public class AvunaHTTPD {
 			}
 			Logger.log("Loading Connection Handling");
 			for (Host h : hosts.values()) {
-				h.start();
+				if (!h.hasStarted()) h.start();
 			}
 			if (!windows && mainConfig.getNode("safeMode").getValue().equals("true")) {
 				SafeMode.setPerms(cfg.getParentFile(), Integer.parseInt(mainConfig.getNode("uid").getValue()), Integer.parseInt(mainConfig.getNode("gid").getValue()));

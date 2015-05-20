@@ -24,6 +24,7 @@ import org.avuna.httpd.util.unixsocket.UnixServerSocket;
 public abstract class Host extends Thread implements ITerminatable {
 	protected final String name;
 	protected final Protocol protocol;
+	private boolean isStarted = false;
 	
 	public Host(String threadName, Protocol protocol) {
 		super(threadName + " Host");
@@ -59,6 +60,7 @@ public abstract class Host extends Thread implements ITerminatable {
 		for (ITerminatable worker : terms) {
 			worker.terminate();
 		}
+		System.out.println(servers.size());
 		for (ServerSocket server : servers) {
 			try {
 				server.close();
@@ -88,7 +90,9 @@ public abstract class Host extends Thread implements ITerminatable {
 	
 	public final UnixServerSocket makeUnixServer(String file) throws IOException {
 		Logger.log("Starting " + name + "/" + protocol.name + " " + "Server on " + file);
-		return new UnixServerSocket(file);
+		UnixServerSocket uss = new UnixServerSocket(file);
+		servers.add(uss);
+		return uss;
 	}
 	
 	public final SSLContext makeSSLContext(File keyFile, String keyPassword, String keystorePassword) throws IOException {
@@ -142,7 +146,12 @@ public abstract class Host extends Thread implements ITerminatable {
 	
 	public SSLContext sslContext = null;
 	
+	public boolean hasStarted() {
+		return isStarted;
+	}
+	
 	public void run() {
+		isStarted = true;
 		try {
 			ConfigNode cfg = getConfig();
 			ConfigNode ssl = cfg.getNode("ssl");

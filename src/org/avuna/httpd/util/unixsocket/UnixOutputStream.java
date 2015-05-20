@@ -2,6 +2,7 @@ package org.avuna.httpd.util.unixsocket;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.SocketException;
 import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.CLib.bap;
 import com.sun.jna.Native;
@@ -19,7 +20,10 @@ public class UnixOutputStream extends OutputStream {
 		bap.array[0] = (byte)b;
 		int i = CLib.INSTANCE.write(sockfd, bap, 1);
 		if (i < 0) {
-			throw new CException(Native.getLastError(), "End of Stream");
+			i = Native.getLastError();
+			if (i == 104) {
+				throw new SocketException("Connection reset by peer!");
+			}else throw new CException(Native.getLastError(), "End of Stream");
 		}
 	}
 	
@@ -29,7 +33,10 @@ public class UnixOutputStream extends OutputStream {
 		System.arraycopy(buf, 0, bap.array, 0, buf.length);
 		int i = CLib.INSTANCE.write(sockfd, bap, buf.length);
 		if (i < 0) {
-			throw new CException(Native.getLastError(), "End of Stream");
+			i = Native.getLastError();
+			if (i == 104) {
+				throw new SocketException("Connection reset by peer!");
+			}else throw new CException(Native.getLastError(), "End of Stream");
 		}
 	}
 	
@@ -39,7 +46,10 @@ public class UnixOutputStream extends OutputStream {
 		System.arraycopy(buf, 0, bap.array, off, len);
 		int i = CLib.INSTANCE.write(sockfd, bap, len);
 		if (i < 0) {
-			throw new CException(Native.getLastError(), "End of Stream");
+			i = Native.getLastError();
+			if (i == 104) {
+				throw new SocketException("Connection reset by peer!");
+			}else throw new CException(Native.getLastError(), "End of Stream");
 		}
 	}
 	
