@@ -233,21 +233,22 @@ public class PatchJavaLoader extends Patch {
 		super.reload();
 		HTMLCache.reloadAll();
 		config.load();
-		for (JavaLoaderSession session : sessions) {
-			if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
-				ConfigNode ocfg = null;
-				if (!config.containsNode(session.getVHost().getHostPath())) {
-					config.insertNode(session.getVHost().getHostPath());
-				}
-				ocfg = config.getNode(session.getVHost().getHostPath());
-				if (!ocfg.containsNode(jl.getClass().getName())) {
-					ocfg.insertNode(jl.getClass().getName());
-				}
-				jl.pcfg = ocfg.getNode(jl.getClass().getName());
-				jl.host = session == null ? null : session.getVHost();
-				jl.reload();
-			}
-		}
+		flushjl();
+		// for (JavaLoaderSession session : sessions) {
+		// if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
+		// ConfigNode ocfg = null;
+		// if (!config.containsNode(session.getVHost().getHostPath())) {
+		// config.insertNode(session.getVHost().getHostPath());
+		// }
+		// ocfg = config.getNode(session.getVHost().getHostPath());
+		// if (!ocfg.containsNode(jl.getClass().getName())) {
+		// ocfg.insertNode(jl.getClass().getName());
+		// }
+		// jl.pcfg = ocfg.getNode(jl.getClass().getName());
+		// jl.host = session == null ? null : session.getVHost();
+		// jl.reload();
+		// }
+		// }
 	}
 	
 	@Override

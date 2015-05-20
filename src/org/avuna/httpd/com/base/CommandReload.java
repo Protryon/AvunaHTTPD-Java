@@ -5,8 +5,6 @@ import org.avuna.httpd.com.Command;
 import org.avuna.httpd.com.CommandContext;
 import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostHTTP;
-import org.avuna.httpd.http.plugins.base.PatchOverride;
-import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
 
 public class CommandReload extends Command {
 	
@@ -16,9 +14,9 @@ public class CommandReload extends Command {
 		AvunaHTTPD.fileManager.clearCache();
 		Host host = AvunaHTTPD.hosts.get(context.getSelectedHost());
 		if (host != null && host instanceof HostHTTP) {
-			((PatchOverride)((HostHTTP)host).registry.getPatchForClass(PatchOverride.class)).flush();
+			// ((PatchOverride)((HostHTTP)host).registry.getPatchForClass(PatchOverride.class)).flush();
 			((HostHTTP)host).patchBus.reload();
-			((PatchJavaLoader)((HostHTTP)host).registry.getPatchForClass(PatchJavaLoader.class)).flushjl();
+			// ((PatchJavaLoader)((HostHTTP)host).registry.getPatchForClass(PatchJavaLoader.class)).flushjl();
 			AvunaHTTPD.fileManager.flushjl();
 		}
 		AvunaHTTPD.mainConfig.load();
