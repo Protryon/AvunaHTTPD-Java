@@ -38,7 +38,7 @@ public class ConfigNode {
 			if (sub[i].name.equals(name)) {
 				ConfigNode[] nsub = new ConfigNode[sub.length - 1];
 				System.arraycopy(sub, 0, nsub, 0, i);
-				System.arraycopy(sub, i + 1, nsub, i, (sub.length - i) - 1);
+				System.arraycopy(sub, i + 1, nsub, i, sub.length - (i + 1));
 				sub = nsub;
 				break;
 			}
