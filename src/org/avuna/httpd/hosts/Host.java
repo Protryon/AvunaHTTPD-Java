@@ -34,8 +34,14 @@ public abstract class Host extends Thread {
 		
 	}
 	
+	private ConfigNode virtualConfig = null;
+	
+	public void setVirtualConfig(ConfigNode node) {
+		this.virtualConfig = node;
+	}
+	
 	public final ConfigNode getConfig() {
-		return AvunaHTTPD.hostsConfig.getNode(name);
+		return virtualConfig != null ? virtualConfig : AvunaHTTPD.hostsConfig.getNode(name);
 	}
 	
 	public boolean loaded = false;

@@ -227,8 +227,8 @@ public class AvunaHTTPD {
 					}
 					int wuid = Integer.parseInt(args[1]);
 					int wgid = Integer.parseInt(args[2]);
-					CLib.INSTANCE.setuid(wuid);
 					CLib.INSTANCE.setgid(wgid);
+					CLib.INSTANCE.setuid(wuid);
 					int uid = CLib.INSTANCE.getuid();
 					int gid = CLib.INSTANCE.getgid();
 					System.out.println("setuid = " + uid + " (wanted " + wuid + ")");
