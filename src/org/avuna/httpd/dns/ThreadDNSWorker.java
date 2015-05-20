@@ -6,9 +6,10 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
+import org.avuna.httpd.hosts.ITerminatable;
 import org.avuna.httpd.util.Logger;
 
-public class ThreadDNSWorker extends Thread {
+public class ThreadDNSWorker extends Thread implements ITerminatable {
 	
 	public static RecordHolder holder;
 	private static int nid = 1;
@@ -40,10 +41,6 @@ public class ThreadDNSWorker extends Thread {
 	
 	private boolean keepRunning = true;
 	
-	public void close() {
-		keepRunning = false;
-	}
-	
 	public static int getQueueSize() {
 		return workQueue.size();
 	}
@@ -71,9 +68,9 @@ public class ThreadDNSWorker extends Thread {
 			Work focus = workQueue.poll();
 			if (focus == null) {
 				try {
-					Thread.sleep(1L);
+					Thread.sleep(2L, 500000);
 				}catch (InterruptedException e) {
-					Logger.logError(e);
+					// Logger.logError(e);
 				}
 				continue;
 			}
@@ -168,5 +165,11 @@ public class ThreadDNSWorker extends Thread {
 				}
 			}
 		}
+	}
+	
+	@Override
+	public void terminate() {
+		keepRunning = false;
+		this.interrupt();
 	}
 }

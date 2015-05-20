@@ -172,7 +172,6 @@ public class HostHTTP extends Host {
 		reqWorkQueue.clear();
 	}
 	
-	public ArrayList<ThreadWorker> workers = new ArrayList<ThreadWorker>();
 	private ArrayBlockingQueue<RequestPacket> reqWorkQueue;
 	
 	public void addWork(RequestPacket req) {
@@ -278,13 +277,18 @@ public class HostHTTP extends Host {
 		initQueue(mc < 1 ? 10000000 : mc);
 		initQueue();
 		for (int i = 0; i < twc; i++) {
-			new ThreadWorker(this).start();
+			ThreadWorker tw = new ThreadWorker(this);
+			addTerm(tw);
+			tw.start();
 		}
 		for (int i = 0; i < tcc; i++) {
-			new ThreadConnection(this).start();
+			ThreadConnection tc = new ThreadConnection(this);
+			addTerm(tc);
+			tc.start();
 		}
 		for (int i = 0; i < tac; i++) {
-			new ThreadAccept(this, s, mc).start();
+			ThreadAccept ta = new ThreadAccept(this, s, mc);
+			ta.start();
 		}
 	}
 }

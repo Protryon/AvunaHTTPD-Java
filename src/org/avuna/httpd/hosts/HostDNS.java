@@ -48,6 +48,7 @@ public class HostDNS extends Host {
 		ThreadDNSWorker.initQueue(mc < 1 ? 10000000 : mc);
 		for (int i = 0; i < twc; i++) {
 			ThreadDNSWorker worker = new ThreadDNSWorker();
+			addTerm(worker);
 			worker.setDaemon(true);
 			worker.start();
 		}

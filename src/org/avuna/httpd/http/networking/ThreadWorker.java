@@ -4,24 +4,20 @@ import java.io.IOException;
 import java.net.SocketException;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostHTTP;
+import org.avuna.httpd.hosts.ITerminatable;
 import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.util.Logger;
 
-public class ThreadWorker extends Thread {
+public class ThreadWorker extends Thread implements ITerminatable {
 	protected static int nid = 1;
 	protected final HostHTTP host;
 	
 	public ThreadWorker(HostHTTP host) {
 		super("Avuna HTTP-Worker Thread #" + nid++);
 		this.host = host;
-		host.workers.add(this);
 	}
 	
 	protected boolean keepRunning = true;
-	
-	public void close() {
-		keepRunning = false;
-	}
 	
 	public void run() {
 		while (keepRunning) {
@@ -30,7 +26,7 @@ public class ThreadWorker extends Thread {
 				try {
 					Thread.sleep(2L, 500000);
 				}catch (InterruptedException e) {
-					Logger.logError(e);
+					// Logger.logError(e);
 				}
 				continue;
 			}
@@ -88,10 +84,16 @@ public class ThreadWorker extends Thread {
 					try {
 						Thread.sleep(0L, 100000);
 					}catch (InterruptedException e) {
-						Logger.logError(e);
+						// Logger.logError(e);
 					}
 				}
 			}
 		}
+	}
+	
+	@Override
+	public void terminate() {
+		keepRunning = false;
+		this.interrupt();
 	}
 }

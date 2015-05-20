@@ -60,10 +60,14 @@ public class HostHTTPM extends HostHTTP {
 		initQueue(mc < 1 ? 10000000 : mc);
 		initQueue();
 		for (int i = 0; i < twc; i++) {
-			new ThreadMWorker(this).start();
+			ThreadMWorker tmw = new ThreadMWorker(this);
+			addTerm(tmw);
+			tmw.start();
 		}
 		for (int i = 0; i < tcc; i++) {
-			new ThreadConnection(this).start();
+			ThreadConnection tc = new ThreadConnection(this);
+			addTerm(tc);
+			tc.start();
 		}
 		for (int i = 0; i < tac; i++) {
 			new ThreadAccept(this, s, mc).start();

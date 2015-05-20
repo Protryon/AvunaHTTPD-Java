@@ -6,9 +6,10 @@ import java.net.SocketTimeoutException;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.HostHTTPM;
+import org.avuna.httpd.hosts.ITerminatable;
 import org.avuna.httpd.util.Logger;
 
-public class ThreadConnection extends Thread {
+public class ThreadConnection extends Thread implements ITerminatable {
 	private static int nid = 1;
 	protected final HostHTTP host;
 	
@@ -20,10 +21,6 @@ public class ThreadConnection extends Thread {
 	
 	protected boolean keepRunning = true;
 	
-	public void close() {
-		keepRunning = false;
-	}
-	
 	public void run() {
 		while (keepRunning) {
 			Work focus = host.pollQueue();
@@ -31,7 +28,7 @@ public class ThreadConnection extends Thread {
 				try {
 					Thread.sleep(2L, 500000);
 				}catch (InterruptedException e) {
-					Logger.logError(e);
+					// Logger.logError(e);
 				}
 				continue;
 			}
@@ -209,10 +206,16 @@ public class ThreadConnection extends Thread {
 					try {
 						Thread.sleep(0L, 100000);
 					}catch (InterruptedException e) {
-						Logger.logError(e);
+						// Logger.logError(e);
 					}
 				}
 			}
 		}
+	}
+	
+	@Override
+	public void terminate() {
+		keepRunning = false;
+		this.interrupt();
 	}
 }

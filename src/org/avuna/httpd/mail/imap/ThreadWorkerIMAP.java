@@ -5,10 +5,11 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
+import org.avuna.httpd.hosts.ITerminatable;
 import org.avuna.httpd.mail.util.StringFormatter;
 import org.avuna.httpd.util.Logger;
 
-public class ThreadWorkerIMAP extends Thread {
+public class ThreadWorkerIMAP extends Thread implements ITerminatable {
 	public final HostMail host;
 	
 	public ThreadWorkerIMAP(HostMail host) {
@@ -17,8 +18,9 @@ public class ThreadWorkerIMAP extends Thread {
 	
 	private boolean keepRunning = true;
 	
-	public void close() {
+	public void terminate() {
 		keepRunning = false;
+		this.interrupt();
 	}
 	
 	public static String safeRead(IMAPWork focus) throws IOException {

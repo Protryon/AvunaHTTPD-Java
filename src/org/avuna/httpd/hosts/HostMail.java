@@ -125,25 +125,32 @@ public class HostMail extends Host {
 			workQueueIMAP = new ArrayBlockingQueue<IMAPWork>(mc < 0 ? 1000000 : mc);
 			for (int i = 0; i < twc; i++) {
 				ThreadWorkerSMTP tws = new ThreadWorkerSMTP(this);
+				addTerm(tws);
 				workersSMTP.add(tws);
 				tws.start();
 			}
 			for (int i = 0; i < tac; i++) {
-				new ThreadAcceptSMTP(this, smtp, mc).start();
-				new ThreadAcceptSMTP(this, smtpmua, mc).start();
+				ThreadAcceptSMTP tas1 = new ThreadAcceptSMTP(this, smtp, mc);
+				tas1.start();
+				ThreadAcceptSMTP tas2 = new ThreadAcceptSMTP(this, smtpmua, mc);
+				tas2.start();
 				if (smtps != null) {
-					new ThreadAcceptSMTP(this, smtps, mc).start();
+					ThreadAcceptSMTP tas3 = new ThreadAcceptSMTP(this, smtps, mc);
+					tas3.start();
 				}
 			}
 			for (int i = 0; i < twc; i++) {
 				ThreadWorkerIMAP tws = new ThreadWorkerIMAP(this);
+				addTerm(tws);
 				workersIMAP.add(tws);
 				tws.start();
 			}
 			for (int i = 0; i < tac; i++) {
-				new ThreadAcceptIMAP(this, imap, mc).start();
+				ThreadAcceptIMAP tai1 = new ThreadAcceptIMAP(this, imap, mc);
+				tai1.start();
 				if (imaps != null) {
-					new ThreadAcceptIMAP(this, imaps, mc).start();
+					ThreadAcceptIMAP tai2 = new ThreadAcceptIMAP(this, imaps, mc);
+					tai2.start();
 				}
 			}
 			Runtime.getRuntime().addShutdownHook(new Thread() {
