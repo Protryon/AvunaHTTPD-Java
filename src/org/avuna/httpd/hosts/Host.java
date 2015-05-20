@@ -60,7 +60,6 @@ public abstract class Host extends Thread implements ITerminatable {
 		for (ITerminatable worker : terms) {
 			worker.terminate();
 		}
-		System.out.println(servers.size());
 		for (ServerSocket server : servers) {
 			try {
 				server.close();
