@@ -29,7 +29,7 @@ public class SafeMode {
 		bb.put(0, bap.array[16]);
 		int hcount = bb.getInt(0);
 		// Logger.log(hcount + "");
-		return hcount != 1;
+		return hcount >= 1;
 	}
 	
 	private static boolean isSymlink(bap f, boolean isFile) {
