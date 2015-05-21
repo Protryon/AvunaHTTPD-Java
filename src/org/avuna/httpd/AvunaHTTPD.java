@@ -310,12 +310,12 @@ public class AvunaHTTPD {
 					}else {
 						dir = new File(map.getNode("dir").getValue());
 					}
-					if (!map.containsNode("hosts")) map.insertNode("hosts", new File(dir, "hosts.cfg").toString());
-					if (!map.containsNode("logs")) map.insertNode("logs", new File(dir, "logs").toString());
-					if (!map.containsNode("javac")) map.insertNode("javac", "javac");
-					if (!windows && !map.containsNode("uid")) map.insertNode("uid", unpack ? "6833" : "0");
-					if (!windows && !map.containsNode("gid")) map.insertNode("gid", unpack ? "6833" : "0");
-					if (!windows && !map.containsNode("safeMode")) map.insertNode("safeMode", "true");
+					if (!map.containsNode("hosts")) map.insertNode("hosts", new File(dir, "hosts.cfg").toString(), "main hosts file");
+					if (!map.containsNode("logs")) map.insertNode("logs", new File(dir, "logs").toString(), "logs folder");
+					if (!map.containsNode("javac")) map.insertNode("javac", "javac", "command for javac for comp command.");
+					if (!windows && !map.containsNode("uid")) map.insertNode("uid", unpack ? "6833" : "0", "uid to de-escalate to, must be ran as root");
+					if (!windows && !map.containsNode("gid")) map.insertNode("gid", unpack ? "6833" : "0", "gid to de-escalate to, must be ran as root");
+					if (!windows && !map.containsNode("safeMode")) map.insertNode("safeMode", "true", "if true, automatically enforces file permissions. generally reccomended to prevent critical misconfiguration.");
 				}
 			});
 			mainConfig.load();
@@ -407,11 +407,11 @@ public class AvunaHTTPD {
 				public void format(ConfigNode map) {
 					boolean nm = false, nc = false, nd = false;
 					if (!map.containsNode("main")) {
-						map.insertNode("main");
+						map.insertNode("main", null, "main node, must exist");
 						nm = true;
 					}
 					if (!map.containsNode("com")) {
-						map.insertNode("com");
+						map.insertNode("com", null, "set enabled=true to use the local/remote command system.");
 						nc = true;
 					}
 					// if (!map.containsKey("dns")) {
@@ -421,7 +421,7 @@ public class AvunaHTTPD {
 					for (String key : map.getSubnodes()) {
 						ConfigNode host = map.getNode(key);
 						if (!host.containsNode("enabled")) host.insertNode("enabled", (nc && key.equals("com")) ? "false" : "true");
-						if (!host.containsNode("protocol")) host.insertNode("protocol", ((nd && key.equals("dns")) ? "dns" : ((nc && key.equals("com")) ? "com" : "http")));
+						if (!host.containsNode("protocol")) host.insertNode("protocol", ((nd && key.equals("dns")) ? "dns" : ((nc && key.equals("com")) ? "com" : "http")), "set to http/httpm/com/dns/mail for respective servers, load avuna with these to have other config options autofill.");
 						Protocol p = Protocol.fromString(host.getNode("protocol").getValue());
 						if (p == null) {
 							Logger.log("Skipping Host: " + key + " due to invalid protocol!");

@@ -43,8 +43,8 @@ public class HostHTTPM extends HostHTTP {
 			// if (!vhost.containsNode("gid")) vhost.insertNode(AvunaHTTPD.mainConfig.get("gid"));
 			// }
 			if (!AvunaHTTPD.windows && !vhost.containsNode("unix")) vhost.insertNode("unix", "false", "enabled unix socket. if true, set the ip to the unix socket file, port is ignored.");
-			if (!vhost.containsNode("ip")) vhost.insertNode("ip", "127.0.0.1");
-			if (!vhost.containsNode("port")) vhost.insertNode("port", "6844");
+			if (!vhost.containsNode("ip")) vhost.insertNode("ip", "127.0.0.1", "ip or unix socket file to forward to");
+			if (!vhost.containsNode("port")) vhost.insertNode("port", "6844", "port to forward if ip");
 		}
 		for (String vkey : vhosts.getSubnodes()) {
 			ConfigNode ourvh = vhosts.getNode(vkey);
