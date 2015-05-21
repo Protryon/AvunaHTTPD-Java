@@ -30,14 +30,14 @@ public class HostDNS extends Host {
 	}
 	
 	public void formatConfig(ConfigNode map) {
-		if (!map.containsNode("port")) map.insertNode("port", "53");
-		if (!map.containsNode("ip")) map.insertNode("ip", "0.0.0.0");
-		if (!map.containsNode("dnsf")) map.insertNode("dnsf", AvunaHTTPD.fileManager.getBaseFile("dns.cfg").getAbsolutePath());
+		if (!map.containsNode("port")) map.insertNode("port", "53", "bind port for UDP & TCP");
+		if (!map.containsNode("ip")) map.insertNode("ip", "0.0.0.0", "bind ip");
+		if (!map.containsNode("dnsf")) map.insertNode("dnsf", AvunaHTTPD.fileManager.getBaseFile("dns.cfg").getAbsolutePath(), "dns zone file");
 		dnsf = map.getNode("dnsf").getValue();
 		ip = map.getNode("ip").getValue();
 		port = Integer.parseInt(map.getNode("port").getValue());
-		if (!map.containsNode("workerThreadCount")) map.insertNode("workerThreadCount", "8");
-		if (!map.containsNode("maxConnections")) map.insertNode("maxConnections", "-1");
+		if (!map.containsNode("workerThreadCount")) map.insertNode("workerThreadCount", "8", "dns worker thread count");
+		if (!map.containsNode("maxConnections")) map.insertNode("maxConnections", "-1", "max number of *TCP* connections");
 		twc = Integer.parseInt(map.getNode("workerThreadCount").getValue());
 		mc = Integer.parseInt(map.getNode("maxConnections").getValue());
 	}

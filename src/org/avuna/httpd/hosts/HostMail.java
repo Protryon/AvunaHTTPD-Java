@@ -77,23 +77,23 @@ public class HostMail extends Host {
 	public final ArrayList<EmailAccount> accounts = new ArrayList<EmailAccount>();
 	
 	public void formatConfig(ConfigNode map) {
-		if (!map.containsNode("smtp-port")) map.insertNode("smtp-port", "25");
-		if (!map.containsNode("smtp-mua-port")) map.insertNode("smtp-mua-port", "587");
-		if (!map.containsNode("smtp-tls-port")) map.insertNode("smtp-tls-port", "465");
-		if (!map.containsNode("imap-port")) map.insertNode("imap-port", "143");
-		if (!map.containsNode("imap-tls-port")) map.insertNode("imap-tls-port", "993");
-		if (!map.containsNode("ip")) map.insertNode("ip", "0.0.0.0");
-		if (!map.containsNode("ssl")) map.insertNode("ssl");
+		if (!map.containsNode("smtp-port")) map.insertNode("smtp-port", "25", "mail delivery port");
+		if (!map.containsNode("smtp-mua-port")) map.insertNode("smtp-mua-port", "587", "email client port");
+		if (!map.containsNode("smtp-tls-port")) map.insertNode("smtp-tls-port", "465", "TLS port for SMTP");
+		if (!map.containsNode("imap-port")) map.insertNode("imap-port", "143", "IMAP port");
+		if (!map.containsNode("imap-tls-port")) map.insertNode("imap-tls-port", "993", "IMAPS port");
+		if (!map.containsNode("ip")) map.insertNode("ip", "0.0.0.0", "bind ip");
+		if (!map.containsNode("ssl")) map.insertNode("ssl", "configure to enable imaps/smtps/starttls");
 		ConfigNode ssl = map.getNode("ssl");
 		if (!ssl.containsNode("enabled")) ssl.insertNode("enabled", "false");
 		if (!ssl.containsNode("keyFile")) ssl.insertNode("keyFile", AvunaHTTPD.fileManager.getBaseFile("ssl/keyFile").toString());
 		if (!ssl.containsNode("keystorePassword")) ssl.insertNode("keystorePassword", "password");
 		if (!ssl.containsNode("keyPassword")) ssl.insertNode("keyPassword", "password");
-		if (!map.containsNode("domain")) map.insertNode("domain", "example.com,example.org");
-		if (!map.containsNode("folder")) map.insertNode("folder", AvunaHTTPD.fileManager.getBaseFile("mail").toString());
-		if (!map.containsNode("acceptThreadCount")) map.insertNode("acceptThreadCount", "2");
-		if (!map.containsNode("workerThreadCount")) map.insertNode("workerThreadCount", "8");
-		if (!map.containsNode("maxConnections")) map.insertNode("maxConnections", "-1");
+		if (!map.containsNode("domain")) map.insertNode("domain", "example.com,example.org", "domains to accept mail from");
+		if (!map.containsNode("folder")) map.insertNode("folder", AvunaHTTPD.fileManager.getBaseFile("mail").toString(), "mail sotrage folder");
+		if (!map.containsNode("acceptThreadCount")) map.insertNode("acceptThreadCount", "2", "accept thread count");
+		if (!map.containsNode("workerThreadCount")) map.insertNode("workerThreadCount", "8", "worker thread count");
+		if (!map.containsNode("maxConnections")) map.insertNode("maxConnections", "-1", "max connections per port");
 		tac = Integer.parseInt(map.getNode("acceptThreadCount").getValue());
 		twc = Integer.parseInt(map.getNode("workerThreadCount").getValue());
 		mc = Integer.parseInt(map.getNode("maxConnections").getValue());

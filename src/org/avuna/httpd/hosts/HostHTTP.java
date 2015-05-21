@@ -217,41 +217,42 @@ public class HostHTTP extends Host {
 	
 	public void formatConfig(ConfigNode map, boolean loadVHosts) {
 		super.formatConfig(map);
-		if (!map.containsNode("errorpages")) map.insertNode("errorpages");
-		if (!map.containsNode("index")) map.insertNode("index", "index.class,index.php,index.html");
-		if (!map.containsNode("cacheClock")) map.insertNode("cacheClock", "-1");
+		if (!map.containsNode("errorpages")) map.insertNode("errorpages", null, "subvalues are errorcode=errorpage, ie 404=/404.html");
+		if (!map.containsNode("index")) map.insertNode("index", "index.class,index.php,index.html", "format is filename,filename,etc");
+		if (!map.containsNode("cacheClock")) map.insertNode("cacheClock", "-1", "-1=forever, 0=never >0=MS per cache clear");
 		if (!map.containsNode("maxPostSize")) map.insertNode("maxPostSize", "65535", "max post size in KB");
 		this.maxPostSize = Integer.parseInt(map.getNode("maxPostSize").getValue());
-		if (!map.containsNode("acceptThreadCount")) map.insertNode("acceptThreadCount", "4");
-		if (!map.containsNode("connThreadCount")) map.insertNode("connThreadCount", "12");
-		if (!map.containsNode("workerThreadCount")) map.insertNode("workerThreadCount", "32");
-		if (!map.containsNode("maxConnections")) map.insertNode("maxConnections", "-1");
-		if (!map.containsNode("http2")) map.insertNode("http2", "false");
+		if (!map.containsNode("acceptThreadCount")) map.insertNode("acceptThreadCount", "4", "number of accept threads");
+		if (!map.containsNode("connThreadCount")) map.insertNode("connThreadCount", "12", "number of connection threads");
+		if (!map.containsNode("workerThreadCount")) map.insertNode("workerThreadCount", "32", "number of HTTP worker threads");
+		if (!map.containsNode("maxConnections")) map.insertNode("maxConnections", "-1", "-1 for infinite, >0 for a maximum amount.");
+		if (!map.containsNode("http2")) map.insertNode("http2", "false", "not fully implemented, reccomended against use");
 		if (!map.containsNode("plugins")) map.insertNode("plugins", AvunaHTTPD.fileManager.getBaseFile("plugins").toString());
 		tac = Integer.parseInt(map.getNode("acceptThreadCount").getValue());
 		tcc = Integer.parseInt(map.getNode("connThreadCount").getValue());
 		twc = Integer.parseInt(map.getNode("workerThreadCount").getValue());
 		mc = Integer.parseInt(map.getNode("maxConnections").getValue());
 		http2 = map.getNode("http2").getValue().equals("true");
-		if (!map.containsNode("vhosts")) map.insertNode("vhosts");
+		if (!map.containsNode("vhosts")) map.insertNode("vhosts", null, "host values are checked in the order of this file");
 		ConfigNode vhosts = map.getNode("vhosts");
-		if (!vhosts.containsNode("main")) vhosts.insertNode("main");
+		if (!vhosts.containsNode("main")) vhosts.insertNode("main", "main node must exist, since it is a catch all, I reccomend you keep it at the bottom for the above reason");
 		for (String vkey : vhosts.getSubnodes()) {
 			ConfigNode vhost = vhosts.getNode(vkey);
 			if (!vhost.containsNode("enabled")) vhost.insertNode("enabled", "true");
-			if (!vhost.containsNode("debug")) vhost.insertNode("debug", "false");
-			if (!vhost.containsNode("host")) vhost.insertNode("host", ".*");
-			if (!vhost.containsNode("inheritjls")) {
-				if (!vhost.containsNode("htdocs")) vhost.insertNode("htdocs", AvunaHTTPD.fileManager.getBaseFile("htdocs").toString());
-				if (!vhost.containsNode("htsrc")) vhost.insertNode("htsrc", AvunaHTTPD.fileManager.getBaseFile("htsrc").toString());
-			}
+			if (!vhost.containsNode("debug")) vhost.insertNode("debug", "false", "if true, request headers will be logged");
+			if (!vhost.containsNode("host")) vhost.insertNode("host", ".*", "regex to match host header, determines which vhost to load.");
+			// if (!vhost.containsNode("inheritjls")) {
+			if (!vhost.containsNode("htdocs")) vhost.insertNode("htdocs", AvunaHTTPD.fileManager.getBaseFile("htdocs").toString());
+			if (!vhost.containsNode("htsrc")) vhost.insertNode("htsrc", AvunaHTTPD.fileManager.getBaseFile("htsrc").toString());
+			// }
+			if (!vhost.containsNode("inheritjls")) vhost.insertNode("inheritjls", "", "set to host/vhost to inherit another hosts javaloaders; used for HTTPS, you would want to inherit JLS to sync them in memory.");
 		}
 		if (loadVHosts) {
 			for (String vkey : vhosts.getSubnodes()) {
 				ConfigNode ourvh = vhosts.getNode(vkey);
 				if (!ourvh.getNode("enabled").getValue().equals("true")) continue;
 				VHost vhost = null;
-				if (ourvh.containsNode("inheritjls")) {
+				if (ourvh.containsNode("inheritjls") && ourvh.getNode("inheritjls").getValue().length() > 0) {
 					VHost parent = null;
 					String ij = ourvh.getNode("inheritjls").getValue();
 					for (Host host : AvunaHTTPD.hosts.values()) {
