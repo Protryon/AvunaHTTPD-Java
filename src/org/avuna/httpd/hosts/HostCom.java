@@ -19,12 +19,12 @@ public class HostCom extends Host {
 	private int port;
 	
 	public void formatConfig(ConfigNode map) {
-		if (!map.containsNode("port")) map.insertNode("port", "6049");
-		if (!map.containsNode("ip")) map.insertNode("ip", "127.0.0.1");
+		if (!map.containsNode("port")) map.insertNode("port", "6049", "bind port");
+		if (!map.containsNode("ip")) map.insertNode("ip", "127.0.0.1", "bind ip, or unix socket file");
 		if (!map.containsNode("unix")) map.insertNode("unix", "false", "set to true, and set ip to the socket file to use a unix socket. port is ignored. mostly used for shared hosting.");
 		// super.formatConfig(map);
-		if (!map.containsNode("doAuth")) map.insertNode("doAuth", "true");
-		if (!map.containsNode("auth")) map.insertNode("auth", "");
+		if (!map.containsNode("doAuth")) map.insertNode("doAuth", "true", "if true, will request username/password, and enforce login limits");
+		if (!map.containsNode("auth")) map.insertNode("auth", "", "format: username:password,username2:password2");
 		if (!map.getNode("doAuth").getValue().equals("true")) {
 			auth = null;
 		}else {
