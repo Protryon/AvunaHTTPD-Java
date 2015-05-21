@@ -13,7 +13,9 @@ public class SetCookie {
 	
 	public SetCookie(ResponsePacket response) {
 		this.response = response;
-		this.domain = response.request.headers.hasHeader("Host") ? response.request.headers.getHeader("Host") : "";
+		String dom = response.request.headers.hasHeader("Host") ? response.request.headers.getHeader("Host") : "";
+		if (dom.contains(":")) dom = dom.substring(0, dom.indexOf(":"));
+		this.domain = dom;
 	}
 	
 	public void setCookie(String name, String value) {
