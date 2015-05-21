@@ -65,6 +65,11 @@ public class AvunaHTTPD {
 	}
 	public static final CommandContext mainCommandContext = commandRegistry.newContext(System.out, new Scanner(System.in));
 	
+	/**
+	 * Setup folders if they don't exist.
+	 * @see FileManager
+	 * @see Host#setupFolders()
+	 */
 	public static void setupFolders() {
 		fileManager.getMainDir().mkdirs();
 		fileManager.getLogs().mkdirs();
