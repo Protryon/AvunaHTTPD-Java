@@ -153,7 +153,14 @@ public class FileManager {
 	
 	public File getAbsolutePath(String reqTarget, RequestPacket request) {
 		lwi = false;
-		File abs = new File(request.host.getHTDocs(), URLDecoder.decode(reqTarget));
+		String[] t = URLDecoder.decode(reqTarget).split("/");
+		File abs = request.host.getHTDocs();
+		for (String st : t) {
+			abs = new File(abs, st);
+			if (abs.isFile()) {
+				break;
+			}
+		}
 		String abspr = abs.getAbsolutePath();
 		String htd = request.host.getHTDocs().getAbsolutePath();
 		if (!abspr.startsWith(htd)) {
