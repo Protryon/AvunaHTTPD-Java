@@ -10,6 +10,7 @@ import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -20,9 +21,10 @@ import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.unixsocket.UnixServerSocket;
 
-public abstract class Host extends Thread {
+public abstract class Host extends Thread implements ITerminatable {
 	protected final String name;
 	protected final Protocol protocol;
+	private boolean isStarted = false;
 	
 	public Host(String threadName, Protocol protocol) {
 		super(threadName + " Host");
@@ -34,30 +36,62 @@ public abstract class Host extends Thread {
 		
 	}
 	
+	private ConfigNode virtualConfig = null;
+	
+	public void setVirtualConfig(ConfigNode node) {
+		this.virtualConfig = node;
+	}
+	
 	public final ConfigNode getConfig() {
-		return AvunaHTTPD.hostsConfig.getNode(name);
+		return virtualConfig != null ? virtualConfig : AvunaHTTPD.hostsConfig.getNode(name);
 	}
 	
 	public boolean loaded = false;
+	private ArrayList<ITerminatable> terms = new ArrayList<ITerminatable>();
+	
+	public void addTerm(ITerminatable it) {
+		terms.add(it);
+	}
+	
+	private ArrayList<ServerSocket> servers = new ArrayList<ServerSocket>();
+	
+	@Override
+	public void terminate() {
+		for (ITerminatable worker : terms) {
+			worker.terminate();
+		}
+		for (ServerSocket server : servers) {
+			try {
+				server.close();
+			}catch (IOException e) {
+				Logger.logError(e);
+			}
+		}
+	}
 	
 	public final ServerSocket makeServer(String ip, int port, boolean ssl, SSLServerSocketFactory sc) throws IOException {
 		Logger.log("Starting " + name + "/" + protocol.name + " " + (ssl ? "TLS-" : "") + "Server on " + ip + ":" + port);
 		if (ssl) {
 			try {
 				ServerSocket server = sc.createServerSocket(port, 50, InetAddress.getByName(ip));
+				servers.add(server);
 				return server;
 			}catch (Exception e) {
 				Logger.logError(e);
 				return null;
 			}
 		}else {
-			return new ServerSocket(port, 1000, InetAddress.getByName(ip));
+			ServerSocket server = new ServerSocket(port, 1000, InetAddress.getByName(ip));
+			servers.add(server);
+			return server;
 		}
 	}
 	
 	public final UnixServerSocket makeUnixServer(String file) throws IOException {
 		Logger.log("Starting " + name + "/" + protocol.name + " " + "Server on " + file);
-		return new UnixServerSocket(file);
+		UnixServerSocket uss = new UnixServerSocket(file);
+		servers.add(uss);
+		return uss;
 	}
 	
 	public final SSLContext makeSSLContext(File keyFile, String keyPassword, String keystorePassword) throws IOException {
@@ -111,7 +145,12 @@ public abstract class Host extends Thread {
 	
 	public SSLContext sslContext = null;
 	
+	public boolean hasStarted() {
+		return isStarted;
+	}
+	
 	public void run() {
+		isStarted = true;
 		try {
 			ConfigNode cfg = getConfig();
 			ConfigNode ssl = cfg.getNode("ssl");

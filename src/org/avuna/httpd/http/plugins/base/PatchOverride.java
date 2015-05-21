@@ -95,15 +95,11 @@ public class PatchOverride extends Patch {
 	public void reload() throws IOException {
 		super.reload();
 		nogo.clear();
+		overrides.clear();
 	}
 	
 	private ArrayList<String> nogo = new ArrayList<String>();
 	private HashMap<String, HashMap<String, Object>> overrides = new HashMap<String, HashMap<String, Object>>();
-	
-	public void flush() {
-		nogo.clear();
-		overrides.clear();
-	}
 	
 	@Override
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {

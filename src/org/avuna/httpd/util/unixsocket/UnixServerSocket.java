@@ -57,6 +57,6 @@ public class UnixServerSocket extends ServerSocket {
 	public void close() throws IOException {
 		closed = true;
 		int s = CLib.INSTANCE.close(sockfd);
-		if (s < 0) throw new CException(Native.getLastError(), "socket failed close");;
+		if (s < 0) throw new CException(Native.getLastError(), "socket failed close");
 	}
 }

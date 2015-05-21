@@ -227,8 +227,8 @@ public class AvunaHTTPD {
 					}
 					int wuid = Integer.parseInt(args[1]);
 					int wgid = Integer.parseInt(args[2]);
-					CLib.INSTANCE.setuid(wuid);
 					CLib.INSTANCE.setgid(wgid);
+					CLib.INSTANCE.setuid(wuid);
 					int uid = CLib.INSTANCE.getuid();
 					int gid = CLib.INSTANCE.getgid();
 					System.out.println("setuid = " + uid + " (wanted " + wuid + ")");
@@ -361,7 +361,7 @@ public class AvunaHTTPD {
 			}
 			Logger.log("Loading Connection Handling");
 			for (Host h : hosts.values()) {
-				h.start();
+				if (!h.hasStarted()) h.start();
 			}
 			if (!windows && mainConfig.getNode("safeMode").getValue().equals("true")) {
 				SafeMode.setPerms(cfg.getParentFile(), Integer.parseInt(mainConfig.getNode("uid").getValue()), Integer.parseInt(mainConfig.getNode("gid").getValue()));

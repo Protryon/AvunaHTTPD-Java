@@ -2,6 +2,7 @@ package org.avuna.httpd.util.unixsocket;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketException;
 import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.CLib.bap;
 import com.sun.jna.Native;
@@ -26,7 +27,10 @@ public class UnixInputStream extends InputStream {
 		bap bap = new bap(1);
 		int i = CLib.INSTANCE.read(sockfd, bap, 1);
 		if (i < 0) {
-			throw new CException(Native.getLastError(), "read failed");
+			i = Native.getLastError();
+			if (i == 104) {
+				throw new SocketException("Connection reset by peer!");
+			}else throw new CException(i, "read failed");
 		}
 		return bap.array[0] & 0xff;
 	}
@@ -35,7 +39,10 @@ public class UnixInputStream extends InputStream {
 		bap bap = new bap(array.length);
 		int i = CLib.INSTANCE.read(sockfd, bap, array.length);
 		if (i < 0) {
-			throw new CException(Native.getLastError(), "read failed");
+			i = Native.getLastError();
+			if (i == 104) {
+				throw new SocketException("Connection reset by peer!");
+			}else throw new CException(i, "read failed");
 		}
 		System.arraycopy(bap.array, 0, array, 0, array.length);
 		return i;
@@ -46,7 +53,10 @@ public class UnixInputStream extends InputStream {
 		bap bap = new bap(array.length);
 		int i = CLib.INSTANCE.read(sockfd, bap, array.length);
 		if (i < 0) {
-			throw new CException(Native.getLastError(), "read failed");
+			i = Native.getLastError();
+			if (i == 104) {
+				throw new SocketException("Connection reset by peer!");
+			}else throw new CException(i, "read failed");
 		}
 		System.arraycopy(bap.array, 0, array, off, len);
 		return i;

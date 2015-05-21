@@ -86,8 +86,10 @@ public class FileManager {
 		cConfigCache.clear();
 		for (Host host : AvunaHTTPD.hosts.values()) {
 			if (host instanceof HostHTTP) {
-				((PatchInline)((HostHTTP)host).registry.getPatchForClass(PatchInline.class)).clearCache();
-				((PatchGZip)((HostHTTP)host).registry.getPatchForClass(PatchGZip.class)).clearCache();
+				PatchInline pi = ((PatchInline)((HostHTTP)host).registry.getPatchForClass(PatchInline.class));
+				if (pi != null) pi.clearCache();
+				PatchGZip pg = ((PatchGZip)((HostHTTP)host).registry.getPatchForClass(PatchGZip.class));
+				if (pg != null) pg.clearCache();
 			}
 		}
 		

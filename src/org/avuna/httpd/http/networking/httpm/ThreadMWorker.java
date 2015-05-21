@@ -41,7 +41,7 @@ public class ThreadMWorker extends ThreadWorker {
 				try {
 					Thread.sleep(1L);
 				}catch (InterruptedException e) {
-					Logger.logError(e);
+					// Logger.logError(e);
 				}
 				continue;
 			}

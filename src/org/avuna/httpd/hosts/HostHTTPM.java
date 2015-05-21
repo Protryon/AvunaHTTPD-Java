@@ -26,6 +26,8 @@ public class HostHTTPM extends HostHTTP {
 	
 	public void formatConfig(ConfigNode map) {
 		super.formatConfig(map, false);
+		map.removeNode("index");
+		map.removeNode("cacheClock");
 		ConfigNode vhosts = map.getNode("vhosts");
 		for (String vkey : vhosts.getSubnodes()) {
 			ConfigNode vhost = vhosts.getNode(vkey);
@@ -40,15 +42,15 @@ public class HostHTTPM extends HostHTTP {
 			// if (!vhost.containsNode("uid")) vhost.insertNode(AvunaHTTPD.mainConfig.get("uid"));
 			// if (!vhost.containsNode("gid")) vhost.insertNode(AvunaHTTPD.mainConfig.get("gid"));
 			// }
-			if (!AvunaHTTPD.windows && !vhost.containsNode("vhost-unix")) vhost.insertNode("vhost-unix", "false", "enabled unix socket. if true, set the ip to the unix socket file, port is ignored.");
-			if (!vhost.containsNode("vhost-ip")) vhost.insertNode("vhost-ip", "127.0.0.1");
-			if (!vhost.containsNode("vhost-port")) vhost.insertNode("vhost-port", "6844");
+			if (!AvunaHTTPD.windows && !vhost.containsNode("unix")) vhost.insertNode("unix", "false", "enabled unix socket. if true, set the ip to the unix socket file, port is ignored.");
+			if (!vhost.containsNode("ip")) vhost.insertNode("ip", "127.0.0.1");
+			if (!vhost.containsNode("port")) vhost.insertNode("port", "6844");
 		}
 		for (String vkey : vhosts.getSubnodes()) {
 			ConfigNode ourvh = vhosts.getNode(vkey);
 			if (!ourvh.getNode("enabled").getValue().equals("true")) continue;
 			boolean unix = !AvunaHTTPD.windows && ourvh.getNode("unix").getValue().equals("true");
-			VHost vhost = new VHostM(this.getHostname() + "/" + vkey, this, unix, ourvh.getNode("host").getValue(), ourvh.getNode("vhost-ip").getValue(), Integer.parseInt(ourvh.getNode("vhost-port").getValue()));
+			VHost vhost = new VHostM(this.getHostname() + "/" + vkey, this, unix, ourvh.getNode("host").getValue(), ourvh.getNode("ip").getValue(), Integer.parseInt(ourvh.getNode("port").getValue()));
 			vhost.setDebug(ourvh.getNode("debug").getValue().equals("true"));
 			this.addVHost(vhost);
 		}
@@ -58,10 +60,14 @@ public class HostHTTPM extends HostHTTP {
 		initQueue(mc < 1 ? 10000000 : mc);
 		initQueue();
 		for (int i = 0; i < twc; i++) {
-			new ThreadMWorker(this).start();
+			ThreadMWorker tmw = new ThreadMWorker(this);
+			addTerm(tmw);
+			tmw.start();
 		}
 		for (int i = 0; i < tcc; i++) {
-			new ThreadConnection(this).start();
+			ThreadConnection tc = new ThreadConnection(this);
+			addTerm(tc);
+			tc.start();
 		}
 		for (int i = 0; i < tac; i++) {
 			new ThreadAccept(this, s, mc).start();

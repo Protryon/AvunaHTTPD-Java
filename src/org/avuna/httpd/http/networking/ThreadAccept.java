@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import javax.net.ssl.SSLServerSocket;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostHTTP;
@@ -60,6 +61,8 @@ public class ThreadAccept extends Thread {
 				out.flush();
 				DataInputStream in = new DataInputStream(s.getInputStream());
 				host.addWork(host, s, in, out, server instanceof SSLServerSocket);
+			}catch (SocketException e) {
+				if (!server.isClosed()) Logger.logError(e);
 			}catch (Exception e) {
 				Logger.logError(e);
 			}
