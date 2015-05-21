@@ -4,9 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import org.avuna.httpd.util.CLib;
-import org.avuna.httpd.util.CLib.sockaddr_un;
-import com.sun.jna.Native;
-import com.sun.jna.ptr.IntByReference;
 
 public class UnixServerSocket extends ServerSocket {
 	private int sockfd = 0;
@@ -33,30 +30,27 @@ public class UnixServerSocket extends ServerSocket {
 	
 	public void bind() throws IOException {
 		if (bound) throw new IOException("Already bound!");
-		sockfd = CLib.INSTANCE.socket(1, 1, 0);
-		if (sockfd < 0) throw new CException(Native.getLastError(), "socket failed native create");
-		byte[] fb = file.getBytes();
-		sockaddr_un sau = new sockaddr_un();
-		sau.sunpath = fb;
-		sau.sunfamily = 1;
-		int bind = CLib.INSTANCE.bind(sockfd, sau, fb.length + 2);
-		if (bind != 0) throw new CException(Native.getLastError(), "socket failed bind");
-		int listen = CLib.INSTANCE.listen(sockfd, 50);
-		if (bind != 0) throw new CException(Native.getLastError(), "socket failed listen");
+		sockfd = CLib.socket(1, 1, 0);
+		if (sockfd < 0) throw new CException(CLib.errno(), "socket failed native create");
+		int bind = CLib.bind(sockfd, file);
+		if (bind != 0) throw new CException(CLib.errno(), "socket failed bind");
+		int listen = CLib.listen(sockfd, 50);
+		if (listen != 0) throw new CException(CLib.errno(), "socket failed listen");
 		bound = true;
 	}
 	
 	public UnixSocket accept() throws IOException {
 		if (!bound) bind();
-		sockaddr_un remote = new sockaddr_un();
-		int nsfd = CLib.INSTANCE.accept(sockfd, remote, new IntByReference(110));
-		UnixSocket us = new UnixSocket(new String(remote.sunpath), nsfd);
+		String nsfd = CLib.accept(sockfd);
+		int i = Integer.parseInt(nsfd.substring(0, nsfd.indexOf("/")));
+		nsfd = nsfd.substring(nsfd.indexOf("/") + 1);
+		UnixSocket us = new UnixSocket(file, i);
 		return us;
 	}
 	
 	public void close() throws IOException {
 		closed = true;
-		int s = CLib.INSTANCE.close(sockfd);
-		if (s < 0) throw new CException(Native.getLastError(), "socket failed close");
+		int s = CLib.close(sockfd);
+		if (s < 0) throw new CException(CLib.errno(), "socket failed close");
 	}
 }

@@ -5,7 +5,6 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import org.avuna.httpd.util.CLib;
-import com.sun.jna.Native;
 
 public class UnixSocket extends Socket {
 	private int sockfd = -1;
@@ -29,14 +28,10 @@ public class UnixSocket extends Socket {
 	
 	public void connect() throws IOException {
 		if (connected) throw new IOException("Already connected!");
-		sockfd = CLib.INSTANCE.socket(1, 1, 0);
-		if (sockfd < 0) throw new CException(Native.getLastError(), "socket failed native create");
-		CLib.sockaddr_un sockaddr = new CLib.sockaddr_un();
-		byte[] fd = file.getBytes();
-		sockaddr.sunfamily = 1;
-		sockaddr.sunpath = fd;
-		int c = CLib.INSTANCE.connect(sockfd, sockaddr, fd.length + 2);
-		if (c != 0) throw new CException(Native.getLastError(), "socket failed connect");
+		sockfd = CLib.socket(1, 1, 0);
+		if (sockfd < 0) throw new CException(CLib.errno(), "socket failed native create");
+		int c = CLib.connect(sockfd, file);
+		if (c != 0) throw new CException(CLib.errno(), "socket failed connect");
 		out = new UnixOutputStream(sockfd);
 		in = new UnixInputStream(sockfd);
 		connected = true;
@@ -66,7 +61,7 @@ public class UnixSocket extends Socket {
 	
 	public void close() throws IOException {
 		closed = true;
-		int s = CLib.INSTANCE.close(sockfd);
-		if (s < 0) throw new CException(Native.getLastError(), "socket failed close");
+		int s = CLib.close(sockfd);
+		if (s < 0) throw new CException(CLib.errno(), "socket failed close");
 	}
 }

@@ -12,7 +12,7 @@ public class CommandRestart extends Command {
 		if (AvunaHTTPD.windows) {
 			Runtime.getRuntime().exec(AvunaHTTPD.fileManager.getBaseFile("restart.bat").getAbsolutePath());
 		}else {
-			if (CLib.INSTANCE.getuid() != 0) {
+			if (CLib.getuid() != 0) {
 				context.println("[CRITICAL] You must run as root to restart Avuna!");
 				return 5; // TODO: if non-standard config, allow restart.
 			}

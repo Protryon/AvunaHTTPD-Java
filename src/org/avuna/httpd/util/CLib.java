@@ -1,90 +1,64 @@
 package org.avuna.httpd.util;
 
-import java.util.Arrays;
-import java.util.List;
-import com.sun.jna.Library;
-import com.sun.jna.Native;
-import com.sun.jna.Platform;
-import com.sun.jna.Structure;
-import com.sun.jna.ptr.IntByReference;
+import java.io.File;
+import org.avuna.httpd.AvunaHTTPD;
 
-public interface CLib extends Library {
-	CLib INSTANCE = (CLib)Native.loadLibrary((Platform.isWindows() ? "msvcrt" : "c"), CLib.class);
-	
-	public int socket(int domain, int type, int protocol);
-	
-	public int bind(int sockfd, sockaddr_un sockaddr, int len);
-	
-	public int listen(int sockfd, int backlog);
-	
-	public int accept(int sockfd, sockaddr_un sockaddr, IntByReference len);
-	
-	public int recv(int sockfd, bap byteArrayPointer, int len, int flags);
-	
-	public int send(int sockfd, bap byteArrayPointer, int len, int flags);
-	
-	public int read(int sockfd, bap byteArrayPointer, int len);
-	
-	public int write(int sockfd, bap byteArrayPointer, int len);
-	
-	public static class bap extends Structure {
-		
-		public byte[] array;
-		
-		public bap(int size) {
-			array = new byte[size];
-		}
-		
-		@Override
-		protected List<String> getFieldOrder() {
-			return Arrays.asList(new String[]{"array"});
-		}
-		
+public class CLib {
+	private CLib() {
 	}
 	
-	public int connect(int sockfd, sockaddr_un sockaddr, int len);
+	public static native int socket(int domain, int type, int protocol);
 	
-	public static class sockaddr_un extends Structure {
-		
-		public short sunfamily = 1;
-		public byte[] sunpath = new byte[108]; // must be 108 long.
-		
-		@Override
-		protected List<String> getFieldOrder() {
-			return Arrays.asList(new String[]{"sunfamily", "sunpath"});
-		}
-	}
+	public static native int bind(int sockfd, String path);
 	
-	public int ioctl(int sockfd, int mode, IntByReference count);
+	public static native int listen(int sockfd, int backlog);
 	
-	public int close(int sockfd);
+	public static native String accept(int sockfd);
 	
-	public int umask(int umask);
+	public static native byte[] read(int sockfd, int size);
 	
-	public int setuid(int uid);
+	public static native int write(int sockfd, byte[] ba);
 	
-	public int setgid(int gid);
+	public static native int connect(int sockfd, String sockaddr);
 	
-	public int getuid();
+	public static native int close(int sockfd);
 	
-	public int getgid();
+	public static native int umask(int umask);
 	
-	public int seteuid(int uid);
+	public static native int setuid(int uid);
 	
-	public int geteuid();
+	public static native int setgid(int gid);
 	
-	public int setegid(int uid);
+	public static native int getuid();
 	
-	public int getegid();
+	public static native int getgid();
 	
-	public int fflush(int sockfd);
+	public static native int seteuid(int uid);
 	
-	public int __xstat64(int ver, bap path, bap statdump);
+	public static native int geteuid();
 	
-	public int readlink(bap path, bap buf, int bufsize);
+	public static native int setegid(int uid);
+	
+	public static native int getegid();
+	
+	public static native int fflush(int sockfd);
+	
+	public static native int __xstat64(String path, byte[] statdump);
+	
+	public static native int readlink(String path, byte[] buf);
 	
 	// dont use unless verified not symlink, otherwise escalation ensues.
-	public int chmod(bap bap, int chmod);
+	public static native int chmod(String path, int chmod);
 	
-	public int lchown(bap bap, int uid, int gid);
+	public static native int lchown(String path, int uid, int gid);
+	
+	public static native int available(int sockfd);
+	
+	public static native int errno();
+	
+	static {
+		if (!AvunaHTTPD.windows) {
+			System.load(new File(new File(AvunaHTTPD.fileManager.getBaseFile("jni"), System.getProperty("os.arch")), "libAvunaHTTPD_JNI.so").getAbsolutePath());
+		}
+	}
 }

@@ -3,38 +3,34 @@ package org.avuna.httpd.util;
 import java.io.File;
 import java.nio.ByteBuffer;
 import org.avuna.httpd.AvunaHTTPD;
-import org.avuna.httpd.util.CLib.bap;
 
 public class SafeMode {
 	public static boolean isSymlink(File f) {
 		if (AvunaHTTPD.windows) return false;
-		byte[] rb = f.getAbsolutePath().getBytes();
-		CLib.bap bap = new CLib.bap(rb.length);
-		System.arraycopy(rb, 0, bap.array, 0, rb.length);
-		return isSymlink(bap, f.isFile());
+		return isSymlink(f.getAbsolutePath(), f.isFile());
 	}
 	
-	private static boolean isHardlink(bap f, boolean isFile) {
+	private static boolean isHardlink(String f, boolean isFile) {
 		if (!isFile) return false; // folders CANNOT be hardlinked, but do return the number of subfolders(+1 or 2)
-		bap bap = new bap(1024);
-		int s = CLib.INSTANCE.__xstat64(1, f, bap);
+		byte[] buf = new byte[1024];
+		int s = CLib.__xstat64(f, buf);
 		if (s == -1) {
 			// Logger.log("hle: " + Native.getLastError());
 		}
 		ByteBuffer bb = ByteBuffer.allocate(4);
 		bb.order(java.nio.ByteOrder.LITTLE_ENDIAN);
-		bb.put(0, bap.array[13]);
-		bb.put(0, bap.array[14]);
-		bb.put(0, bap.array[15]);
-		bb.put(0, bap.array[16]);
+		bb.put(0, buf[13]);
+		bb.put(0, buf[14]);
+		bb.put(0, buf[15]);
+		bb.put(0, buf[16]);
 		int hcount = bb.getInt(0);
 		// Logger.log(hcount + "");
 		return hcount > 1;
 	}
 	
-	private static boolean isSymlink(bap f, boolean isFile) {
-		bap bap = new bap(255);
-		int length = CLib.INSTANCE.readlink(f, bap, 255);
+	private static boolean isSymlink(String f, boolean isFile) {
+		byte[] buf = new byte[1024];
+		int length = CLib.readlink(f, buf);
 		boolean hl = isHardlink(f, isFile);
 		// Logger.log("" + (length) + " hl = " + hl);
 		return length >= 0 || hl;
@@ -43,16 +39,13 @@ public class SafeMode {
 	public static void setPerms(File root, int uid, int gid, int chmod) { // TODO: block ALL crontab + chroot
 		// Logger.log("Setting " + root.getAbsolutePath() + " to " + uid + ":" + gid + " chmod " + chmod);
 		// Logger.log(root.getAbsolutePath());
-		byte[] rb = root.getAbsolutePath().getBytes();
-		CLib.bap bap = new CLib.bap(rb.length);
-		System.arraycopy(rb, 0, bap.array, 0, rb.length);
-		if (isSymlink(bap, root.isFile())) return;
-		CLib.INSTANCE.umask(0000);
-		CLib.INSTANCE.chmod(bap, chmod);
+		String ra = root.getAbsolutePath();
+		if (isSymlink(ra, root.isFile())) return;
+		CLib.umask(0000);
+		CLib.chmod(ra, chmod);
 		// Logger.log("lchmod returned: " + ch + (ch == -1 ? " error code: " + Native.getLastError() : ""));
-		CLib.INSTANCE.lchown(bap, uid, gid);
-		CLib.INSTANCE.umask(0077);
-		
+		CLib.lchown(ra, uid, gid);
+		CLib.umask(0077);
 	}
 	
 	/**

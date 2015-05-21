@@ -4,9 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketException;
 import org.avuna.httpd.util.CLib;
-import org.avuna.httpd.util.CLib.bap;
-import com.sun.jna.Native;
-import com.sun.jna.ptr.IntByReference;
 
 public class UnixInputStream extends InputStream {
 	private int sockfd = -1;
@@ -16,50 +13,46 @@ public class UnixInputStream extends InputStream {
 	}
 	
 	public int available() {
-		IntByReference ava = new IntByReference(0);
-		int status = CLib.INSTANCE.ioctl(sockfd, 0x541B, ava);
+		int status = CLib.available(sockfd);
 		if (status < 0) return 0;
-		return ava.getValue();
+		return status;
 	}
 	
 	@Override
 	public int read() throws IOException {
-		bap bap = new bap(1);
-		int i = CLib.INSTANCE.read(sockfd, bap, 1);
-		if (i < 0) {
-			i = Native.getLastError();
+		byte[] sa = CLib.read(sockfd, 1);
+		if (sa.length == 0) {
+			int i = CLib.errno();
 			if (i == 104) {
 				throw new SocketException("Connection reset by peer!");
 			}else throw new CException(i, "read failed");
 		}
-		return bap.array[0] & 0xff;
+		return sa[0] & 0xff;
 	}
 	
 	public int read(byte[] array) throws IOException {
-		bap bap = new bap(array.length);
-		int i = CLib.INSTANCE.read(sockfd, bap, array.length);
-		if (i < 0) {
-			i = Native.getLastError();
+		byte[] buf = CLib.read(sockfd, array.length);
+		if (buf.length == 0) {
+			int i = CLib.errno();
 			if (i == 104) {
 				throw new SocketException("Connection reset by peer!");
 			}else throw new CException(i, "read failed");
 		}
-		System.arraycopy(bap.array, 0, array, 0, array.length);
-		return i;
+		System.arraycopy(buf, 0, array, 0, buf.length);
+		return buf.length;
 	}
 	
 	public int read(byte[] array, int off, int len) throws IOException {
 		if (off + len > array.length) throw new ArrayIndexOutOfBoundsException("off + len MUST NOT be >= array.length");
-		bap bap = new bap(array.length);
-		int i = CLib.INSTANCE.read(sockfd, bap, array.length);
-		if (i < 0) {
-			i = Native.getLastError();
+		byte[] buf = CLib.read(sockfd, len);
+		if (buf.length == 0) { // not 100% accurate, but what else?
+			int i = CLib.errno();
 			if (i == 104) {
 				throw new SocketException("Connection reset by peer!");
 			}else throw new CException(i, "read failed");
 		}
-		System.arraycopy(bap.array, 0, array, off, len);
-		return i;
+		System.arraycopy(buf, 0, array, off, buf.length);
+		return buf.length;
 	}
 	
 }

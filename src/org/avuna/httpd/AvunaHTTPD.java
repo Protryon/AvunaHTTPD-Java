@@ -140,9 +140,12 @@ public class AvunaHTTPD {
 	public static void unpack() {
 		try {
 			setupScripts();
-			String[] unpacks = new String[]{"mime.txt"};
+			String[] unpacks = new String[]{"mime.txt", "jni/amd64/libAvunaHTTPD_JNI.so", "jni/i386/libAvunaHTTPD_JNI.so"};
 			for (String up : unpacks) {
+				if (windows && up.endsWith(".so")) continue;
+				if (!windows && up.endsWith(".dll")) continue;
 				File mime = fileManager.getBaseFile(up);
+				mime.getParentFile().mkdirs();
 				if (!mime.exists()) {
 					Logger.log("Unpacking " + up + "...");
 					InputStream in = AvunaHTTPD.class.getResourceAsStream("/unpack/" + up);
@@ -199,6 +202,7 @@ public class AvunaHTTPD {
 	
 	public static void main(String[] args) {
 		try {
+			boolean dosetid = false;
 			if (args.length >= 1) {
 				if (args[0].equals("cmd")) {
 					String ip = args.length >= 2 ? args[1] : "127.0.0.1";
@@ -222,38 +226,14 @@ public class AvunaHTTPD {
 						return;
 					}
 					if (args.length < 4) {
-						System.out.println("Usage: setid <uid> <gid> <exec...>");
+						System.out.println("Usage: setid <mainConfigFile> <uid> <gid> <exec...>");
 						return;
 					}
-					int wuid = Integer.parseInt(args[1]);
-					int wgid = Integer.parseInt(args[2]);
-					CLib.INSTANCE.setgid(wgid);
-					CLib.INSTANCE.setuid(wuid);
-					int uid = CLib.INSTANCE.getuid();
-					int gid = CLib.INSTANCE.getgid();
-					System.out.println("setuid = " + uid + " (wanted " + wuid + ")");
-					System.out.println("setgid = " + gid + " (wanted " + wgid + ")");
-					if (uid != wuid || gid != wgid) {
-						System.out.println("Failed to de-escalate, terminating!");
-						return;
-					}
-					String[] rargs = new String[args.length - 3];
-					System.arraycopy(args, 3, rargs, 0, rargs.length);
-					ProcessBuilder pb = new ProcessBuilder(rargs);
-					pb.redirectErrorStream(true);
-					Process p = pb.start();
-					p.waitFor();
-					InputStream in = p.getInputStream();
-					while (in.available() > 0) {
-						System.out.append((char)in.read());
-					}
-					return;
+					dosetid = true;
 				}
 				
 			}
-			if (!windows && CLib.INSTANCE.getuid() == 0) {
-				System.out.println("[NOTIFY] Running as root, will load servers and attempt de-escalate, if configured.");
-			}
+			
 			System.setProperty("line.separator", crlf);
 			final boolean unpack = args.length >= 1 && args[0].equals("unpack");
 			File us = null;
@@ -262,7 +242,10 @@ public class AvunaHTTPD {
 			}catch (Exception e) {
 			}
 			File fcfg = null;
-			if ((unpack && args.length == 2) || (!unpack && args.length == 1)) {
+			if (dosetid) {
+				System.out.println(args[1]);
+				fcfg = new File(args[1]);
+			}else if ((unpack && args.length == 2) || (!unpack && args.length == 1)) {
 				fcfg = new File(args[unpack ? 1 : 0]);
 			}else if (us != null) {
 				fcfg = new File(us.getParentFile(), "main.cfg");
@@ -289,6 +272,76 @@ public class AvunaHTTPD {
 			mainConfig.load();
 			if (unpack) {
 				mainConfig.save();
+			}
+			unpack();
+			loadUnpacked();
+			// {
+			// final UnixServerSocket uss = new UnixServerSocket("/tmp2.sock");
+			// uss.bind();
+			// new Thread() {
+			// public void run() {
+			// try {
+			// UnixSocket ss = uss.accept();
+			// DataOutputStream out = new DataOutputStream(ss.getOutputStream());
+			// out.flush();
+			// DataInputStream in = new DataInputStream(ss.getInputStream());
+			// out.write(10);
+			// out.write(10);
+			// out.write(10);
+			// out.flush();
+			// System.out.println(in.available());
+			// System.out.println(in.read());
+			// System.out.println(in.read());
+			// System.out.println(in.read());
+			// ss.close();
+			// }catch (IOException e) {
+			// e.printStackTrace();
+			// }
+			// }
+			// }.start();
+			// long start = System.nanoTime();
+			// UnixSocket cs = new UnixSocket("/tmp2.sock");
+			// DataOutputStream out = new DataOutputStream(cs.getOutputStream());
+			// out.flush();
+			// DataInputStream in = new DataInputStream(cs.getInputStream());
+			// System.out.println(in.read());
+			// System.out.println(in.read());
+			// System.out.println(in.read());
+			// out.write(10);
+			// out.write(10);
+			// out.write(10);
+			// out.flush();
+			// cs.close();
+			// uss.close();
+			// if (true) return;
+			// }
+			if (dosetid) {
+				int wuid = Integer.parseInt(args[2]);
+				int wgid = Integer.parseInt(args[3]);
+				CLib.setgid(wgid);
+				CLib.setuid(wuid);
+				int uid = CLib.getuid();
+				int gid = CLib.getgid();
+				System.out.println("setuid = " + uid + " (wanted " + wuid + ")");
+				System.out.println("setgid = " + gid + " (wanted " + wgid + ")");
+				if (uid != wuid || gid != wgid) {
+					System.out.println("Failed to de-escalate, terminating!");
+					return;
+				}
+				String[] rargs = new String[args.length - 4];
+				System.arraycopy(args, 4, rargs, 0, rargs.length);
+				ProcessBuilder pb = new ProcessBuilder(rargs);
+				pb.redirectErrorStream(true);
+				Process p = pb.start();
+				p.waitFor();
+				InputStream in = p.getInputStream();
+				while (in.available() > 0) {
+					System.out.append((char)in.read());
+				}
+				return;
+			}
+			if (!windows && CLib.getuid() == 0) {
+				System.out.println("[NOTIFY] Running as root, will load servers and attempt de-escalate, if configured.");
 			}
 			HostRegistry.addHost(Protocol.HTTP, HostHTTP.class);
 			HostRegistry.addHost(Protocol.HTTPM, HostHTTPM.class);
@@ -346,8 +399,6 @@ public class AvunaHTTPD {
 			File lf = new File(fileManager.getLogs(), "" + (System.currentTimeMillis() / 1000L));
 			lf.createNewFile();
 			Logger.INSTANCE = new Logger(new PrintStream(new FileOutputStream(lf)));
-			unpack();
-			loadUnpacked();
 			Logger.log("Loaded Configs");
 			for (Host host : hosts.values()) {
 				if (host instanceof HostHTTP) {
@@ -366,7 +417,7 @@ public class AvunaHTTPD {
 			if (!windows && mainConfig.getNode("safeMode").getValue().equals("true")) {
 				SafeMode.setPerms(cfg.getParentFile(), Integer.parseInt(mainConfig.getNode("uid").getValue()), Integer.parseInt(mainConfig.getNode("gid").getValue()));
 			}
-			if (!windows && CLib.INSTANCE.getuid() == 0 && !mainConfig.getNode("uid").getValue().equals("0")) {
+			if (!windows && CLib.getuid() == 0 && !mainConfig.getNode("uid").getValue().equals("0")) {
 				major:
 				while (true) {
 					for (Host h : hosts.values()) {
@@ -377,11 +428,11 @@ public class AvunaHTTPD {
 					}
 					break;
 				}
-				CLib.INSTANCE.setuid(Integer.parseInt(mainConfig.getNode("uid").getValue()));
-				CLib.INSTANCE.setgid(Integer.parseInt(mainConfig.getNode("gid").getValue()));
-				Logger.log("[NOTIFY] De-escalated to uid " + CLib.INSTANCE.getuid());
+				CLib.setuid(Integer.parseInt(mainConfig.getNode("uid").getValue()));
+				CLib.setgid(Integer.parseInt(mainConfig.getNode("gid").getValue()));
+				Logger.log("[NOTIFY] De-escalated to uid " + CLib.getuid());
 			}else if (!windows) {
-				Logger.log("[NOTIFY] We did NOT de-escalate, currently running as uid " + CLib.INSTANCE.getuid());
+				Logger.log("[NOTIFY] We did NOT de-escalate, currently running as uid " + CLib.getuid());
 			}
 			for (Host host : hosts.values()) {
 				if (host instanceof HostHTTP) {
