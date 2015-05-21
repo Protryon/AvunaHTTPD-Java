@@ -78,6 +78,11 @@ public class AvunaHTTPD {
 		}
 	}
 	
+	/**
+	 * Creates default scripts if the don't exist.
+	 * @throws IOException
+	 * @see FileManager
+	 */
 	public static void setupScripts() throws IOException {
 		String os = System.getProperty("os.name").toLowerCase();
 		if (os.contains("windows")) {
@@ -141,7 +146,10 @@ public class AvunaHTTPD {
 			}
 		}
 	}
-	
+	/**
+	 * Checks file names in String array, creates mime.txt from unpack dir if it exists.
+	 * @throws IOException if no files end in .so or .dll
+	 */
 	public static void unpack() {
 		try {
 			setupScripts();
@@ -175,6 +183,10 @@ public class AvunaHTTPD {
 		}
 	}
 	
+	/**
+	 * Reads in mime.txt file to {@link #extensionToMime}
+	 * @throws IOException
+	 */
 	public static void loadUnpacked() {
 		try {
 			File mime = fileManager.getBaseFile("mime.txt");
@@ -231,6 +243,10 @@ public class AvunaHTTPD {
 	 * If first arg is "unpack" or single argument (hopefully a file name) import and store in main.cfg otherwise get "main.cfg" from either executable parent directory or C:\Avuna\ or /etc/Avuna/
 	 * <p>
 	 * main.cfg file is verified via {@link Config#Config(String, File, ConfigFormat)} and creates if necessary, main.cfg, adding missing elements with default values. main.cfg as {@link #mainConfig} is loaded, optionally saved if "unpack" arg used.
+	 * <p>
+	 * {@link #unpack()} runs {@link #setupScripts()} to create default scripts and reads mime.txt and Jni object files.
+	 * <p>
+	 * {@link #loadUnpacked()} loads mime.txt else, creates mime.txt from unpack dir to {@link #extensionToMime}
 	 * <p>
 	 * Extend Host Protocol types with {@link HostRegistry#addHost(Protocol, Class)} and create any required directories or files via {@link HostDNS#unpack()} {@link HostHTTP#unpack()} {@link HostHTTPM#unpack()} or {@link HostMail#unpack()}
 	 * <p>
