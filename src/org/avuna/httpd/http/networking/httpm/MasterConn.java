@@ -20,6 +20,10 @@ public class MasterConn {
 		this.in = new DataInputStream(s.getInputStream());
 	}
 	
+	public Socket getSocket() {
+		return this.s == null ? this.us : this.s;
+	}
+	
 	public MasterConn(UnixSocket us) throws IOException {
 		this.us = us;
 		this.s = null;

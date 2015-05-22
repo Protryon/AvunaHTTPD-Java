@@ -149,6 +149,12 @@ public abstract class Host extends Thread implements ITerminatable {
 		return isStarted;
 	}
 	
+	private boolean iu = false;
+	
+	public boolean isUnix() {
+		return iu;
+	}
+	
 	public void run() {
 		isStarted = true;
 		try {
@@ -159,8 +165,10 @@ public abstract class Host extends Thread implements ITerminatable {
 				sslContext = makeSSLContext(new File(ssl.getNode("keyFile").getValue()), ssl.getNode("keyPassword").getValue(), ssl.getNode("keystorePassword").getValue());
 			}
 			if (cfg.containsNode("unix") && cfg.getNode("unix").getValue().equals("true")) {
+				iu = true;
 				setup(makeUnixServer(cfg.getNode("ip").getValue()));
 			}else {
+				iu = false;
 				setup(makeServer(cfg.getNode("ip").getValue(), Integer.parseInt(cfg.getNode("port").getValue()), isSSL, !isSSL ? null : sslContext.getServerSocketFactory()));
 			}
 		}catch (Exception e) {

@@ -38,7 +38,7 @@ public class ThreadAccept extends Thread {
 					AvunaHTTPD.lastbipc = System.currentTimeMillis() + 3600000L;
 					AvunaHTTPD.bannedIPs.clear();
 				}
-				if (AvunaHTTPD.bannedIPs.contains(s.getInetAddress().getHostAddress())) {
+				if (!host.isUnix() && AvunaHTTPD.bannedIPs.contains(s.getInetAddress().getHostAddress())) {
 					s.close();
 					continue;
 				}

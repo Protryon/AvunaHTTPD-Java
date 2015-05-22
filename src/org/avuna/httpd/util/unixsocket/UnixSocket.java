@@ -27,6 +27,10 @@ public class UnixSocket extends Socket {
 		this.file = file;
 	}
 	
+	public void setSoTimeout(int timeout) {
+		// TODO: impl
+	}
+	
 	public void connect() throws IOException {
 		if (connected) throw new IOException("Already connected!");
 		sockfd = CLib.socket(1, 1, 0);

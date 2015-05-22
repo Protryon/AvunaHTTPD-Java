@@ -39,7 +39,7 @@ public class ThreadMWorker extends ThreadWorker {
 			RequestPacket incomingRequest = host.pollReqQueue();
 			if (incomingRequest == null) {
 				try {
-					Thread.sleep(1L);
+					Thread.sleep(2L, 500000);
 				}catch (InterruptedException e) {
 					// Logger.logError(e);
 				}
@@ -66,6 +66,7 @@ public class ThreadMWorker extends ThreadWorker {
 					String line = readLine(incomingRequest.work.cn.getInputStream());
 					if (line == null) {
 						VHostM vm = (VHostM)incomingRequest.host;
+						incomingRequest.work.cn.getSocket().close();
 						incomingRequest.work.cn = vh.unix ? new MasterConn(new UnixSocket(vh.ip)) : new MasterConn(new Socket(vh.ip, vh.port));
 						est = System.nanoTime();
 						incomingRequest.write(incomingRequest.work.cn.getOutputStream());
@@ -125,6 +126,7 @@ public class ThreadMWorker extends ThreadWorker {
 					
 				}else {
 					try {
+						incomingRequest.work.cn.getSocket().close();
 						incomingRequest.work.s.close();
 					}catch (IOException ex) {
 						Logger.logError(ex);
