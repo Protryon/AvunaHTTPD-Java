@@ -126,7 +126,7 @@ public class ThreadMWorker extends ThreadWorker {
 					
 				}else {
 					try {
-						incomingRequest.work.cn.getSocket().close();
+						if (incomingRequest.work.cn != null) incomingRequest.work.cn.getSocket().close();
 						incomingRequest.work.s.close();
 					}catch (IOException ex) {
 						Logger.logError(ex);

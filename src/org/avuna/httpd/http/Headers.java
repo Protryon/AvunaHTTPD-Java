@@ -53,6 +53,10 @@ public class Headers {
 	public void updateHeader(String name, String value) {
 		if (hasHeader(name)) {
 			ArrayList<String> hdrs = getHeaders(name);
+			if (hdrs == null) {
+				addHeader(name, value);
+				return;
+			}
 			hdrs.clear();
 			hdrs.add(value);
 		}else {
