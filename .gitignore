@@ -1,1 +1,6 @@
 /bin/
+*.cfg
+*.sh
+*.so
+*.settings/
+/logs/
