@@ -82,6 +82,11 @@ public class PatchOverride extends Patch {
 					break;
 				}
 				break;
+			case rewrite:
+				if (rt.matches(d.args[0])) {
+					request.target = d.args[1];
+				}
+				break;
 			}
 		}
 		return;

@@ -44,7 +44,7 @@ public class CompiledDirective {
 			break;
 		case redirect:
 			if (cargs.length != 2) {
-				Logger.log("[WARNING] REDIRECT directive has invalid arguments: " + args + " expecting two argument.");
+				Logger.log("[WARNING] REDIRECT directive has invalid arguments: " + args + " expecting two arguments.");
 				throw new IllegalArgumentException();
 			}
 			break;
@@ -62,7 +62,13 @@ public class CompiledDirective {
 			break;
 		case cache:
 			if (cargs.length != 2) {
-				Logger.log("[WARNING] CACHE directive has invalid arguments: " + args + " expecting a cache argument(off, or seconds, or -1 for perminant), and a regex argument.");
+				Logger.log("[WARNING] CACHE directive has invalid arguments: " + args + " expecting a cache argument(off, or seconds, or -1 for permanent), and a regex argument.");
+				throw new IllegalArgumentException();
+			}
+			break;
+		case rewrite:
+			if (cargs.length != 2) {
+				Logger.log("[WARNING] CACHE directive has invalid arguments: " + args + " expecting two arguments.");
 				throw new IllegalArgumentException();
 			}
 			break;
