@@ -3,6 +3,7 @@ package org.avuna.httpd.util.unixsocket;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import org.avuna.httpd.util.CLib;
 
@@ -31,7 +32,14 @@ public class UnixSocket extends Socket {
 		sockfd = CLib.socket(1, 1, 0);
 		if (sockfd < 0) throw new CException(CLib.errno(), "socket failed native create");
 		int c = CLib.connect(sockfd, file);
-		if (c != 0) throw new CException(CLib.errno(), "socket failed connect");
+		if (c != 0) switch (CLib.errno()) {
+		case 111:
+			throw new SocketException("Connection Refused");
+		case 110:
+			throw new SocketException("Connection Timed Out");
+		default:
+			throw new CException(CLib.errno(), "socket failed connect");
+		}
 		out = new UnixOutputStream(sockfd);
 		in = new UnixInputStream(sockfd);
 		connected = true;
