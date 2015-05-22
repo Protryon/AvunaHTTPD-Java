@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import org.avuna.httpd.util.CLib;
-import org.avuna.httpd.util.Logger;
 
 public class UnixServerSocket extends ServerSocket {
 	private int sockfd = 0;
@@ -42,9 +41,9 @@ public class UnixServerSocket extends ServerSocket {
 	
 	public UnixSocket accept() throws IOException {
 		if (!bound) bind();
-		Logger.log("accepting");
+		// Logger.log("accepting");
 		String nsfd = CLib.accept(sockfd);
-		Logger.log(nsfd);
+		// Logger.log(nsfd);
 		int i = Integer.parseInt(nsfd.substring(0, nsfd.indexOf("/")));
 		nsfd = nsfd.substring(nsfd.indexOf("/") + 1);
 		UnixSocket us = new UnixSocket(file, i);

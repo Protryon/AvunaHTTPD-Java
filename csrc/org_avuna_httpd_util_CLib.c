@@ -67,14 +67,14 @@ JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_accept(JNIEnv * this, j
 	struct sockaddr_un sun;
 	sun.sun_family = 1;
 	char *fpath = malloc(32);
-	if(fpath == -1) {
+	if(fpath == NULL) {
 		return NULL;
 	}
 	socklen_t slt = sizeof(sun);
 	int i = accept(sockfd, (struct sockaddr *)&sun, &slt);
 	if(i < 0) {
 		fpath = malloc(8);
-		if(fpath == -1) {
+		if(fpath == NULL) {
 			return NULL;
 		}
 		strcpy(fpath, "-1/null");
@@ -84,13 +84,12 @@ JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_accept(JNIEnv * this, j
 		fpath = itoa(i, 10);
 		char *cr1;
 		cr1 = malloc(strlen(fpath) + 1 + strlen((char *)&sun.sun_path) + 1);
-		if(cr1 == -1) {
+		if(cr1 == NULL) {
 			return NULL;
 		}
 		strcpy(cr1, fpath);
 		strcat(cr1, "/");
 		strcat(cr1, (char *)&sun.sun_path);
-		free(fpath);
 		fpath = cr1;
 	}
 	jstring js = (*this)->NewStringUTF(this, fpath);
