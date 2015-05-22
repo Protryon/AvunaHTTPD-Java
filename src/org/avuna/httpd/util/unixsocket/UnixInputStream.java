@@ -24,7 +24,9 @@ public class UnixInputStream extends InputStream {
 		if (sa.length == 0) {
 			int i = CLib.errno();
 			if (i == 104) {
-				throw new SocketException("Connection reset by peer!");
+				throw new SocketException("Connection reset by peer");
+			}else if (i == 32) {
+				throw new SocketException("Broken Pipe");
 			}else throw new CException(i, "read failed");
 		}
 		return sa[0] & 0xff;
@@ -35,7 +37,9 @@ public class UnixInputStream extends InputStream {
 		if (buf.length == 0) {
 			int i = CLib.errno();
 			if (i == 104) {
-				throw new SocketException("Connection reset by peer!");
+				throw new SocketException("Connection reset by peer");
+			}else if (i == 32) {
+				throw new SocketException("Broken Pipe");
 			}else throw new CException(i, "read failed");
 		}
 		System.arraycopy(buf, 0, array, 0, buf.length);
@@ -48,7 +52,9 @@ public class UnixInputStream extends InputStream {
 		if (buf.length == 0) { // not 100% accurate, but what else?
 			int i = CLib.errno();
 			if (i == 104) {
-				throw new SocketException("Connection reset by peer!");
+				throw new SocketException("Connection reset by peer");
+			}else if (i == 32) {
+				throw new SocketException("Broken Pipe");
 			}else throw new CException(i, "read failed");
 		}
 		System.arraycopy(buf, 0, array, off, buf.length);

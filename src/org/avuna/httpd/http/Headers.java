@@ -38,10 +38,10 @@ public class Headers {
 	 * @param value the value to store
 	 */
 	public void addHeader(String name, String value) {
-		if (!headers.containsKey(name)) {
+		if (!hasHeader(name)) {
 			headers.put(name, new ArrayList<String>());
 		}
-		headers.get(name).add(value);
+		getHeaders(name).add(value);
 	}
 	
 	/**
@@ -76,7 +76,12 @@ public class Headers {
 	 * @return the headers for the name.
 	 */
 	public ArrayList<String> getHeaders(String name) {
-		return headers.get(name);
+		for (String header : headers.keySet()) {
+			if (header.equalsIgnoreCase(name)) {
+				return headers.get(header);
+			}
+		}
+		return null;
 	}
 	
 	/**

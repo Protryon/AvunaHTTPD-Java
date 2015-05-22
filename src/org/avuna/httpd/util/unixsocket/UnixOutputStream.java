@@ -19,7 +19,9 @@ public class UnixOutputStream extends OutputStream {
 		if (i < 0) {
 			i = CLib.errno();
 			if (i == 104) {
-				throw new SocketException("Connection reset by peer!");
+				throw new SocketException("Connection reset by peer");
+			}else if (i == 32) {
+				throw new SocketException("Broken Pipe");
 			}else throw new CException(i, "End of Stream");
 		}
 	}
@@ -30,7 +32,9 @@ public class UnixOutputStream extends OutputStream {
 		if (i < 0) {
 			i = CLib.errno();
 			if (i == 104) {
-				throw new SocketException("Connection reset by peer!");
+				throw new SocketException("Connection reset by peer");
+			}else if (i == 32) {
+				throw new SocketException("Broken Pipe");
 			}else throw new CException(i, "End of Stream");
 		}
 	}
@@ -43,7 +47,9 @@ public class UnixOutputStream extends OutputStream {
 		if (i < 0) {
 			i = CLib.errno();
 			if (i == 104) {
-				throw new SocketException("Connection reset by peer!");
+				throw new SocketException("Connection reset by peer");
+			}else if (i == 32) {
+				throw new SocketException("Broken Pipe");
 			}else throw new CException(CLib.errno(), "End of Stream");
 		}
 	}
