@@ -67,6 +67,7 @@ public class AvunaHTTPD {
 	
 	/**
 	 * Setup folders if they don't exist.
+	 * 
 	 * @see FileManager
 	 * @see Host#setupFolders()
 	 */
@@ -79,7 +80,8 @@ public class AvunaHTTPD {
 	}
 	
 	/**
-	 * Creates default scripts if the don't exist.
+	 * Creates default scripts if they don't exist.
+	 * 
 	 * @throws IOException
 	 * @see FileManager
 	 */
@@ -146,8 +148,10 @@ public class AvunaHTTPD {
 			}
 		}
 	}
+	
 	/**
 	 * Checks file names in String array, creates mime.txt from unpack dir if it exists.
+	 * 
 	 * @throws IOException if no files end in .so or .dll
 	 */
 	public static void unpack() {
@@ -185,6 +189,7 @@ public class AvunaHTTPD {
 	
 	/**
 	 * Reads in mime.txt file to {@link #extensionToMime}
+	 * 
 	 * @throws IOException
 	 */
 	public static void loadUnpacked() {
