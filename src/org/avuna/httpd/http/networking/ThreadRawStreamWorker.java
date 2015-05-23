@@ -30,6 +30,7 @@ public class ThreadRawStreamWorker extends Thread {
 			cos.writeHeaders();
 			while (!work.s.isClosed() && !cis.isEnded()) {
 				int ba = cis.blockAvailable(true);
+				if (ba < 0) break;
 				byte[] buf = new byte[ba];
 				cis.read(buf);
 				cos.write(buf);
