@@ -103,6 +103,15 @@ public class HostHTTP extends Host {
 		return null;
 	}
 	
+	public void deleteVHostByName(String name) {
+		for (int i = 0; i < vhosts.size(); i++) {
+			if (vhosts.get(i).getName().equals(this.name + "/" + name)) {
+				vhosts.remove(i);
+				return;
+			}
+		}
+	}
+	
 	public ArrayList<VHost> getVHosts() {
 		return vhosts;
 	}
