@@ -67,6 +67,7 @@ public class ZoneFile {
 		while (s.hasNextLine()) {
 			ln++;
 			String line = s.nextLine().trim();
+			if (line.length() == 0) continue;
 			String com = line.substring(0, line.contains(" ") ? line.indexOf(" ") : line.length());
 			line = line.substring(com.length()).trim();
 			String[] args = line.split(" ");
