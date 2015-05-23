@@ -432,10 +432,9 @@ public class AvunaHTTPD {
 				
 				@Override
 				public void format(ConfigNode map) {
-					boolean nm = false, nc = false, nd = false;
+					boolean nc = false, nd = false;
 					if (!map.containsNode("main")) {
 						map.insertNode("main", null, "main node, must exist");
-						nm = true;
 					}
 					if (!map.containsNode("com")) {
 						map.insertNode("com", null, "set enabled=true to use the local/remote command system.");
@@ -531,6 +530,7 @@ public class AvunaHTTPD {
 				Logger.logError(e);
 			}
 		}
+		@SuppressWarnings("resource")
 		Scanner scan = new Scanner(System.in);
 		while (scan.hasNextLine()) {
 			try {

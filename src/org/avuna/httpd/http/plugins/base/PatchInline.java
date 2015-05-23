@@ -78,7 +78,6 @@ public class PatchInline extends Patch {
 		cdata.clear();
 	}
 	
-	private final BASE64Encoder encoder = new BASE64Encoder();
 	private final Comparator<SubReq> subReqComparator = new Comparator<SubReq>() {
 		public int compare(SubReq x, SubReq y) {
 			return x.start - y.start;

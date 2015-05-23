@@ -138,7 +138,8 @@ public class ZoneFile {
 		s.close();
 	}
 	
-	private static DNSRecord readRecord(int ttl, String[] args) throws IOException {
+	private static DNSRecord readRecord(int ttl, String[] pa) throws IOException {
+		String[] args = pa;
 		if (args.length < 3) return null;
 		String domain = args[0];
 		Type type = Type.getType(args[1].toUpperCase());

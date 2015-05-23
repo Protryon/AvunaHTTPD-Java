@@ -45,10 +45,8 @@ public class ThreadStreamWorker extends Thread {
 			cos.writeHeaders();
 			int i = 1;
 			byte[] buf = new byte[10485760];
-			int wr = 0;
 			while (!work.s.isClosed() && i > 0) {
 				i = fin.read(buf);
-				wr += i;
 				if (i < 1) {
 					work.s.close();
 					break;

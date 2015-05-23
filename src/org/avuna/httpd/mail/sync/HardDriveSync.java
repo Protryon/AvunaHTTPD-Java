@@ -68,6 +68,7 @@ public class HardDriveSync extends Sync {
 					DataInputStream fin2 = new DataInputStream(new FileInputStream(new File(acctf, "cfg")));
 					byte[] pwba = new byte[fin2.readInt()];
 					fin2.readFully(pwba);
+					fin2.close();
 					String password = new String(pwba);
 					EmailAccount acct = new EmailAccount(email, password);
 					for (File mf : acctf.listFiles()) {
@@ -108,6 +109,7 @@ public class HardDriveSync extends Sync {
 										e.to.add(to);
 									}
 									m.emails.add(e);
+									fin.close();
 								}
 							}
 						}

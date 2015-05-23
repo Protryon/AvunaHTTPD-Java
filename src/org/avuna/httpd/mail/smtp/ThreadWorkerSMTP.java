@@ -7,6 +7,7 @@ import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.hosts.ITerminatable;
 import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.util.Stream;
 
 public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 	private final HostMail host;
@@ -23,7 +24,7 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 	}
 	
 	public static String safeRead(SMTPWork focus) throws IOException {
-		String line = focus.in.readLine();
+		String line = Stream.readLine(focus.in);
 		if (focus.sslprep != null) {
 			line = focus.sslprep.toString() + line;
 			focus.sslprep.reset();

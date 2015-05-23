@@ -31,10 +31,10 @@ public class ThreadJavaLoaderStreamWorker extends Thread {
 			if (!(e instanceof SocketException)) Logger.logError(e);
 		}finally {
 			String ip = work.s.getInetAddress().getHostAddress();
-			Integer cur = host.connIPs.get(ip);
+			Integer cur = HostHTTP.connIPs.get(ip);
 			if (cur == null) cur = 1;
 			cur -= 1;
-			host.connIPs.put(ip, cur);
+			HostHTTP.connIPs.put(ip, cur);
 			Logger.log(ip + " closed.");
 			try {
 				if (work.s != null) work.s.close();

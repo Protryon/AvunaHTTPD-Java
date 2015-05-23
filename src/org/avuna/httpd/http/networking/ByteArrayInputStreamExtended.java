@@ -149,23 +149,24 @@ public class ByteArrayInputStreamExtended extends InputStream {
 	 * @exception IndexOutOfBoundsException If <code>off</code> is negative, <code>len</code> is negative, or <code>len</code> is greater than <code>b.length - off</code>
 	 */
 	public synchronized int read(byte b[], int off, int len) {
+		int len2 = len;
 		if (b == null) {
 			throw new NullPointerException();
-		}else if (off < 0 || len < 0 || len > b.length - off) {
+		}else if (off < 0 || len2 < 0 || len2 > b.length - off) {
 			throw new IndexOutOfBoundsException();
 		}
 		if (pos >= count) {
 			return -1;
 		}
-		if (pos + len > count) {
-			len = count - pos;
+		if (pos + len2 > count) {
+			len2 = count - pos;
 		}
-		if (len <= 0) {
+		if (len2 <= 0) {
 			return 0;
 		}
-		System.arraycopy(buf, pos, b, off, len);
-		pos += len;
-		return len;
+		System.arraycopy(buf, pos, b, off, len2);
+		pos += len2;
+		return len2;
 	}
 	
 	/**
@@ -179,14 +180,15 @@ public class ByteArrayInputStreamExtended extends InputStream {
 	 * @return the actual number of bytes skipped.
 	 */
 	public synchronized long skip(long n) {
-		if (pos + n > count) {
-			n = count - pos;
+		long n2 = n;
+		if (pos + n2 > count) {
+			n2 = count - pos;
 		}
-		if (n < 0) {
+		if (n2 < 0) {
 			return 0;
 		}
-		pos += n;
-		return n;
+		pos += n2;
+		return n2;
 	}
 	
 	/**

@@ -36,6 +36,7 @@ public class ComClient {
 		// Handles console/com input and processes.
 		Thread mte = new Thread() {
 			public void run() {
+				@SuppressWarnings("resource")
 				Scanner inp = new Scanner(System.in);
 				while (inp.hasNextLine()) {
 					String com = inp.nextLine();
@@ -58,7 +59,6 @@ public class ComClient {
 				out = new PrintStream(cs.getOutputStream());
 				out.flush();
 				scan = new DataInputStream(cs.getInputStream());
-				int nc = 0;
 				while (!cs.isClosed()) {
 					int c = scan.read();
 					if (c == -1) {
@@ -82,6 +82,7 @@ public class ComClient {
 		// Handles console/com input and processes.
 		Thread mte = new Thread() {
 			public void run() {
+				@SuppressWarnings("resource")
 				Scanner inp = new Scanner(System.in);
 				while (inp.hasNextLine()) {
 					String com = inp.nextLine();
@@ -104,7 +105,6 @@ public class ComClient {
 				out = new PrintStream(cs.getOutputStream());
 				out.flush();
 				scan = new DataInputStream(cs.getInputStream());
-				int nc = 0;
 				while (!cs.isClosed()) {
 					int c = scan.read();
 					if (c == -1) {

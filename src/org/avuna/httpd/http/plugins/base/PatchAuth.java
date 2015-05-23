@@ -86,6 +86,7 @@ public class PatchAuth extends Patch {
 							}
 						}else {
 							if (line.equals(up)) {
+								scan.close();
 								return true;
 							}
 						}
@@ -93,7 +94,7 @@ public class PatchAuth extends Patch {
 					scan.close();
 					return cr;
 				}catch (IOException e) {
-					Logger.logError(e);;
+					Logger.logError(e);
 				}
 			}else {
 				return ull.contains(up);
@@ -152,7 +153,7 @@ public class PatchAuth extends Patch {
 			response.body = null;
 			response.headers.addHeader("WWW-Authenticate", "Basic realm=\"" + auth.realm + "\"");
 		}catch (Exception e) {
-			Logger.logError(e);;
+			Logger.logError(e);
 		}
 		return null;
 	}

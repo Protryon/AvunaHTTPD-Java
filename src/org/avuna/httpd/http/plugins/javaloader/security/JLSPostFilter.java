@@ -4,7 +4,7 @@ import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSecurity;
 
 public class JLSPostFilter extends JavaLoaderSecurity {
-	
+	@SuppressWarnings("unused")
 	private int returnWeight = 0;
 	private boolean enabled = true;
 	
