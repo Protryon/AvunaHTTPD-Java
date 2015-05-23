@@ -55,6 +55,10 @@ public abstract class Host extends Thread implements ITerminatable {
 	
 	private ArrayList<ServerSocket> servers = new ArrayList<ServerSocket>();
 	
+	public void postload() throws IOException {
+		
+	}
+	
 	@Override
 	public void terminate() {
 		for (ITerminatable worker : terms) {

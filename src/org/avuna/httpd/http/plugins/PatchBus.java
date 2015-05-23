@@ -65,4 +65,10 @@ public class PatchBus {
 			patch.reload();
 		}
 	}
+	
+	public void postload() throws IOException {
+		for (Patch patch : registry.patchs) {
+			patch.postload();
+		}
+	}
 }

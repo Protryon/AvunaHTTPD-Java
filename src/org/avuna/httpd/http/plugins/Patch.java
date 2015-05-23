@@ -24,6 +24,10 @@ public abstract class Patch {
 		
 	}
 	
+	public void postload() {
+		
+	}
+	
 	public Patch(String name, PatchRegistry registry) {
 		this.name = name;
 		this.registry = registry;

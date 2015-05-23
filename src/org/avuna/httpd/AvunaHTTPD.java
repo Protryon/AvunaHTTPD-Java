@@ -414,7 +414,7 @@ public class AvunaHTTPD {
 			if (!windows && CLib.getuid() == 0) {
 				System.out.println("[NOTIFY] Running as root, will load servers and attempt de-escalate, if configured.");
 			}
-			CLib.umask(0077);
+			// CLib.umask(0077);
 			HostRegistry.addHost(Protocol.HTTP, HostHTTP.class);
 			HostRegistry.addHost(Protocol.HTTPM, HostHTTPM.class);
 			HostRegistry.addHost(Protocol.COM, HostCom.class);
@@ -519,6 +519,11 @@ public class AvunaHTTPD {
 					Logger.flush();
 				}
 			});
+			for (Host host : hosts.values()) {
+				if (host instanceof HostHTTP) {
+					((HostHTTP)host).postload();
+				}
+			}
 		}catch (Exception e) {
 			if (Logger.INSTANCE == null) {
 				e.printStackTrace();
