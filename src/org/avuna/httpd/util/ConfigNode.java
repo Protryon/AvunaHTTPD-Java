@@ -1,34 +1,72 @@
 package org.avuna.httpd.util;
 
+/**
+ * General utility for instantiating getting and setting key/values for Avuna
+ * *.cfg configuration files.
+ * 
+ * @author Max
+ */
 public class ConfigNode {
 	private String name, value, comment = null;
 	private ConfigNode[] sub = new ConfigNode[0];
 	private ConfigNode parent = null;
 	
+	/**
+	 * Constructor for node key/value pair
+	 * 
+	 * @param name
+	 * @param value
+	 */
 	public ConfigNode(String name, String value) {
 		this.name = name;
 		this.value = value;
 	}
 	
+	/**
+	 * Get value of node parent key. By default the parent value is null and must be
+	 * set using {@link ConfigNode#setParent(ConfigNode)}.
+	 * 
+	 * @return node parent key value.
+	 */
 	public ConfigNode getParent() {
 		return parent;
 	}
 	
+	/**
+	 * Sets value on node parent key.
+	 * 
+	 * @param parent
+	 * @return
+	 */
 	public ConfigNode setParent(ConfigNode parent) {
 		this.parent = parent;
 		return this;
 	}
 	
+	/**
+	 * Constructor for node.
+	 * 
+	 * @param name
+	 */
 	public ConfigNode(String name) {
 		this.name = name;
 		this.value = null;
 	}
 	
+	/**
+	 * Sets comment value on node.
+	 * 
+	 * @param comment
+	 * @return
+	 */
 	public ConfigNode setComment(String comment) {
 		this.comment = comment;
 		return this;
 	}
 	
+	/**
+	 * @return true if node.sub array length is more than 0 or key has null value.
+	 */
 	public boolean branching() {
 		return sub.length > 0 || value == null;
 	}
