@@ -127,7 +127,6 @@ public class Util {
 	public static int getLocationInArray(byte[] major, byte[] minor) {
 		int loc = -1;
 		int mLen = 0;
-		major:
 		for (int i = 0; i < major.length; i++) {
 			if (major[i] == minor[mLen]) {
 				if (mLen == 0) {
