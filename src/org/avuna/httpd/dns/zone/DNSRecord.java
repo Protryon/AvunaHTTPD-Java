@@ -45,7 +45,7 @@ public class DNSRecord implements IDirective {
 			}
 			int priority = 0;
 			try {
-				Integer.parseInt(args[0]);
+				priority = Integer.parseInt(args[0]);
 			}catch (NumberFormatException e) {
 				return null;
 			}
@@ -76,6 +76,31 @@ public class DNSRecord implements IDirective {
 			fd = new byte[db.length + 1];
 			fd[0] = (byte)db.length;
 			System.arraycopy(db, 0, fd, 1, db.length);
+		}else if (type == Type.SRV) {
+			if (args.length != 4) {
+				return null;
+			}
+			int priority = 0, weight = 0, port = 0;
+			try {
+				priority = Integer.parseInt(args[0]);
+				weight = Integer.parseInt(args[1]);
+				port = Integer.parseInt(args[2]);
+			}catch (NumberFormatException e) {
+				return null;
+			}
+			ByteArrayOutputStream mxf = new ByteArrayOutputStream();
+			DataOutputStream mxfd = new DataOutputStream(mxf);
+			mxfd.writeShort(priority);
+			mxfd.writeShort(weight);
+			mxfd.writeShort(port);
+			String[] dspl = args[3].split("\\.");
+			for (String d : dspl) {
+				if (d.length() == 0) continue;
+				mxfd.write(d.length());
+				mxfd.write(d.getBytes());
+			}
+			mxfd.write(0);
+			fd = mxf.toByteArray();
 		}else {
 			fd = args[0].getBytes(); // TODO: ???
 		}
