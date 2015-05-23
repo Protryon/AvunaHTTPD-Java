@@ -38,16 +38,23 @@ public class FileManager {
 		return new String(hexChars);
 	}
 	
-	private File dir = null, plugins = null, logs = null;
+	private File dir = null, logs = null;
 	private HashMap<String, File> plugin = new HashMap<String, File>();
 	private HashMap<String, File> base = new HashMap<String, File>();
+	private HashMap<HostHTTP, File> plugins = new HashMap<HostHTTP, File>();
 	
 	public File getMainDir() {
 		return dir == null ? (dir = new File(AvunaHTTPD.mainConfig.getNode("dir").getValue())) : dir;
 	}
 	
 	public File getPlugins(HostHTTP host) {
-		return plugins == null ? (plugins = new File(host.getConfig().getNode("plugins").getValue())) : plugins;
+		if (plugins.containsKey(host)) {
+			return plugins.get(host);
+		}else {
+			File f = new File(host.getConfig().getNode("plugins").getValue());
+			plugins.put(host, f);
+			return f;
+		}
 	}
 	
 	public File getLogs() {

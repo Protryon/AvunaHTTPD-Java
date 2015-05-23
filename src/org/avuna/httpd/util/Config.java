@@ -33,6 +33,10 @@ public class Config extends ConfigNode {
 		configs.put(name, this);
 	}
 	
+	public File getFile() {
+		return cfg;
+	}
+	
 	private void format() {
 		if (format != null) {
 			format.format(this);
