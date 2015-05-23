@@ -88,7 +88,7 @@ public class ZoneFile {
 				}
 				boolean isabs = false;
 				if (AvunaHTTPD.windows) {
-					if (args[0].length() > 0 && args[0].substring(1).startsWith(":")) {
+					if (args[0].length() > 0 && args[0].substring(0).startsWith(":")) {
 						isabs = true;
 					}
 				}else {
@@ -103,8 +103,9 @@ public class ZoneFile {
 					Logger.log(nf.getAbsolutePath() + ": invalid permissions for import at line " + ln);
 					continue;
 				}
-				subload(nf, dirs);
-				dirs.add(new Directive("ttl", args));
+				ZoneFile sz = new ZoneFile(nf);
+				sz.load();
+				dirs.add(new ImportDirective(args, sz));
 			}else if (com.equals("zone")) {
 				if (args.length != 2) {
 					Logger.log(f.getAbsolutePath() + ": Invalid zone directive at line " + ln);

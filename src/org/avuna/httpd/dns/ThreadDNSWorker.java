@@ -6,6 +6,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import org.avuna.httpd.dns.zone.DNSRecord;
 import org.avuna.httpd.dns.zone.IDirective;
+import org.avuna.httpd.dns.zone.ImportDirective;
 import org.avuna.httpd.dns.zone.ZoneDirective;
 import org.avuna.httpd.dns.zone.ZoneFile;
 import org.avuna.httpd.hosts.HostDNS;
@@ -68,6 +69,8 @@ public class ThreadDNSWorker extends Thread implements ITerminatable {
 				if (matches) {
 					if (processZoneForRecord(q, ((ZoneDirective)d).zf, records, hasType)) hasType = true;
 				}
+			}else if (d instanceof ImportDirective) {
+				if (processZoneForRecord(q, ((ImportDirective)d).zf, records, hasType)) hasType = true;
 			}
 			// System.out.println("Response for " + responseRecord.getDomain() + " data: " + new String(responseRecord.getData()));
 		}
