@@ -315,7 +315,6 @@ public class AvunaHTTPD {
 			}
 			File fcfg = null;
 			if (dosetid) {
-				System.out.println(args[1]);
 				fcfg = new File(args[1]);
 			}else if ((unpack && args.length == 2) || (!unpack && args.length == 1)) {
 				fcfg = new File(args[unpack ? 1 : 0]);
