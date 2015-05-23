@@ -90,8 +90,10 @@ public class HostDNS extends Host {
 		}
 		UDPServer udp = new UDPServer(this);
 		udp.start();
+		addTerm(udp);
 		TCPServer tcp = new TCPServer(this, s);
 		tcp.start();
+		addTerm(tcp);
 		while (!udp.bound)
 			try {
 				Thread.sleep(1L);
