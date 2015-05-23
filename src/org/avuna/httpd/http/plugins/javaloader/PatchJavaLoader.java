@@ -127,6 +127,11 @@ public class PatchJavaLoader extends Patch {
 			if (ps.pcfg.getNode("enabled").getValue().equals("true")) {
 				recurLoad(null, AvunaHTTPD.fileManager.getPlugin(ps));
 			}
+			for (JavaLoaderSession session : sessions) {
+				if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
+					jl.postinit();
+				}
+			}
 		}catch (Exception e) {
 			Logger.logError(e);
 		}
