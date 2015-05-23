@@ -35,6 +35,14 @@ public class PatchJavaLoader extends Patch {
 	
 	private Config config = null;
 	
+	public void postload() {
+		for (JavaLoaderSession session : sessions) {
+			if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
+				jl.postinit();
+			}
+		}
+	}
+	
 	public PatchJavaLoader(String name, PatchRegistry registry) {
 		super(name, registry);
 		log("Loading JavaLoader Config & Security");

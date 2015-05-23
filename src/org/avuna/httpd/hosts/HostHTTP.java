@@ -3,6 +3,7 @@ package org.avuna.httpd.hosts;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -30,6 +31,10 @@ public class HostHTTP extends Host {
 	public final PatchRegistry registry;
 	public final PatchBus patchBus;
 	private int maxPostSize = 65535;
+	
+	public void postload() throws IOException {
+		patchBus.postload();
+	}
 	
 	public int getMaxPostSize() {
 		return maxPostSize;

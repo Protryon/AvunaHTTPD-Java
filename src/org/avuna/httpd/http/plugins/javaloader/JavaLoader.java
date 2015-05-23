@@ -18,6 +18,9 @@ public abstract class JavaLoader {
 	public void init() {
 	}
 	
+	public void postinit() {
+	}
+	
 	public int getType() {
 		return -1;
 	}

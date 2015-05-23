@@ -41,11 +41,11 @@ public class SafeMode {
 		// Logger.log(root.getAbsolutePath());
 		String ra = root.getAbsolutePath();
 		if (isSymlink(ra, root.isFile())) return;
-		CLib.umask(0000);
+		// CLib.umask(0000);
 		CLib.chmod(ra, chmod);
 		// Logger.log("lchmod returned: " + ch + (ch == -1 ? " error code: " + Native.getLastError() : ""));
 		CLib.lchown(ra, uid, gid);
-		CLib.umask(0077);
+		// CLib.umask(0077);
 	}
 	
 	/**
