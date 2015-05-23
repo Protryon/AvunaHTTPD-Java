@@ -61,7 +61,6 @@ public class ZoneFile {
 	}
 	
 	private static void subload(File f, ArrayList<IDirective> dirs) throws IOException {
-		int ttl = 3600;
 		int ln = 0;
 		Scanner s = new Scanner(f);
 		while (s.hasNextLine()) {
@@ -74,19 +73,7 @@ public class ZoneFile {
 			if (args.length > 0) {
 				args = congealArgsEscape(args);
 			}
-			if (com.equals("ttl")) {
-				if (args.length != 1) {
-					Logger.log(f.getAbsolutePath() + ": Invalid ttl directive @ line " + ln);
-					continue;
-				}
-				try {
-					ttl = Integer.parseInt(args[0]);
-				}catch (NumberFormatException e) {
-					Logger.log(f.getAbsolutePath() + ": Invalid ttl directive at line " + ln);
-					continue;
-				}
-				dirs.add(new Directive("ttl", args));
-			}else if (com.equals("import")) {
+			if (com.equals("import")) {
 				if (args.length != 1) {
 					Logger.log(f.getAbsolutePath() + ": Invalid import directive at line " + ln);
 					continue;
@@ -141,7 +128,7 @@ public class ZoneFile {
 				nargs[0] = com;
 				System.arraycopy(args, 0, nargs, 1, args.length);
 				args = nargs;
-				DNSRecord record = readRecord(ttl, args);
+				DNSRecord record = readRecord(args);
 				if (record == null) {
 					Logger.log(f.getAbsolutePath() + ": malformed record at line " + ln);
 					continue;
@@ -152,13 +139,14 @@ public class ZoneFile {
 		s.close();
 	}
 	
-	private static DNSRecord readRecord(int ttl, String[] pa) throws IOException {
+	private static DNSRecord readRecord(String[] pa) throws IOException {
 		String[] args = pa;
-		if (args.length < 3) return null;
+		if (args.length < 4) return null;
 		String domain = args[0];
 		Type type = Type.getType(args[1].toUpperCase());
-		String[] nargs = new String[args.length - 2];
-		System.arraycopy(args, 2, nargs, 0, args.length - 2);
+		int ttl = Integer.parseInt(args[2]);
+		String[] nargs = new String[args.length - 3];
+		System.arraycopy(args, 3, nargs, 0, nargs.length);
 		args = nargs;
 		byte[] fd = DNSRecord.getDataFromArgs(type, args);
 		return new DNSRecord(domain, type, ttl, fd, pa);
@@ -183,7 +171,7 @@ public class ZoneFile {
 		for (IDirective dir : dirs) {
 			if (dir instanceof DNSRecord) {
 				DNSRecord rec = (DNSRecord)dir;
-				String l = escape(rec.getDomain()) + " " + escape(rec.getType().name);
+				String l = escape(rec.getDomain()) + " " + escape(rec.getType().name) + " " + rec.getTimeToLive();
 				for (String ss : rec.getTV()) {
 					l += " " + escape(ss);
 				}
