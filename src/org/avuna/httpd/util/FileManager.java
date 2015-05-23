@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
@@ -153,7 +154,12 @@ public class FileManager {
 	
 	public File getAbsolutePath(String reqTarget, RequestPacket request) {
 		lwi = false;
-		String[] t = URLDecoder.decode(reqTarget).split("/");
+		String[] t = new String[0];
+		try {
+			t = URLDecoder.decode(reqTarget, "UTF-8").split("/");
+		}catch (UnsupportedEncodingException e) {
+			Logger.logError(e);
+		}
 		File abs = request.host.getHTDocs();
 		for (String st : t) {
 			abs = new File(abs, st);
