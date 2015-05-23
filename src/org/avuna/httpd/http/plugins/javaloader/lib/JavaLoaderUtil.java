@@ -9,6 +9,10 @@ import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSecurity;
 import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
 
 public class JavaLoaderUtil {
+	public static String htmlescape(String html) {
+		return html.replace("&", "&amp;").replace("\"", "&quot;").replace("'", "&#039;").replace("<", "&lt;").replace(">", "&gt;");
+	}
+	
 	public static String mysql_real_escape_string(DatabaseManager manager, String str) throws SQLException {
 		if (str == null) {
 			return "NULL";
