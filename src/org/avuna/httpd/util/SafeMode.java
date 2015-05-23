@@ -61,13 +61,13 @@ public class SafeMode {
 	
 	// should run as root
 	private static void setPerms(File root, int uid, int gid, boolean recursed) {
-		setPerms(root, uid, gid, 0711);
+		setPerms(root, uid, gid, 0700);
 		for (File f : root.listFiles()) {
 			if (f.isDirectory()) {
 				setPerms(f, uid, gid, true);
 			}else {
 				if (uid == 0 && gid == 0) {
-					setPerms(f, 0, 0, 0711);
+					setPerms(f, 0, 0, 0700);
 				}else {
 					String rn = f.getName();
 					if (!recursed && (rn.equals("avuna.jar") || rn.equals("main.cfg"))) {
