@@ -3,11 +3,15 @@ package org.avuna.httpd.hosts;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.ArrayBlockingQueue;
 import org.avuna.httpd.AvunaHTTPD;
-import org.avuna.httpd.dns.RecordHolder;
 import org.avuna.httpd.dns.TCPServer;
 import org.avuna.httpd.dns.ThreadDNSWorker;
 import org.avuna.httpd.dns.UDPServer;
+import org.avuna.httpd.dns.Work;
+import org.avuna.httpd.dns.zone.ZoneFile;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 
@@ -19,6 +23,11 @@ public class HostDNS extends Host {
 	
 	private String dnsf = null;
 	private int twc, mc;
+	private ZoneFile zf;
+	
+	public ZoneFile getZone() {
+		return zf;
+	}
 	
 	public static void unpack() {
 		try {
@@ -39,19 +48,49 @@ public class HostDNS extends Host {
 		mc = Integer.parseInt(map.getNode("maxConnections").getValue());
 	}
 	
+	public ArrayBlockingQueue<Work> workQueue;
+	
+	public void clearWork() {
+		workQueue.clear();
+	}
+	
+	private HashMap<String, Integer> connIPs = new HashMap<String, Integer>();
+	public ArrayList<ThreadDNSWorker> workers = new ArrayList<ThreadDNSWorker>();
+	
+	public void initQueue(int connlimit) {
+		workQueue = new ArrayBlockingQueue<Work>(connlimit);
+	}
+	
+	public int getConnectionsForIP(String ip) {
+		return connIPs.get(ip);
+	}
+	
+	public void addWork(Work work) {
+		workQueue.add(work);
+	}
+	
+	public int getQueueSize() {
+		return workQueue.size();
+	}
+	
 	public void setup(ServerSocket s) {
-		RecordHolder holder = new RecordHolder(new File(dnsf));
-		ThreadDNSWorker.holder = holder;
-		ThreadDNSWorker.initQueue(mc < 1 ? 10000000 : mc);
+		this.zf = new ZoneFile(new File(dnsf));
+		try {
+			this.zf.load();
+		}catch (IOException e1) {
+			Logger.logError(e1);
+			Logger.log("Failed to read DNS zone file!");
+		}
+		initQueue(mc < 1 ? 10000000 : mc);
 		for (int i = 0; i < twc; i++) {
-			ThreadDNSWorker worker = new ThreadDNSWorker();
+			ThreadDNSWorker worker = new ThreadDNSWorker(this);
 			addTerm(worker);
 			worker.setDaemon(true);
 			worker.start();
 		}
-		UDPServer udp = new UDPServer();
+		UDPServer udp = new UDPServer(this);
 		udp.start();
-		TCPServer tcp = new TCPServer(s);
+		TCPServer tcp = new TCPServer(this, s);
 		tcp.start();
 		while (!udp.bound)
 			try {

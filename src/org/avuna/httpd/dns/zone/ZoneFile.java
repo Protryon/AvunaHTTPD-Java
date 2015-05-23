@@ -19,8 +19,16 @@ public class ZoneFile {
 		return dirs;
 	}
 	
+	public void setDirectives(IDirective[] dirs) {
+		this.dirs = dirs;
+	}
+	
 	public ZoneFile(File f) {
 		this.f = f;
+	}
+	
+	public ZoneFile() {
+		this.f = null;
 	}
 	
 	private static void subload(File f, ArrayList<IDirective> dirs) throws IOException {
@@ -28,6 +36,7 @@ public class ZoneFile {
 		int ln = 0;
 		Scanner s = new Scanner(f);
 		while (s.hasNextLine()) {
+			ln++;
 			String line = s.nextLine().trim();
 			String com = line.substring(0, line.contains(" ") ? line.indexOf(" ") : line.length());
 			line = line.substring(com.length()).trim();
@@ -133,7 +142,6 @@ public class ZoneFile {
 				}
 				dirs.add(record);
 			}
-			ln++;
 		}
 		s.close();
 	}
@@ -144,7 +152,7 @@ public class ZoneFile {
 		String domain = args[0];
 		Type type = Type.getType(args[1].toUpperCase());
 		String[] nargs = new String[args.length - 2];
-		System.arraycopy(args, 2, nargs, 0, args.length);
+		System.arraycopy(args, 2, nargs, 0, args.length - 2);
 		args = nargs;
 		byte[] fd = null;
 		if (type == Type.A) {
