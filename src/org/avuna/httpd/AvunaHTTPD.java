@@ -25,7 +25,6 @@ import org.avuna.httpd.com.base.CommandRegister;
 import org.avuna.httpd.com.base.CommandReload;
 import org.avuna.httpd.com.base.CommandRestart;
 import org.avuna.httpd.com.base.CommandSelect;
-import org.avuna.httpd.dns.RecordHolder;
 import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostCom;
 import org.avuna.httpd.hosts.HostDNS;
@@ -214,8 +213,6 @@ public class AvunaHTTPD {
 	}
 	
 	public static final HashMap<String, Host> hosts = new HashMap<String, Host>();
-	
-	public static final RecordHolder records = new RecordHolder();
 	
 	public static final ArrayList<String> bannedIPs = new ArrayList<String>();
 	

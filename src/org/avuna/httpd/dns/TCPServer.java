@@ -5,6 +5,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import org.avuna.httpd.hosts.HostDNS;
 import org.avuna.httpd.util.Logger;
 
 /**
@@ -12,10 +13,12 @@ import org.avuna.httpd.util.Logger;
  */
 public class TCPServer extends Thread implements IServer {
 	private final ServerSocket server;
+	private final HostDNS host;
 	
-	public TCPServer(ServerSocket server) {
+	public TCPServer(HostDNS host, ServerSocket server) {
 		super("DNS TCPServer");
 		this.server = server;
+		this.host = host;
 	}
 	
 	public void run() {
@@ -26,7 +29,7 @@ public class TCPServer extends Thread implements IServer {
 				final DataOutputStream out = new DataOutputStream(s.getOutputStream());
 				out.flush();
 				final DataInputStream in = new DataInputStream(s.getInputStream());
-				ThreadDNSWorker.addWork(new WorkTCP(s, in, out));
+				host.addWork(new WorkTCP(s, in, out));
 			}
 		}catch (Exception e) {
 			Logger.logError(e);
