@@ -5,7 +5,6 @@ public class StringFormatter {
 		String[] nargs = new String[orig.length];
 		String ctps = "";
 		int cloc = 0;
-		int clen = 0;
 		boolean act = false;
 		int nlen = orig.length;
 		for (int i = 0; i < orig.length; i++) {
@@ -17,7 +16,6 @@ public class StringFormatter {
 			}
 			if (act) {
 				ctps += orig[i] + " ";
-				clen++;
 				nlen--;
 				if (orig[i].contains(s2)) {
 					ctps = ctps.trim();

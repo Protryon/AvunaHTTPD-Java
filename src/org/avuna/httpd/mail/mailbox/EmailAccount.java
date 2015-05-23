@@ -18,9 +18,10 @@ public class EmailAccount {
 	}
 	
 	public Mailbox getMailbox(String name) {
-		if (name.startsWith("\"")) name = name.substring(1, name.length() - 1);
+		String name2 = name;
+		if (name2.startsWith("\"")) name2 = name2.substring(1, name2.length() - 1);
 		for (Mailbox m : mailboxes) {
-			if (m.name.equalsIgnoreCase(name)) {
+			if (m.name.equalsIgnoreCase(name2)) {
 				return m;
 			}
 		}

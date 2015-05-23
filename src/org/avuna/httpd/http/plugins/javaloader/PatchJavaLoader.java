@@ -277,20 +277,18 @@ public class PatchJavaLoader extends Patch {
 		return null;
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
 		try {
 			response.headers.updateHeader("Content-Type", "text/html");
 			String name = "";
-			long start = System.nanoTime();
-			long digest = 0L;
 			CRC32 crc = new CRC32();
 			HashMap<String, String> loadedClasses = request.host.getJLS().getLoadedClasses();
 			JavaLoaderClassLoader jlcl = request.host.getJLS().getJLCL();
 			HashMap<String, JavaLoader> jls = request.host.getJLS().getJLS();
 			crc.update(data);
 			String sha = crc.getValue() + "";
-			digest = System.nanoTime();
 			synchronized (loadedClasses) {
 				name = loadedClasses.get(sha);
 				if (name == null || name.equals("")) {
@@ -298,7 +296,6 @@ public class PatchJavaLoader extends Patch {
 					loadedClasses.put(sha, name);
 				}
 			}
-			long loaded = System.nanoTime();
 			JavaLoader loader = null;
 			if (!jls.containsKey(name)) {
 				Class<?> loaderClass = jlcl.loadClass(name);
@@ -322,9 +319,7 @@ public class PatchJavaLoader extends Patch {
 				loader = jls.get(name);
 			}
 			if (loader == null) return null;
-			long loadert = System.nanoTime();
 			request.procJL();
-			long proc = System.nanoTime();
 			byte[] ndata = null;
 			int type = loader.getType();
 			boolean doout = true;
@@ -341,7 +336,6 @@ public class PatchJavaLoader extends Patch {
 			}else if (type == 2) {
 				response.reqStream = (JavaLoaderStream)loader;
 			}
-			long cur = System.nanoTime();
 			// System.out.println((digest - start) / 1000000D + " start-digest");
 			// System.out.println((loaded - digest) / 1000000D + " digest-loaded");
 			// System.out.println((loadert - loaded) / 1000000D + " loaded-loadert");
@@ -349,7 +343,7 @@ public class PatchJavaLoader extends Patch {
 			// System.out.println((cur - proc) / 1000000D + " proc-cur");
 			return !doout ? new byte[0] : ndata;
 		}catch (Exception e) {
-			Logger.logError(e);;
+			Logger.logError(e);
 		}
 		return null;
 	}

@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
+import org.avuna.httpd.util.Stream;
 
 public class ChunkedInputStream extends InputStream {
 	private ByteArrayInputStreamExtended buf = new ByteArrayInputStreamExtended();
@@ -24,9 +25,9 @@ public class ChunkedInputStream extends InputStream {
 	public int read() throws IOException {
 		if (ended) return -1;
 		if (proxy.available() == 0) {
-			String hex = in.readLine();
+			String hex = Stream.readLine(in);
 			if (hex.length() == 0) {
-				hex = in.readLine();
+				hex = Stream.readLine(in);
 			}
 			int l = Integer.parseInt(hex, 16);
 			if (l == 0) {
@@ -43,9 +44,9 @@ public class ChunkedInputStream extends InputStream {
 	public int blockAvailable(boolean allowRefresh) throws IOException {
 		if (ended) return 0;
 		if (allowRefresh && proxy.available() == 0) {
-			String hex = in.readLine();
+			String hex = Stream.readLine(in);
 			if (hex.length() == 0) {
-				hex = in.readLine();
+				hex = Stream.readLine(in);
 			}
 			int l = Integer.parseInt(hex, 16);
 			if (l == 0) {

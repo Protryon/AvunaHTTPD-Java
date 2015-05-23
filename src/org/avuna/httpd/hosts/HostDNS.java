@@ -17,9 +17,8 @@ public class HostDNS extends Host {
 		super(name, Protocol.DNS);
 	}
 	
-	private String ip = null, dnsf = null;
+	private String dnsf = null;
 	private int twc, mc;
-	private int port;
 	
 	public static void unpack() {
 		try {
@@ -34,8 +33,6 @@ public class HostDNS extends Host {
 		if (!map.containsNode("ip")) map.insertNode("ip", "0.0.0.0", "bind ip");
 		if (!map.containsNode("dnsf")) map.insertNode("dnsf", AvunaHTTPD.fileManager.getBaseFile("dns.cfg").getAbsolutePath(), "dns zone file");
 		dnsf = map.getNode("dnsf").getValue();
-		ip = map.getNode("ip").getValue();
-		port = Integer.parseInt(map.getNode("port").getValue());
 		if (!map.containsNode("workerThreadCount")) map.insertNode("workerThreadCount", "8", "dns worker thread count");
 		if (!map.containsNode("maxConnections")) map.insertNode("maxConnections", "-1", "max number of *TCP* connections");
 		twc = Integer.parseInt(map.getNode("workerThreadCount").getValue());

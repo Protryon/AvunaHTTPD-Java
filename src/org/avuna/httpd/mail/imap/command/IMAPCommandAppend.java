@@ -16,7 +16,8 @@ public class IMAPCommandAppend extends IMAPCommand {
 	}
 	
 	@Override
-	public void run(IMAPWork focus, String letters, String[] args) throws IOException {
+	public void run(IMAPWork focus, String letters, String[] pa) throws IOException {
+		String[] args = pa;
 		if (args.length >= 2) {
 			args = StringFormatter.congealBySurroundings(args, "(", ")");
 			String mailbox = args[0];
@@ -30,6 +31,7 @@ public class IMAPCommandAppend extends IMAPCommand {
 			if (args.length >= 3) {
 				flags = args[1].substring(1, args[1].length() - 1);
 			}
+			@SuppressWarnings("unused")
 			String date = "";
 			if (args.length >= 4) {
 				date = args[2];

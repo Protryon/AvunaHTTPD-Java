@@ -151,6 +151,7 @@ public class IMAPCommandSearch extends IMAPCommand {
 						hb = true;
 					}
 				}
+				hs.close();
 				if (!hb) emails.remove(i--);
 			}
 		}else {

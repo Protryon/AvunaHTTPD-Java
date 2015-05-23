@@ -25,6 +25,7 @@ public class Headers {
 	 * 
 	 * @return a cloned version of the current headers.
 	 */
+	@SuppressWarnings("unchecked")
 	public Headers clone() {
 		Headers h = new Headers();
 		h.headers = (HashMap<String, ArrayList<String>>)headers.clone();

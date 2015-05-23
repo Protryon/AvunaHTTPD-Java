@@ -35,7 +35,7 @@ public class IMAPCommandStatus extends IMAPCommand {
 				for (Email e : m.emails) {
 					if (!e.flags.contains("\\Seen")) unseen++;
 				}
-				focus.writeLine(focus, "*", "STATUS " + m.name + " (MESSAGES " + m.emails.size() + " RECENT " + recent + " UIDNEXT " + (m.emails.size() + 1) + " UIDVALIDITY " + Integer.MAX_VALUE + " UNSEEN unseen)");
+				focus.writeLine(focus, "*", "STATUS " + m.name + " (MESSAGES " + m.emails.size() + " RECENT " + recent + " UIDNEXT " + (m.emails.size() + 1) + " UIDVALIDITY " + Integer.MAX_VALUE + " UNSEEN " + unseen + ")");
 				focus.writeLine(focus, letters, "OK Status.");
 			}
 		}else {

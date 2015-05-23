@@ -7,6 +7,7 @@ import org.avuna.httpd.util.Logger;
 
 public class JLSFlow extends JavaLoaderSecurity {
 	
+	@SuppressWarnings("unused")
 	private int returnWeight = 0;
 	private boolean enabled = true;
 	

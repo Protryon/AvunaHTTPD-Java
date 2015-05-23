@@ -22,7 +22,7 @@ public abstract class FCGIPacket {
 	}
 	
 	public static FCGIPacket read(DataInputStream in) throws IOException {
-		int version = in.read();
+		in.read();// version
 		Type type = Type.fromID(in.read());
 		int id = in.readUnsignedShort();
 		int cl = in.readUnsignedShort();

@@ -5,6 +5,10 @@ public abstract class Command {
 	private CommandRegistry registry = null;
 	protected int registeredID = -1;
 	
+	public CommandRegistry getRegistry() {
+		return registry;
+	}
+	
 	protected void setRegistry(CommandRegistry registry, int id) {
 		if (this.registered) throw new IllegalArgumentException("Command already registered!");
 		this.registry = registry;

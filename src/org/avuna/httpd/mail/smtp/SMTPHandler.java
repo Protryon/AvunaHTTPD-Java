@@ -12,6 +12,7 @@ import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.mail.mailbox.Email;
 import org.avuna.httpd.mail.mailbox.EmailAccount;
 import org.avuna.httpd.mail.mailbox.EmailRouter;
+import org.avuna.httpd.util.Stream;
 
 public class SMTPHandler {
 	
@@ -54,7 +55,8 @@ public class SMTPHandler {
 		});
 		
 		commands.add(new SMTPCommand("auth", 1, 100) {
-			public void run(SMTPWork focus, String line) throws IOException {
+			public void run(SMTPWork focus, String lp) throws IOException {
+				String line = lp;
 				if (line.toUpperCase().startsWith("PLAIN")) {
 					line = line.substring(6).trim();
 					if (line.length() > 0) {
@@ -80,10 +82,10 @@ public class SMTPHandler {
 					}
 				}else if (line.toUpperCase().startsWith("LOGIN")) {
 					focus.writeLine(334, "VXNlcm5hbWU6");
-					String u64 = focus.in.readLine().trim();
+					String u64 = Stream.readLine(focus.in).trim();
 					String username = new String(DatatypeConverter.parseBase64Binary(u64));
 					focus.writeLine(334, "UGFzc3dvcmQ6");
-					String p64 = focus.in.readLine().trim();
+					String p64 = Stream.readLine(focus.in).trim();
 					String password = new String(DatatypeConverter.parseBase64Binary(p64));
 					EmailAccount us = null;
 					for (EmailAccount e : host.accounts) {

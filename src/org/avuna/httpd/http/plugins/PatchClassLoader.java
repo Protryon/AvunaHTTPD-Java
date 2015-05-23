@@ -29,6 +29,7 @@ public class PatchClassLoader extends ClassLoader {
 					}
 					fin.close();
 					byte[] j = bout.toByteArray();
+					@SuppressWarnings("deprecation")
 					Class<?> patchClass = defineClass(j, 0, j.length);
 					javaLoaders.put(patchClass.getName(), patchClass);
 					if (patchClass.isAssignableFrom(Patch.class)) { // TODO: patch priority

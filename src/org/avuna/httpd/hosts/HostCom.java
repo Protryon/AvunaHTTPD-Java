@@ -15,8 +15,6 @@ public class HostCom extends Host {
 	}
 	
 	private String[] auth = null;
-	private String ip = null;
-	private int port;
 	
 	public void formatConfig(ConfigNode map) {
 		if (!map.containsNode("port")) map.insertNode("port", "6049", "bind port");
@@ -30,8 +28,6 @@ public class HostCom extends Host {
 		}else {
 			auth = (map.getNode("auth").getValue()).split(",");
 		}
-		ip = map.getNode("ip").getValue();
-		port = Integer.parseInt(map.getNode("port").getValue());
 	}
 	
 	public void setup(ServerSocket s) {

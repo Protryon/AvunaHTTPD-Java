@@ -8,14 +8,12 @@ import org.avuna.httpd.util.Logger;
 
 public class ThreadRawStreamWorker extends Thread {
 	private final Work work;
-	private final RequestPacket req;
 	private final ResponsePacket resp;
 	private final HostHTTP host;
 	private final DataInputStream raw;
 	
-	public ThreadRawStreamWorker(HostHTTP host, Work work, RequestPacket req, ResponsePacket resp, DataInputStream raw) {
+	public ThreadRawStreamWorker(HostHTTP host, Work work, ResponsePacket resp, DataInputStream raw) {
 		this.work = work;
-		this.req = req;
 		this.resp = resp;
 		this.host = host;
 		this.raw = raw;
@@ -25,7 +23,9 @@ public class ThreadRawStreamWorker extends Thread {
 	public void run() {
 		// resp.headers.removeHeaders("Content-Encoding");
 		try {
+			@SuppressWarnings("resource")
 			ChunkedOutputStream cos = new ChunkedOutputStream(work.out, resp, false);
+			@SuppressWarnings("resource")
 			ChunkedInputStream cis = new ChunkedInputStream(raw, false);
 			cos.writeHeaders();
 			while (!work.s.isClosed() && !cis.isEnded()) {

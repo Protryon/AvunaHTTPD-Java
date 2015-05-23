@@ -77,6 +77,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 											break;
 										}
 									}
+									ed.close();
 								}else if (value.equals("text")) {
 									Scanner ed = new Scanner(e.data);
 									while (ed.hasNextLine()) {
@@ -91,6 +92,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 										String line = ed.nextLine();
 										mhd += line + AvunaHTTPD.crlf;
 									}
+									ed.close();
 								}else if (value.equals("mime")) {
 									Scanner ed = new Scanner(e.data);
 									while (ed.hasNextLine()) {
@@ -106,6 +108,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 											break;
 										}
 									}
+									ed.close();
 								}else if (value.startsWith("header.fields")) {
 									boolean limit = value.contains("(");
 									String[] limitList = new String[0];
@@ -204,6 +207,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 								break;
 							}
 						}
+						ed.close();
 					}else if (s.equals("rfc822.size")) {
 						ret += "RFC822.SIZE " + e.data.length();
 					}else if (s.equals("uid")) {

@@ -55,7 +55,7 @@ public class ThreadConnection extends Thread implements ITerminatable {
 						readd = false;
 						canAdd = false;
 					}else if (peek.toStream != null) {
-						ThreadRawStreamWorker sw = new ThreadRawStreamWorker(host, focus, peek.request, peek, peek.toStream);
+						ThreadRawStreamWorker sw = new ThreadRawStreamWorker(host, focus, peek, peek.toStream);
 						host.subworkers.add(sw);
 						sw.start();
 						readd = false;

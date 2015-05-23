@@ -17,7 +17,6 @@ public class Multipart {
 		try {
 			String sep = readLine(bin);
 			boolean hc = true;
-			String line;
 			int mi = 0;
 			while (hc && mi++ < 50) {
 				String ct = "application/octet-stream";

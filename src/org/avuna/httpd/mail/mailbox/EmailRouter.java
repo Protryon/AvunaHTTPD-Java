@@ -13,6 +13,7 @@ import javax.naming.directory.InitialDirContext;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.util.Stream;
 
 public class EmailRouter {
 	public static void route(HostMail host, Email email) {
@@ -49,31 +50,31 @@ public class EmailRouter {
 						DataOutputStream out = new DataOutputStream(rs.getOutputStream());
 						out.flush();
 						DataInputStream in = new DataInputStream(rs.getInputStream());
-						Logger.log(in.readLine());
+						Logger.log(Stream.readLine(in));
 						out.write(("EHLO " + doms[0] + AvunaHTTPD.crlf).getBytes());
 						Logger.log("EHLO " + doms[0]);
 						out.flush();
 						String line;
-						while (!(line = in.readLine()).startsWith("250 "))
+						while (!(line = Stream.readLine(in)).startsWith("250 "))
 							Logger.log(line);
 						out.write(("MAIL FROM: " + email.from + AvunaHTTPD.crlf).getBytes());
 						Logger.log("MAIL FROM: " + email.from);
 						out.flush();
-						Logger.log(in.readLine());
+						Logger.log(Stream.readLine(in));
 						if (!to.startsWith("<")) to = "<" + to + ">";
 						out.write(("RCPT TO: " + to + AvunaHTTPD.crlf).getBytes());
 						Logger.log("RCPT TO: " + to);
 						out.flush();
-						Logger.log(in.readLine());
+						Logger.log(Stream.readLine(in));
 						out.write(("DATA" + AvunaHTTPD.crlf).getBytes());
 						Logger.log("DATA");
 						out.flush();
-						Logger.log(in.readLine());
+						Logger.log(Stream.readLine(in));
 						out.write(email.data.getBytes());
 						Logger.log(email.data);
 						out.write((AvunaHTTPD.crlf + "." + AvunaHTTPD.crlf).getBytes());
 						out.flush();
-						Logger.log(in.readLine());
+						Logger.log(Stream.readLine(in));
 						rs.close();
 						break;
 					}catch (Exception e) {
@@ -84,7 +85,7 @@ public class EmailRouter {
 		}
 	}
 	
-	// CREDIT: http://www.eyeasme.com/Shayne/MAILHOSTS/mailHostsLookup.html Copyright © 2011 Shayne Steele (shayne.steele@eyeasme.com)
+	// CREDIT: http://www.eyeasme.com/Shayne/MAILHOSTS/mailHostsLookup.html Copyright ï¿½ 2011 Shayne Steele (shayne.steele@eyeasme.com)
 	private static String[] lookupMailHosts(String domainName) throws NamingException {
 		InitialDirContext iDirC = new InitialDirContext();
 		Attributes attributes = iDirC.getAttributes("dns:/" + domainName, new String[]{"MX"});
