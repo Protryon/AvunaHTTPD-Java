@@ -6,6 +6,7 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
+import org.avuna.httpd.dns.zone.DNSRecord;
 import org.avuna.httpd.hosts.ITerminatable;
 import org.avuna.httpd.util.Logger;
 

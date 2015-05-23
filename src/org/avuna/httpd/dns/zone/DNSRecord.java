@@ -1,6 +1,9 @@
-package org.avuna.httpd.dns;
+package org.avuna.httpd.dns.zone;
 
-public class DNSRecord {
+import org.avuna.httpd.dns.Type;
+import org.avuna.httpd.dns.Util;
+
+public class DNSRecord implements IDirective {
 	private final String domain;
 	private final Type type;
 	private final int ttl;

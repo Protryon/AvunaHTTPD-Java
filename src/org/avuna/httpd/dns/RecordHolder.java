@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import org.avuna.httpd.dns.zone.DNSRecord;
 import org.avuna.httpd.util.Logger;
 
 public class RecordHolder {
