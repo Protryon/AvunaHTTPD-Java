@@ -60,7 +60,11 @@ public class FTPHandler {
 		});
 		commands.add(new FTPCommand("cdup", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				focus.cwd = line;
+				if (!focus.cwd.equals("/")) {
+					if (focus.cwd.endsWith("/")) focus.cwd = focus.cwd.substring(0, focus.cwd.length() - 1);
+					focus.cwd = focus.cwd.substring(0, focus.cwd.lastIndexOf("/") + 1);
+				}
+				if (focus.cwd.equals("")) focus.cwd = "/";
 				focus.writeLine(250, "Directory successfully changed.");
 			}
 		});
