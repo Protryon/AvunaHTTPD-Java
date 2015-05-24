@@ -6,6 +6,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
+import org.avuna.httpd.ftp.FTPAccountProvider;
+import org.avuna.httpd.ftp.FTPConfigAccountProvider;
 import org.avuna.httpd.ftp.FTPHandler;
 import org.avuna.httpd.ftp.FTPWork;
 import org.avuna.httpd.ftp.ThreadAcceptFTP;
@@ -16,9 +18,15 @@ public class HostFTP extends Host {
 	
 	private int tac, twc, mc;
 	public final FTPHandler ftphandler = new FTPHandler(this);
+	public FTPAccountProvider provider;
 	
 	public HostFTP(String name) {
-		super(name, Protocol.MAIL);
+		this(name, null);
+	}
+	
+	public HostFTP(String name, FTPAccountProvider provider) {
+		super(name, Protocol.FTP);
+		this.provider = provider;
 	}
 	
 	public void clearWork() {
@@ -43,11 +51,16 @@ public class HostFTP extends Host {
 	}
 	
 	public void formatConfig(ConfigNode map) {
+		if (!map.containsNode("port")) map.insertNode("port", "21");
 		super.formatConfig(map);
 		map.removeNode("ssl");
 		if (!map.containsNode("acceptThreadCount")) map.insertNode("acceptThreadCount", "2", "accept thread count");
 		if (!map.containsNode("workerThreadCount")) map.insertNode("workerThreadCount", "8", "worker thread count");
 		if (!map.containsNode("maxConnections")) map.insertNode("maxConnections", "-1", "max connections per port");
+		if (provider == null) {
+			if (!map.containsNode("accounts")) map.insertNode("accounts");
+			provider = new FTPConfigAccountProvider(map.getNode("accounts"));
+		}
 		tac = Integer.parseInt(map.getNode("acceptThreadCount").getValue());
 		twc = Integer.parseInt(map.getNode("workerThreadCount").getValue());
 		mc = Integer.parseInt(map.getNode("maxConnections").getValue());

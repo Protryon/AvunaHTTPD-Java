@@ -28,6 +28,7 @@ import org.avuna.httpd.com.base.CommandSelect;
 import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostCom;
 import org.avuna.httpd.hosts.HostDNS;
+import org.avuna.httpd.hosts.HostFTP;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.HostHTTPM;
 import org.avuna.httpd.hosts.HostMail;
@@ -420,10 +421,12 @@ public class AvunaHTTPD {
 			HostRegistry.addHost(Protocol.COM, HostCom.class);
 			HostRegistry.addHost(Protocol.DNS, HostDNS.class);
 			HostRegistry.addHost(Protocol.MAIL, HostMail.class);
+			HostRegistry.addHost(Protocol.FTP, HostFTP.class);
 			HostHTTP.unpack();
 			HostCom.unpack();
 			HostDNS.unpack();
 			HostMail.unpack();
+			HostFTP.unpack();
 			hostsConfig = new Config("hosts", new File(mainConfig.getNode("hosts").getValue()), new ConfigFormat() {
 				
 				@Override

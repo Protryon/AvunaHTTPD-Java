@@ -33,7 +33,7 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 			FTPWork focus = host.workQueue.poll();
 			if (focus == null) {
 				try {
-					Thread.sleep(1L);
+					Thread.sleep(2L, 500000);
 				}catch (InterruptedException e) {
 					Logger.logError(e);
 				}
@@ -51,7 +51,7 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 						readd = true;
 						if (host.workQueue.isEmpty()) {
 							try {
-								Thread.sleep(1L);
+								Thread.sleep(2L, 500000);
 							}catch (InterruptedException e) {
 								Logger.logError(e);
 							}
@@ -67,7 +67,7 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 							}
 							if (sleep) {
 								try {
-									Thread.sleep(1L);
+									Thread.sleep(2L, 500000);
 								}catch (InterruptedException e) {
 									Logger.logError(e);
 								}
@@ -92,8 +92,12 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 					}
 					boolean r = false;
 					for (FTPCommand comm : host.ftphandler.commands) {
-						if ((focus.state == 101 || comm.comm.equals(cmd)) && focus.state <= comm.maxState && focus.state >= comm.minState) {
-							comm.run(focus, line);
+						if (comm.comm.equals(cmd)) {
+							if (focus.state <= comm.maxState && focus.state >= comm.minState) {
+								comm.run(focus, line);
+							}else {
+								focus.writeLine(500, "Command not allowed at this time.");
+							}
 							r = true;
 							break;
 						}

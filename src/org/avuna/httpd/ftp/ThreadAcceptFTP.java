@@ -62,7 +62,7 @@ public class ThreadAcceptFTP extends Thread {
 				if (server instanceof SSLServerSocket) {
 					((SSLSocket)s).startHandshake();
 				}
-				out.write(("220 " + host.getConfig().getNode("domain").getValue().split(",")[0] + " ESMTP Avuna-HTTPD" + AvunaHTTPD.crlf).getBytes());
+				out.write(("220 Avuna HTTPD " + AvunaHTTPD.VERSION + AvunaHTTPD.crlf).getBytes());
 				out.flush();
 				s.setSoTimeout(1000);
 				host.addWork(s, in, out);

@@ -14,6 +14,16 @@ public class FTPWork {
 	public int state = 0;
 	public long sns = 0L;
 	public int tos = 0;
+	public String user = "";
+	public boolean auth = false;
+	public String cwd = "/";
+	public String root = "/";
+	public FTPType type = FTPType.ASCII;
+	public boolean isPASV = false, isPORT = false;
+	public ThreadPassive psv = null;
+	public int port = 0;
+	public String rnfr = "";
+	public int skip = 0;
 	
 	public FTPWork(Socket s, DataInputStream in, DataOutputStream out) {
 		this.s = s;
@@ -21,9 +31,14 @@ public class FTPWork {
 		this.out = out;
 	}
 	
-	public void writeMLine(int response, String data) throws IOException {
+	public void writeBMLine(int response, String data) throws IOException {
 		Logger.log(hashCode() + ": " + response + "-" + data);
 		out.write((response + "-" + data + AvunaHTTPD.crlf).getBytes());
+	}
+	
+	public void writeMMLine(String data) throws IOException {
+		Logger.log(hashCode() + ":  " + data);
+		out.write((" " + data + AvunaHTTPD.crlf).getBytes());
 	}
 	
 	public void writeLine(int response, String data) throws IOException {
