@@ -13,4 +13,5 @@ public abstract class FTPCommand {
 	}
 	
 	public abstract void run(FTPWork focus, String line) throws IOException;
+	
 }

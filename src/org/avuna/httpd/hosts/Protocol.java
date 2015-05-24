@@ -9,6 +9,7 @@ public class Protocol {
 	public static final Protocol MAIL = new Protocol("MAIL");
 	public static final Protocol DNS = new Protocol("DNS");
 	public static final Protocol COM = new Protocol("COM");
+	public static final Protocol FTP = new Protocol("FTP");
 	public final String name;
 	
 	public Protocol(String name) {

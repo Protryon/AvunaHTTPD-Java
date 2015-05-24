@@ -37,7 +37,7 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 			SMTPWork focus = host.workQueueSMTP.poll();
 			if (focus == null) {
 				try {
-					Thread.sleep(1L);
+					Thread.sleep(2L, 500000);
 				}catch (InterruptedException e) {
 					Logger.logError(e);
 				}
@@ -71,7 +71,7 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 						readd = true;
 						if (host.workQueueSMTP.isEmpty()) {
 							try {
-								Thread.sleep(1L);
+								Thread.sleep(2L, 500000);
 							}catch (InterruptedException e) {
 								Logger.logError(e);
 							}
@@ -87,7 +87,7 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 							}
 							if (sleep) {
 								try {
-									Thread.sleep(1L);
+									Thread.sleep(2L, 500000);
 								}catch (InterruptedException e) {
 									Logger.logError(e);
 								}

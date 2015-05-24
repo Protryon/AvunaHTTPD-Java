@@ -38,7 +38,7 @@ public class ThreadWorkerIMAP extends Thread implements ITerminatable {
 			IMAPWork focus = host.workQueueIMAP.poll();
 			if (focus == null) {
 				try {
-					Thread.sleep(1L);
+					Thread.sleep(2L, 500000);
 				}catch (InterruptedException e) {
 					Logger.logError(e);
 				}
@@ -72,7 +72,7 @@ public class ThreadWorkerIMAP extends Thread implements ITerminatable {
 						readd = true;
 						if (host.workQueueIMAP.isEmpty()) {
 							try {
-								Thread.sleep(1L);
+								Thread.sleep(2L, 500000);
 							}catch (InterruptedException e) {
 								Logger.logError(e);
 							}
@@ -88,7 +88,7 @@ public class ThreadWorkerIMAP extends Thread implements ITerminatable {
 							}
 							if (sleep) {
 								try {
-									Thread.sleep(1L);
+									Thread.sleep(2L, 500000);
 								}catch (InterruptedException e) {
 									Logger.logError(e);
 								}
