@@ -18,6 +18,7 @@ import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.VHost;
 import org.avuna.httpd.hosts.VHostM;
+import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.networking.Packet;
@@ -356,7 +357,9 @@ public class PatchJavaLoader extends Patch {
 			}catch (Exception e) {
 				Logger.logError(e);
 				ResponseGenerator.generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
-				response.body = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "Avuna had a critical error attempting to serve your page. Please contact your server administrator and try again. This error has been recorded in the Avuna log file.");
+				Resource rsc = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "Avuna had a critical error attempting to serve your page. Please contact your server administrator and try again. This error has been recorded in the Avuna log file.");
+				response.headers.updateHeader("Content-Type", rsc.type);
+				return rsc.data;
 			}finally {
 				request.work.blockTimeout = false;
 			}
