@@ -18,6 +18,8 @@ import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.VHost;
 import org.avuna.httpd.hosts.VHostM;
+import org.avuna.httpd.http.ResponseGenerator;
+import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
@@ -351,6 +353,10 @@ public class PatchJavaLoader extends Patch {
 				}else if (type == 2) {
 					response.reqStream = (JavaLoaderStream)loader;
 				}
+			}catch (Exception e) {
+				Logger.logError(e);
+				ResponseGenerator.generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
+				AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "Avuna had a critical error attempting to serve your page. Please contact your server administrator and try again. This error has been recorded in the Avuna log file.");
 			}finally {
 				request.work.blockTimeout = false;
 			}
