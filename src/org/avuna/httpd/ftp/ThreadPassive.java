@@ -18,6 +18,11 @@ public class ThreadPassive extends Thread {
 	private FTPTransferType ftt = null;
 	private FTPWork work;
 	private File f;
+	private boolean cl = false;
+	
+	public void cancel() {
+		cl = true;
+	}
 	
 	public void setType(FTPTransferType ftt, File f) {
 		this.ftt = ftt;
@@ -41,12 +46,14 @@ public class ThreadPassive extends Thread {
 	public void run() {
 		try {
 			while (!st) {
+				if (cl) return;
 				try {
 					Thread.sleep(5L);
 				}catch (InterruptedException e) {
 					Logger.logError(e);
 				}
 			}
+			if (cl) return;
 			Socket s = serv instanceof ServerSocket ? ((ServerSocket)serv).accept() : new Socket((String)serv, ep);
 			DataOutputStream out = new DataOutputStream(s.getOutputStream());
 			out.flush();
@@ -117,8 +124,11 @@ public class ThreadPassive extends Thread {
 				Logger.logError(e);
 			}
 		}finally {
-			work.isPASV = false;
-			work.psv = null;
+			if (!cl) {
+				work.isPASV = false;
+				work.isPORT = false;
+				work.psv = null;
+			}
 			try {
 				if (serv instanceof ServerSocket) {
 					((ServerSocket)serv).close();

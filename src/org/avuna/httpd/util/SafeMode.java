@@ -6,10 +6,6 @@ import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.util.unixsocket.CException;
 
 public class SafeMode {
-	public static boolean isSymlink(File f) throws CException {
-		if (AvunaHTTPD.windows) return false;
-		return isSymlink(f.getAbsolutePath(), f.isFile());
-	}
 	
 	public static class StatResult {
 		public int nlink = -1, uid = -1, gid = -1, chmod = -1;
@@ -84,31 +80,31 @@ public class SafeMode {
 		}
 	}
 	
-	private static boolean isHardlink(String f, boolean isFile) throws CException {
-		if (!isFile) return false; // folders CANNOT be hardlinked, but do return the number of subfolders(+1 or 2)
-		StatResult sr = new StatResult(f);
+	public static boolean isHardlink(File f) throws CException {
+		if (AvunaHTTPD.windows) return false;
+		if (!f.isFile()) return false; // folders CANNOT be hardlinked, but do return the number of subfolders(+1 or 2)
+		StatResult sr = new StatResult(f.getAbsolutePath());
 		ByteBuffer bb = ByteBuffer.allocate(4);
-		// Logger.log(hcount + "");
 		return sr.nlink > 1;
 	}
 	
-	private static boolean isSymlink(String f, boolean isFile) throws CException {
+	public static boolean isSymlink(File f) throws CException {
+		if (AvunaHTTPD.windows) return false;
 		byte[] buf = new byte[1024];
-		int length = CLib.readlink(f, buf);
-		boolean hl = isHardlink(f, isFile);
-		// Logger.log("" + (length) + " hl = " + hl);
+		int length = CLib.readlink(f.getAbsolutePath(), buf);
+		boolean hl = isHardlink(f);
 		return length >= 0 || hl;
 	}
 	
 	public static void setPerms(File root, int uid, int gid, int chmod) { // TODO: block ALL crontab + chroot
 		// Logger.log("Setting " + root.getAbsolutePath() + " to " + uid + ":" + gid + " chmod " + chmod);
 		// Logger.log(root.getAbsolutePath());
-		String ra = root.getAbsolutePath();
 		try {
-			if (isSymlink(ra, root.isFile())) return;
+			if (isSymlink(root)) return;
 		}catch (CException e) {
 			return;
 		}
+		String ra = root.getAbsolutePath();
 		// CLib.umask(0000);
 		CLib.chmod(ra, chmod);
 		// Logger.log("lchmod returned: " + ch + (ch == -1 ? " error code: " + Native.getLastError() : ""));
