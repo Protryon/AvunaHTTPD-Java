@@ -24,7 +24,9 @@ public class ThreadWorker extends Thread implements ITerminatable {
 			RequestPacket incomingRequest = host.pollReqQueue();
 			if (incomingRequest == null) {
 				try {
-					Thread.sleep(2L, 500000);
+					synchronized (this) {
+						this.wait();
+					}
 				}catch (InterruptedException e) {
 					// Logger.logError(e);
 				}
