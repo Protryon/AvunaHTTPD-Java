@@ -49,7 +49,7 @@ public class FTPHandler {
 		});
 		commands.add(new FTPCommand("quit", 0, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				focus.writeLine(221, "Terminating connection.");
+				focus.writeLine(221, "Goodbye.");
 				focus.s.close();
 			}
 		});
@@ -81,7 +81,30 @@ public class FTPHandler {
 		});
 		commands.add(new FTPCommand("port", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				focus.writeLine(500, "Illegal PORT command.");// TODO
+				String[] ls = line.split(",");
+				if (ls.length != 6) {
+					focus.writeLine(500, "Illegal PORT command.");
+					return;
+				}
+				String ip = "";
+				int port = 0;
+				try {
+					for (int i = 0; i < 6; i++) {
+						if (i < 4) {
+							ip += (i > 0 ? "." : "") + ls[i];
+						}else if (i == 5) {
+							port = Integer.parseInt(ls[i]) * 256;
+						}else if (i == 6) {
+							port += Integer.parseInt(ls[i]);
+						}
+					}
+				}catch (NumberFormatException e) {
+					focus.writeLine(500, "Illegal PORT command.");
+					return;
+				}
+				focus.psv = new ThreadPassive(focus, ip, port);
+				focus.psv.start();
+				focus.writeLine(200, "PORT command successful. Consider using PASV.");
 			}
 		});
 		commands.add(new FTPCommand("pasv", 1, 100) {

@@ -13,7 +13,8 @@ import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.util.Logger;
 
 public class ThreadPassive extends Thread {
-	private ServerSocket serv = null;
+	private Object serv = null;
+	private int ep = -1;
 	private FTPTransferType ftt = null;
 	private FTPWork work;
 	private File f;
@@ -26,6 +27,12 @@ public class ThreadPassive extends Thread {
 	
 	private boolean st = false;
 	
+	public ThreadPassive(FTPWork work, String ip, int port) {
+		this.serv = ip;
+		this.ep = port;
+		this.work = work;
+	}
+	
 	public ThreadPassive(FTPWork work, ServerSocket serv) {
 		this.serv = serv;
 		this.work = work;
@@ -33,10 +40,6 @@ public class ThreadPassive extends Thread {
 	
 	public void run() {
 		try {
-			Socket s = serv.accept();
-			DataOutputStream out = new DataOutputStream(s.getOutputStream());
-			out.flush();
-			DataInputStream in = new DataInputStream(s.getInputStream());
 			while (!st) {
 				try {
 					Thread.sleep(5L);
@@ -44,6 +47,10 @@ public class ThreadPassive extends Thread {
 					Logger.logError(e);
 				}
 			}
+			Socket s = serv instanceof ServerSocket ? ((ServerSocket)serv).accept() : new Socket((String)serv, ep);
+			DataOutputStream out = new DataOutputStream(s.getOutputStream());
+			out.flush();
+			DataInputStream in = new DataInputStream(s.getInputStream());
 			if (ftt == FTPTransferType.STOR || ftt == FTPTransferType.STOU || ftt == FTPTransferType.APPE) {
 				work.writeLine(150, (ftt == FTPTransferType.STOU ? "FILE: " + FTPHandler.chroot(work.root, f.getAbsolutePath()) : "Ok to send data."));
 				FileOutputStream fout = new FileOutputStream(f, ftt == FTPTransferType.APPE);
@@ -108,7 +115,9 @@ public class ThreadPassive extends Thread {
 			work.isPASV = false;
 			work.psv = null;
 			try {
-				serv.close();
+				if (serv instanceof ServerSocket) {
+					((ServerSocket)serv).close();
+				}
 			}catch (IOException e) {
 				Logger.logError(e);
 			}
