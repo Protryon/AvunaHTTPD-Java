@@ -336,18 +336,23 @@ public class PatchJavaLoader extends Patch {
 			byte[] ndata = null;
 			int type = loader.getType();
 			boolean doout = true;
-			if (type == 0) {
-				ndata = ((JavaLoaderBasic)loader).generate(response, request);
-			}else if (type == 1) {
-				HTMLBuilder out = new HTMLBuilder(new StringWriter());
-				// long st = System.nanoTime();
-				
-				doout = ((JavaLoaderPrint)loader).generate(out, response, request);
-				// System.out.println((System.nanoTime() - st) / 1000000D);
-				String s = out.toString();
-				ndata = s.getBytes();
-			}else if (type == 2) {
-				response.reqStream = (JavaLoaderStream)loader;
+			try {
+				request.work.blockTimeout = true;
+				if (type == 0) {
+					ndata = ((JavaLoaderBasic)loader).generate(response, request);
+				}else if (type == 1) {
+					HTMLBuilder out = new HTMLBuilder(new StringWriter());
+					// long st = System.nanoTime();
+					
+					doout = ((JavaLoaderPrint)loader).generate(out, response, request);
+					// System.out.println((System.nanoTime() - st) / 1000000D);
+					String s = out.toString();
+					ndata = s.getBytes();
+				}else if (type == 2) {
+					response.reqStream = (JavaLoaderStream)loader;
+				}
+			}finally {
+				request.work.blockTimeout = false;
 			}
 			// System.out.println((digest - start) / 1000000D + " start-digest");
 			// System.out.println((loaded - digest) / 1000000D + " digest-loaded");
