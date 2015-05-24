@@ -104,6 +104,9 @@ public class ThreadPassive extends Thread {
 			s.close();
 		}catch (IOException e) {
 			Logger.logError(e);
+		}finally {
+			work.isPASV = false;
+			work.psv = null;
 		}
 	}
 }
