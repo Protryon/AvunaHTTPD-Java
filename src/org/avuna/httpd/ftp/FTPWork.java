@@ -5,7 +5,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import org.avuna.httpd.AvunaHTTPD;
-import org.avuna.httpd.util.Logger;
 
 public class FTPWork {
 	public Socket s;
@@ -32,17 +31,17 @@ public class FTPWork {
 	}
 	
 	public void writeBMLine(int response, String data) throws IOException {
-		Logger.log(hashCode() + ": " + response + "-" + data);
+		// Logger.log(hashCode() + ": " + response + "-" + data);
 		out.write((response + "-" + data + AvunaHTTPD.crlf).getBytes());
 	}
 	
 	public void writeMMLine(String data) throws IOException {
-		Logger.log(hashCode() + ":  " + data);
+		// Logger.log(hashCode() + ":  " + data);
 		out.write((" " + data + AvunaHTTPD.crlf).getBytes());
 	}
 	
 	public void writeLine(int response, String data) throws IOException {
-		Logger.log(hashCode() + ": " + response + " " + data);
+		// Logger.log(hashCode() + ": " + response + " " + data);
 		out.write((response + " " + data + AvunaHTTPD.crlf).getBytes());
 	}
 }

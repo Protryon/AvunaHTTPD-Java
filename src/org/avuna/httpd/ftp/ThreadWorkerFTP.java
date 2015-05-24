@@ -83,7 +83,7 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 					String line = safeRead(focus);
 					focus.tos = 0;
 					readd = true;
-					Logger.log(focus.hashCode() + ": " + line);
+					// Logger.log(focus.hashCode() + ": " + line);
 					String cmd = "";
 					if (focus.state != 101) {
 						cmd = line.contains(" ") ? line.substring(0, line.indexOf(" ")) : line;
