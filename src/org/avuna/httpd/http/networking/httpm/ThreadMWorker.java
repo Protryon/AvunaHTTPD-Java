@@ -84,7 +84,7 @@ public class ThreadMWorker extends ThreadWorker {
 						outgoingResponse.done = true;
 						outgoingResponse.bwt = System.nanoTime();
 					}else {
-						Logger.log("Data unforwardable/corrupted! No chunked or content-length specified.");
+						// no body
 					}
 				}catch (Exception e) {
 					Logger.logError(e);
