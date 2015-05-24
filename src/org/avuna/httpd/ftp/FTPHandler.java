@@ -187,6 +187,7 @@ public class FTPHandler {
 				try {
 					if (f.exists()) f.delete();
 					f.createNewFile();
+					SafeMode.setPerms(f, uid, uid, 0640);
 					s = true;
 				}catch (IOException e) {
 					// Logger.logError(e);
@@ -223,6 +224,7 @@ public class FTPHandler {
 						f = new File(f.getParentFile(), f.getName() + "." + (i++));
 					}
 					f.createNewFile();
+					SafeMode.setPerms(f, uid, uid, 0640);
 					s = true;
 				}catch (IOException e) {
 					// Logger.logError(e);
@@ -253,7 +255,10 @@ public class FTPHandler {
 					return;
 				}
 				try {
-					if (!f.exists()) f.createNewFile();
+					if (!f.exists()) {
+						f.createNewFile();
+						SafeMode.setPerms(f, uid, uid, 0640);
+					}
 				}catch (IOException e) {
 					// Logger.logError(e);
 				}
@@ -411,28 +416,28 @@ public class FTPHandler {
 					focus.writeLine(550, "Permission Denied.");
 					return;
 				}
-				if (f.exists() && f.canWrite()) {
-					try {
-						FileInputStream in = new FileInputStream(focus.rnfr);
-						FileOutputStream out = new FileOutputStream(f);
-						byte[] buf = new byte[1024];
-						int i = 1;
-						while (i > 0) {
-							i = in.read(buf);
-							if (i > 0) {
-								out.write(buf, 0, i);
-							}
+				if (!f.exists()) {
+					f.createNewFile();
+					SafeMode.setPerms(f, uid, uid, 0640);
+				}
+				try {
+					FileInputStream in = new FileInputStream(focus.rnfr);
+					FileOutputStream out = new FileOutputStream(f);
+					byte[] buf = new byte[1024];
+					int i = 1;
+					while (i > 0) {
+						i = in.read(buf);
+						if (i > 0) {
+							out.write(buf, 0, i);
 						}
-						in.close();
-						out.flush();
-						out.close();
-						focus.writeLine(250, "Rename successful.");
-					}catch (IOException e) {
-						focus.writeLine(550, "Rename failed.");
-						
 					}
-				}else {
+					in.close();
+					out.flush();
+					out.close();
+					focus.writeLine(250, "Rename successful.");
+				}catch (IOException e) {
 					focus.writeLine(550, "Rename failed.");
+					
 				}
 			}
 		});
@@ -468,7 +473,7 @@ public class FTPHandler {
 					return;
 				}
 				int uid = host.provider.getUID(focus.user);
-				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
+				if ((f.exists() && !SafeMode.canUserRead(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserRead(uid, uid, pf.getAbsolutePath()))) {
 					focus.writeLine(550, "Permission Denied.");
 					return;
 				}
@@ -496,6 +501,7 @@ public class FTPHandler {
 				if (f.isFile()) f = f.getParentFile();
 				if (f.getParentFile() != null && f.getParentFile().exists() && f.getParentFile().canWrite()) {
 					f.mkdirs();
+					SafeMode.setPerms(f, uid, uid, 0770);
 					focus.writeLine(250, "Create directory operation successful.");
 				}else {
 					focus.writeLine(550, "Create directory operation failed.");
