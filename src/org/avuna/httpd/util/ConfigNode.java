@@ -65,7 +65,7 @@ public class ConfigNode {
 	}
 	
 	/**
-	 * @return true if node.sub array length is more than 0 or key has null value.
+	 * @return true if node is a list of properties.
 	 */
 	public boolean branching() {
 		return sub.length > 0 || value == null;
