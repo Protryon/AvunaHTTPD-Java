@@ -90,7 +90,7 @@ public class HostMail extends Host {
 		if (!ssl.containsNode("keystorePassword")) ssl.insertNode("keystorePassword", "password");
 		if (!ssl.containsNode("keyPassword")) ssl.insertNode("keyPassword", "password");
 		if (!map.containsNode("domain")) map.insertNode("domain", "example.com,example.org", "domains to accept mail from");
-		if (!map.containsNode("folder")) map.insertNode("folder", AvunaHTTPD.fileManager.getBaseFile("mail").toString(), "mail sotrage folder");
+		if (!map.containsNode("folder")) map.insertNode("folder", AvunaHTTPD.fileManager.getBaseFile("mail").toString(), "mail storage folder");
 		if (!map.containsNode("acceptThreadCount")) map.insertNode("acceptThreadCount", "2", "accept thread count");
 		if (!map.containsNode("workerThreadCount")) map.insertNode("workerThreadCount", "8", "worker thread count");
 		if (!map.containsNode("maxConnections")) map.insertNode("maxConnections", "-1", "max connections per port");
