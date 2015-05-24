@@ -434,6 +434,7 @@ public class FTPHandler {
 					in.close();
 					out.flush();
 					out.close();
+					new File(focus.rnfr).delete();
 					focus.writeLine(250, "Rename successful.");
 				}catch (IOException e) {
 					focus.writeLine(550, "Rename failed.");
