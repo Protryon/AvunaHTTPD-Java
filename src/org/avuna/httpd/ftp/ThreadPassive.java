@@ -111,6 +111,11 @@ public class ThreadPassive extends Thread {
 			s.close();
 		}catch (IOException e) {
 			Logger.logError(e);
+			try {
+				work.writeLine(526, "Transfer failed.");
+			}catch (IOException e1) {
+				Logger.logError(e);
+			}
 		}finally {
 			work.isPASV = false;
 			work.psv = null;
