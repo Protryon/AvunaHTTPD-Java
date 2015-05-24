@@ -489,7 +489,7 @@ public class AvunaHTTPD {
 				if (!h.hasStarted()) h.start();
 			}
 			if (!windows && mainConfig.getNode("safeMode").getValue().equals("true")) {
-				SafeMode.setPerms(cfg.getParentFile(), Integer.parseInt(mainConfig.getNode("uid").getValue()), Integer.parseInt(mainConfig.getNode("gid").getValue()));
+				SafeMode.recurPerms(cfg.getParentFile(), Integer.parseInt(mainConfig.getNode("uid").getValue()), Integer.parseInt(mainConfig.getNode("gid").getValue()));
 			}
 			if (!windows && CLib.getuid() == 0 && !mainConfig.getNode("uid").getValue().equals("0")) {
 				major:

@@ -96,13 +96,13 @@ public class SafeMode {
 		return length >= 0 || hl;
 	}
 	
-	public static void setPerms(File root, int uid, int gid, int chmod) { // TODO: block ALL crontab + chroot
+	public static boolean setPerms(File root, int uid, int gid, int chmod) { // TODO: block ALL crontab + chroot
 		// Logger.log("Setting " + root.getAbsolutePath() + " to " + uid + ":" + gid + " chmod " + chmod);
 		// Logger.log(root.getAbsolutePath());
 		try {
-			if (isSymlink(root)) return;
+			if (isSymlink(root)) return false;
 		}catch (CException e) {
-			return;
+			return false;
 		}
 		String ra = root.getAbsolutePath();
 		// CLib.umask(0000);
@@ -110,6 +110,7 @@ public class SafeMode {
 		// Logger.log("lchmod returned: " + ch + (ch == -1 ? " error code: " + Native.getLastError() : ""));
 		CLib.lchown(ra, uid, gid);
 		// CLib.umask(0077);
+		return true;
 	}
 	
 	/**
@@ -119,16 +120,23 @@ public class SafeMode {
 	 * @param uid
 	 * @param gid
 	 */
-	public static void setPerms(File root, int uid, int gid) {
-		setPerms(root, uid, gid, false);
+	public static void recurPerms(File root, int uid, int gid) {
+		recurPerms(root, uid, gid, false);
 	}
 	
 	// should run as root
-	private static void setPerms(File root, int uid, int gid, boolean recursed) {
+	private static void recurPerms(File root, int uid, int gid, boolean recursed) {
+		try {
+			if (isSymlink(root)) {
+				return;
+			}
+		}catch (CException e) {
+			return;
+		}
 		setPerms(root, uid, gid, 0700);
 		for (File f : root.listFiles()) {
 			if (f.isDirectory()) {
-				setPerms(f, uid, gid, true);
+				recurPerms(f, uid, gid, true);
 			}else {
 				if (uid == 0 && gid == 0) {
 					setPerms(f, 0, 0, 0700);
