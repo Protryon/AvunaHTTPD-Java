@@ -19,6 +19,7 @@ import org.avuna.httpd.http.plugins.base.PatchChunked;
 import org.avuna.httpd.http.plugins.base.PatchGZip;
 import org.avuna.httpd.http.plugins.base.PatchInline;
 import org.avuna.httpd.http.plugins.javaloader.lib.HTMLCache;
+import org.avuna.httpd.http.plugins.javaloader.lib.JavaLoaderUtil;
 import org.avuna.httpd.http.util.OverrideConfig;
 
 public class FileManager {
@@ -71,7 +72,6 @@ public class FileManager {
 	public File getBaseFile(String name) {
 		if (!base.containsKey(name)) {
 			base.put(name, new File(getMainDir(), name));
-			
 		}
 		return base.get(name);
 	}
@@ -128,7 +128,7 @@ public class FileManager {
 				if (resource != null) {
 					if (resource.type.startsWith("text")) {
 						String res = new String(resource.data);
-						res = res.replace("$_statusCode_$", status.getStatus() + "").replace("$_reason_$", status.getPhrase()).replace("$_info_$", info).replace("$_reqTarget_$", reqTarget);
+						res = res.replace("$_statusCode_$", status.getStatus() + "").replace("$_reason_$", status.getPhrase()).replace("$_info_$", JavaLoaderUtil.htmlescape(info)).replace("$_reqTarget_$", JavaLoaderUtil.htmlescape(reqTarget));
 						resource.data = res.getBytes();
 					}
 					return resource;
@@ -150,7 +150,7 @@ public class FileManager {
 		pb.append(status.getPhrase());
 		pb.append("</h1>");
 		pb.append("<p>");
-		pb.append(info);
+		pb.append(JavaLoaderUtil.htmlescape(info));
 		pb.append("</p>");
 		pb.append("</body></html>");
 		Resource error = new Resource(pb.toString().getBytes(), "text/html");
