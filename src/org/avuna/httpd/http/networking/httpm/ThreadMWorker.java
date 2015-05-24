@@ -84,6 +84,7 @@ public class ThreadMWorker extends ThreadWorker {
 						outgoingResponse.done = true;
 						outgoingResponse.bwt = System.nanoTime();
 					}else {
+						outgoingResponse.bwt = System.nanoTime();
 						// no body
 					}
 				}catch (Exception e) {
