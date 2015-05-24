@@ -44,18 +44,10 @@ JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_listen(JNIEnv * this, jcla
 	return listen(sockfd, backlog);
 }
 
-char* itoa(int val, int base){
-
-	static char buf[32] = {0};
-
-	int i = 30;
-
-	for(; val && i ; --i, val /= base)
-
-		buf[i] = "0123456789abcdef"[val % base];
-
-	return &buf[i+1];
-
+char* itoa(int val){
+	char *ret = malloc(32);
+	sprintf(ret, "%d", val);
+	return ret;
 }
 
 /*
@@ -81,7 +73,7 @@ JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_accept(JNIEnv * this, j
 		//*fpath = "-1/null";
 	}else{
 		free(fpath);
-		fpath = itoa(i, 10);
+		fpath = itoa(i);
 		char *cr1;
 		cr1 = malloc(strlen(fpath) + 1 + strlen((char *)&sun.sun_path) + 1);
 		if(cr1 == NULL) {
@@ -90,6 +82,7 @@ JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_accept(JNIEnv * this, j
 		strcpy(cr1, fpath);
 		strcat(cr1, "/");
 		strcat(cr1, (char *)&sun.sun_path);
+		free(fpath);
 		fpath = cr1;
 	}
 	jstring js = (*this)->NewStringUTF(this, fpath);
@@ -251,13 +244,34 @@ JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_fflush(JNIEnv * this, jcla
  * Method:    __xstat64
  * Signature: (ILjava/lang/String;[B)I
  */
-JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib__1_1xstat64(JNIEnv * this, jclass cls, jstring path, jbyteArray buf) {
-	jbyte* jb = (*this)->GetByteArrayElements(this, buf, 0);
+JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_stat(JNIEnv * this, jclass cls, jstring path) {
+	struct stat s;
+	char ret[128];//more than we could possibly ever need
 	const char *npath = (*this)->GetStringUTFChars(this, path, 0);
-	int i = stat(npath, (void *)jb);
+	int i = stat(npath, &s);
 	(*this)->ReleaseStringUTFChars(this, path, 0);
-	(*this)->ReleaseByteArrayElements(this, buf, jb, 0);
-	return i;
+	if(i == -1) {
+		char *tcpy = "-1";
+		strcpy(ret, tcpy);
+	}else{
+		char *sep = "/";
+		char *tmp = itoa(s.st_nlink);
+		strcpy(ret, tmp);
+		free(tmp);
+		strcat(ret, sep);
+		tmp = itoa(s.st_uid);
+		strcat(ret, itoa(s.st_uid));
+		free(tmp);
+		strcat(ret, sep);
+		tmp = itoa(s.st_gid);
+		strcat(ret, itoa(s.st_gid));
+		free(tmp);
+		strcat(ret, sep);
+		tmp = itoa(s.st_mode);
+		strcat(ret, itoa(s.st_mode));
+		free(tmp);
+	}
+	return (*this)->NewStringUTF(this, ret);
 }
 
 /*

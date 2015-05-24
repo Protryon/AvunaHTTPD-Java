@@ -35,7 +35,7 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 				try {
 					Thread.sleep(2L, 500000);
 				}catch (InterruptedException e) {
-					Logger.logError(e);
+					// Logger.logError(e);
 				}
 				continue;
 			}
@@ -53,7 +53,7 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 							try {
 								Thread.sleep(2L, 500000);
 							}catch (InterruptedException e) {
-								Logger.logError(e);
+								// Logger.logError(e);
 							}
 						}
 						continue;
@@ -69,7 +69,7 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 								try {
 									Thread.sleep(2L, 500000);
 								}catch (InterruptedException e) {
-									Logger.logError(e);
+									// Logger.logError(e);
 								}
 							}
 							continue;

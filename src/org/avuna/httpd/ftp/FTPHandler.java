@@ -11,6 +11,7 @@ import java.util.Random;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostFTP;
 import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.util.SafeMode;
 
 public class FTPHandler {
 	
@@ -149,8 +150,14 @@ public class FTPHandler {
 				}
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
-				if (!f.getAbsolutePath().startsWith(focus.root)) {
+				File pf = f.getParentFile();
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
 					focus.writeLine(550, "Failed to open file.");
+					return;
+				}
+				int uid = host.provider.getUID(focus.user);
+				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
+					focus.writeLine(550, "Permission Denied.");
 					return;
 				}
 				boolean s = false;
@@ -176,8 +183,14 @@ public class FTPHandler {
 				}
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
-				if (!f.getAbsolutePath().startsWith(focus.root)) {
+				File pf = f.getParentFile();
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
 					focus.writeLine(550, "Failed to open file.");
+					return;
+				}
+				int uid = host.provider.getUID(focus.user);
+				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
+					focus.writeLine(550, "Permission Denied.");
 					return;
 				}
 				boolean s = false;
@@ -206,8 +219,14 @@ public class FTPHandler {
 				}
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
-				if (!f.getAbsolutePath().startsWith(focus.root)) {
+				File pf = f.getParentFile();
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
 					focus.writeLine(550, "Failed to open file.");
+					return;
+				}
+				int uid = host.provider.getUID(focus.user);
+				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
+					focus.writeLine(550, "Permission Denied.");
 					return;
 				}
 				try {
@@ -230,8 +249,14 @@ public class FTPHandler {
 				}
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
-				if (!f.getAbsolutePath().startsWith(focus.root)) {
+				File pf = f.getParentFile();
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
 					focus.writeLine(550, "Failed to open file.");
+					return;
+				}
+				int uid = host.provider.getUID(focus.user);
+				if (f.exists() && !SafeMode.canUserRead(uid, uid, f.getAbsolutePath())) {
+					focus.writeLine(550, "Permission Denied.");
 					return;
 				}
 				if (f.isFile()) f = f.getParentFile();
@@ -250,8 +275,14 @@ public class FTPHandler {
 				}
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
-				if (!f.getAbsolutePath().startsWith(focus.root)) {
+				File pf = f.getParentFile();
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
 					focus.writeLine(550, "Failed to open file.");
+					return;
+				}
+				int uid = host.provider.getUID(focus.user);
+				if (f.exists() && !SafeMode.canUserRead(uid, uid, f.getAbsolutePath())) {
+					focus.writeLine(550, "Permission Denied.");
 					return;
 				}
 				if (f.isFile()) f = f.getParentFile();
@@ -270,8 +301,14 @@ public class FTPHandler {
 				}
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
-				if (!f.getAbsolutePath().startsWith(focus.root)) {
+				File pf = f.getParentFile();
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
 					focus.writeLine(550, "Failed to open file.");
+					return;
+				}
+				int uid = host.provider.getUID(focus.user);
+				if (f.exists() && !SafeMode.canUserRead(uid, uid, f.getAbsolutePath())) {
+					focus.writeLine(550, "Permission Denied.");
 					return;
 				}
 				if (f.isDirectory()) {
@@ -289,8 +326,14 @@ public class FTPHandler {
 			public void run(FTPWork focus, String line) throws IOException {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
-				if (!f.getAbsolutePath().startsWith(focus.root)) {
+				File pf = f.getParentFile();
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
 					focus.writeLine(550, "Delete operation failed.");
+					return;
+				}
+				int uid = host.provider.getUID(focus.user);
+				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
+					focus.writeLine(550, "Permission Denied.");
 					return;
 				}
 				if (f.isDirectory()) {
@@ -309,8 +352,14 @@ public class FTPHandler {
 			public void run(FTPWork focus, String line) throws IOException {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
-				if (!f.getAbsolutePath().startsWith(focus.root)) {
+				File pf = f.getParentFile();
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
 					focus.writeLine(550, "Rename failed.");
+					return;
+				}
+				int uid = host.provider.getUID(focus.user);
+				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
+					focus.writeLine(550, "Permission Denied.");
 					return;
 				}
 				if (f.exists() && f.canWrite()) {
@@ -329,8 +378,14 @@ public class FTPHandler {
 				}
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
-				if (!f.getAbsolutePath().startsWith(focus.root)) {
+				File pf = f.getParentFile();
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
 					focus.writeLine(550, "Rename failed.");
+					return;
+				}
+				int uid = host.provider.getUID(focus.user);
+				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
+					focus.writeLine(550, "Permission Denied.");
 					return;
 				}
 				if (f.exists() && f.canWrite()) {
@@ -384,8 +439,14 @@ public class FTPHandler {
 			public void run(FTPWork focus, String line) throws IOException {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
-				if (!f.getAbsolutePath().startsWith(focus.root)) {
+				File pf = f.getParentFile();
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
 					focus.writeLine(550, "Could not get file modification time.");
+					return;
+				}
+				int uid = host.provider.getUID(focus.user);
+				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
+					focus.writeLine(550, "Permission Denied.");
 					return;
 				}
 				if (f.exists() && f.canRead()) {
@@ -399,8 +460,14 @@ public class FTPHandler {
 			public void run(FTPWork focus, String line) throws IOException {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
-				if (!f.getAbsolutePath().startsWith(focus.root)) {
+				File pf = f.getParentFile();
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
 					focus.writeLine(550, "Create directory operation failed.");
+					return;
+				}
+				int uid = host.provider.getUID(focus.user);
+				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
+					focus.writeLine(550, "Permission Denied.");
 					return;
 				}
 				if (f.isFile()) f = f.getParentFile();
@@ -416,8 +483,14 @@ public class FTPHandler {
 			public void run(FTPWork focus, String line) throws IOException {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
-				if (!f.getAbsolutePath().startsWith(focus.root)) {
+				File pf = f.getParentFile();
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
 					focus.writeLine(550, "Remove directory operation failed.");
+					return;
+				}
+				int uid = host.provider.getUID(focus.user);
+				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
+					focus.writeLine(550, "Permission Denied.");
 					return;
 				}
 				if (f.isFile()) f = f.getParentFile();
