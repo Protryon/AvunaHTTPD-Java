@@ -461,7 +461,7 @@ public class FTPHandler {
 				focus.writeMMLine(focus.auth ? ("Logged in as " + focus.user) : "Not logged in");
 				focus.writeMMLine("TYPE: " + (focus.type == FTPType.ASCII ? "ASCII" : "BINARY"));
 				focus.writeMMLine("No session bandwidth limit");
-				focus.writeMMLine("Session timeout in seconds is 300");
+				focus.writeMMLine("Session timeout in seconds is 10");
 				focus.writeMMLine("Control connection is plain text");
 				focus.writeMMLine("Data connections will be plain text");
 				focus.writeMMLine("At session startup, client count was 1");
