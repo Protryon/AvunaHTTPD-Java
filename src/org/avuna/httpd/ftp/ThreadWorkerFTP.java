@@ -75,6 +75,11 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 							continue;
 						}else {
 							readd = false;
+							try {
+								focus.writeLine(421, "Timeout");
+							}catch (IOException ex) {
+								// Logger.logError(ex);
+							}
 							focus.s.close();
 							continue;
 						}
@@ -111,6 +116,11 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 				if (focus.tos < 10) {
 					readd = true;
 				}else {
+					try {
+						focus.writeLine(421, "Timeout");
+					}catch (IOException ex) {
+						// Logger.logError(ex);
+					}
 					try {
 						focus.s.close();
 					}catch (IOException ex) {
