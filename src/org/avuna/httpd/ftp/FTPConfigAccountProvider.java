@@ -27,4 +27,8 @@ public class FTPConfigAccountProvider extends FTPAccountProvider {
 	public String getRoot(String user) {
 		return node.getNode("root").getValue();
 	}
+	
+	public int getUID(String user) {
+		return -1;
+	}
 }

@@ -156,8 +156,8 @@ JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_fflush
  * Method:    __xstat64
  * Signature: (Ljava/lang/String;[B)I
  */
-JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib__1_1xstat64
-  (JNIEnv *, jclass, jstring, jbyteArray);
+JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_stat
+  (JNIEnv *, jclass, jstring);
 
 /*
  * Class:     org_avuna_httpd_util_CLib

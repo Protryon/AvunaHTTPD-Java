@@ -4,6 +4,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
 import org.avuna.httpd.AvunaHTTPD;
@@ -67,7 +68,7 @@ public class ThreadAcceptFTP extends Thread {
 				s.setSoTimeout(1000);
 				host.addWork(s, in, out);
 			}catch (Exception e) {
-				Logger.logError(e);
+				if (!(e instanceof SocketException)) Logger.logError(e);
 			}
 		}
 	}

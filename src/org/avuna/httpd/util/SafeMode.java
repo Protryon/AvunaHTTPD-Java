@@ -3,32 +3,96 @@ package org.avuna.httpd.util;
 import java.io.File;
 import java.nio.ByteBuffer;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.util.unixsocket.CException;
 
 public class SafeMode {
-	public static boolean isSymlink(File f) {
+	public static boolean isSymlink(File f) throws CException {
 		if (AvunaHTTPD.windows) return false;
 		return isSymlink(f.getAbsolutePath(), f.isFile());
 	}
 	
-	private static boolean isHardlink(String f, boolean isFile) {
-		if (!isFile) return false; // folders CANNOT be hardlinked, but do return the number of subfolders(+1 or 2)
-		byte[] buf = new byte[1024];
-		int s = CLib.__xstat64(f, buf);
-		if (s == -1) {
-			// Logger.log("hle: " + Native.getLastError());
+	public static class StatResult {
+		public int nlink = -1, uid = -1, gid = -1, chmod = -1;
+		
+		public StatResult(String path) throws CException {
+			String s = CLib.stat(path);
+			if (s.equals("-1")) {
+				throw new CException(CLib.errno(), "stat failed!");
+			}
+			String[] s2 = s.split("/");
+			if (s2.length != 4) {
+				throw new CException(-1, "Stat returned bad result!");
+			}
+			nlink = Integer.parseInt(s2[0]);
+			uid = Integer.parseInt(s2[1]);
+			gid = Integer.parseInt(s2[2]);
+			chmod = Integer.parseInt(s2[3]);
 		}
-		ByteBuffer bb = ByteBuffer.allocate(4);
-		bb.order(java.nio.ByteOrder.LITTLE_ENDIAN);
-		bb.put(0, buf[13]);
-		bb.put(0, buf[14]);
-		bb.put(0, buf[15]);
-		bb.put(0, buf[16]);
-		int hcount = bb.getInt(0);
-		// Logger.log(hcount + "");
-		return hcount > 1;
 	}
 	
-	private static boolean isSymlink(String f, boolean isFile) {
+	public static boolean canUserRead(int uid, int gid, String f) {
+		if (uid <= 0) return true;
+		try {
+			StatResult stat = new StatResult(f);
+			if (stat.uid == uid) {
+				if ((stat.chmod & 0400) == 0400) return true;
+			}
+			if (stat.gid == gid) {
+				if ((stat.chmod & 0040) == 0040) return true;
+			}
+			if ((stat.chmod & 0004) == 0004) return true;
+			return false;
+		}catch (CException e) {
+			Logger.logError(e);
+			return false;
+		}
+	}
+	
+	public static boolean canUserWrite(int uid, int gid, String f) {
+		if (uid <= 0) return true;
+		try {
+			StatResult stat = new StatResult(f);
+			if (stat.uid == uid) {
+				if ((stat.chmod & 0200) == 0200) return true;
+			}
+			if (stat.gid == gid) {
+				if ((stat.chmod & 0020) == 0020) return true;
+			}
+			if ((stat.chmod & 0002) == 0002) return true;
+			return false;
+		}catch (CException e) {
+			Logger.logError(e);
+			return false;
+		}
+	}
+	
+	public static boolean canUserExecute(int uid, int gid, String f) {
+		if (uid <= 0) return true;
+		try {
+			StatResult stat = new StatResult(f);
+			if (stat.uid == uid) {
+				if ((stat.chmod & 0100) == 0100) return true;
+			}
+			if (stat.gid == gid) {
+				if ((stat.chmod & 0010) == 0010) return true;
+			}
+			if ((stat.chmod & 0001) == 0001) return true;
+			return false;
+		}catch (CException e) {
+			Logger.logError(e);
+			return false;
+		}
+	}
+	
+	private static boolean isHardlink(String f, boolean isFile) throws CException {
+		if (!isFile) return false; // folders CANNOT be hardlinked, but do return the number of subfolders(+1 or 2)
+		StatResult sr = new StatResult(f);
+		ByteBuffer bb = ByteBuffer.allocate(4);
+		// Logger.log(hcount + "");
+		return sr.nlink > 1;
+	}
+	
+	private static boolean isSymlink(String f, boolean isFile) throws CException {
 		byte[] buf = new byte[1024];
 		int length = CLib.readlink(f, buf);
 		boolean hl = isHardlink(f, isFile);
@@ -40,7 +104,11 @@ public class SafeMode {
 		// Logger.log("Setting " + root.getAbsolutePath() + " to " + uid + ":" + gid + " chmod " + chmod);
 		// Logger.log(root.getAbsolutePath());
 		String ra = root.getAbsolutePath();
-		if (isSymlink(ra, root.isFile())) return;
+		try {
+			if (isSymlink(ra, root.isFile())) return;
+		}catch (CException e) {
+			return;
+		}
 		// CLib.umask(0000);
 		CLib.chmod(ra, chmod);
 		// Logger.log("lchmod returned: " + ch + (ch == -1 ? " error code: " + Native.getLastError() : ""));

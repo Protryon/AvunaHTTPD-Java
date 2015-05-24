@@ -49,7 +49,7 @@ public class CLib {
 	
 	public static native int fflush(int sockfd);
 	
-	public static native int __xstat64(String path, byte[] statdump);
+	public static native String stat(String path);
 	
 	public static native int readlink(String path, byte[] buf);
 	
