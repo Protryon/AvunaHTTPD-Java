@@ -92,28 +92,13 @@ public class ThreadConnection extends Thread implements ITerminatable {
 					if (focus.sns == 0L) {
 						focus.sns = System.nanoTime() + 10000000000L;
 						readd = true;
-						if (host.emptyQueue()) {
-							try {
-								Thread.sleep(2L, 500000);
-							}catch (InterruptedException e) {
-								Logger.logError(e);
-							}
-						}
 						continue;
 					}else {
 						if (focus.sns >= System.nanoTime()) {
-							boolean sleep = host.emptyQueue();
 							if (AvunaHTTPD.bannedIPs.contains(focus.s.getInetAddress().getHostAddress())) {
 								focus.s.close();
 							}else {
 								readd = true;
-							}
-							if (sleep) {
-								try {
-									Thread.sleep(1L);
-								}catch (InterruptedException e) {
-									Logger.logError(e);
-								}
 							}
 							continue;
 						}else {

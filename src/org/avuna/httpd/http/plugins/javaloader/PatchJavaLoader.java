@@ -18,6 +18,9 @@ import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.VHost;
 import org.avuna.httpd.hosts.VHostM;
+import org.avuna.httpd.http.Resource;
+import org.avuna.httpd.http.ResponseGenerator;
+import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
@@ -336,18 +339,29 @@ public class PatchJavaLoader extends Patch {
 			byte[] ndata = null;
 			int type = loader.getType();
 			boolean doout = true;
-			if (type == 0) {
-				ndata = ((JavaLoaderBasic)loader).generate(response, request);
-			}else if (type == 1) {
-				HTMLBuilder out = new HTMLBuilder(new StringWriter());
-				// long st = System.nanoTime();
-				
-				doout = ((JavaLoaderPrint)loader).generate(out, response, request);
-				// System.out.println((System.nanoTime() - st) / 1000000D);
-				String s = out.toString();
-				ndata = s.getBytes();
-			}else if (type == 2) {
-				response.reqStream = (JavaLoaderStream)loader;
+			try {
+				request.work.blockTimeout = true;
+				if (type == 0) {
+					ndata = ((JavaLoaderBasic)loader).generate(response, request);
+				}else if (type == 1) {
+					HTMLBuilder out = new HTMLBuilder(new StringWriter());
+					// long st = System.nanoTime();
+					
+					doout = ((JavaLoaderPrint)loader).generate(out, response, request);
+					// System.out.println((System.nanoTime() - st) / 1000000D);
+					String s = out.toString();
+					ndata = s.getBytes();
+				}else if (type == 2) {
+					response.reqStream = (JavaLoaderStream)loader;
+				}
+			}catch (Exception e) {
+				Logger.logError(e);
+				ResponseGenerator.generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
+				Resource rsc = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "Avuna had a critical error attempting to serve your page. Please contact your server administrator and try again. This error has been recorded in the Avuna log file.");
+				response.headers.updateHeader("Content-Type", rsc.type);
+				return rsc.data;
+			}finally {
+				request.work.blockTimeout = false;
 			}
 			// System.out.println((digest - start) / 1000000D + " start-digest");
 			// System.out.println((loaded - digest) / 1000000D + " digest-loaded");

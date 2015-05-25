@@ -136,6 +136,7 @@ public class HostHTTP extends Host {
 	public final ArrayList<Thread> subworkers = new ArrayList<Thread>();
 	
 	public ArrayList<ThreadConnection> conns = new ArrayList<ThreadConnection>();
+	public ArrayList<ThreadWorker> workers = new ArrayList<ThreadWorker>();
 	private ArrayBlockingQueue<Work> workQueue;
 	public static HashMap<String, Integer> connIPs = new HashMap<String, Integer>();
 	
@@ -190,6 +191,14 @@ public class HostHTTP extends Host {
 	
 	public void addWork(RequestPacket req) {
 		reqWorkQueue.add(req);
+		for (ThreadWorker worker : workers) {
+			if (worker.getState() == State.WAITING) {
+				synchronized (worker) {
+					worker.notify();
+				}
+				break;
+			}
+		}
 	}
 	
 	public void initQueue() {
@@ -294,6 +303,7 @@ public class HostHTTP extends Host {
 		for (int i = 0; i < twc; i++) {
 			ThreadWorker tw = new ThreadWorker(this);
 			addTerm(tw);
+			workers.add(tw);
 			tw.start();
 		}
 		for (int i = 0; i < tcc; i++) {

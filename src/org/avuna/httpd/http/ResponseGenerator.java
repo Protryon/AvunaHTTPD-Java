@@ -45,6 +45,11 @@ public class ResponseGenerator {
 			if (request.headers.hasHeader("Connection")) {
 				response.headers.addHeader("Connection", request.headers.getHeader("Connection"));
 			}
+			if (request.host == null) {
+				ResponseGenerator.generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
+				response.body = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "The requested host was not found on this server. Please contratc your server administrator.");
+				return false;
+			}
 			// Now we handle all of our patches such as php or jhtml which fill in the response.
 			if (!request.host.getHost().patchBus.processMethod(request, response)) {
 				generateDefaultResponse(response, StatusCode.NOT_YET_IMPLEMENTED);
@@ -60,7 +65,7 @@ public class ResponseGenerator {
 		}catch (Exception e) {
 			Logger.logError(e);
 			generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
-			response.body = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.NOT_YET_IMPLEMENTED, "The requested URL " + request.target + " caused a server failure.");
+			response.body = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "The requested URL " + request.target + " caused a server failure.");
 			return false;
 		}
 	}

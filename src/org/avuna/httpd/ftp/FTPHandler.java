@@ -49,7 +49,7 @@ public class FTPHandler {
 		});
 		commands.add(new FTPCommand("quit", 0, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				focus.writeLine(221, "Terminating connection.");
+				focus.writeLine(221, "Goodbye.");
 				focus.s.close();
 			}
 		});
@@ -81,17 +81,46 @@ public class FTPHandler {
 		});
 		commands.add(new FTPCommand("port", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				focus.writeLine(500, "Illegal PORT command.");// TODO
+				if (focus.isPASV || focus.isPORT) {
+					focus.psv.cancel();
+					focus.isPASV = false;
+					focus.isPORT = false;
+					focus.psv = null;
+				}
+				focus.isPORT = true;
+				String[] ls = line.split(",");
+				if (ls.length != 6) {
+					focus.writeLine(500, "Illegal PORT command.");
+					return;
+				}
+				String ip = "";
+				int port = 0;
+				try {
+					for (int i = 0; i < 6; i++) {
+						if (i < 4) {
+							ip += (i > 0 ? "." : "") + ls[i];
+						}else if (i == 5) {
+							port = Integer.parseInt(ls[i]) * 256;
+						}else if (i == 6) {
+							port += Integer.parseInt(ls[i]);
+						}
+					}
+				}catch (NumberFormatException e) {
+					focus.writeLine(500, "Illegal PORT command.");
+					return;
+				}
+				focus.psv = new ThreadPassive(focus, ip, port);
+				focus.psv.start();
+				focus.writeLine(200, "PORT command successful. Consider using PASV.");
 			}
 		});
 		commands.add(new FTPCommand("pasv", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				if (focus.isPASV) {
-					focus.writeLine(425, "Already in PASV mode!");
-					return;
-				}else if (focus.isPORT) {
-					focus.writeLine(425, "Already in PORT mode!");
-					return;
+				if (focus.isPASV || focus.isPORT) {
+					focus.psv.cancel();
+					focus.isPASV = false;
+					focus.isPORT = false;
+					focus.psv = null;
 				}
 				focus.isPASV = true;
 				ServerSocket ps = null;
@@ -151,7 +180,7 @@ public class FTPHandler {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
 				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
 					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
@@ -164,6 +193,7 @@ public class FTPHandler {
 				try {
 					if (f.exists()) f.delete();
 					f.createNewFile();
+					SafeMode.setPerms(f, uid, uid, 0640);
 					s = true;
 				}catch (IOException e) {
 					// Logger.logError(e);
@@ -184,7 +214,7 @@ public class FTPHandler {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
 				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
 					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
@@ -200,6 +230,7 @@ public class FTPHandler {
 						f = new File(f.getParentFile(), f.getName() + "." + (i++));
 					}
 					f.createNewFile();
+					SafeMode.setPerms(f, uid, uid, 0640);
 					s = true;
 				}catch (IOException e) {
 					// Logger.logError(e);
@@ -220,7 +251,7 @@ public class FTPHandler {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
 				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
 					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
@@ -230,7 +261,10 @@ public class FTPHandler {
 					return;
 				}
 				try {
-					if (!f.exists()) f.createNewFile();
+					if (!f.exists()) {
+						f.createNewFile();
+						SafeMode.setPerms(f, uid, uid, 0640);
+					}
 				}catch (IOException e) {
 					// Logger.logError(e);
 				}
@@ -250,7 +284,7 @@ public class FTPHandler {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
 				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
 					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
@@ -276,7 +310,7 @@ public class FTPHandler {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
 				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
 					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
@@ -302,7 +336,7 @@ public class FTPHandler {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
 				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
 					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
@@ -327,7 +361,7 @@ public class FTPHandler {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
 				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
 					focus.writeLine(550, "Delete operation failed.");
 					return;
 				}
@@ -353,7 +387,7 @@ public class FTPHandler {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
 				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
 					focus.writeLine(550, "Rename failed.");
 					return;
 				}
@@ -379,7 +413,7 @@ public class FTPHandler {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
 				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
 					focus.writeLine(550, "Rename failed.");
 					return;
 				}
@@ -388,28 +422,29 @@ public class FTPHandler {
 					focus.writeLine(550, "Permission Denied.");
 					return;
 				}
-				if (f.exists() && f.canWrite()) {
-					try {
-						FileInputStream in = new FileInputStream(focus.rnfr);
-						FileOutputStream out = new FileOutputStream(f);
-						byte[] buf = new byte[1024];
-						int i = 1;
-						while (i > 0) {
-							i = in.read(buf);
-							if (i > 0) {
-								out.write(buf, 0, i);
-							}
+				if (!f.exists()) {
+					f.createNewFile();
+					SafeMode.setPerms(f, uid, uid, 0640);
+				}
+				try {
+					FileInputStream in = new FileInputStream(focus.rnfr);
+					FileOutputStream out = new FileOutputStream(f);
+					byte[] buf = new byte[1024];
+					int i = 1;
+					while (i > 0) {
+						i = in.read(buf);
+						if (i > 0) {
+							out.write(buf, 0, i);
 						}
-						in.close();
-						out.flush();
-						out.close();
-						focus.writeLine(250, "Rename successful.");
-					}catch (IOException e) {
-						focus.writeLine(550, "Rename failed.");
-						
 					}
-				}else {
+					in.close();
+					out.flush();
+					out.close();
+					new File(focus.rnfr).delete();
+					focus.writeLine(250, "Rename successful.");
+				}catch (IOException e) {
 					focus.writeLine(550, "Rename failed.");
+					
 				}
 			}
 		});
@@ -440,12 +475,12 @@ public class FTPHandler {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
 				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
 					focus.writeLine(550, "Could not get file modification time.");
 					return;
 				}
 				int uid = host.provider.getUID(focus.user);
-				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
+				if ((f.exists() && !SafeMode.canUserRead(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserRead(uid, uid, pf.getAbsolutePath()))) {
 					focus.writeLine(550, "Permission Denied.");
 					return;
 				}
@@ -461,7 +496,7 @@ public class FTPHandler {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
 				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
 					focus.writeLine(550, "Create directory operation failed.");
 					return;
 				}
@@ -473,6 +508,7 @@ public class FTPHandler {
 				if (f.isFile()) f = f.getParentFile();
 				if (f.getParentFile() != null && f.getParentFile().exists() && f.getParentFile().canWrite()) {
 					f.mkdirs();
+					SafeMode.setPerms(f, uid, uid, 0770);
 					focus.writeLine(250, "Create directory operation successful.");
 				}else {
 					focus.writeLine(550, "Create directory operation failed.");
@@ -484,7 +520,7 @@ public class FTPHandler {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
 				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists()) {
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
 					focus.writeLine(550, "Remove directory operation failed.");
 					return;
 				}
