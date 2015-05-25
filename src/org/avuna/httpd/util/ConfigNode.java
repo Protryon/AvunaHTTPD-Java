@@ -65,7 +65,7 @@ public class ConfigNode {
 	}
 	
 	/**
-	 * @return true if node is a list of properties.
+	 * @return true if node is main node or subnode.
 	 */
 	public boolean branching() {
 		return sub.length > 0 || value == null;
@@ -96,6 +96,13 @@ public class ConfigNode {
 		return this.insertNode(new ConfigNode(name, value).setComment(comment));
 	}
 	
+	/**
+	 * Inserts new configuration node as child of calling node.
+	 * 
+	 * @param subnode
+	 * @see #insertNode(String, String, String)
+	 * @return new subnode
+	 */
 	public ConfigNode insertNode(ConfigNode subnode) {
 		for (int i = 0; i < sub.length; i++) {
 			if (sub[i].name.equals(subnode.name)) {
