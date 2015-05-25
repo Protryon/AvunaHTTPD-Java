@@ -108,6 +108,11 @@ public class FileManager {
 		int delSize = 0;
 		for (String file : cache.keySet()) {
 			if (extCache.get(file).equals("application/x-java")) {
+				if (delSize > delKeys.length) {
+					String[] ndk = new String[delKeys.length + 1];
+					System.arraycopy(delKeys, 0, ndk, 0, delKeys.length);
+					delKeys = ndk;
+				}
 				delKeys[delSize++] = file;
 			}
 		}

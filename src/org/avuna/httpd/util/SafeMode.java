@@ -1,7 +1,6 @@
 package org.avuna.httpd.util;
 
 import java.io.File;
-import java.nio.ByteBuffer;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.util.unixsocket.CException;
 
@@ -84,7 +83,6 @@ public class SafeMode {
 		if (AvunaHTTPD.windows) return false;
 		if (!f.isFile()) return false; // folders CANNOT be hardlinked, but do return the number of subfolders(+1 or 2)
 		StatResult sr = new StatResult(f.getAbsolutePath());
-		ByteBuffer bb = ByteBuffer.allocate(4);
 		return sr.nlink > 1;
 	}
 	
