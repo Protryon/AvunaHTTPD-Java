@@ -6,4 +6,6 @@ public abstract class FTPAccountProvider {
 	public abstract String getRoot(String user);
 	
 	public abstract int getUID(String user);
+	
+	public abstract String getExternalIP();
 }

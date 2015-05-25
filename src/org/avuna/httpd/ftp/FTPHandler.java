@@ -79,6 +79,16 @@ public class FTPHandler {
 				focus.writeLine(502, "REIN not implemented.");
 			}
 		});
+		commands.add(new FTPCommand("feat", 0, 100) {
+			public void run(FTPWork focus, String line) throws IOException {
+				focus.writeBMLine(211, "Extensions supported:");
+				focus.writeMMLine("MDTM");
+				focus.writeMMLine("PASV");
+				focus.writeMMLine("SIZE");
+				focus.writeMMLine("UTF8");
+				focus.writeLine(211, "End");
+			}
+		});
 		commands.add(new FTPCommand("port", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
 				if (focus.isPASV || focus.isPORT) {
@@ -132,7 +142,7 @@ public class FTPHandler {
 						int major = (port - minor) / 256;
 						focus.psv = new ThreadPassive(focus, ps);
 						focus.psv.start();
-						focus.writeLine(227, "Entering Passive Mode (127,0,0,1," + major + "," + minor + ").");
+						focus.writeLine(227, "Entering Passive Mode (" + host.provider.getExternalIP().replace(".", ",") + "," + major + "," + minor + ").");
 					}catch (IOException e) {
 						Logger.logError(e);
 						ps = null;
@@ -356,6 +366,31 @@ public class FTPHandler {
 				}
 			}
 		});
+		commands.add(new FTPCommand("size", 1, 100) {
+			public void run(FTPWork focus, String line) throws IOException {
+				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
+				File f = new File(rt, line);
+				File pf = f.getParentFile();
+				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
+					focus.writeLine(550, "Failed to open file.");
+					return;
+				}
+				int uid = host.provider.getUID(focus.user);
+				if (f.exists() && !SafeMode.canUserRead(uid, uid, f.getAbsolutePath())) {
+					focus.writeLine(550, "Permission Denied.");
+					return;
+				}
+				if (f.isDirectory()) {
+					focus.writeLine(550, "Failed to open file.");
+					return;
+				}
+				if (f.exists() && f.canRead()) {
+					focus.writeLine(213, "" + f.length());
+				}else {
+					focus.writeLine(550, "Failed to open file.");
+				}
+			}
+		});
 		commands.add(new FTPCommand("dele", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
@@ -544,7 +579,7 @@ public class FTPHandler {
 				focus.writeBMLine(214, "The following commands are recognized.");
 				focus.writeMMLine("ABOR ACCT ALLO APPE CDUP CWD  DELE HELP LIST MDTM MKD  MODE NLST NOOP");
 				focus.writeMMLine("PASS PASV PORT PWD  QUIT REIN REST RETR RMD  RNFR RNTO SITE SMNT STAT");
-				focus.writeMMLine("STOR STOU STRU SYST TYPE USER");
+				focus.writeMMLine("STOR STOU STRU SYST TYPE USER FEAT SIZE");
 				focus.writeLine(214, "Help OK.");
 			}
 		});
