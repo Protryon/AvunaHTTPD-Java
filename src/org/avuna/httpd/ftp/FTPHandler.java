@@ -55,7 +55,11 @@ public class FTPHandler {
 		});
 		commands.add(new FTPCommand("cwd", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				focus.cwd = line;
+				if (isAbsolute(line)) {
+					focus.cwd = line;
+				}else {
+					focus.cwd = focus.cwd + (focus.cwd.endsWith("/") ? "" : "/") + line;
+				}
 				focus.writeLine(250, "Directory successfully changed.");
 			}
 		});
@@ -87,6 +91,26 @@ public class FTPHandler {
 				focus.writeMMLine("SIZE");
 				focus.writeMMLine("UTF8");
 				focus.writeLine(211, "End");
+			}
+		});
+		commands.add(new FTPCommand("opts", 0, 100) {
+			public void run(FTPWork focus, String line) throws IOException {
+				String[] args = line.split(" ");
+				if (args.length == 0) {
+					focus.writeLine(501, "Option not understood.");
+				}
+				if (args[0].equalsIgnoreCase("utf8")) {
+					if (args.length != 2) {
+						focus.writeLine(501, "Option not understood.");
+					}
+					if (args[1].equalsIgnoreCase("on")) {
+						focus.writeLine(200, "Always in UTF8 mode.");
+					}else {
+						focus.writeLine(501, "Option not understood.");
+					}
+				}else {
+					focus.writeLine(501, "Option not understood.");
+				}
 			}
 		});
 		commands.add(new FTPCommand("port", 1, 100) {
@@ -294,7 +318,7 @@ public class FTPHandler {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
 				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
+				if (!f.getAbsolutePath().startsWith(focus.root) || (pf != null && !pf.exists()) || SafeMode.isHardlink(f)) {
 					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
@@ -320,7 +344,7 @@ public class FTPHandler {
 				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
 				File f = new File(rt, line);
 				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
+				if (!f.getAbsolutePath().startsWith(focus.root) || (pf != null && !pf.exists()) || SafeMode.isHardlink(f)) {
 					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
