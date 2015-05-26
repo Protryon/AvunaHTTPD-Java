@@ -102,6 +102,7 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 				}else if (focus.in.available() > 0) {
 					String line = safeRead(focus);
 					focus.tos = 0;
+					focus.sns = 0L;
 					readd = true;
 					Logger.log(focus.hashCode() + ": " + line);
 					String cmd = "";
