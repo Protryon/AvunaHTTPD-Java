@@ -3,6 +3,12 @@ package org.avuna.httpd.util;
 import java.io.File;
 import org.avuna.httpd.AvunaHTTPD;
 
+/**
+* Loads native system methods via JNI.
+* 
+* @author Max
+* @see FileManager#getBaseFile(String)
+*/
 public class CLib {
 	private CLib() {
 	}
