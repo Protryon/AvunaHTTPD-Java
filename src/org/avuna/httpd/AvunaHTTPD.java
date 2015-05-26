@@ -276,6 +276,7 @@ public class AvunaHTTPD {
 	public static void main(String[] args) {
 		try {
 			boolean dosetid = false;
+			boolean doucmd = false;
 			if (args.length >= 1) {
 				if (args[0].equals("cmd")) {
 					String ip = args.length >= 2 ? args[1] : "127.0.0.1";
@@ -291,8 +292,7 @@ public class AvunaHTTPD {
 						System.out.println("MUST specify unix socket file!");
 						return;
 					}
-					ComClient.runUnix(args[1]);
-					return;
+					doucmd = true;
 				}else if (args[0].equals("setid")) {
 					if (windows) {
 						System.out.println("Unix only!");
@@ -317,7 +317,7 @@ public class AvunaHTTPD {
 			File fcfg = null;
 			if (dosetid) {
 				fcfg = new File(args[1]);
-			}else if ((unpack && args.length == 2) || (!unpack && args.length == 1)) {
+			}else if (!doucmd && ((unpack && args.length == 2) || (!unpack && args.length == 1))) {// TODO: ucmd set main.cfg?
 				fcfg = new File(args[unpack ? 1 : 0]);
 			}else if (us != null) {
 				fcfg = new File(us.getParentFile(), "main.cfg");
@@ -387,7 +387,10 @@ public class AvunaHTTPD {
 			// uss.close();
 			// if (true) return;
 			// }
-			if (dosetid) {
+			if (doucmd) {
+				ComClient.runUnix(args[1]);
+				return;
+			}else if (dosetid) {
 				int wuid = Integer.parseInt(args[2]);
 				int wgid = Integer.parseInt(args[3]);
 				CLib.setgid(wgid);
