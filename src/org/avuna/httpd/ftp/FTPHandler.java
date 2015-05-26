@@ -55,12 +55,35 @@ public class FTPHandler {
 		});
 		commands.add(new FTPCommand("cwd", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
+				String ncwd = focus.cwd;
 				if (isAbsolute(line)) {
-					focus.cwd = line;
+					ncwd = line;
 				}else {
-					focus.cwd = focus.cwd + (focus.cwd.endsWith("/") ? "" : "/") + line;
+					ncwd = ncwd + (ncwd.endsWith("/") ? "" : "/") + line;
 				}
-				focus.writeLine(250, "Directory successfully changed.");
+				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
+				File f = new File(rt, line);
+				File pf = f.getParentFile();
+				if (!f.getAbsolutePath().startsWith(focus.root) || (pf != null && !pf.exists()) || SafeMode.isHardlink(f) || !f.exists()) {
+					focus.writeLine(550, "Failed to open directory.");
+					return;
+				}
+				int uid = host.provider.getUID(focus.user);
+				if (!SafeMode.canUserRead(uid, uid, f.getAbsolutePath())) {
+					focus.writeLine(550, "Permission Denied.");
+					return;
+				}
+				if (!f.isDirectory()) {
+					focus.writeLine(550, "Failed to open directory.");
+					return;
+				}
+				if (f.canRead()) {
+					focus.cwd = ncwd;
+					focus.writeLine(250, "Directory successfully changed.");
+				}else {
+					focus.writeLine(550, "Failed to open directory.");
+				}
+				
 			}
 		});
 		commands.add(new FTPCommand("cdup", 1, 100) {
@@ -603,12 +626,14 @@ public class FTPHandler {
 				focus.writeBMLine(214, "The following commands are recognized.");
 				focus.writeMMLine("ABOR ACCT ALLO APPE CDUP CWD  DELE HELP LIST MDTM MKD  MODE NLST NOOP");
 				focus.writeMMLine("PASS PASV PORT PWD  QUIT REIN REST RETR RMD  RNFR RNTO SITE SMNT STAT");
-				focus.writeMMLine("STOR STOU STRU SYST TYPE USER FEAT SIZE");
+				focus.writeMMLine("STOR STOU STRU SYST TYPE USER FEAT SIZE OPTS");
 				focus.writeLine(214, "Help OK.");
 			}
 		});
 		commands.add(new FTPCommand("site", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
+				String[] args = line.split(" ");
+				
 				focus.writeLine(500, "Unknown SITE command.");
 			}
 		});
