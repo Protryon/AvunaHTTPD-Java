@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.util.Logger;
@@ -117,7 +118,7 @@ public class ThreadPassive extends Thread {
 			}
 			s.close();
 		}catch (IOException e) {
-			Logger.logError(e);
+			if (!(e instanceof SocketException)) Logger.logError(e);
 			try {
 				work.writeLine(526, "Transfer failed.");
 			}catch (IOException e1) {
