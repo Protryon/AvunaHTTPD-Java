@@ -32,6 +32,7 @@ public class SMTPHandler {
 				focus.writeLine(220, "Go ahead");
 				focus.s = host.sslContext.getSocketFactory().createSocket(focus.s, focus.s.getInetAddress().getHostAddress(), focus.s.getPort(), true);
 				((SSLSocket)focus.s).setUseClientMode(false);
+				((SSLSocket)focus.s).setNeedClientAuth(false);
 				((SSLSocket)focus.s).startHandshake();
 				focus.out = new DataOutputStream(focus.s.getOutputStream());
 				focus.out.flush();
