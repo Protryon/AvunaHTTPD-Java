@@ -12,7 +12,7 @@ public class ConfigNode {
 	private ConfigNode parent = null;
 	
 	/**
-	 * Constructor for node key/value pair
+	 * Instantiate Node with name and value parameters.
 	 * 
 	 * @param name
 	 * @param value
@@ -33,7 +33,7 @@ public class ConfigNode {
 	}
 	
 	/**
-	 * Sets value on node parent key.
+	 * Sets parent element of node to parent {@link #sub} array.
 	 * 
 	 * @param parent
 	 * @return
@@ -44,7 +44,7 @@ public class ConfigNode {
 	}
 	
 	/**
-	 * Constructor for node.
+	 * Instantiate Node with name parameter only.
 	 * 
 	 * @param name
 	 */
@@ -65,12 +65,18 @@ public class ConfigNode {
 	}
 	
 	/**
-	 * @return true if node is main node or subnode.
+	 * @return true if node is list header.
 	 */
 	public boolean branching() {
 		return sub.length > 0 || value == null;
 	}
 	
+	/**
+	 * Removes node from {@link #sub} array.
+	 * 
+	 * @param name
+	 * @return new {@link #sub}
+	 */
 	public ConfigNode removeNode(String name) {
 		for (int i = 0; i < sub.length; i++) {
 			if (sub[i].name.equals(name)) {
@@ -84,24 +90,46 @@ public class ConfigNode {
 		return this;
 	}
 	
+	/**
+	 * Instantiate Node with name and call {@link #insertNode(ConfigNode)}.
+	 * 
+	 * @param name
+	 * @return {@link #insertNode(ConfigNode)} 
+	 */
 	public ConfigNode insertNode(String name) {
 		return this.insertNode(new ConfigNode(name));
 	}
 	
+	/**
+	 * Instantiate Node with name, value, and call
+	 * {@link #insertNode(ConfigNode)}.
+	 * 
+	 * @param name
+	 * @param value
+	 * @return {@link #insertNode(ConfigNode)} 
+	 */
 	public ConfigNode insertNode(String name, String value) {
 		return this.insertNode(new ConfigNode(name, value));
 	}
 	
+	/**
+	 * Instantiate Node with name, value, comment and call
+	 *  {@link #insertNode(ConfigNode)}.
+	 * 
+	 * @param name
+	 * @param value
+	 * @param comment
+	 * @return {@link #insertNode(ConfigNode)} 
+	 */
 	public ConfigNode insertNode(String name, String value, String comment) {
 		return this.insertNode(new ConfigNode(name, value).setComment(comment));
 	}
 	
 	/**
-	 * Inserts new configuration node as child of calling node.
+	 * Used by {@link Config#readMap} to append node to {@link #sub} array.
 	 * 
 	 * @param subnode
-	 * @see #insertNode(String, String, String)
-	 * @return new subnode
+	 * @return updated {@link #sub} array
 	 */
 	public ConfigNode insertNode(ConfigNode subnode) {
 		for (int i = 0; i < sub.length; i++) {
@@ -125,6 +153,12 @@ public class ConfigNode {
 		return this;
 	}
 	
+	/**
+	 * Check if Node exists.
+	 * 
+	 * @param name
+	 * @return true/false
+	 */
 	public boolean containsNode(String name) {
 		for (ConfigNode subnode : sub) {
 			if (subnode.name.equals(name)) {
@@ -134,6 +168,12 @@ public class ConfigNode {
 		return false;
 	}
 	
+	/**
+	 * Get Node object.
+	 * 
+	 * @param name
+	 * @return Node object
+	 */
 	public ConfigNode getNode(String name) {
 		for (ConfigNode subnode : sub) {
 			if (subnode.name.equals(name)) {
@@ -143,14 +183,27 @@ public class ConfigNode {
 		return null;
 	}
 	
+	/**
+	 * Get Node comment.
+	 * 
+	 * @return Node comment
+	 */
 	public String getComment() {
 		return comment;
 	}
 	
+	/**
+	 * Get Node name.
+	 * 
+	 * @return Node name
+	 */
 	public String getName() {
 		return name;
 	}
 	
+	/**
+	 * @return list of names of {@link #sub} array.
+	 */
 	public String[] getSubnodes() {
 		String[] names = new String[sub.length];
 		for (int i = 0; i < sub.length; i++) {
@@ -159,12 +212,23 @@ public class ConfigNode {
 		return names;
 	}
 	
+	/**
+	 * Set value on node if not list header.
+	 * 
+	 * @param value
+	 * @return node with updated value unless list header
+	 */
 	public ConfigNode setValue(String value) {
 		if (branching()) return this;
 		this.value = value;
 		return this;
 	}
 	
+	/**
+	 * Get value of node if not list header.
+	 * 
+	 * @return value if not list header, otherwise null
+	 */
 	public String getValue() {
 		if (branching()) return null;
 		return value;
