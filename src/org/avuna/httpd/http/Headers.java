@@ -97,7 +97,7 @@ public class Headers {
 	 */
 	public String getHeader(String name) {
 		for (String key : headers.keySet()) {
-			if (key.equals(name) && headers.get(key).size() > 0) {
+			if (key.equalsIgnoreCase(name) && headers.get(key).size() > 0) {
 				return headers.get(key).get(0);
 			}
 		}
