@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
+import org.avuna.httpd.http.plugins.javaloader.lib.Multipart.MultiPartData;
 import org.avuna.httpd.mail.imap.IMAPCommand;
 import org.avuna.httpd.mail.imap.IMAPWork;
 import org.avuna.httpd.mail.mailbox.Email;
@@ -17,6 +18,12 @@ public class IMAPCommandFetch extends IMAPCommand {
 	
 	public IMAPCommandFetch(String comm, int minState, int maxState, HostMail host) {
 		super(comm, minState, maxState, host);
+	}
+	
+	private static void trim(StringBuilder sb) {
+		String s = sb.toString().trim();
+		sb.setLength(0);
+		sb.append(s);
 	}
 	
 	@Override
@@ -38,13 +45,76 @@ public class IMAPCommandFetch extends IMAPCommand {
 				}else if (tps[0].equals("full")) {
 					tps = new String[]{"FLAGS", "INTERNALDATE", "RFC822.SIZE", "ENVELOPE", "BODY"};
 				}
-				String ret = e.uid + " FETCH (";
+				StringBuilder ret = new StringBuilder().append(e.uid).append(" FETCH (");
 				for (String s3 : tps) {
 					String s = s3.toLowerCase();
-					if (s.equals("body")) {
-						
-					}else if (s.equals("bodystructure")) {
-						
+					if (s.equals("bodystructure") || s.equals("body")) {
+						ret.append("BODYSTRUCTURE (");
+						if (e.mp != null) {
+							for (MultiPartData mpd : e.mp.mpds) {
+								String ct = mpd.contentType;
+								if (ct == null) continue;
+								boolean ecs = ct.contains(";");
+								String ct1 = ecs ? ct.substring(0, ct.indexOf(";")).trim() : ct;
+								ret.append("(");
+								ret.append("\"").append(ct1.toUpperCase().replace("/", "\" \"")).append("\"");
+								while (ecs) {
+									ret.append(" (");
+									ct = ct.substring(ct.indexOf(";") + 1);
+									ecs = ct.contains(";");
+									ct1 = ecs ? ct.substring(0, ct.indexOf(";")).toUpperCase().trim() : ct.toUpperCase().trim();
+									ret.append("\"").append(ct1.replace("=", "\" \"")).append("\"");
+									ret.append(")");
+								}
+								ret.append(" NIL NIL");
+								String cte = mpd.contentTransferEncoding;
+								if (cte == null) cte = "7BIT";
+								ret.append(" \"").append(cte.toUpperCase()).append("\"");
+								ret.append(" ").append(mpd.data.length);
+								int lines = 0;
+								if (mpd.data.length > 1) for (int i = 1; i < mpd.data.length; i++) {
+									if (mpd.data[i - 1] == AvunaHTTPD.crlfb[0] && mpd.data[i] == AvunaHTTPD.crlfb[1]) {// assumes crlf, however, is always crlf
+										lines++;
+									}
+								}
+								ret.append(" ").append(lines);
+								ret.append(" NIL NIL NIL");
+								ret.append(")");
+							}
+							ret.append(" \"ALTERNATIVE\" (\"BOUNDARY\" \"");
+							ret.append(e.mp.boundary);
+							ret.append("\") NIL NIL");
+						}else {
+							String ct = e.headers.getHeader("Content-Type");
+							if (ct == null) continue;
+							boolean ecs = ct.contains(";");
+							String ct1 = ecs ? ct.substring(0, ct.indexOf(";")).trim() : ct;
+							ret.append("\"").append(ct1.toUpperCase().replace("/", "\" \"")).append("\"");
+							while (ecs) {
+								ret.append(" (");
+								ct = ct.substring(ct.indexOf(";") + 1);
+								ecs = ct.contains(";");
+								ct1 = ecs ? ct.substring(0, ct.indexOf(";")).trim() : ct.toUpperCase().trim();
+								ret.append("\"").append(ct1.replace("=", "\" \"")).append("\"");
+								ret.append(")");
+							}
+							ret.append(" NIL NIL");
+							String cte = e.headers.getHeader("Content-Transfer-Encoding");
+							if (cte == null) cte = "7BIT";
+							ret.append(" \"").append(cte.toUpperCase()).append("\"");
+							byte[] bbody = e.body.getBytes();
+							ret.append(" ").append(e.body.length());
+							int lines = 0;
+							if (bbody.length > 1) for (int i = 1; i < bbody.length; i++) {
+								if (bbody[i - 1] == AvunaHTTPD.crlfb[0] && bbody[i] == AvunaHTTPD.crlfb[1]) {// assumes crlf, however, is always crlf
+									lines++;
+								}
+							}
+							ret.append(" ").append(lines);
+							ret.append(" NIL NIL NIL");
+						}
+						ret.append(")");
+						trim(ret);
 					}else if (s.startsWith("body") || s.equals("rfc822") || s.equals("rfc822.header") || s.equals("rfc822.text")) {
 						String mhd = "";
 						boolean peek = s.startsWith("body.peek") || s.startsWith("rfc822.header");
@@ -179,7 +249,6 @@ public class IMAPCommandFetch extends IMAPCommand {
 						if (peek && s4.toLowerCase().startsWith("body.peek")) {
 							s4 = s4.substring(0, 4) + s4.substring(9);
 						}
-						ret += s4 + " {" + (mhd.length() - 2) + "}" + AvunaHTTPD.crlf;
 						if (sub > 0) {
 							if (sub >= mhd.length()) mhd = "";
 							else mhd = mhd.substring(sub);
@@ -187,18 +256,19 @@ public class IMAPCommandFetch extends IMAPCommand {
 						if (max > 0) {
 							if (mhd.length() >= max) mhd = mhd.substring(0, max);
 						}
-						ret += (sub > 0 ? mhd.substring(sub) : mhd);
+						ret.append(s4).append(" {").append(mhd.length() - 2).append("}").append(AvunaHTTPD.crlf);
+						ret.append(sub > 0 ? mhd.substring(sub) : mhd);
 					}else if (s.equals("envelope")) {
 						
 					}else if (s.equals("flags")) {
-						ret += "FLAGS (";
+						ret.append("FLAGS (");
 						for (String flag : e.flags) {
-							ret += flag + " ";
+							ret.append(flag).append(" ");
 						}
-						ret = ret.trim();
-						ret += ")";
+						trim(ret);
+						ret.append(")");
 					}else if (s.equals("internaldate")) {
-						ret += "INTERNALDATE ";
+						ret.append("INTERNALDATE ");
 						Scanner ed = new Scanner(e.data);
 						while (ed.hasNextLine()) {
 							String line = ed.nextLine().trim();
@@ -207,7 +277,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 								String hn = line.substring(0, line.indexOf(":")).trim();
 								String hd = line.substring(line.indexOf(":") + 1).trim();
 								if (hn.equalsIgnoreCase("date")) {
-									ret += hd;
+									ret.append(hd);
 								}
 							}else {
 								break;
@@ -215,15 +285,15 @@ public class IMAPCommandFetch extends IMAPCommand {
 						}
 						ed.close();
 					}else if (s.equals("rfc822.size")) {
-						ret += "RFC822.SIZE " + e.data.length();
+						ret.append("RFC822.SIZE " + e.data.length());
 					}else if (s.equals("uid")) {
-						ret += "UID " + e.uid;
+						ret.append("UID " + e.uid);
 					}
-					ret += " ";
+					ret.append(" ");
 				}
-				ret = ret.trim();
-				ret += ")";
-				focus.writeLine(focus, "*", ret);
+				trim(ret);
+				ret.append(")");
+				focus.writeLine(focus, "*", ret.toString());
 			}
 			focus.writeLine(focus, letters, "OK");
 		}else {

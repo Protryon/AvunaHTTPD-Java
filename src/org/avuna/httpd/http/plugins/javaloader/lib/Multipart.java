@@ -11,11 +11,26 @@ import org.avuna.httpd.util.Logger;
 
 public class Multipart {
 	public final ArrayList<MultiPartData> mpds = new ArrayList<MultiPartData>();
+	public String boundary;
 	
 	public Multipart(byte[] content) {
-		ByteArrayInputStream bin = new ByteArrayInputStream(content);
+		this(new ByteArrayInputStream(content));
+	}
+	
+	public Multipart(InputStream bin) {
+		this(null, bin);
+	}
+	
+	public Multipart(String boundary, InputStream bin) {
 		try {
-			String sep = readLine(bin);
+			if (boundary == null) {
+				do {
+					
+					this.boundary = readLine(bin);
+				}while (!this.boundary.startsWith("-"));
+			}else {
+				this.boundary = boundary;
+			}
 			boolean hc = true;
 			int mi = 0;
 			while (hc && mi++ < 50) {
@@ -23,10 +38,10 @@ public class Multipart {
 				HashMap<String, String> vars = new HashMap<String, String>();
 				String contentTransferEncoding = "";
 				String str;
-				boolean fh = false;
+				boolean fh = true;
 				while (true) {
 					str = readLine(bin);
-					if (str.length() == 0) {
+					if (str.length() == 0 || !str.contains(":")) {
 						if (fh) break;
 						else continue;
 					}
@@ -52,7 +67,7 @@ public class Multipart {
 						contentTransferEncoding = value;
 					}
 				}
-				byte[] data = readUntil(sep.getBytes(), bin);
+				byte[] data = readUntil(this.boundary.getBytes(), bin);
 				byte[] nloe = new byte[2];
 				bin.read(nloe);
 				if (nloe[0] == 0x2D && nloe[1] == 0x2D) {
