@@ -28,6 +28,9 @@ public class ZoneFile {
 	}
 	
 	public static String[] congealArgsEscape(String[] args) {
+		if (args[0].equals("TXT")) {
+			System.out.print("");
+		}
 		String[] tcargs = new String[args.length];
 		int nl = 0;
 		boolean iq = false;
@@ -35,7 +38,7 @@ public class ZoneFile {
 		for (int i = 0; i < args.length; i++) {
 			boolean niq = false;
 			String ct = args[i].trim();
-			if (!iq && ct.startsWith("\"") && (ct.length() < 2 || ct.charAt(ct.length() - 2) != '\\')) {
+			if (!iq && ct.startsWith("\"")) {
 				iq = true;
 				niq = true;
 			}
