@@ -54,7 +54,7 @@ public class Email {
 			Logger.logError(e);
 		}
 		String ct = headers.getHeader("Content-Type");
-		boolean mp = ct.startsWith("multipart/alternative");
+		boolean mp = ct != null && ct.startsWith("multipart/alternative");
 		byte[] body = new byte[bin.available()];
 		if (mp) bin.mark(body.length);
 		try {
