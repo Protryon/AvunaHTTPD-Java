@@ -29,12 +29,12 @@ public class IMAPCommandList extends IMAPCommand {
 			if (mn.endsWith("\"")) {
 				mn = mn.substring(0, mn.length() - 1);
 			}
-			if (!mn.equals("*")) {
+			if (!mn.equals("%")) {
 				Mailbox m = mn.length() == 0 && focus.selectedMailbox != null ? focus.selectedMailbox : focus.authUser.getMailbox(mn);
 				if (m == null) {
 					focus.writeLine(focus, letters, "NO Invalid Mailbox.");
 				}else {
-					focus.writeLine(focus, "*", "LIST (\\HasNoChildren) \"" + rn + "\" \"" + m.name + "\"");
+					focus.writeLine(focus, "*", "LIST (\\HasNoChildren) \"/\" \"" + m.name + "\"");
 					focus.writeLine(focus, letters, "OK Mailbox list.");
 				}
 			}else {
@@ -43,9 +43,10 @@ public class IMAPCommandList extends IMAPCommand {
 						m = null;
 					}
 					if (m != null) {
-						focus.writeLine(focus, "*", "LIST (\\HasNoChildren) \"" + rn + "\" \"" + m.name + "\"");
+						focus.writeLine(focus, "*", "LIST (\\HasNoChildren) \"/\" \"" + m.name + "\"");
 					}
 				}
+				focus.writeLine(focus, "*", "LIST (\\Noselect \\HasNoChildren) \"/\" \"[Avuna Mail]\"");
 				focus.writeLine(focus, letters, "OK Mailbox list.");
 			}
 		}else {
