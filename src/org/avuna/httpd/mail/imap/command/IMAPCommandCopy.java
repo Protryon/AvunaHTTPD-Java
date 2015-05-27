@@ -26,7 +26,12 @@ public class IMAPCommandCopy extends IMAPCommand {
 			return;
 		}
 		ArrayList<Email> tc = focus.selectedMailbox.getByIdentifier(args[0]);
-		tct.emails.addAll(tc);
+		synchronized (tct.emails) {
+			Email[] ne = new Email[tct.emails.length + tc.size()];
+			System.arraycopy(tct.emails, 0, ne, 0, tct.emails.length);
+			System.arraycopy(tc.toArray(new Email[0]), 0, ne, tct.emails.length, tc.size());
+			tct.emails = ne;
+		}
 		focus.writeLine(focus, letters, "OK Copied.");
 	}
 	

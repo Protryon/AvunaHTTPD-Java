@@ -16,22 +16,7 @@ public class IMAPCommandStore extends IMAPCommand {
 	@Override
 	public void run(IMAPWork focus, String letters, String[] args) throws IOException {
 		if (args.length >= 3) {
-			String seq = args[0];
-			ArrayList<Email> toFetch = new ArrayList<Email>();
-			if (seq.contains(":")) {
-				int i = Integer.parseInt(seq.substring(0, seq.indexOf(":"))) - 1;
-				String f = seq.substring(seq.indexOf(":") + 1);
-				int f2 = f.equals("*") ? focus.selectedMailbox.emails.size() : Integer.parseInt(f) - 1;
-				for (; i < f2; i++) {
-					toFetch.add(focus.selectedMailbox.emails.get(i));
-				}
-			}else {
-				if (seq.equals("*")) {
-					toFetch.add(focus.selectedMailbox.emails.get(focus.selectedMailbox.emails.size() - 1));
-				}else {
-					toFetch.add(focus.selectedMailbox.emails.get(Integer.parseInt(seq) - 1));
-				}
-			}
+			ArrayList<Email> toFetch = focus.selectedMailbox.getByIdentifier(args[0]);
 			String fc = args[1].toLowerCase();
 			String[] flags = args[2].substring(1, args[2].length() - 1).split(" ");
 			for (Email e : toFetch) {

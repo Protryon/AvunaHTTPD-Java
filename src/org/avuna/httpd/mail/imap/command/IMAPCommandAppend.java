@@ -41,12 +41,17 @@ public class IMAPCommandAppend extends IMAPCommand {
 			byte[] data = new byte[l];
 			focus.in.readFully(data);
 			String ed = new String(data);
-			Email eml = new Email(ed, mb.emails.size() + 1, focus.authUser.email);
-			for (String flag : flags.split(" ")) {
-				eml.flags.add(flag);
+			synchronized (mb.emails) {
+				Email eml = new Email(ed, mb.emails.length + 1, focus.authUser.email);
+				for (String flag : flags.split(" ")) {
+					eml.flags.add(flag);
+				}
+				Logger.log(ed);
+				Email[] ne = new Email[mb.emails.length + 1];
+				System.arraycopy(mb.emails, 0, ne, 0, mb.emails.length);
+				ne[ne.length - 1] = eml;
+				mb.emails = ne;
 			}
-			Logger.log(ed);
-			mb.emails.add(eml);
 			focus.writeLine(focus, letters, "OK");
 		}else {
 			focus.writeLine(focus, letters, "BAD No mailbox.");

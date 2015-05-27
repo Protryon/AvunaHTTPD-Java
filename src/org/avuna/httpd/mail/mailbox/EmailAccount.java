@@ -29,10 +29,14 @@ public class EmailAccount {
 	}
 	
 	public void deliver(Email email) {
-		email.uid = INBOX.emails.size() + 1;
 		email.flags.add("\\Recent");
 		email.flags.add("\\Unseen");
-		INBOX.emails.add(email);
+		synchronized (INBOX.emails) {
+			email.uid = INBOX.emails.length + 1;
+			Email[] ne = new Email[INBOX.emails.length + 1];
+			System.arraycopy(INBOX.emails, 0, ne, 0, INBOX.emails.length);
+			ne[ne.length - 1] = email;
+			INBOX.emails = ne;
+		}
 	}
-	
 }

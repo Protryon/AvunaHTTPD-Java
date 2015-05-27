@@ -28,14 +28,18 @@ public class IMAPCommandStatus extends IMAPCommand {
 				focus.writeLine(focus, letters, "NO Invalid Mailbox.");
 			}else {
 				int recent = 0;
-				for (Email e : m.emails) {
-					if (e.flags.contains("\\Recent")) recent++;
+				synchronized (m.emails) {
+					for (Email e : m.emails) {
+						if (e == null) continue;
+						if (e.flags.contains("\\Recent")) recent++;
+					}
+					int unseen = 0;
+					for (Email e : m.emails) {
+						if (e == null) continue;
+						if (!e.flags.contains("\\Seen")) unseen++;
+					}
+					focus.writeLine(focus, "*", "STATUS " + m.name + " (MESSAGES " + m.emails.length + " RECENT " + recent + " UIDNEXT " + (m.emails.length + 1) + " UIDVALIDITY " + Integer.MAX_VALUE + " UNSEEN " + unseen + ")");
 				}
-				int unseen = 0;
-				for (Email e : m.emails) {
-					if (!e.flags.contains("\\Seen")) unseen++;
-				}
-				focus.writeLine(focus, "*", "STATUS " + m.name + " (MESSAGES " + m.emails.size() + " RECENT " + recent + " UIDNEXT " + (m.emails.size() + 1) + " UIDVALIDITY " + Integer.MAX_VALUE + " UNSEEN " + unseen + ")");
 				focus.writeLine(focus, letters, "OK Status.");
 			}
 		}else {

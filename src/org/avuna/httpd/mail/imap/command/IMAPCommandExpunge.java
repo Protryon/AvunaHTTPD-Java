@@ -13,11 +13,13 @@ public class IMAPCommandExpunge extends IMAPCommand {
 	
 	@Override
 	public void run(IMAPWork focus, String letters, String[] args) throws IOException {
-		for (int i = 0; i < focus.selectedMailbox.emails.size(); i++) {
-			if (focus.selectedMailbox.emails.get(i).flags.contains("\\Deleted")) {
-				focus.selectedMailbox.emails.remove(i);
-				focus.writeLine(focus, "*", (i + 1) + " EXPUNGE");
-				i--;
+		synchronized (focus.selectedMailbox.emails) {
+			for (int i = 0; i < focus.selectedMailbox.emails.length; i++) {
+				if (focus.selectedMailbox.emails[i].flags.contains("\\Deleted")) {
+					focus.selectedMailbox.emails[i] = null;
+					focus.writeLine(focus, "*", (i + 1) + " EXPUNGE");
+					i--;
+				}
 			}
 		}
 		focus.writeLine(focus, letters, "OK expunge.");

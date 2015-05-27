@@ -2,6 +2,7 @@ package org.avuna.httpd.mail.imap.command;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.mail.imap.IMAPCommand;
@@ -174,8 +175,10 @@ public class IMAPCommandSearch extends IMAPCommand {
 	@Override
 	public void run(IMAPWork focus, String letters, String[] cargs) throws IOException {
 		String[] args = StringFormatter.congealBySurroundings(cargs, "\"", "\"");
-		@SuppressWarnings("unchecked")
-		ArrayList<Email> emails = (ArrayList<Email>)focus.selectedMailbox.emails.clone();
+		ArrayList<Email> emails;
+		synchronized (focus.selectedMailbox.emails) {
+			emails = new ArrayList<Email>(Arrays.asList(focus.selectedMailbox.emails));
+		}
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i].toLowerCase().replace("\"", "");
 			String targ = arg;

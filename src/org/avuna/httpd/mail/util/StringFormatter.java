@@ -2,28 +2,24 @@ package org.avuna.httpd.mail.util;
 
 public class StringFormatter {
 	public static String[] congealBySurroundings(String[] orig, String s1, String s2) {
-		String[] nargs = new String[orig.length];
+		String[] nargs = new String[orig.length + 16];
 		String ctps = "";
-		int cloc = 0;
 		boolean act = false;
-		int nlen = orig.length;
+		int nlen = 0;
 		for (int i = 0; i < orig.length; i++) {
 			if (!act && orig[i].contains(s1)) {
 				act = true;
 				ctps = "";
-				cloc = i;
-				nlen += 1;
 			}
 			if (act) {
 				ctps += orig[i] + " ";
-				nlen--;
 				if (orig[i].contains(s2)) {
 					ctps = ctps.trim();
-					nargs[cloc] = ctps;
+					nargs[nlen++] = ctps;
 					act = false;
 				}
 			}else {
-				nargs[i] = orig[i];
+				nargs[nlen++] = orig[i];
 			}
 		}
 		String[] n = new String[nlen];

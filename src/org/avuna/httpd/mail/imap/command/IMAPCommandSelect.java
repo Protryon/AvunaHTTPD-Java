@@ -32,19 +32,22 @@ public class IMAPCommandSelect extends IMAPCommand {
 				focus.state = 3;
 				focus.writeLine(focus, "*", "FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)");
 				focus.writeLine(focus, "*", "OK [PERMANENTFLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft \\*)] Flags permitted.");
-				focus.writeLine(focus, "*", m.emails.size() + " EXISTS");
-				int recent = 0;
-				for (Email e : m.emails) {
-					if (e.flags.contains("\\Recent")) recent++;
-				}
-				int unseen = 0;
-				for (Email e : m.emails) {
-					if (!e.flags.contains("\\Seen")) unseen++;
+				int recent = 0, unseen = 0;
+				synchronized (m.emails) {
+					focus.writeLine(focus, "*", m.emails.length + " EXISTS");
+					for (Email e : m.emails) {
+						if (e != null && e.flags.contains("\\Recent")) recent++;
+					}
+					for (Email e : m.emails) {
+						if (e != null && !e.flags.contains("\\Seen")) unseen++;
+					}
 				}
 				focus.writeLine(focus, "*", recent + " RECENT");
 				focus.writeLine(focus, "*", "OK [UNSEEN " + unseen + "] Unseen messages");
 				focus.writeLine(focus, "*", "OK [UIDVALIDITY " + Integer.MAX_VALUE + "] UIDs valid");
-				focus.writeLine(focus, "*", "OK [UIDNEXT " + (m.emails.size() + 1) + "] Predicted next UID");
+				synchronized (m.emails) {
+					focus.writeLine(focus, "*", "OK [UIDNEXT " + (m.emails.length + 1) + "] Predicted next UID");
+				}
 				focus.writeLine(focus, "*", "OK [HIGHESTMODSEQ 1] Highest");
 				focus.writeLine(focus, letters, "OK [READ-WRITE] Select completed.");
 			}else {

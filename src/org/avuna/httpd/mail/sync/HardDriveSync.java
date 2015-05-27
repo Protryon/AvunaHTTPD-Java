@@ -108,7 +108,14 @@ public class HardDriveSync extends Sync {
 									for (String to : toa) {
 										e.to.add(to);
 									}
-									m.emails.add(e);
+									synchronized (m.emails) {
+										if (m.emails.length < e.uid) {
+											Email[] ne = new Email[e.uid];
+											System.arraycopy(m.emails, 0, ne, 0, m.emails.length);
+											ne[e.uid - 1] = e;
+											m.emails = ne;
+										}
+									}
 									fin.close();
 								}
 							}

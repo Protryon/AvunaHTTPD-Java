@@ -11,6 +11,7 @@ import org.avuna.httpd.mail.imap.IMAPCommand;
 import org.avuna.httpd.mail.imap.IMAPWork;
 import org.avuna.httpd.mail.mailbox.Email;
 import org.avuna.httpd.mail.util.StringFormatter;
+import org.avuna.httpd.util.Logger;
 
 public class IMAPCommandFetch extends IMAPCommand {
 	
@@ -26,6 +27,9 @@ public class IMAPCommandFetch extends IMAPCommand {
 			if (tp.startsWith("(")) tp = tp.substring(1, tp.length() - 1);
 			String[] tps = tp.split(" ");
 			tps = StringFormatter.congealBySurroundings(tps, "[", "]");
+			for (String tp2 : tps) {
+				Logger.log(tp2);
+			}
 			for (Email e : toFetch) {
 				if (tps[0].equals("all")) {
 					tps = new String[]{"FLAGS", "INTERNALDATE", "RFC822.SIZE", "ENVELOPE"};
@@ -162,11 +166,13 @@ public class IMAPCommandFetch extends IMAPCommand {
 						}
 						int sub = 0;
 						int max = -1;
-						String s5 = s.substring(s.indexOf("]"));
+						String s5 = s.substring(s.indexOf("]") + 1);
 						if (s5.startsWith("<")) {
 							if (s5.contains(".")) {
-								sub = Integer.parseInt(s5.substring(1, s5.indexOf(".")));
-								max = Integer.parseInt(s5.substring(s5.indexOf("."), s5.length() - 1));
+								String ss = s5.substring(1, s5.indexOf("."));
+								sub = ss.length() > 0 ? Integer.parseInt(ss) : 0;
+								String sm = s5.substring(s5.indexOf(".") + 1, s5.length() - 1);
+								max = sm.length() > 0 ? Integer.parseInt(sm) : 0;
 							}else sub = Integer.parseInt(s5.substring(1, s5.length() - 1));
 						}
 						String s4 = s3;
