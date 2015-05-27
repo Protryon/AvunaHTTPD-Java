@@ -30,7 +30,7 @@ public class IMAPCommandList extends IMAPCommand {
 				mn = mn.substring(0, mn.length() - 1);
 			}
 			if (mn.equals("")) {
-				focus.writeLine(focus, "*", "LIST (\\Noselect) \"/\" \"[Avuna Mail]\"");
+				focus.writeLine(focus, "*", "LIST (\\Noselect) \"/\" \"/\"");
 				focus.writeLine(focus, letters, "OK Mailbox list.");
 			}else if (mn.equals("%")) {
 				for (Mailbox m : focus.authUser.mailboxes) {
