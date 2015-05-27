@@ -249,8 +249,9 @@ public class PatchFCGI extends Patch {
 				if (line.length() > 0) {
 					if (tt && line.contains(":")) {
 						String hn = line.substring(0, line.indexOf(":")).trim();
+						if (hn.equalsIgnoreCase("Expires") || hn.equalsIgnoreCase("Last-Modified")) continue;
 						String hd = line.substring(line.indexOf(":") + 1).trim();
-						if (hn.equals("Status")) {
+						if (hn.equalsIgnoreCase("Status")) {
 							response.statusCode = Integer.parseInt(hd.substring(0, hd.indexOf(" ")));
 							response.reasonPhrase = hd.substring(hd.indexOf(" ") + 1);
 						}else {
@@ -275,5 +276,4 @@ public class PatchFCGI extends Patch {
 		}
 		return null;// TODO: to prevent PHP leaks
 	}
-	
 }
