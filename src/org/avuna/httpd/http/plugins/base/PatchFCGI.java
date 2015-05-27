@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.http.Resource;
+import org.avuna.httpd.http.ResponseGenerator;
+import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
@@ -153,13 +156,19 @@ public class PatchFCGI extends Patch {
 							conn = (FCGIConnection)fcgi;
 						}else {
 							FCGIConnectionManagerNMPX fcmx = (FCGIConnectionManagerNMPX)fcgi;
+							if (fcmx == null) continue;
 							conn = fcmx.getNMPX();
 						}
 						break major;
 					}
 				}
 			}
-			if (conn == null) return new byte[0];
+			if (conn == null) {
+				ResponseGenerator.generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
+				Resource er = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "Avuna encountered a critical error attempting to contact the FCGI Server! Please contact your system administrator and notify them to check their logs.");
+				response.headers.updateHeader("Content-Type", er.type);
+				return er.data;
+			}
 			FCGISession session = new FCGISession(conn);
 			session.start();
 			// pb.environment().start();
