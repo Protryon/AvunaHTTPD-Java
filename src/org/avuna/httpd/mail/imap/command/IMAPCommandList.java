@@ -29,15 +29,10 @@ public class IMAPCommandList extends IMAPCommand {
 			if (mn.endsWith("\"")) {
 				mn = mn.substring(0, mn.length() - 1);
 			}
-			if (!mn.equals("%")) {
-				Mailbox m = mn.length() == 0 && focus.selectedMailbox != null ? focus.selectedMailbox : focus.authUser.getMailbox(mn);
-				if (m == null) {
-					focus.writeLine(focus, letters, "NO Invalid Mailbox.");
-				}else {
-					focus.writeLine(focus, "*", "LIST (\\HasNoChildren) \"/\" \"" + m.name + "\"");
-					focus.writeLine(focus, letters, "OK Mailbox list.");
-				}
-			}else {
+			if (mn.equals("")) {
+				focus.writeLine(focus, "*", "LIST (\\Noselect) \"/\" \"[Avuna Mail]\"");
+				focus.writeLine(focus, letters, "OK Mailbox list.");
+			}else if (mn.equals("%")) {
 				for (Mailbox m : focus.authUser.mailboxes) {
 					if (!m.subscribed) {
 						m = null;
@@ -46,8 +41,16 @@ public class IMAPCommandList extends IMAPCommand {
 						focus.writeLine(focus, "*", "LIST (\\HasNoChildren) \"/\" \"" + m.name + "\"");
 					}
 				}
-				focus.writeLine(focus, "*", "LIST (\\Noselect \\HasNoChildren) \"/\" \"[Avuna Mail]\"");
+				focus.writeLine(focus, "*", "LIST (\\Noselect \\HasChildren) \"/\" \"[Avuna Mail]\"");
 				focus.writeLine(focus, letters, "OK Mailbox list.");
+			}else {
+				Mailbox m = mn.length() == 0 && focus.selectedMailbox != null ? focus.selectedMailbox : focus.authUser.getMailbox(mn);
+				if (m == null) {
+					focus.writeLine(focus, letters, "NO Invalid Mailbox.");
+				}else {
+					focus.writeLine(focus, "*", "LIST (\\HasNoChildren) \"/\" \"" + m.name + "\"");
+					focus.writeLine(focus, letters, "OK Mailbox list.");
+				}
 			}
 		}else {
 			focus.writeLine(focus, letters, "BAD No mailbox.");
