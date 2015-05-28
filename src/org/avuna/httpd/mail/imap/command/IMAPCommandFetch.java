@@ -45,12 +45,19 @@ public class IMAPCommandFetch extends IMAPCommand {
 					tps = new String[]{"FLAGS", "INTERNALDATE", "RFC822.SIZE", "ENVELOPE", "BODY"};
 				}
 				StringBuilder ret = new StringBuilder().append(e.uid).append(" FETCH (");
-				for (String s3 : tps) {
+				boolean notrim = false;
+				for (int i3 = 0; i3 < tps.length; i3++) {
+					String s3 = tps[i3];
 					String s = s3.toLowerCase();
 					if (s.equals("bodystructure") || s.equals("body")) {
 						ret.append("BODYSTRUCTURE (");
 						if (e.mp != null) {
-							for (MultiPartData mpd : e.mp.mpds) {
+							for (int i2 = 0; i2 < e.mp.mpds.size(); i2++) {
+								MultiPartData mpd = e.mp.mpds.get(i2);
+								if (i2 == 0 && mpd.contentType.toLowerCase().startsWith("application/octet-stream")) {
+									// some random thing some clients add, confuses some simple clients.
+									continue;
+								}
 								String ct = mpd.contentType;
 								if (ct == null) continue;
 								boolean ecs = ct.contains(";");
@@ -165,7 +172,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 									for (String l : limitList) {
 										if (e.headers.hasHeader(l)) {
 											for (String v : e.headers.getHeaders(l))
-												mhd.append(l).append(": ").append(v).append(AvunaHTTPD.crlf);
+												mhd.append(e.headers.getCurrentCase(l)).append(": ").append(v).append(AvunaHTTPD.crlf);
 										}
 									}
 								}else if (value.startsWith("header.fields.not")) {
@@ -186,6 +193,18 @@ public class IMAPCommandFetch extends IMAPCommand {
 										for (String sss : values) {
 											mhd.append(ss).append(": ").append(sss).append(AvunaHTTPD.crlf);
 										}
+									}
+								}else if (e.mp != null) {
+									try {
+										int part = Integer.parseInt(value);
+										if (e.mp.mpds.size() > part) {
+											MultiPartData mpd = e.mp.mpds.get(part);
+											if (mpd != null) {
+												mhd.append(new String(mpd.data));
+											}
+										}
+									}catch (NumberFormatException e2) {
+										
 									}
 								}
 							}
@@ -213,9 +232,10 @@ public class IMAPCommandFetch extends IMAPCommand {
 						if (max > 0) {
 							if (r.length() >= max) r = r.substring(0, max);
 						}
-						ret.append(s4).append(" {").append(r.length() - 2).append("}").append(AvunaHTTPD.crlf);
+						ret.append(s4).append(" {").append(r.length()).append("}").append(AvunaHTTPD.crlf);
 						ret.append(r);
-						ret.append(AvunaHTTPD.crlf);
+						// ret.append(AvunaHTTPD.crlf);
+						if (i3 == tps.length - 1) notrim = true;
 					}else if (s.equals("envelope")) {
 						
 					}else if (s.equals("flags")) {
@@ -247,9 +267,9 @@ public class IMAPCommandFetch extends IMAPCommand {
 					}else if (s.equals("uid")) {
 						ret.append("UID " + e.uid);
 					}
-					ret.append(" ");
+					if (!notrim) ret.append(" ");
 				}
-				trim(ret);
+				if (!notrim) trim(ret);
 				ret.append(")");
 				focus.writeLine(focus, "*", ret.toString());
 			}

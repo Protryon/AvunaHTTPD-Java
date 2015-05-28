@@ -133,6 +133,15 @@ public class Headers {
 		return false;
 	}
 	
+	public String getCurrentCase(String name) {
+		for (String header : headers.keySet()) {
+			if (header.equalsIgnoreCase(name)) {
+				return header;
+			}
+		}
+		return null;
+	}
+	
 	/**
 	 * Get all the headers.
 	 * 

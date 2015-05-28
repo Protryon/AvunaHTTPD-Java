@@ -89,7 +89,16 @@ public class IMAPCommandSearch extends IMAPCommand {
 		return day + (mo * 40) + (yr * 400);
 	}
 	
-	private static boolean processList(IMAPWork focus, String com, ArrayList<Email> emails) {
+	private static boolean processList(IMAPWork focus, String bcom, ArrayList<Email> emls) {
+		String com = bcom;
+		boolean inverted = false;
+		ArrayList<Email> emails = emls;
+		if (com.startsWith("not")) {
+			inverted = true;
+			if (com.length() >= 4) com = com.substring(4);
+			else return false;
+			emails = new ArrayList<Email>();
+		}
 		if (com.equals("all")) {
 			
 		}else if (com.equals("answered")) {
@@ -128,8 +137,10 @@ public class IMAPCommandSearch extends IMAPCommand {
 				}
 				if (hb) emails.remove(i--);
 			}
-		}else if (com.equals("all")) {
-			
+		}else if (com.equals("deleted")) {
+			for (int i = 0; i < emails.size(); i++) {
+				if (emails.get(i).flags.contains("\\Deleted")) emails.remove(i--);
+			}
 		}else {
 			try {
 				ArrayList<Email> toFetch = focus.selectedMailbox.getByIdentifier(com);
@@ -138,11 +149,16 @@ public class IMAPCommandSearch extends IMAPCommand {
 						emails.remove(i--);
 					}
 				}
-				return true;
 			}catch (Exception e) {
-				
+				return false;
 			}
-			return false;
+		}
+		if (inverted) {
+			for (int i = 0; i < emls.size(); i++) {
+				if (emails.contains(emls.get(i))) {
+					emls.remove(i--);
+				}
+			}
 		}
 		return true;
 	}
@@ -160,7 +176,7 @@ public class IMAPCommandSearch extends IMAPCommand {
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i].toLowerCase().replace("\"", "");
 			String targ = arg;
-			if (arg.equals("before") || arg.equals("since")) {
+			if (arg.equals("before") || arg.equals("since") || arg.equals("not")) {
 				targ += " " + args[++i].toLowerCase().replace("\"", "");
 			}
 			Logger.log(targ);

@@ -37,7 +37,9 @@ public class Multipart {
 				String ct = "application/octet-stream";
 				HashMap<String, String> vars = new HashMap<String, String>();
 				String contentTransferEncoding = "";
+				String rawdisp = "";
 				String str;
+				ArrayList<String> extraHeaders = new ArrayList<String>();
 				boolean fh = true;
 				while (true) {
 					str = readLine(bin);
@@ -52,6 +54,7 @@ public class Multipart {
 					if (name.equals("content-type")) {
 						ct = value;
 					}else if (name.equals("content-disposition")) {
+						rawdisp = value;
 						String[] spl = value.split(";");
 						// assume [0] is form-data;
 						for (int i = 1; i < spl.length; i++) {
@@ -65,15 +68,28 @@ public class Multipart {
 						}
 					}else if (name.equals("content-transfer-encoding")) {
 						contentTransferEncoding = value;
+					}else {
+						extraHeaders.add(str);
 					}
 				}
 				byte[] data = readUntil(this.boundary.getBytes(), bin);
+				int clip = 0;
+				for (int i = data.length - 1; i > 0; i--) {
+					if (data[i] == '-') {
+						clip++;
+					}else break;
+				}
+				if (clip > 0) {
+					byte[] cdata = new byte[data.length - clip];
+					System.arraycopy(data, 0, cdata, 0, cdata.length);
+					data = cdata;
+				}
 				byte[] nloe = new byte[2];
 				bin.read(nloe);
 				if (nloe[0] == 0x2D && nloe[1] == 0x2D) {
 					hc = false;
 				}
-				mpds.add(new MultiPartData(ct, contentTransferEncoding, vars, data));
+				mpds.add(new MultiPartData(ct, contentTransferEncoding, rawdisp, extraHeaders, vars, data));
 			}
 		}catch (IOException e) {
 			Logger.logError(e);
@@ -116,9 +132,13 @@ public class Multipart {
 		public final String contentType, contentTransferEncoding;
 		public final HashMap<String, String> vars;
 		public final byte[] data;
+		public final String rawdisp;
+		public final ArrayList<String> extraHeaders;
 		
-		private MultiPartData(String ct, String contentTransferEncoding, HashMap<String, String> vars, byte[] data) {
+		private MultiPartData(String ct, String contentTransferEncoding, String rawdisp, ArrayList<String> extraHeaders, HashMap<String, String> vars, byte[] data) {
 			this.contentType = ct;
+			this.extraHeaders = extraHeaders;
+			this.rawdisp = rawdisp;
 			this.vars = vars;
 			this.data = data;
 			this.contentTransferEncoding = contentTransferEncoding;
