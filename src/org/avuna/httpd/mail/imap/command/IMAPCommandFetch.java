@@ -20,7 +20,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 		super(comm, minState, maxState, host);
 	}
 	
-	private static void trim(StringBuilder sb) {
+	protected static void trim(StringBuilder sb) {
 		String s = sb.toString().trim();
 		sb.setLength(0);
 		sb.append(s);
@@ -257,7 +257,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 							if (mhd.length() >= max) mhd = mhd.substring(0, max);
 						}
 						ret.append(s4).append(" {").append(mhd.length() - 2).append("}").append(AvunaHTTPD.crlf);
-						ret.append(sub > 0 ? mhd.substring(sub) : mhd);
+						ret.append(mhd);
 					}else if (s.equals("envelope")) {
 						
 					}else if (s.equals("flags")) {
@@ -277,7 +277,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 								String hn = line.substring(0, line.indexOf(":")).trim();
 								String hd = line.substring(line.indexOf(":") + 1).trim();
 								if (hn.equalsIgnoreCase("date")) {
-									ret.append(hd);
+									ret.append("\"").append(hd).append("\"");
 								}
 							}else {
 								break;

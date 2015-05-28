@@ -46,7 +46,7 @@ public class Email {
 					ArrayList<String> hds = headers.getHeaders(lhn);
 					if (hds.size() > 0) {
 						int i = hds.size() - 1;
-						hds.set(i, hds.get(i) + AvunaHTTPD.crlf + line);
+						hds.set(i, hds.get(i) + line);
 					}
 				}
 			}

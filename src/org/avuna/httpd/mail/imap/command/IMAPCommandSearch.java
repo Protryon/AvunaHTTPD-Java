@@ -3,7 +3,6 @@ package org.avuna.httpd.mail.imap.command;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Scanner;
 import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.mail.imap.IMAPCommand;
 import org.avuna.httpd.mail.imap.IMAPWork;
@@ -101,60 +100,36 @@ public class IMAPCommandSearch extends IMAPCommand {
 			}
 		}else if (com.startsWith("bcc ")) {
 			for (int i = 0; i < emails.size(); i++) {
-				Scanner hs = new Scanner(emails.get(i).data);
-				boolean hb = false;
-				while (hs.hasNextLine()) {
-					String line = hs.nextLine();
-					if (line.length() == 0) break;
-					if (line.startsWith("BCC")) {
-						if (!line.substring(5).contains(com.substring(4))) {
-							emails.remove(i--);
-						}
-						hb = true;
-					}
-				}
-				hs.close();
-				if (!hb) emails.remove(i--);
+				if (emails.get(i).headers.hasHeader("BCC") && emails.get(i).headers.getHeader("BCC").contains(com.substring(4))) emails.remove(i--);
 			}
 		}else if (com.startsWith("before ")) {
 			String wd = com.substring(7);
 			int wval = getDateInt(wd);
 			if (wval == -1) return false;
 			for (int i = 0; i < emails.size(); i++) {
-				Scanner hs = new Scanner(emails.get(i).data);
-				boolean hb = false;
-				while (hs.hasNextLine()) {
-					String line = hs.nextLine();
-					if (line.length() == 0) break;
-					if (line.startsWith("Date")) {
-						String date = line.substring(6);
-						int eval = getDateRFC(date);
-						if (eval <= wval) emails.remove(i--);
-						hb = true;
-					}
+				String date = emails.get(i).headers.getHeader("Date");
+				boolean hb = date == null;
+				if (!hb) {
+					int eval = getDateRFC(date);
+					if (eval <= wval) hb = true;
 				}
-				hs.close();
-				if (!hb) emails.remove(i--);
+				if (hb) emails.remove(i--);
 			}
 		}else if (com.startsWith("since ")) {
 			String wd = com.substring(6);
 			int wval = getDateInt(wd);
+			if (wval == -1) return false;
 			for (int i = 0; i < emails.size(); i++) {
-				Scanner hs = new Scanner(emails.get(i).data);
-				boolean hb = false;
-				while (hs.hasNextLine()) {
-					String line = hs.nextLine();
-					if (line.length() == 0) break;
-					if (line.startsWith("Date")) {
-						String date = line.substring(6);
-						int eval = getDateRFC(date);
-						if (eval >= wval) emails.remove(i--);
-						hb = true;
-					}
+				String date = emails.get(i).headers.getHeader("Date");
+				boolean hb = date == null;
+				if (!hb) {
+					int eval = getDateRFC(date);
+					if (eval >= wval) hb = true;
 				}
-				hs.close();
-				if (!hb) emails.remove(i--);
+				if (hb) emails.remove(i--);
 			}
+		}else if (com.equals("all")) {
+			
 		}else {
 			try {
 				ArrayList<Email> toFetch = focus.selectedMailbox.getByIdentifier(com);
@@ -178,6 +153,9 @@ public class IMAPCommandSearch extends IMAPCommand {
 		ArrayList<Email> emails;
 		synchronized (focus.selectedMailbox.emails) {
 			emails = new ArrayList<Email>(Arrays.asList(focus.selectedMailbox.emails));
+		}
+		for (int i = 0; i < emails.size(); i++) {
+			if (emails.get(i) == null) emails.remove(i--);
 		}
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i].toLowerCase().replace("\"", "");
