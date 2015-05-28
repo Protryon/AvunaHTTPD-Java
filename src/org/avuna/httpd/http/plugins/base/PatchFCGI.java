@@ -3,6 +3,8 @@ package org.avuna.httpd.http.plugins.base;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -85,6 +87,11 @@ public class PatchFCGI extends Patch {
 	@Override
 	public void formatConfig(ConfigNode json) {
 		if (!json.containsNode("enabled")) json.insertNode("enabled", "false");
+		if (!json.containsNode("server_addr")) try {
+			json.insertNode("server_addr", Inet4Address.getLocalHost().getHostAddress());
+		}catch (UnknownHostException e) {
+			json.insertNode("server_addr", "127.0.0.1");
+		}
 		if (!json.containsNode("php")) json.insertNode("php");
 		for (String subb : json.getSubnodes()) {
 			ConfigNode sub = json.getNode(subb);
@@ -171,7 +178,7 @@ public class PatchFCGI extends Patch {
 			}
 			FCGISession session = new FCGISession(conn);
 			session.start();
-			// pb.environment().start();
+			session.param("SERVER_ADDR", pcfg.getNode("server_addr") + "");
 			session.param("REQUEST_URI", rq + (get.length() > 0 ? "?" + get : ""));
 			
 			rq = AvunaHTTPD.fileManager.correctForIndex(rq, request);
@@ -179,8 +186,8 @@ public class PatchFCGI extends Patch {
 			session.param("CONTENT_LENGTH", request.body.data.length + "");
 			session.param("CONTENT_TYPE", request.body.type);
 			session.param("GATEWAY_INTERFACE", "CGI/1.1");
-			// pb.environment().put("PATH_INFO", request.target);
-			// pb.environment().put("PATH_TRANSLATED", new File(JavaWebServer.fileManager.getHTDocs(), rq).toString());
+			// session.param("PATH_INFO", request.extraPath);
+			// session.param("PATH_TRANSLATED", new File(request.host.getHTDocs(), URLDecoder.decode(request.extraPath)).getAbsolutePath());
 			session.param("QUERY_STRING", get);
 			session.param("REMOTE_ADDR", request.userIP);
 			session.param("REMOTE_HOST", request.userIP);
@@ -255,7 +262,11 @@ public class PatchFCGI extends Patch {
 							response.statusCode = Integer.parseInt(hd.substring(0, hd.indexOf(" ")));
 							response.reasonPhrase = hd.substring(hd.indexOf(" ") + 1);
 						}else {
-							response.headers.updateHeader(hn, hd);
+							if (hn.equals("Set-Cookie")) {
+								response.headers.addHeader(hn, hd);
+							}else {
+								response.headers.updateHeader(hn, hd);
+							}
 						}
 					}else {
 						tt = false;

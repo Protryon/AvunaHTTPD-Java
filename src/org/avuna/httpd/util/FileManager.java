@@ -173,12 +173,19 @@ public class FileManager {
 			Logger.logError(e);
 		}
 		File abs = request.host.getHTDocs();
+		boolean ext = false;
+		String ep = "";
 		for (String st : t) {
-			abs = new File(abs, st);
-			if (abs.isFile()) {
-				break;
+			if (ext) {
+				ep += "/" + st;
+			}else {
+				abs = new File(abs, st);
+				if (abs.isFile()) {
+					ext = true;
+				}
 			}
 		}
+		request.extraPath = ep;
 		String abspr = abs.getAbsolutePath();
 		String htd = request.host.getHTDocs().getAbsolutePath();
 		if (!abspr.startsWith(htd)) {

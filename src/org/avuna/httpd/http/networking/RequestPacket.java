@@ -17,7 +17,7 @@ import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.util.Logger;
 
 public class RequestPacket extends Packet {
-	public String target = "/";
+	public String target = "/", extraPath = "";
 	public Method method = Method.GET;
 	public String userIP = "";
 	public int userPort = 80;
