@@ -213,8 +213,8 @@ public class IMAPCommandFetch extends IMAPCommand {
 						if (max > 0) {
 							if (r.length() >= max) r = r.substring(0, max);
 						}
-						ret.append(s4).append(" {").append(mhd.length()).append("}").append(AvunaHTTPD.crlf);
-						ret.append(mhd);
+						ret.append(s4).append(" {").append(r.length() - 2).append("}").append(AvunaHTTPD.crlf);
+						ret.append(r);
 						ret.append(AvunaHTTPD.crlf);
 					}else if (s.equals("envelope")) {
 						

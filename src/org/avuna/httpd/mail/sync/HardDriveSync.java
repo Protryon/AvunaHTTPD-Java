@@ -37,6 +37,7 @@ public class HardDriveSync extends Sync {
 				mf.mkdirs();
 				synchronized (m.emails) {
 					for (Email e : m.emails) {
+						if (e == null) continue;
 						DataOutputStream fout = new DataOutputStream(new FileOutputStream(new File(mf, e.uid + ".eml")));
 						fout.writeInt(e.from.length());
 						fout.write(e.from.getBytes());
