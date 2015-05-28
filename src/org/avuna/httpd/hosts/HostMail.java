@@ -26,7 +26,7 @@ import org.avuna.httpd.util.Logger;
 
 public class HostMail extends Host {
 	
-	private int tac, twc, mc;
+	private int tac, twc, mc, se;
 	public SMTPHandler smtphandler = new SMTPHandler(this);
 	public IMAPHandler imaphandler = new IMAPHandler(this);
 	
@@ -77,6 +77,7 @@ public class HostMail extends Host {
 	public final ArrayList<EmailAccount> accounts = new ArrayList<EmailAccount>();
 	
 	public void formatConfig(ConfigNode map) {
+		if (!map.containsNode("sync-interval")) map.insertNode("sync-interval", "60", "default is to sync to hard drive every 60 seconds");
 		if (!map.containsNode("smtp-port")) map.insertNode("smtp-port", "25", "mail delivery port");
 		if (!map.containsNode("smtp-mua-port")) map.insertNode("smtp-mua-port", "587", "email client port");
 		if (!map.containsNode("smtp-tls-port")) map.insertNode("smtp-tls-port", "465", "TLS port for SMTP");
@@ -97,6 +98,7 @@ public class HostMail extends Host {
 		tac = Integer.parseInt(map.getNode("acceptThreadCount").getValue());
 		twc = Integer.parseInt(map.getNode("workerThreadCount").getValue());
 		mc = Integer.parseInt(map.getNode("maxConnections").getValue());
+		se = Integer.parseInt(map.getNode("sync-interval").getValue());
 	}
 	
 	public void registerAccount(String email, String password) {
@@ -168,6 +170,13 @@ public class HostMail extends Host {
 		}finally {
 			loaded = true;
 		}
+		while (loaded)
+			try {
+				sync.save(accounts);
+				Thread.sleep(se * 1000L);
+			}catch (Exception e) {
+				Logger.logError(e);
+			}
 	}
 	
 	@Override

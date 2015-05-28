@@ -43,6 +43,7 @@ public class Email {
 					String hd = line.substring(lhn.length() + 1).trim();
 					headers.addHeader(lhn, hd);
 				}else {
+					if (lhn.trim().length() == 0) continue;
 					ArrayList<String> hds = headers.getHeaders(lhn);
 					if (hds.size() > 0) {
 						int i = hds.size() - 1;

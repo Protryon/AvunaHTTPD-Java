@@ -32,7 +32,7 @@ public class IMAPCommandList extends IMAPCommand {
 			if (mn.equals("")) {
 				focus.writeLine(focus, "*", "LIST (\\Noselect) \"/\" \"/\"");
 				focus.writeLine(focus, letters, "OK Mailbox list.");
-			}else if (mn.equals("%")) {
+			}else if (mn.equals("%") || mn.equals("*")) {
 				for (Mailbox m : focus.authUser.mailboxes) {
 					if (!m.subscribed) {
 						m = null;

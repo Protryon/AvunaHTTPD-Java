@@ -35,24 +35,26 @@ public class HardDriveSync extends Sync {
 			for (Mailbox m : acct.mailboxes) {
 				File mf = new File(acctf, m.name);
 				mf.mkdirs();
-				for (Email e : m.emails) {
-					DataOutputStream fout = new DataOutputStream(new FileOutputStream(new File(mf, e.uid + ".eml")));
-					fout.writeInt(e.from.length());
-					fout.write(e.from.getBytes());
-					fout.writeInt(e.to.size());
-					for (String to : e.to) {
-						fout.writeInt(to.length());
-						fout.write(to.getBytes());
+				synchronized (m.emails) {
+					for (Email e : m.emails) {
+						DataOutputStream fout = new DataOutputStream(new FileOutputStream(new File(mf, e.uid + ".eml")));
+						fout.writeInt(e.from.length());
+						fout.write(e.from.getBytes());
+						fout.writeInt(e.to.size());
+						for (String to : e.to) {
+							fout.writeInt(to.length());
+							fout.write(to.getBytes());
+						}
+						fout.writeInt(e.flags.size());
+						for (String flag : e.flags) {
+							fout.writeInt(flag.length());
+							fout.write(flag.getBytes());
+						}
+						fout.writeInt(e.data.length());
+						fout.write(e.data.getBytes());
+						fout.flush();
+						fout.close();
 					}
-					fout.writeInt(e.flags.size());
-					for (String flag : e.flags) {
-						fout.writeInt(flag.length());
-						fout.write(flag.getBytes());
-					}
-					fout.writeInt(e.data.length());
-					fout.write(e.data.getBytes());
-					fout.flush();
-					fout.close();
 				}
 			}
 		}

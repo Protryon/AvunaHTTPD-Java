@@ -2,8 +2,7 @@ package org.avuna.httpd.mail.imap.command;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
@@ -116,7 +115,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 						ret.append(")");
 						trim(ret);
 					}else if (s.startsWith("body") || s.equals("rfc822") || s.equals("rfc822.header") || s.equals("rfc822.text")) {
-						String mhd = "";
+						StringBuilder mhd = new StringBuilder();
 						boolean peek = s.startsWith("body.peek") || s.startsWith("rfc822.header");
 						if (!peek) {
 							if (e.flags.contains("\\Unseen")) e.flags.remove("\\Unseen");
@@ -131,7 +130,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 							s2 = "text";
 						}
 						if (s2.equals("")) {
-							mhd = e.data;
+							mhd.append(e.data);
 						}else {
 							String[] kinds = StringFormatter.congealBySurroundings(s2.split(" "), "(", ")");
 							for (int i = 0; i < kinds.length; i++) {
@@ -142,95 +141,52 @@ public class IMAPCommandFetch extends IMAPCommand {
 								}
 								value = value.toLowerCase().trim();
 								if (value.equals("header")) {
-									Scanner ed = new Scanner(e.data);
-									while (ed.hasNextLine()) {
-										String line = ed.nextLine().trim();
-										if (line.length() > 0) {
-											mhd += line + AvunaHTTPD.crlf;
-										}else {
-											break;
+									LinkedHashMap<String, ArrayList<String>> hdrs = e.headers.getHeaders();
+									for (String ss : hdrs.keySet()) {
+										ArrayList<String> values = hdrs.get(ss);
+										for (String sss : values) {
+											mhd.append(ss).append(": ").append(sss).append(AvunaHTTPD.crlf);
 										}
 									}
-									ed.close();
 								}else if (value.equals("text")) {
-									Scanner ed = new Scanner(e.data);
-									while (ed.hasNextLine()) {
-										String line = ed.nextLine().trim();
-										if (line.length() > 0) {
-											// skip
-										}else {
-											break;
-										}
-									}
-									while (ed.hasNextLine()) {
-										String line = ed.nextLine();
-										mhd += line + AvunaHTTPD.crlf;
-									}
-									ed.close();
+									mhd.append(e.body);
 								}else if (value.equals("mime")) {
-									Scanner ed = new Scanner(e.data);
-									while (ed.hasNextLine()) {
-										String line = ed.nextLine().trim();
-										if (line.length() > 0) {
-											if (!line.contains(":")) continue;
-											String hn = line.substring(0, line.indexOf(":")).trim();
-											String hd = line.substring(line.indexOf(":") + 1).trim();
-											if (hn.equalsIgnoreCase("content-type")) {
-												mhd += hd;
-											}
-										}else {
-											break;
-										}
+									if (e.headers.hasHeader("content-type")) {
+										mhd.append(e.headers.getHeader("content-type"));
+									}else {
+										mhd.append("text/plain; charset=UTF-8");
 									}
-									ed.close();
 								}else if (value.startsWith("header.fields")) {
 									boolean limit = value.contains("(");
 									String[] limitList = new String[0];
 									if (limit) {
 										limitList = value.substring(value.indexOf("(") + 1, value.indexOf(")")).split(" ");
 									}
-									List<String> limitList2 = Arrays.asList(limitList);
-									limitList = null;
-									
-									Scanner ed = new Scanner(e.data);
-									while (ed.hasNextLine()) {
-										String line = ed.nextLine().trim();
-										if (line.length() > 0) {
-											if (!line.contains(":")) continue;
-											String hn = line.substring(0, line.indexOf(":")).trim();
-											String hd = line.substring(line.indexOf(":") + 1).trim();
-											if (!limit || (limitList2.contains(hn.toLowerCase()))) {
-												mhd += hn + ": " + hd + AvunaHTTPD.crlf;
-											}
-										}else {
-											break;
+									for (String l : limitList) {
+										if (e.headers.hasHeader(l)) {
+											for (String v : e.headers.getHeaders(l))
+												mhd.append(l).append(": ").append(v).append(AvunaHTTPD.crlf);
 										}
 									}
-									ed.close();
 								}else if (value.startsWith("header.fields.not")) {
 									boolean limit = value.contains("(");
 									String[] limitList = new String[0];
 									if (limit) {
 										limitList = value.substring(value.indexOf("(") + 1, value.indexOf(")")).split(" ");
 									}
-									List<String> limitList2 = Arrays.asList(limitList);
-									limitList = null;
-									
-									Scanner ed = new Scanner(e.data);
-									while (ed.hasNextLine()) {
-										String line = ed.nextLine().trim();
-										if (line.length() > 0) {
-											if (!line.contains(":")) continue;
-											String hn = line.substring(0, line.indexOf(":")).trim();
-											String hd = line.substring(line.indexOf(":") + 1).trim();
-											if (!limit || (!limitList2.contains(hn.toLowerCase()))) {
-												mhd += hn + ": " + hd + AvunaHTTPD.crlf;
+									LinkedHashMap<String, ArrayList<String>> hdrs = e.headers.getHeaders();
+									b:
+									for (String ss : hdrs.keySet()) {
+										for (String l : limitList) {
+											if (ss.equalsIgnoreCase(l)) {
+												continue b;
 											}
-										}else {
-											break;
+										}
+										ArrayList<String> values = hdrs.get(ss);
+										for (String sss : values) {
+											mhd.append(ss).append(": ").append(sss).append(AvunaHTTPD.crlf);
 										}
 									}
-									ed.close();
 								}
 							}
 						}
@@ -249,15 +205,17 @@ public class IMAPCommandFetch extends IMAPCommand {
 						if (peek && s4.toLowerCase().startsWith("body.peek")) {
 							s4 = s4.substring(0, 4) + s4.substring(9);
 						}
+						String r = mhd.toString();
 						if (sub > 0) {
-							if (sub >= mhd.length()) mhd = "";
-							else mhd = mhd.substring(sub);
+							if (sub >= r.length()) r = "";
+							else r = r.substring(sub);
 						}
 						if (max > 0) {
-							if (mhd.length() >= max) mhd = mhd.substring(0, max);
+							if (r.length() >= max) r = r.substring(0, max);
 						}
-						ret.append(s4).append(" {").append(mhd.length() - 2).append("}").append(AvunaHTTPD.crlf);
+						ret.append(s4).append(" {").append(mhd.length()).append("}").append(AvunaHTTPD.crlf);
 						ret.append(mhd);
+						ret.append(AvunaHTTPD.crlf);
 					}else if (s.equals("envelope")) {
 						
 					}else if (s.equals("flags")) {

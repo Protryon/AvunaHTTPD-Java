@@ -1,7 +1,7 @@
 package org.avuna.httpd.http;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 /**
  * This class is used to store key-value properties for an HTTP header.
@@ -11,7 +11,7 @@ public class Headers {
 	/**
 	 * This map contains all the headers for the http header.
 	 */
-	private HashMap<String, ArrayList<String>> headers = new HashMap<String, ArrayList<String>>();
+	private LinkedHashMap<String, ArrayList<String>> headers = new LinkedHashMap<String, ArrayList<String>>();
 	
 	/**
 	 * Constructor for the Headers.
@@ -28,7 +28,7 @@ public class Headers {
 	@SuppressWarnings("unchecked")
 	public Headers clone() {
 		Headers h = new Headers();
-		h.headers = (HashMap<String, ArrayList<String>>)headers.clone();
+		h.headers = (LinkedHashMap<String, ArrayList<String>>)headers.clone();
 		return h;
 	}
 	
@@ -138,7 +138,7 @@ public class Headers {
 	 * 
 	 * @return the hashmap of all headers.
 	 */
-	public HashMap<String, ArrayList<String>> getHeaders() {
+	public LinkedHashMap<String, ArrayList<String>> getHeaders() {
 		return headers;
 	}
 }
