@@ -1,12 +1,12 @@
 package org.avuna.httpd.util;
 
 import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import org.avuna.httpd.AvunaHTTPD;
 
 public class Stream {
-	public static String readLine(DataInputStream in) throws IOException {
+	public static String readLine(InputStream in) throws IOException {
 		ByteArrayOutputStream writer = new ByteArrayOutputStream();
 		int i = in.read();
 		if (i == -1) return null;

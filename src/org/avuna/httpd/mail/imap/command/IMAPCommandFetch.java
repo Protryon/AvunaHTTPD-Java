@@ -54,7 +54,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 						if (e.mp != null) {
 							for (int i2 = 0; i2 < e.mp.mpds.size(); i2++) {
 								MultiPartData mpd = e.mp.mpds.get(i2);
-								if (i2 == 0 && mpd.contentType.toLowerCase().startsWith("application/octet-stream")) {
+								if (i2 == 0 && e.hasExtraPart) {
 									// some random thing some clients add, confuses some simple clients.
 									continue;
 								}
@@ -69,7 +69,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 									ct = ct.substring(ct.indexOf(";") + 1);
 									ecs = ct.contains(";");
 									ct1 = ecs ? ct.substring(0, ct.indexOf(";")).toUpperCase().trim() : ct.toUpperCase().trim();
-									ret.append("\"").append(ct1.replace("=", "\" \"")).append("\"");
+									ret.append("\"").append(ct1.replace("\"", "").replace("=", "\" \"")).append("\"");
 									ret.append(")");
 								}
 								ret.append(" NIL NIL");

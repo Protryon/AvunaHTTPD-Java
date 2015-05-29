@@ -2,6 +2,7 @@ package org.avuna.httpd.mail.mailbox;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.Arrays;
@@ -43,43 +44,113 @@ public class EmailRouter {
 				}catch (NamingException e) {
 					e.printStackTrace();
 				}
-				for (String mxr : mx) {
+				int lrt = 0;
+				boolean delivered = false;
+				for (int i = 0; i < mx.length; i++) {
+					String mxr = mx[i];
 					Logger.log("Trying " + mxr);
+					Socket rs = null;
 					try {
-						Socket rs = new Socket(InetAddress.getByName(mxr), 25);
+						rs = new Socket(InetAddress.getByName(mxr), 25);
 						DataOutputStream out = new DataOutputStream(rs.getOutputStream());
 						out.flush();
 						DataInputStream in = new DataInputStream(rs.getInputStream());
-						Logger.log(Stream.readLine(in));
+						String header = Stream.readLine(in);
+						Logger.log(header);
 						out.write(("EHLO " + doms[0] + AvunaHTTPD.crlf).getBytes());
 						Logger.log("EHLO " + doms[0]);
 						out.flush();
 						String line;
-						while (!(line = Stream.readLine(in)).startsWith("250 "))
+						while ((line = Stream.readLine(in)).length() >= 4 && line.charAt(3) == '-')
 							Logger.log(line);
 						out.write(("MAIL FROM: " + email.from + AvunaHTTPD.crlf).getBytes());
 						Logger.log("MAIL FROM: " + email.from);
 						out.flush();
-						Logger.log(Stream.readLine(in));
+						String mresp = Stream.readLine(in);
+						Logger.log(mresp);
+						if (!mresp.startsWith("2")) {
+							if (mresp.startsWith("4")) {
+								if (lrt < 3) {
+									i--;
+									lrt++;
+								}else {
+									lrt = 0;
+								}
+								continue;
+							}else {
+								continue;
+							}
+						}
 						if (!to.startsWith("<")) to = "<" + to + ">";
 						out.write(("RCPT TO: " + to + AvunaHTTPD.crlf).getBytes());
 						Logger.log("RCPT TO: " + to);
 						out.flush();
-						Logger.log(Stream.readLine(in));
+						String rresp = Stream.readLine(in);
+						Logger.log(rresp);
+						if (!rresp.startsWith("2")) {
+							if (rresp.startsWith("4")) {
+								if (lrt < 3) {
+									i--;
+									lrt++;
+								}else {
+									lrt = 0;
+								}
+								continue;
+							}else {
+								continue;
+							}
+						}
 						out.write(("DATA" + AvunaHTTPD.crlf).getBytes());
 						Logger.log("DATA");
 						out.flush();
-						Logger.log(Stream.readLine(in));
+						String dresp = Stream.readLine(in);
+						Logger.log(dresp);
+						if (!dresp.startsWith("354")) {
+							if (dresp.startsWith("4")) {
+								if (lrt < 3) {
+									i--;
+									lrt++;
+								}else {
+									lrt = 0;
+								}
+								continue;
+							}else {
+								continue;
+							}
+						}
 						out.write(email.data.getBytes());
 						Logger.log(email.data);
 						out.write((AvunaHTTPD.crlf + "." + AvunaHTTPD.crlf).getBytes());
 						out.flush();
-						Logger.log(Stream.readLine(in));
-						rs.close();
+						String fresp = Stream.readLine(in);
+						Logger.log(fresp);
+						if (!fresp.startsWith("2")) {
+							if (fresp.startsWith("4")) {
+								if (lrt < 3) {
+									i--;
+									lrt++;
+								}else {
+									lrt = 0;
+								}
+								continue;
+							}else {
+								continue;
+							}
+						}
+						delivered = true;
 						break;
 					}catch (Exception e) {
-						e.printStackTrace();
+						Logger.logError(e);
+					}finally {
+						if (rs != null) try {
+							rs.close();
+						}catch (IOException e) {
+							Logger.logError(e);
+						}
 					}
+				}
+				if (!delivered) {
+					Logger.log("Mail was not accepted from any server listed in MX!"); // TODO: try again then send a no reciept email back
 				}
 			}
 		}

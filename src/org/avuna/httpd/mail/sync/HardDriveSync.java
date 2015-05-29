@@ -83,45 +83,50 @@ public class HardDriveSync extends Sync {
 									acct.mailboxes.add(m = new Mailbox(acct, mf.getName()));
 								}
 								for (File eml : mf.listFiles()) {
-									if (eml.isFile()) {
-										int uid = Integer.parseInt(eml.getName().substring(0, eml.getName().indexOf(".")));
-										DataInputStream fin = new DataInputStream(new FileInputStream(eml));
-										byte[] fba = new byte[fin.readInt()];
-										fin.readFully(fba);
-										String from = new String(fba);
-										int tl = fin.readInt();
-										String[] toa = new String[tl];
-										for (int i = 0; i < tl; i++) {
-											byte[] tba = new byte[fin.readInt()];
-											fin.readFully(tba);
-											toa[i] = new String(tba);
-										}
-										int fl = fin.readInt();
-										String[] fla = new String[fl];
-										for (int i = 0; i < fl; i++) {
-											byte[] flba = new byte[fin.readInt()];
-											fin.readFully(flba);
-											fla[i] = new String(flba);
-										}
-										byte[] dba = new byte[fin.readInt()];
-										fin.readFully(dba);
-										String data = new String(dba);
-										Email e = new Email(data, uid, from);
-										for (String flag : fla) {
-											if (!e.flags.contains(flag)) e.flags.add(flag);
-										}
-										for (String to : toa) {
-											e.to.add(to);
-										}
-										synchronized (m.emails) {
-											if (m.emails.length < e.uid) {
-												Email[] ne = new Email[e.uid];
-												System.arraycopy(m.emails, 0, ne, 0, m.emails.length);
-												ne[e.uid - 1] = e;
-												m.emails = ne;
+									try {
+										if (eml.isFile()) {
+											int uid = Integer.parseInt(eml.getName().substring(0, eml.getName().indexOf(".")));
+											DataInputStream fin = new DataInputStream(new FileInputStream(eml));
+											byte[] fba = new byte[fin.readInt()];
+											fin.readFully(fba);
+											String from = new String(fba);
+											int tl = fin.readInt();
+											String[] toa = new String[tl];
+											for (int i = 0; i < tl; i++) {
+												byte[] tba = new byte[fin.readInt()];
+												fin.readFully(tba);
+												toa[i] = new String(tba);
 											}
+											int fl = fin.readInt();
+											String[] fla = new String[fl];
+											for (int i = 0; i < fl; i++) {
+												byte[] flba = new byte[fin.readInt()];
+												fin.readFully(flba);
+												fla[i] = new String(flba);
+											}
+											byte[] dba = new byte[fin.readInt()];
+											fin.readFully(dba);
+											String data = new String(dba);
+											Email e = new Email(data, uid, from);
+											for (String flag : fla) {
+												if (!e.flags.contains(flag)) e.flags.add(flag);
+											}
+											for (String to : toa) {
+												e.to.add(to);
+											}
+											synchronized (m.emails) {
+												if (m.emails.length < e.uid) {
+													Email[] ne = new Email[e.uid];
+													System.arraycopy(m.emails, 0, ne, 0, m.emails.length);
+													ne[e.uid - 1] = e;
+													m.emails = ne;
+												}
+											}
+											fin.close();
 										}
-										fin.close();
+									}catch (Exception e) {
+										Logger.logError(e);
+										Logger.log("Error loading email: " + eml.getAbsolutePath());
 									}
 								}
 							}
@@ -129,7 +134,7 @@ public class HardDriveSync extends Sync {
 						host.accounts.add(acct);
 					}catch (IOException e) {
 						Logger.logError(e);
-						Logger.log("Error loading account " + acctf.getAbsolutePath());
+						Logger.log("Error loading account: " + acctf.getAbsolutePath());
 					}
 				}
 			}

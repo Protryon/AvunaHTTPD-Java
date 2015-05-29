@@ -34,6 +34,7 @@ import org.avuna.httpd.hosts.HostHTTPM;
 import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.hosts.HostRegistry;
 import org.avuna.httpd.hosts.Protocol;
+import org.avuna.httpd.mail.util.StringFormatter;
 import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.Config;
 import org.avuna.httpd.util.ConfigFormat;
@@ -274,6 +275,11 @@ public class AvunaHTTPD {
 	 * @param args string array arguments to run Avuna
 	 */
 	public static void main(String[] args) {
+		String[] s = StringFormatter.congealBySurroundings("UID BODY.PEEK[HEADER.FIELDS (Content-Type Content-Transfer-Encoding)] BODY.PEEK[TEXT]<0.2048>".split(" "), "[", "]");
+		for (String ss : s) {
+			System.out.println(ss);
+		}
+		if (true) return;
 		try {
 			boolean dosetid = false;
 			boolean doucmd = false;

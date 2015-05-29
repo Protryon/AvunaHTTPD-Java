@@ -6,8 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.util.Stream;
 
 public class Multipart {
 	public final ArrayList<MultiPartData> mpds = new ArrayList<MultiPartData>();
@@ -26,13 +26,14 @@ public class Multipart {
 			if (boundary == null) {
 				do {
 					
-					this.boundary = readLine(bin);
+					this.boundary = Stream.readLine(bin);
 				}while (!this.boundary.startsWith("-"));
 			}else {
 				this.boundary = boundary;
 			}
 			boolean hc = true;
 			int mi = 0;
+			boolean fb = false;
 			while (hc && mi++ < 50) {
 				String ct = "application/octet-stream";
 				HashMap<String, String> vars = new HashMap<String, String>();
@@ -40,14 +41,20 @@ public class Multipart {
 				String rawdisp = "";
 				String str;
 				ArrayList<String> extraHeaders = new ArrayList<String>();
-				boolean fh = true;
 				while (true) {
-					str = readLine(bin);
-					if (str.length() == 0 || !str.contains(":")) {
-						if (fh) break;
-						else continue;
+					// bin.mark(1024);
+					str = Stream.readLine(bin);
+					if (str == null) break;
+					if (str.contains(this.boundary)) {
+						// bin.reset();
+						fb = false;
+						break;
 					}
-					fh = true;
+					if (str.length() == 0) {
+						if (fb) continue;
+						else break;
+					}
+					
 					String name = str.substring(0, str.indexOf(":"));
 					String value = str.substring(name.length() + 1).trim();
 					name = name.trim().toLowerCase();
@@ -73,11 +80,17 @@ public class Multipart {
 					}
 				}
 				byte[] data = readUntil(this.boundary.getBytes(), bin);
+				if (data.length == 0) {
+					hc = false;
+					continue;
+				}
 				int clip = 0;
 				for (int i = data.length - 1; i > 0; i--) {
 					if (data[i] == '-') {
 						clip++;
-					}else break;
+					}else {
+						break;
+					}
 				}
 				if (clip > 0) {
 					byte[] cdata = new byte[data.length - clip];
@@ -102,6 +115,9 @@ public class Multipart {
 		int ml = 0;
 		while ((i = in.read()) != -1) {
 			if (i == match[ml]) {
+				if (ml == 1 && in.markSupported()) {
+					in.mark(match.length);
+				}
 				ml++;
 				if (ml == match.length) {
 					break;
@@ -109,23 +125,13 @@ public class Multipart {
 			}else if (ml > 0) {
 				writer.write(match, 0, ml);
 				writer.write(i);
+				if (in.markSupported() && ml > 1) in.reset();
 				ml = 0;
 			}else {
 				writer.write(i);
 			}
 		}
 		return writer.toByteArray();
-	}
-	
-	private static String readLine(InputStream in) throws IOException {
-		ByteArrayOutputStream writer = new ByteArrayOutputStream();
-		int i = in.read();
-		while (i != AvunaHTTPD.crlfb[0] && i != -1) {
-			writer.write(i);
-			i = in.read();
-		}
-		if (AvunaHTTPD.crlfb.length == 2) in.read();
-		return writer.toString();
 	}
 	
 	public static class MultiPartData {
