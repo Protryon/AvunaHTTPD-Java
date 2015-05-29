@@ -166,6 +166,10 @@ public class FTPHandler {
 					focus.writeLine(500, "Illegal PORT command.");
 					return;
 				}
+				if (!ip.equals(focus.s.getInetAddress().getHostAddress())) {
+					focus.writeLine(500, "Illegal PORT command.");
+					return;
+				}
 				focus.psv = new ThreadPassive(focus, ip, port);
 				focus.psv.start();
 				focus.writeLine(200, "PORT command successful. Consider using PASV.");
