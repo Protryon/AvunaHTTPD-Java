@@ -7,13 +7,27 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Scanner;
-
+/**
+ * General utility for configuration array and file instantiation.
+ * Provides methods for reading and writing of formatted configuration files.
+ * 
+ * @author Max
+ * @see ConfigNode
+ * @see ConfigFormat abstract for configuration blocks.
+ */
 public class Config extends ConfigNode {
 	private final File cfg;
 	private ConfigFormat format = null;
 	private final String iconf;
 	public static final HashMap<String, Config> configs = new HashMap<String, Config>();
 	
+	/**
+	 * Reads, if exists, or creates configuration array and assigns values.
+	 * 
+	 * @param name configuration file name and top element of array
+	 * @param cfg file name
+	 * @param format block information for building array
+	 */
 	public Config(String name, File cfg, ConfigFormat format) {
 		super(name);
 		this.cfg = cfg;
@@ -43,6 +57,12 @@ public class Config extends ConfigNode {
 		}
 	}
 	
+	/**
+	 * Loads configuration file data from from file or std input if file does
+	 * not exist.
+	 * 
+	 * @throws IOException
+	 */
 	public void load() throws IOException {
 		if (cfg != null && !cfg.exists() && cfg.isFile()) {
 			format();
@@ -56,6 +76,9 @@ public class Config extends ConfigNode {
 	
 	private int tabLevel = 0;
 	
+	/**
+	 * @return string of 4 characters to create "tab".
+	 */
 	private String getWTab() {
 		StringBuilder ret = new StringBuilder();
 		for (int i = 0; i < tabLevel; i++) {
@@ -66,6 +89,12 @@ public class Config extends ConfigNode {
 	
 	private int pl = 0;
 	
+	/**
+	 * Read configuration file into array.
+	 * 
+	 * @param map
+	 * @param in
+	 */
 	private void readMap(ConfigNode map, Scanner in) {
 		while (in.hasNextLine()) {
 			String line = in.nextLine().trim();
@@ -93,6 +122,13 @@ public class Config extends ConfigNode {
 		}
 	}
 	
+	/**
+	 * Write configuration array out to json style format.
+	 * 
+	 * @param map
+	 * @param out
+	 * @see #save() saves physical file
+	 */
 	private void writeMap(ConfigNode map, PrintStream out) {
 		String c2 = map.getComment();
 		out.println(getWTab() + map.getName() + "{" + (c2 != null ? " # " + c2 : ""));
@@ -110,6 +146,12 @@ public class Config extends ConfigNode {
 		out.println(getWTab() + "}");
 	}
 	
+	/**
+	 * Save physical configuration file, creating parent directories if
+	 * they don't exist.
+	 * 
+	 * @throws IOException
+	 */
 	public void save() {
 		if (cfg == null) return;
 		format();
