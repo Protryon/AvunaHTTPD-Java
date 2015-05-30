@@ -55,7 +55,15 @@ public class ThreadPassive extends Thread {
 				}
 			}
 			if (cl) return;
-			Socket s = serv instanceof ServerSocket ? ((ServerSocket)serv).accept() : new Socket((String)serv, ep);
+			Socket s = null;
+			if (serv instanceof ServerSocket) {
+				do {
+					if (s != null) s.close();
+					s = ((ServerSocket)serv).accept();
+				}while (!s.getInetAddress().getHostAddress().equals(work.s.getInetAddress().getHostAddress()));
+			}else {
+				s = new Socket((String)serv, ep);
+			}
 			DataOutputStream out = new DataOutputStream(s.getOutputStream());
 			out.flush();
 			DataInputStream in = new DataInputStream(s.getInputStream());
