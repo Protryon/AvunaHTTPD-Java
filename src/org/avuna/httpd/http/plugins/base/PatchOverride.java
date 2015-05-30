@@ -36,7 +36,7 @@ public class PatchOverride extends Patch {
 	public void processPacket(Packet packet) {
 		RequestPacket request = (RequestPacket)packet;
 		try {
-			request.body = AvunaHTTPD.fileManager.preloadOverride(request, request.body);
+			request.body = AvunaHTTPD.fileManager.preloadOverride(request, request.body, request.host.getHTDocs().getAbsolutePath());
 		}catch (IOException e) {
 			Logger.logError(e);
 		}

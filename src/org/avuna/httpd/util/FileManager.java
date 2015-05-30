@@ -166,17 +166,36 @@ public class FileManager {
 	
 	private boolean lwi = false;// TODO: thread safety?
 	
-	public File getAbsolutePath(String reqTarget, RequestPacket request) {
+	public File getAbsolutePath(String reqTarget2, RequestPacket request) {
+		String reqTarget = reqTarget2;
 		lwi = false;
+		File htd = request.host.getHTDocs();
+		File abs = htd;
+		String htds = htd.getAbsolutePath();
+		String rdtf = null;
+		if (request.rags1 != null && request.rags2 != null) {
+			String subabs = reqTarget;
+			String nsa = subabs.replaceAll(request.rags1, request.rags2); // TODO: edward snowden ;)
+			if (!subabs.equals(nsa)) {
+				File saf = new File(htd, subabs);
+				File nsaf = new File(htd, nsa);
+				String safs = saf.getAbsolutePath();
+				String nsafs = nsaf.getAbsolutePath();
+				if (!safs.startsWith(htds) || !nsafs.startsWith(htds)) {
+					return null;
+				}
+				rdtf = safs;
+				if (!saf.exists()) {
+					reqTarget = nsa;
+				}
+			}
+		}
 		String[] t = new String[0];
 		try {
 			t = URLDecoder.decode(reqTarget, "UTF-8").split("/");
 		}catch (UnsupportedEncodingException e) {
 			Logger.logError(e);
 		}
-		File htd = request.host.getHTDocs();
-		File abs = htd;
-		String htds = htd.getAbsolutePath();
 		boolean ext = false;
 		String ep = "";
 		for (String st : t) {
@@ -184,10 +203,8 @@ public class FileManager {
 				ep += "/" + st;
 			}else {
 				abs = new File(abs, st);
-				if (!abs.exists()) {
+				if (abs.isFile() || (rdtf != null && abs.getAbsolutePath().startsWith(rdtf))) {
 					ext = true;
-					abs = abs.getParentFile();
-					ep += "/" + st;
 				}
 			}
 		}
@@ -195,17 +212,6 @@ public class FileManager {
 		String abspr = abs.getAbsolutePath();
 		if (!abspr.startsWith(htds)) {
 			return null;
-		}
-		if (request.rags1 != null && request.rags2 != null) {
-			String subabs = abspr.substring(htds.length());
-			String nsa = subabs.replaceAll(request.rags1, request.rags2); // TODO: edward snowden ;)
-			if (!subabs.equals(nsa)) {
-				abs = new File(htd, nsa);
-				abspr = abs.getAbsolutePath();
-				if (!abspr.startsWith(htds)) {
-					return null;
-				}
-			}
 		}
 		
 		if (abs.isDirectory()) {
@@ -260,7 +266,7 @@ public class FileManager {
 		return path.contains("/") ? path.substring(0, path.lastIndexOf("/") + 1) : path;
 	}
 	
-	public Resource preloadOverride(RequestPacket request, Resource resource) throws IOException {
+	public Resource preloadOverride(RequestPacket request, Resource resource, String htds) throws IOException {
 		if (resource == null) return null;
 		String rt = request.target;
 		if (rt.contains("#")) {
@@ -274,7 +280,19 @@ public class FileManager {
 			resource.effectiveOverride = cConfigCache.get(nrt);
 		}else {
 			File abs = getAbsolutePath(rt, request).getParentFile();
-			if (abs.exists()) resource.effectiveOverride = loadDirective(new File(abs, ".override"), nrt);
+			File override = null;
+			do {
+				if (!abs.exists()) abs = abs.getParentFile();
+				File no = new File(abs, ".override");
+				if (no.isFile()) {
+					override = no;
+					continue;
+				}else {
+					abs = abs.getParentFile();
+					if (!abs.getAbsolutePath().startsWith(htds)) break;
+				}
+			}while (override == null);
+			if (override != null) resource.effectiveOverride = loadDirective(new File(abs, ".override"), nrt);
 		}
 		return resource;
 	}
