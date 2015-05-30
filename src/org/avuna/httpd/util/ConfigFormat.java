@@ -6,5 +6,10 @@ public abstract class ConfigFormat {
 		
 	}
 	
+	/**
+	 * Method for inserting map block into configuration array.
+	 * 
+	 * @param map
+	 */
 	public abstract void format(ConfigNode map);
 }
