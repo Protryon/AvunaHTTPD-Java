@@ -194,14 +194,17 @@ public class PatchFCGI extends Patch {
 			session.param("REMOTE_PORT", request.userPort + "");
 			session.param("REQUEST_METHOD", request.method.name);
 			session.param("REDIRECT_STATUS", response.statusCode + "");
-			session.param("SCRIPT_NAME", rq);
+			Logger.log("oabs: " + response.body.oabs);
+			String oabs = response.body.oabs.replace("\\", "/");
+			String htds = request.host.getHTDocs().getAbsolutePath().replace("\\", "/");
+			session.param("SCRIPT_NAME", oabs.substring(0, htds.length()));
 			session.param("SERVER_NAME", request.headers.getHeader("Host"));
 			int port = request.host.getHost().getPort();
 			session.param("SERVER_PORT", port + "");
 			session.param("SERVER_PROTOCOL", request.httpVersion);
 			session.param("SERVER_SOFTWARE", "Avuna/" + AvunaHTTPD.VERSION);
-			session.param("DOCUMENT_ROOT", request.host.getHTDocs().getAbsolutePath().replace("\\", "/"));
-			session.param("SCRIPT_FILENAME", AvunaHTTPD.fileManager.getAbsolutePath(rq, request).getAbsolutePath().replace("\\", "/"));
+			session.param("DOCUMENT_ROOT", htds);
+			session.param("SCRIPT_FILENAME", oabs);
 			HashMap<String, ArrayList<String>> hdrs = request.headers.getHeaders();
 			for (String key : hdrs.keySet()) {
 				if (key.equalsIgnoreCase("Accept-Encoding")) continue;

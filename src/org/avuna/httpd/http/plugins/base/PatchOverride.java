@@ -63,9 +63,7 @@ public class PatchOverride extends Patch {
 				}
 				break;
 			case redirect:
-				if (rt.matches(d.args[0])) {
-					request.oredir = d.args[1];
-				}
+				request.oredir = rt.replaceAll(d.args[0], d.args[1]);
 				break;
 			case index:
 				request.overrideIndex = d.args;
@@ -83,9 +81,8 @@ public class PatchOverride extends Patch {
 				}
 				break;
 			case rewrite:
-				if (rt.matches(d.args[0])) {
-					request.target = d.args[1];
-				}
+				request.rags1 = d.args[0];
+				request.rags2 = d.args[1];
 				break;
 			}
 		}
@@ -116,6 +113,7 @@ public class PatchOverride extends Patch {
 		if (request.forbode) {
 			ResponseGenerator.generateDefaultResponse(response, StatusCode.FORBIDDEN);
 			response.body = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.FORBIDDEN, "You don't have permission to access " + request.target + " on this server.");
+			response.headers.updateHeader("Content-Type", response.body.type);
 			return response.body.data;
 		}else if (request.oredir.length() > 0) {
 			ResponseGenerator.generateDefaultResponse(response, StatusCode.FOUND);

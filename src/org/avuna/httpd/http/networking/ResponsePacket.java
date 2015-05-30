@@ -69,7 +69,7 @@ public class ResponsePacket extends Packet {
 					cachedSerialize = new byte[0];
 					return new byte[0];
 				}
-				this.body = new Resource(finalc, this.headers.hasHeader("Content-Type") ? this.headers.getHeader("Content-Type") : "text/html", this.request.target, this.body.effectiveOverride);
+				this.body = new Resource(finalc, this.headers.hasHeader("Content-Type") ? this.headers.getHeader("Content-Type") : "text/html", this.request.target, this.body.effectiveOverride, "");
 			}else {
 				add = new byte[0];// AvunaHTTPD.crlf.getBytes();
 			}

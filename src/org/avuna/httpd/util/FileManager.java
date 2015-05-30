@@ -90,6 +90,7 @@ public class FileManager {
 			extCache.remove(delKeys[i]);
 			lwiCache.remove(delKeys[i]);
 			tbCache.remove(delKeys[i]);
+			absCache.remove(delKeys[i]);
 		}
 		cConfigCache.clear();
 		for (Host host : AvunaHTTPD.hosts.values()) {
@@ -121,6 +122,7 @@ public class FileManager {
 			extCache.remove(delKeys[i]);
 			lwiCache.remove(delKeys[i]);
 			tbCache.remove(delKeys[i]);
+			absCache.remove(delKeys[i]);
 		}
 	}
 	
@@ -162,7 +164,7 @@ public class FileManager {
 		return error;
 	}
 	
-	private boolean lwi = false;
+	private boolean lwi = false;// TODO: thread safety?
 	
 	public File getAbsolutePath(String reqTarget, RequestPacket request) {
 		lwi = false;
@@ -172,7 +174,9 @@ public class FileManager {
 		}catch (UnsupportedEncodingException e) {
 			Logger.logError(e);
 		}
-		File abs = request.host.getHTDocs();
+		File htd = request.host.getHTDocs();
+		File abs = htd;
+		String htds = htd.getAbsolutePath();
 		boolean ext = false;
 		String ep = "";
 		for (String st : t) {
@@ -180,17 +184,32 @@ public class FileManager {
 				ep += "/" + st;
 			}else {
 				abs = new File(abs, st);
-				if (abs.isFile()) {
+				if (!abs.exists()) {
 					ext = true;
+					abs = abs.getParentFile();
+					ep += "/" + st;
 				}
 			}
 		}
+		Logger.log("abs: " + abs.getAbsolutePath() + ", ext: " + ep);
 		request.extraPath = ep;
 		String abspr = abs.getAbsolutePath();
-		String htd = request.host.getHTDocs().getAbsolutePath();
-		if (!abspr.startsWith(htd)) {
+		if (!abspr.startsWith(htds)) {
 			return null;
 		}
+		if (request.rags1 != null && request.rags2 != null) {
+			String subabs = abspr.substring(htds.length());
+			String nsa = subabs.replaceAll(request.rags1, request.rags2); // TODO: edward snowden ;)
+			if (!subabs.equals(nsa)) {
+				abs = new File(htd, nsa);
+				abspr = abs.getAbsolutePath();
+				if (!abspr.startsWith(htds)) {
+					return null;
+				}
+			}
+		}
+		Logger.log("2, abs: " + abs.getAbsolutePath() + ", ext: " + ep);
+		
 		if (abs.isDirectory()) {
 			String[] index = null;
 			if (request.overrideIndex != null) {
@@ -210,7 +229,7 @@ public class FileManager {
 				File f = new File(abst + i);
 				if (f.exists()) {
 					abs = f;
-					lwi = true;
+					if (ep.length() == 0) lwi = true;
 					break;
 				}
 			}
@@ -225,6 +244,7 @@ public class FileManager {
 	
 	public static final HashMap<String, byte[]> cache = new HashMap<String, byte[]>();
 	public static final HashMap<String, String> extCache = new HashMap<String, String>();
+	public static final HashMap<String, String> absCache = new HashMap<String, String>();
 	public static final HashMap<String, Boolean> lwiCache = new HashMap<String, Boolean>();
 	public static final HashMap<String, Boolean> tbCache = new HashMap<String, Boolean>();
 	public static final HashMap<String, OverrideConfig> cConfigCache = new HashMap<String, OverrideConfig>();
@@ -277,6 +297,7 @@ public class FileManager {
 			boolean lwi = false;
 			boolean tooBig = false;
 			OverrideConfig directive = null;
+			String oabs = null;
 			if (cache.containsKey(nrt)) {
 				long t = System.currentTimeMillis();
 				long cc = Integer.parseInt(request.host.getHost().getConfig().getNode("cacheClock").getValue());
@@ -292,6 +313,7 @@ public class FileManager {
 					ext = extCache.get(nrt);
 					lwi = lwiCache.get(nrt);
 					tooBig = tbCache.get(nrt);
+					oabs = absCache.get(nrt);
 					directive = cConfigCache.get(superdir);
 				}else if (!tc && cc > 0) {
 					cacheClock = t;
@@ -306,6 +328,7 @@ public class FileManager {
 						cache.remove(delKeys[i]);
 						extCache.remove(delKeys[i]);
 						lwiCache.remove(delKeys[i]);
+						absCache.remove(delKeys[i]);
 						tbCache.remove(delKeys[i]);
 					}
 					cConfigCache.clear();
@@ -317,6 +340,7 @@ public class FileManager {
 				if (!cConfigCache.containsKey(superdir) && abs != null) {
 					directive = loadDirective(new File(abs.getParentFile(), ".override"), superdir);
 				}
+				oabs = abs.getAbsolutePath();
 				if (abs != null && abs.exists()) {
 					ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
 					ext = AvunaHTTPD.extensionToMime.containsKey(ext) ? AvunaHTTPD.extensionToMime.get(ext) : "application/octet-stream";
@@ -343,6 +367,7 @@ public class FileManager {
 					extCache.put(nrt, "text/html");
 					lwi = this.lwi;
 					lwiCache.put(nrt, lwi);
+					absCache.put(nrt, oabs);
 					tbCache.put(nrt, false);
 					return null;
 				}
@@ -350,9 +375,10 @@ public class FileManager {
 				extCache.put(nrt, ext);
 				lwi = this.lwi;
 				lwiCache.put(nrt, lwi);
+				absCache.put(nrt, oabs);
 				tbCache.put(nrt, tooBig);
 			}
-			Resource r = new Resource(resource, ext, rt, directive);
+			Resource r = new Resource(resource, ext, rt, directive, oabs);
 			r.wasDir = lwi;
 			r.tooBig = tooBig;
 			return r;
