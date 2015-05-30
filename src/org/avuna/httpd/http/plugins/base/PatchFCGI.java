@@ -194,7 +194,6 @@ public class PatchFCGI extends Patch {
 			session.param("REMOTE_PORT", request.userPort + "");
 			session.param("REQUEST_METHOD", request.method.name);
 			session.param("REDIRECT_STATUS", response.statusCode + "");
-			Logger.log("oabs: " + response.body.oabs);
 			String oabs = response.body.oabs.replace("\\", "/");
 			String htds = request.host.getHTDocs().getAbsolutePath().replace("\\", "/");
 			session.param("SCRIPT_NAME", oabs.substring(0, htds.length()));

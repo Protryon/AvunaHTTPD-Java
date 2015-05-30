@@ -191,7 +191,6 @@ public class FileManager {
 				}
 			}
 		}
-		Logger.log("abs: " + abs.getAbsolutePath() + ", ext: " + ep);
 		request.extraPath = ep;
 		String abspr = abs.getAbsolutePath();
 		if (!abspr.startsWith(htds)) {
@@ -208,7 +207,6 @@ public class FileManager {
 				}
 			}
 		}
-		Logger.log("2, abs: " + abs.getAbsolutePath() + ", ext: " + ep);
 		
 		if (abs.isDirectory()) {
 			String[] index = null;
