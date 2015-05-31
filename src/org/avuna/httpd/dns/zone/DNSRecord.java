@@ -3,15 +3,17 @@ package org.avuna.httpd.dns.zone;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Random;
 import org.avuna.httpd.dns.Type;
 import org.avuna.httpd.dns.Util;
 
 public class DNSRecord implements IDirective {
 	private final String domain;
 	private final Type type;
-	private final int ttl;
+	private final int ttlr1, ttlr2;
 	private final byte[] data;
 	private final String[] tv;
+	private static final Random rand = new Random();
 	
 	public String getDomain() {
 		return domain;
@@ -22,7 +24,7 @@ public class DNSRecord implements IDirective {
 	}
 	
 	public int getTimeToLive() {
-		return ttl;
+		return ttlr1 == ttlr2 ? ttlr1 : rand.nextInt(ttlr2 - ttlr1) + ttlr1;
 	}
 	
 	public byte[] getData() {
@@ -107,18 +109,20 @@ public class DNSRecord implements IDirective {
 		return fd;
 	}
 	
-	public DNSRecord(String domain, Type type, int ttl, byte[] data, String[] tv) {
+	public DNSRecord(String domain, Type type, int ttlr1, int ttlr2, byte[] data, String[] tv) {
 		this.domain = domain;
 		this.type = type;
-		this.ttl = ttl;
+		this.ttlr1 = ttlr1;
+		this.ttlr2 = ttlr2;
 		this.data = data;
 		this.tv = tv;
 	}
 	
-	public DNSRecord(String domain, String ip, int ttl) {
+	public DNSRecord(String domain, String ip, int ttlr1, int ttlr2) {
 		this.domain = domain;
 		this.type = Type.A;
-		this.ttl = ttl;
+		this.ttlr1 = ttlr1;
+		this.ttlr2 = ttlr2;
 		this.data = Util.ipToByte(ip);
 		this.tv = new String[]{ip};
 	}
