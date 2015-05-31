@@ -87,7 +87,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 								ret.append(" NIL NIL NIL");
 								ret.append(")");
 							}
-							ret.append(" \"ALTERNATIVE\" (\"BOUNDARY\" \"");
+							ret.append(" \"" + e.mp.mct.substring(e.mp.mct.indexOf("/") + 1).toUpperCase() + "\" (\"BOUNDARY\" \"");
 							ret.append(e.mp.boundary);
 							ret.append("\") NIL NIL");
 						}else {

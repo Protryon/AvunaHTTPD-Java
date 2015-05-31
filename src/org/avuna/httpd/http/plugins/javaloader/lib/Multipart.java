@@ -12,16 +12,18 @@ import org.avuna.httpd.util.Stream;
 public class Multipart {
 	public final ArrayList<MultiPartData> mpds = new ArrayList<MultiPartData>();
 	public String boundary;
+	public String mct = "";
 	
-	public Multipart(byte[] content) {
-		this(new ByteArrayInputStream(content));
+	public Multipart(String sct, byte[] content) {
+		this(sct, new ByteArrayInputStream(content));
 	}
 	
-	public Multipart(InputStream bin) {
-		this(null, bin);
+	public Multipart(String sct, InputStream bin) {
+		this(sct, null, bin);
 	}
 	
-	public Multipart(String boundary, InputStream bin) {
+	public Multipart(String sct, String boundary, InputStream bin) {
+		this.mct = sct;
 		try {
 			if (boundary == null) {
 				do {
@@ -50,7 +52,7 @@ public class Multipart {
 						fb = false;
 						break;
 					}
-					if (str.length() == 0) {
+					if (str.length() == 0 || !str.contains(":")) {
 						if (fb) continue;
 						else break;
 					}

@@ -76,7 +76,7 @@ public class Email {
 					if (b.startsWith("\"") && b.endsWith("\"")) b = b.substring(1, b.length() - 1);
 				}
 			}
-			this.mp = new Multipart(b, bin);
+			this.mp = new Multipart(ct, b, bin);
 			if (this.mp.mpds.size() > 0) {
 				MultiPartData mpd = this.mp.mpds.get(0);
 				if (mpd.contentType != null && mpd.contentType.equals("application/octet-stream")) {
