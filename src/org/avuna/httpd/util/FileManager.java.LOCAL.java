@@ -272,6 +272,7 @@ public class FileManager {
 		}catch (UnsupportedEncodingException e) {
 			Logger.logError(e);
 		}
+		File abs = request.host.getHTDocs();
 		boolean ext = false;
 		String ep = "";
 		for (String st : t) {

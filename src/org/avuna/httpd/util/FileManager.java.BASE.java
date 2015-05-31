@@ -22,28 +22,13 @@ import org.avuna.httpd.http.plugins.javaloader.lib.HTMLCache;
 import org.avuna.httpd.http.plugins.javaloader.lib.JavaLoaderUtil;
 import org.avuna.httpd.http.util.OverrideConfig;
 
-/**
- * General utility for File type objects.
- * 
- * @author Max
- *
- */
 public class FileManager {
 	public FileManager() {
 		
 	}
 	
-	/**
-	 * Character array of valid hex values.
-	 */
 	private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
 	
-	/**
-	 * Converts a byte array to a string in hex format.
-	 * 
-	 * @param bytes a byte array
-	 * @return String in hex
-	 */
 	public String bytesToHex(byte[] bytes) {
 		char[] hexChars = new char[bytes.length * 2];
 		for (int j = 0; j < bytes.length; j++) {
@@ -59,23 +44,10 @@ public class FileManager {
 	private HashMap<String, File> base = new HashMap<String, File>();
 	private HashMap<HostHTTP, File> plugins = new HashMap<HostHTTP, File>();
 	
-	/**
-	 * Get object dir value if exists or get value from {@link AvunaHTTPD#mainConfig mainConfig}.
-	 * 
-	 * @return dir
-	 */
 	public File getMainDir() {
 		return dir == null ? (dir = new File(AvunaHTTPD.mainConfig.getNode("dir").getValue())) : dir;
 	}
 	
-	/** 
-	 * Get plugins value from host configuration if exists else get it from
-	 * the host "plugins" node.
-	 * 
-	 * @param host
-	 * @see HashMap#put(Object, Object)
-	 * @return plugins value
-	 */
 	public File getPlugins(HostHTTP host) {
 		if (plugins.containsKey(host)) {
 			return plugins.get(host);
@@ -86,23 +58,10 @@ public class FileManager {
 		}
 	}
 	
-	/**
-	 * Get logs value if exists else get value from {@link AvunaHTTPD#mainConfig mainConfig}.
-	 * 
-	 * @return logs value
-	 */
 	public File getLogs() {
 		return logs == null ? (logs = new File(AvunaHTTPD.mainConfig.getNode("logs").getValue())) : logs;
 	}
 	
-	/**
-	 * Get plugin value if exists else create new plugin entry in plugins.
-	 * 
-	 * @param p plugin object
-	 * @see HashMap
-	 * @see Object#hashCode
-	 * @return plugin
-	 */
 	public File getPlugin(Patch p) {
 		if (!plugin.containsKey(p.hashCode() + "" + p.registry.host.hashCode())) {
 			plugin.put(p.hashCode() + "" + p.registry.host.hashCode(), new File(getPlugins(p.registry.host), p.name));
@@ -110,12 +69,6 @@ public class FileManager {
 		return plugin.get(p.hashCode() + "" + p.registry.host.hashCode());
 	}
 	
-	/**
-	 * Get base file value for object else get main directory and set it.
-	 * 
-	 * @param name
-	 * @return name base file name
-	 */
 	public File getBaseFile(String name) {
 		if (!base.containsKey(name)) {
 			base.put(name, new File(getMainDir(), name));
@@ -123,15 +76,6 @@ public class FileManager {
 		return base.get(name);
 	}
 	
-	/**
-	 * Clear the HTML cache, including extCache, lwiCache, and tbCache,
-	 * except where extCache has key "application/x-java". Also clears
-	 * Patch maps.
-	 * 
-	 * @see PatchInline#clearCache()
-	 * @see PatchGZip#clearCache()
-	 * @throws IOException
-	 */
 	public void clearCache() throws IOException {
 		HTMLCache.reloadAll();
 		String[] delKeys = new String[cache.size()];
@@ -146,7 +90,6 @@ public class FileManager {
 			extCache.remove(delKeys[i]);
 			lwiCache.remove(delKeys[i]);
 			tbCache.remove(delKeys[i]);
-			absCache.remove(delKeys[i]);
 		}
 		cConfigCache.clear();
 		for (Host host : AvunaHTTPD.hosts.values()) {
@@ -178,21 +121,9 @@ public class FileManager {
 			extCache.remove(delKeys[i]);
 			lwiCache.remove(delKeys[i]);
 			tbCache.remove(delKeys[i]);
-			absCache.remove(delKeys[i]);
 		}
 	}
 	
-	/**
-	 * Takes error page request, if error page is in configuration deliver it
-	 * back, else deliver standard html notice.
-	 * 
-	 * @param request
-	 * @param reqTarget
-	 * @param status
-	 * @param info
-	 * @see Resource
-	 * @return error page if configured, else standard error message.
-	 */
 	public Resource getErrorPage(RequestPacket request, String reqTarget, StatusCode status, String info) {
 		ConfigNode errorPages = request.host.getHost().getConfig().getNode("errorpages");
 		if (errorPages.containsNode(status.getStatus() + "")) {
@@ -231,47 +162,17 @@ public class FileManager {
 		return error;
 	}
 	
-	private boolean lwi = false;// TODO: thread safety?
+	private boolean lwi = false;
 	
-	/**
-	 * Retrieve file system path to requested URL. If request is to directory,
-	 * append index file path from host configuration. Set extra parameters
-	 * to child of path.
-	 * 
-	 * @param reqTarget request URL
-	 * @param request Incoming packet for host data
-	 * @return absolute file system path and parameter string (as child)
-	 */
-	public File getAbsolutePath(String reqTarget2, RequestPacket request) {
-		String reqTarget = reqTarget2;
+	public File getAbsolutePath(String reqTarget, RequestPacket request) {
 		lwi = false;
-		File htd = request.host.getHTDocs();
-		File abs = htd;
-		String htds = htd.getAbsolutePath();
-		String rdtf = null;
-		if (request.rags1 != null && request.rags2 != null) {
-			String subabs = reqTarget;
-			String nsa = subabs.replaceAll(request.rags1, request.rags2); // TODO: edward snowden ;)
-			if (!subabs.equals(nsa)) {
-				File saf = new File(htd, subabs);
-				File nsaf = new File(htd, nsa);
-				String safs = saf.getAbsolutePath();
-				String nsafs = nsaf.getAbsolutePath();
-				if (!safs.startsWith(htds) || !nsafs.startsWith(htds)) {
-					return null;
-				}
-				rdtf = safs;
-				if (!saf.exists()) {
-					reqTarget = nsa;
-				}
-			}
-		}
 		String[] t = new String[0];
 		try {
 			t = URLDecoder.decode(reqTarget, "UTF-8").split("/");
 		}catch (UnsupportedEncodingException e) {
 			Logger.logError(e);
 		}
+		File abs = request.host.getHTDocs();
 		boolean ext = false;
 		String ep = "";
 		for (String st : t) {
@@ -279,17 +180,17 @@ public class FileManager {
 				ep += "/" + st;
 			}else {
 				abs = new File(abs, st);
-				if (abs.isFile() || (rdtf != null && abs.getAbsolutePath().startsWith(rdtf))) {
+				if (abs.isFile()) {
 					ext = true;
 				}
 			}
 		}
 		request.extraPath = ep;
 		String abspr = abs.getAbsolutePath();
-		if (!abspr.startsWith(htds)) {
+		String htd = request.host.getHTDocs().getAbsolutePath();
+		if (!abspr.startsWith(htd)) {
 			return null;
 		}
-		
 		if (abs.isDirectory()) {
 			String[] index = null;
 			if (request.overrideIndex != null) {
@@ -309,7 +210,7 @@ public class FileManager {
 				File f = new File(abst + i);
 				if (f.exists()) {
 					abs = f;
-					if (ep.length() == 0) lwi = true;
+					lwi = true;
 					break;
 				}
 			}
@@ -324,7 +225,6 @@ public class FileManager {
 	
 	public static final HashMap<String, byte[]> cache = new HashMap<String, byte[]>();
 	public static final HashMap<String, String> extCache = new HashMap<String, String>();
-	public static final HashMap<String, String> absCache = new HashMap<String, String>();
 	public static final HashMap<String, Boolean> lwiCache = new HashMap<String, Boolean>();
 	public static final HashMap<String, Boolean> tbCache = new HashMap<String, Boolean>();
 	public static final HashMap<String, OverrideConfig> cConfigCache = new HashMap<String, OverrideConfig>();
@@ -342,7 +242,7 @@ public class FileManager {
 		return path.contains("/") ? path.substring(0, path.lastIndexOf("/") + 1) : path;
 	}
 	
-	public Resource preloadOverride(RequestPacket request, Resource resource, String htds) throws IOException {
+	public Resource preloadOverride(RequestPacket request, Resource resource) throws IOException {
 		if (resource == null) return null;
 		String rt = request.target;
 		if (rt.contains("#")) {
@@ -356,19 +256,7 @@ public class FileManager {
 			resource.effectiveOverride = cConfigCache.get(nrt);
 		}else {
 			File abs = getAbsolutePath(rt, request).getParentFile();
-			File override = null;
-			do {
-				if (!abs.exists()) abs = abs.getParentFile();
-				File no = new File(abs, ".override");
-				if (no.isFile()) {
-					override = no;
-					continue;
-				}else {
-					abs = abs.getParentFile();
-					if (!abs.getAbsolutePath().startsWith(htds)) break;
-				}
-			}while (override == null);
-			if (override != null) resource.effectiveOverride = loadDirective(new File(abs, ".override"), nrt);
+			if (abs.exists()) resource.effectiveOverride = loadDirective(new File(abs, ".override"), nrt);
 		}
 		return resource;
 	}
@@ -389,7 +277,6 @@ public class FileManager {
 			boolean lwi = false;
 			boolean tooBig = false;
 			OverrideConfig directive = null;
-			String oabs = null;
 			if (cache.containsKey(nrt)) {
 				long t = System.currentTimeMillis();
 				long cc = Integer.parseInt(request.host.getHost().getConfig().getNode("cacheClock").getValue());
@@ -405,7 +292,6 @@ public class FileManager {
 					ext = extCache.get(nrt);
 					lwi = lwiCache.get(nrt);
 					tooBig = tbCache.get(nrt);
-					oabs = absCache.get(nrt);
 					directive = cConfigCache.get(superdir);
 				}else if (!tc && cc > 0) {
 					cacheClock = t;
@@ -420,7 +306,6 @@ public class FileManager {
 						cache.remove(delKeys[i]);
 						extCache.remove(delKeys[i]);
 						lwiCache.remove(delKeys[i]);
-						absCache.remove(delKeys[i]);
 						tbCache.remove(delKeys[i]);
 					}
 					cConfigCache.clear();
@@ -432,7 +317,6 @@ public class FileManager {
 				if (!cConfigCache.containsKey(superdir) && abs != null) {
 					directive = loadDirective(new File(abs.getParentFile(), ".override"), superdir);
 				}
-				oabs = abs.getAbsolutePath();
 				if (abs != null && abs.exists()) {
 					ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
 					ext = AvunaHTTPD.extensionToMime.containsKey(ext) ? AvunaHTTPD.extensionToMime.get(ext) : "application/octet-stream";
@@ -459,7 +343,6 @@ public class FileManager {
 					extCache.put(nrt, "text/html");
 					lwi = this.lwi;
 					lwiCache.put(nrt, lwi);
-					absCache.put(nrt, oabs);
 					tbCache.put(nrt, false);
 					return null;
 				}
@@ -467,10 +350,9 @@ public class FileManager {
 				extCache.put(nrt, ext);
 				lwi = this.lwi;
 				lwiCache.put(nrt, lwi);
-				absCache.put(nrt, oabs);
 				tbCache.put(nrt, tooBig);
 			}
-			Resource r = new Resource(resource, ext, rt, directive, oabs);
+			Resource r = new Resource(resource, ext, rt, directive);
 			r.wasDir = lwi;
 			r.tooBig = tooBig;
 			return r;

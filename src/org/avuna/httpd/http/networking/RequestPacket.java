@@ -32,6 +32,7 @@ public class RequestPacket extends Packet {
 	public RequestPacket parent = null;
 	public ResponsePacket child = null;
 	public int order = -1;
+	public String rags1 = null, rags2 = null;
 	// javaloader vars
 	public HashMap<String, String> get = new HashMap<String, String>();
 	public HashMap<String, String> post = new HashMap<String, String>();

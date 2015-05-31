@@ -188,7 +188,7 @@ public class FTPHandler {
 				do {
 					try {
 						int port = rand.nextInt(65534 - 1024) + 1024;
-						ps = new ServerSocket(port);
+						ps = new ServerSocket(port, 1);
 						int minor = (port % 256);
 						int major = (port - minor) / 256;
 						focus.psv = new ThreadPassive(focus, ps);
@@ -636,7 +636,7 @@ public class FTPHandler {
 		});
 		commands.add(new FTPCommand("site", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				String[] args = line.split(" ");
+				// String[] args = line.split(" ");
 				
 				focus.writeLine(500, "Unknown SITE command.");
 			}

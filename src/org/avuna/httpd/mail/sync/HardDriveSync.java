@@ -85,7 +85,12 @@ public class HardDriveSync extends Sync {
 								for (File eml : mf.listFiles()) {
 									try {
 										if (eml.isFile()) {
-											int uid = Integer.parseInt(eml.getName().substring(0, eml.getName().indexOf(".")));
+											int uid = -1;
+											try {
+												uid = Integer.parseInt(eml.getName().substring(0, eml.getName().indexOf(".")));
+											}catch (NumberFormatException e) {
+												continue;
+											}
 											DataInputStream fin = new DataInputStream(new FileInputStream(eml));
 											byte[] fba = new byte[fin.readInt()];
 											fin.readFully(fba);

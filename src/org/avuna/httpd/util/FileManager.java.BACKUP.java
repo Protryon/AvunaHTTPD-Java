@@ -233,6 +233,7 @@ public class FileManager {
 	
 	private boolean lwi = false;// TODO: thread safety?
 	
+<<<<<<< HEAD
 	/**
 	 * Retrieve file system path to requested URL. If request is to directory,
 	 * append index file path from host configuration. Set extra parameters
@@ -242,8 +243,11 @@ public class FileManager {
 	 * @param request Incoming packet for host data
 	 * @return absolute file system path and parameter string (as child)
 	 */
+	public File getAbsolutePath(String reqTarget, RequestPacket request) {
+=======
 	public File getAbsolutePath(String reqTarget2, RequestPacket request) {
 		String reqTarget = reqTarget2;
+>>>>>>> master
 		lwi = false;
 		File htd = request.host.getHTDocs();
 		File abs = htd;
