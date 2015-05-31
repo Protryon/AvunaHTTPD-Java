@@ -141,6 +141,11 @@ public class IMAPCommandSearch extends IMAPCommand {
 			for (int i = 0; i < emails.size(); i++) {
 				if (emails.get(i).flags.contains("\\Deleted")) emails.remove(i--);
 			}
+		}else if (com.startsWith("uid ")) {
+			int u = Integer.parseInt(com.substring(4));
+			for (int i = 0; i < emails.size(); i++) {
+				if (emails.get(i).uid != u) emails.remove(i--);
+			}
 		}else {
 			try {
 				ArrayList<Email> toFetch = focus.selectedMailbox.getByIdentifier(com);
@@ -176,7 +181,11 @@ public class IMAPCommandSearch extends IMAPCommand {
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i].toLowerCase().replace("\"", "");
 			String targ = arg;
-			if (arg.equals("before") || arg.equals("since") || arg.equals("not")) {
+			if (arg.equals("not")) {
+				targ += " " + args[++i].toLowerCase().replace("\"", "");
+				arg = args[i];
+			}
+			if (arg.equals("before") || arg.equals("since") || arg.equals("uid")) {
 				targ += " " + args[++i].toLowerCase().replace("\"", "");
 			}
 			Logger.log(targ);
