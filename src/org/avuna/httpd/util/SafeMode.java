@@ -131,21 +131,25 @@ public class SafeMode {
 		}catch (CException e) {
 			return;
 		}
-		setPerms(root, uid, gid, 0700);
+		setPerms(root, uid, gid, 0770);
 		for (File f : root.listFiles()) {
 			if (f.isDirectory()) {
 				recurPerms(f, uid, gid, true);
 			}else {
 				if (uid == 0 && gid == 0) {
-					setPerms(f, 0, 0, 0700);
+					if (f.getName().endsWith(".sh")) {
+						setPerms(f, 0, 0, 0770);
+					}else {
+						setPerms(f, 0, 0, 0660);
+					}
 				}else {
 					String rn = f.getName();
 					if (!recursed && (rn.equals("avuna.jar") || rn.equals("main.cfg"))) {
 						setPerms(f, 0, gid, 0640);
 					}else if (!recursed && (rn.equals("kill.sh") || rn.equals("run.sh") || rn.equals("restart.sh") || rn.equals("cmd.sh"))) {
-						setPerms(f, 0, 0, 0700);
+						setPerms(f, 0, 0, 0770);
 					}else {
-						setPerms(f, uid, gid, 0700);
+						setPerms(f, uid, gid, 0660);
 					}
 				}
 			}

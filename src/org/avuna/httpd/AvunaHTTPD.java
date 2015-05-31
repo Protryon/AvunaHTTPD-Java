@@ -347,6 +347,7 @@ public class AvunaHTTPD {
 			}
 			unpack();
 			loadUnpacked();
+			if (!windows) CLib.umask(0007);// no anything for everyone
 			// {
 			// final UnixServerSocket uss = new UnixServerSocket("/tmp2.sock");
 			// uss.bind();
