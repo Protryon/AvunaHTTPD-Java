@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.Headers;
 import org.avuna.httpd.http.plugins.javaloader.lib.Multipart;
-import org.avuna.httpd.http.plugins.javaloader.lib.Multipart.MultiPartData;
 import org.avuna.httpd.util.Logger;
 
 public class Email {
@@ -20,7 +19,6 @@ public class Email {
 	public final Headers headers = new Headers();
 	public int uid;
 	public final Multipart mp;
-	public boolean hasExtraPart = false;
 	
 	private static String readLine(InputStream in) throws IOException {
 		ByteArrayOutputStream writer = new ByteArrayOutputStream();
@@ -77,12 +75,12 @@ public class Email {
 				}
 			}
 			this.mp = new Multipart(ct, b, bin);
-			if (this.mp.mpds.size() > 0) {
-				MultiPartData mpd = this.mp.mpds.get(0);
-				if (mpd.contentType != null && mpd.contentType.equals("application/octet-stream")) {
-					this.hasExtraPart = true;
-				}
-			}
+			// if (this.mp.mpds.size() > 0) {
+			// MultiPartData mpd = this.mp.mpds.get(0);
+			// if (mpd.contentType != null && mpd.contentType.equals("")) {
+			// this.hasExtraPart = true;
+			// }
+			// }
 		}else {
 			this.mp = null;
 		}
