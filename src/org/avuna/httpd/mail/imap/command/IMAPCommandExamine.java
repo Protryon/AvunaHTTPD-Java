@@ -33,16 +33,19 @@ public class IMAPCommandExamine extends IMAPCommand {
 				focus.state = 3;
 				focus.writeLine(focus, "*", "FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)");
 				focus.writeLine(focus, "*", "OK [PERMANENTFLAGS ()] Read-only mailbox.");
-				synchronized (focus.selectedMailbox.emails) {
-					focus.writeLine(focus, "*", m.emails.length + " EXISTS");
+				synchronized (m.emails) {
+					focus.writeLine(focus, "*", m.emails.length + " EXISTS"); // TODO: deleted
 				}
 				int recent = 0;
-				for (Email e : m.emails) {
-					if (e.flags.contains("\\Recent")) recent++;
+				synchronized (m.emails) {
+					for (Email e : m.emails) {
+						if (e == null) continue;
+						if (e.flags.contains("\\Recent")) recent++;
+					}
 				}
 				focus.writeLine(focus, "*", recent + " RECENT");
 				focus.writeLine(focus, "*", "OK [UIDVALIDITY " + Integer.MAX_VALUE + "] UIDs valid");
-				synchronized (focus.selectedMailbox.emails) {
+				synchronized (m.emails) {
 					focus.writeLine(focus, "*", "OK [UIDNEXT " + (m.emails.length + 1) + "] Predicted next UID");
 				}
 				focus.writeLine(focus, "*", "OK [HIGHESTMODSEQ 1] Highest");

@@ -139,7 +139,60 @@ public class IMAPCommandSearch extends IMAPCommand {
 			}
 		}else if (com.equals("deleted")) {
 			for (int i = 0; i < emails.size(); i++) {
+				if (!emails.get(i).flags.contains("\\Deleted")) emails.remove(i--);
+			}
+		}else if (com.equals("flagged")) {
+			for (int i = 0; i < emails.size(); i++) {
+				if (!emails.get(i).flags.contains("\\Flagged")) emails.remove(i--);
+			}
+		}else if (com.equals("draft")) {
+			for (int i = 0; i < emails.size(); i++) {
+				if (!emails.get(i).flags.contains("\\Draft")) emails.remove(i--);
+			}
+		}else if (com.equals("seen")) {
+			for (int i = 0; i < emails.size(); i++) {
+				if (!emails.get(i).flags.contains("\\Seen")) emails.remove(i--);
+			}
+		}else if (com.equals("answered")) {
+			for (int i = 0; i < emails.size(); i++) {
+				if (!emails.get(i).flags.contains("\\Answered")) emails.remove(i--);
+			}
+		}else if (com.equals("unseen")) {
+			for (int i = 0; i < emails.size(); i++) {
+				if (!emails.get(i).flags.contains("\\Unseen")) emails.remove(i--);
+			}
+		}else if (com.equals("new")) {
+			for (int i = 0; i < emails.size(); i++) {
+				if (!emails.get(i).flags.contains("\\Seen") && emails.get(i).flags.contains("\\Recent")) emails.remove(i--);
+			}
+		}else if (com.equals("old")) {
+			for (int i = 0; i < emails.size(); i++) {
+				if (!emails.get(i).flags.contains("\\Recent")) emails.remove(i--);
+			}
+		}else if (com.equals("recent")) {
+			for (int i = 0; i < emails.size(); i++) {
+				if (emails.get(i).flags.contains("\\Recent")) emails.remove(i--);
+			}
+		}else if (com.equals("unanswered")) {
+			for (int i = 0; i < emails.size(); i++) {
+				if (emails.get(i).flags.contains("\\Answered")) emails.remove(i--);
+			}
+		}else if (com.equals("undeleted")) {
+			for (int i = 0; i < emails.size(); i++) {
 				if (emails.get(i).flags.contains("\\Deleted")) emails.remove(i--);
+			}
+		}else if (com.equals("undraft")) {
+			for (int i = 0; i < emails.size(); i++) {
+				if (emails.get(i).flags.contains("\\Draft")) emails.remove(i--);
+			}
+		}else if (com.equals("unflagged")) {
+			for (int i = 0; i < emails.size(); i++) {
+				if (emails.get(i).flags.contains("\\Flagged")) emails.remove(i--);
+			}
+		}else if (com.startsWith("uid ")) {
+			int u = Integer.parseInt(com.substring(4));
+			for (int i = 0; i < emails.size(); i++) {
+				if (emails.get(i).uid != u) emails.remove(i--);
 			}
 		}else {
 			try {
@@ -176,7 +229,11 @@ public class IMAPCommandSearch extends IMAPCommand {
 		for (int i = 0; i < args.length; i++) {
 			String arg = args[i].toLowerCase().replace("\"", "");
 			String targ = arg;
-			if (arg.equals("before") || arg.equals("since") || arg.equals("not")) {
+			if (arg.equals("not")) {
+				targ += " " + args[++i].toLowerCase().replace("\"", "");
+				arg = args[i];
+			}
+			if (arg.equals("before") || arg.equals("since") || arg.equals("uid")) {
 				targ += " " + args[++i].toLowerCase().replace("\"", "");
 			}
 			Logger.log(targ);

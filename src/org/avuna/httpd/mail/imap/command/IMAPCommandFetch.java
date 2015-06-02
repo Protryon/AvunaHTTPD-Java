@@ -54,7 +54,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 						if (e.mp != null) {
 							for (int i2 = 0; i2 < e.mp.mpds.size(); i2++) {
 								MultiPartData mpd = e.mp.mpds.get(i2);
-								if (i2 == 0 && e.hasExtraPart) {
+								if (i2 == 0) {
 									// some random thing some clients add, confuses some simple clients.
 									continue;
 								}
@@ -64,12 +64,19 @@ public class IMAPCommandFetch extends IMAPCommand {
 								String ct1 = ecs ? ct.substring(0, ct.indexOf(";")).trim() : ct;
 								ret.append("(");
 								ret.append("\"").append(ct1.toUpperCase().replace("/", "\" \"")).append("\"");
-								while (ecs) {
+								boolean f1 = false;
+								if (ecs) {
+									f1 = true;
 									ret.append(" (");
+								}
+								while (ecs) {
 									ct = ct.substring(ct.indexOf(";") + 1);
 									ecs = ct.contains(";");
 									ct1 = ecs ? ct.substring(0, ct.indexOf(";")).toUpperCase().trim() : ct.toUpperCase().trim();
 									ret.append("\"").append(ct1.replace("\"", "").replace("=", "\" \"")).append("\"");
+									if (ecs) ret.append(" ");
+								}
+								if (f1) {
 									ret.append(")");
 								}
 								ret.append(" NIL NIL");
@@ -84,10 +91,9 @@ public class IMAPCommandFetch extends IMAPCommand {
 									}
 								}
 								ret.append(" ").append(lines);
-								ret.append(" NIL NIL NIL");
 								ret.append(")");
 							}
-							ret.append(" \"ALTERNATIVE\" (\"BOUNDARY\" \"");
+							ret.append(" \"" + e.mp.mct.substring(e.mp.mct.indexOf("/") + 1).toUpperCase() + "\" (\"BOUNDARY\" \"");
 							ret.append(e.mp.boundary);
 							ret.append("\") NIL NIL");
 						}else {
@@ -96,12 +102,19 @@ public class IMAPCommandFetch extends IMAPCommand {
 							boolean ecs = ct.contains(";");
 							String ct1 = ecs ? ct.substring(0, ct.indexOf(";")).trim() : ct;
 							ret.append("\"").append(ct1.toUpperCase().replace("/", "\" \"")).append("\"");
-							while (ecs) {
+							boolean f1 = false;
+							if (ecs) {
+								f1 = true;
 								ret.append(" (");
+							}
+							while (ecs) {
 								ct = ct.substring(ct.indexOf(";") + 1);
 								ecs = ct.contains(";");
-								ct1 = ecs ? ct.substring(0, ct.indexOf(";")).trim() : ct.toUpperCase().trim();
-								ret.append("\"").append(ct1.replace("=", "\" \"")).append("\"");
+								ct1 = ecs ? ct.substring(0, ct.indexOf(";")).toUpperCase().trim() : ct.toUpperCase().trim();
+								ret.append("\"").append(ct1.replace("\"", "").replace("=", "\" \"")).append("\"");
+								if (ecs) ret.append(" ");
+							}
+							if (f1) {
 								ret.append(")");
 							}
 							ret.append(" NIL NIL");
@@ -117,7 +130,6 @@ public class IMAPCommandFetch extends IMAPCommand {
 								}
 							}
 							ret.append(" ").append(lines);
-							ret.append(" NIL NIL NIL");
 						}
 						ret.append(")");
 						trim(ret);
@@ -137,7 +149,17 @@ public class IMAPCommandFetch extends IMAPCommand {
 							s2 = "text";
 						}
 						if (s2.equals("")) {
-							mhd.append(e.data);
+							LinkedHashMap<String, ArrayList<String>> hdrs = e.headers.getHeaders();
+							for (String ss : hdrs.keySet()) {
+								ArrayList<String> values = hdrs.get(ss);
+								for (String sss : values) {
+									mhd.append(ss).append(": ").append(sss).append(AvunaHTTPD.crlf);
+								}
+							}
+							mhd.append(AvunaHTTPD.crlf);
+							if (e.mp != null) {
+								mhd.append(new String(e.mp.serialize()));
+							}else mhd.append(e.body);
 						}else {
 							String[] kinds = StringFormatter.congealBySurroundings(s2.split(" "), "(", ")");
 							for (int i = 0; i < kinds.length; i++) {
@@ -156,12 +178,14 @@ public class IMAPCommandFetch extends IMAPCommand {
 										}
 									}
 								}else if (value.equals("text")) {
-									mhd.append(e.body);
+									if (e.mp != null) {
+										mhd.append(new String(e.mp.serialize()));
+									}else mhd.append(e.body);
 								}else if (value.equals("mime")) {
 									if (e.headers.hasHeader("content-type")) {
 										mhd.append(e.headers.getHeader("content-type"));
 									}else {
-										mhd.append("text/plain; charset=UTF-8");
+										mhd.append("text/plain; charset=\"UTF-8\"");
 									}
 								}else if (value.startsWith("header.fields")) {
 									boolean limit = value.contains("(");
@@ -197,6 +221,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 								}else if (e.mp != null) {
 									try {
 										int part = Integer.parseInt(value);
+										part--;
 										if (e.mp.mpds.size() > part) {
 											MultiPartData mpd = e.mp.mpds.get(part);
 											if (mpd != null) {
@@ -206,6 +231,8 @@ public class IMAPCommandFetch extends IMAPCommand {
 									}catch (NumberFormatException e2) {
 										
 									}
+								}else if (value.equals("1")) {
+									mhd.append(e.body);
 								}
 							}
 						}

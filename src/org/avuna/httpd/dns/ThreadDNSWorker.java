@@ -46,7 +46,7 @@ public class ThreadDNSWorker extends Thread implements ITerminatable {
 	
 	private boolean processZoneForRecord(Question q, ZoneFile zf, ArrayList<ResourceRecord> records, boolean ht) {
 		boolean hasType = ht;
-		for (IDirective d : zf.getDirectives()) {
+		for (IDirective d : zf.getDirectives(true)) {
 			if (d instanceof DNSRecord) {
 				DNSRecord r = (DNSRecord)d;
 				if (!r.getType().matches(q.getType())) continue;

@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.Headers;
 import org.avuna.httpd.http.plugins.javaloader.lib.Multipart;
-import org.avuna.httpd.http.plugins.javaloader.lib.Multipart.MultiPartData;
 import org.avuna.httpd.util.Logger;
 
 public class Email {
@@ -20,7 +19,6 @@ public class Email {
 	public final Headers headers = new Headers();
 	public int uid;
 	public final Multipart mp;
-	public boolean hasExtraPart = false;
 	
 	private static String readLine(InputStream in) throws IOException {
 		ByteArrayOutputStream writer = new ByteArrayOutputStream();
@@ -57,7 +55,7 @@ public class Email {
 			Logger.logError(e);
 		}
 		String ct = headers.getHeader("Content-Type");
-		boolean mp = ct != null && ct.startsWith("multipart/alternative");
+		boolean mp = ct != null && ct.startsWith("multipart/");
 		byte[] body = new byte[bin.available()];
 		if (mp) bin.mark(body.length);
 		try {
@@ -76,13 +74,13 @@ public class Email {
 					if (b.startsWith("\"") && b.endsWith("\"")) b = b.substring(1, b.length() - 1);
 				}
 			}
-			this.mp = new Multipart(b, bin);
-			if (this.mp.mpds.size() > 0) {
-				MultiPartData mpd = this.mp.mpds.get(0);
-				if (mpd.contentType != null && mpd.contentType.equals("application/octet-stream")) {
-					this.hasExtraPart = true;
-				}
-			}
+			this.mp = new Multipart(ct, b, bin);
+			// if (this.mp.mpds.size() > 0) {
+			// MultiPartData mpd = this.mp.mpds.get(0);
+			// if (mpd.contentType != null && mpd.contentType.equals("")) {
+			// this.hasExtraPart = true;
+			// }
+			// }
 		}else {
 			this.mp = null;
 		}

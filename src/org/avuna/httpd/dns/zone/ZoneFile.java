@@ -16,7 +16,40 @@ public class ZoneFile {
 	private List<IDirective> dirs = Collections.synchronizedList(new ArrayList<IDirective>());
 	
 	public List<IDirective> getDirectives() {
-		return dirs;
+		return getDirectives(false);
+	}
+	
+	public List<IDirective> getDirectives(boolean round) {
+		if (!round) return dirs;
+		ArrayList<IDirective> ndirs = new ArrayList<IDirective>();
+		boolean rnd = false;
+		int rl = -1;
+		ArrayList<IDirective> rb = new ArrayList<IDirective>();
+		for (IDirective id : dirs) {
+			if (!rnd && id instanceof RoundStartDirective) {
+				rnd = true;
+				rl = ((RoundStartDirective)id).limit;
+				ndirs.add(id);
+			}else if (rnd && id instanceof RoundStopDirective) {
+				rnd = false;
+				Collections.shuffle(rb);
+				if (rl < 1) {
+					ndirs.addAll(rb);
+				}else for (int i = 0; i < rl; i++) {
+					ndirs.add(rb.get(i));
+				}
+				rb.clear();
+				rl = -1;
+				ndirs.add(id);
+			}else {
+				if (rnd) {
+					rb.add(id);
+				}else {
+					ndirs.add(id);
+				}
+			}
+		}
+		return ndirs;
 	}
 	
 	public ZoneFile(File f) {
@@ -66,6 +99,7 @@ public class ZoneFile {
 	private static void subload(File f, ArrayList<IDirective> dirs) throws IOException {
 		int ln = 0;
 		Scanner s = new Scanner(f);
+		boolean round = false;
 		while (s.hasNextLine()) {
 			ln++;
 			String line = s.nextLine().trim();
@@ -126,6 +160,20 @@ public class ZoneFile {
 				ZoneFile sz = new ZoneFile(nf);
 				sz.load();
 				dirs.add(new ZoneDirective(args, sz));
+			}else if (com.equals("roundstart")) {
+				if (round) {
+					Logger.log(f.getAbsolutePath() + ": roundstart called, when already in round robin at line " + ln + ", ignored.");
+					continue;
+				}
+				round = true;
+				dirs.add(new RoundStartDirective(args));
+			}else if (com.equals("roundstop")) {
+				if (!round) {
+					Logger.log(f.getAbsolutePath() + ": roundstop called, when not in round robin at line " + ln + ", ignored.");
+					continue;
+				}
+				round = false;
+				dirs.add(new RoundStopDirective(args));
 			}else {
 				String[] nargs = new String[args.length + 1];
 				nargs[0] = com;
@@ -147,12 +195,25 @@ public class ZoneFile {
 		if (args.length < 4) return null;
 		String domain = args[0];
 		Type type = Type.getType(args[1].toUpperCase());
-		int ttl = Integer.parseInt(args[2]);
+		String ttl = args[2];
+		int ttlr1 = 3600, ttlr2 = 3600;
+		if (ttl.contains("-")) {
+			ttlr1 = Integer.parseInt(ttl.substring(0, ttl.indexOf("-")));
+			ttlr2 = Integer.parseInt(ttl.substring(ttl.indexOf("-") + 1));
+			if (ttlr1 > ttlr2) {
+				int temp = ttlr2;
+				ttlr2 = ttlr1;
+				ttlr1 = temp;
+			}
+		}else {
+			ttlr1 = Integer.parseInt(ttl);
+			ttlr2 = ttlr1;
+		}
 		String[] nargs = new String[args.length - 3];
 		System.arraycopy(args, 3, nargs, 0, nargs.length);
 		args = nargs;
 		byte[] fd = DNSRecord.getDataFromArgs(type, args);
-		return new DNSRecord(domain, type, ttl, fd, pa);
+		return new DNSRecord(domain, type, ttlr1, ttlr2, fd, pa);
 	}
 	
 	public void load() throws IOException {
