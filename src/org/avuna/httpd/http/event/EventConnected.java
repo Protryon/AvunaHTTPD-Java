@@ -1,5 +1,11 @@
 package org.avuna.httpd.http.event;
 
-public class EventConnected {
+import org.avuna.httpd.event.Event;
+
+public class EventConnected extends Event {
+	
+	public EventConnected() {
+		super(HTTPEventID.CONNECTED);
+	}
 	
 }

@@ -1,5 +1,11 @@
 package org.avuna.httpd.http.event;
 
-public class EventPreExit {
+import org.avuna.httpd.event.Event;
+
+public class EventPreExit extends Event {
+	
+	public EventPreExit() {
+		super(HTTPEventID.PREEXIT);
+	}
 	
 }

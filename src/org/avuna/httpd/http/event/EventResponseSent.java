@@ -1,5 +1,11 @@
 package org.avuna.httpd.http.event;
 
-public class EventResponseSent {
+import org.avuna.httpd.event.Event;
+
+public class EventResponseSent extends Event {
+	
+	public EventResponseSent() {
+		super(HTTPEventID.RESPONSESENT);
+	}
 	
 }

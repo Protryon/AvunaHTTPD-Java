@@ -1,5 +1,11 @@
 package org.avuna.httpd.http.event;
 
-public class EventReload {
+import org.avuna.httpd.event.Event;
+
+public class EventReload extends Event {
+	
+	public EventReload() {
+		super(HTTPEventID.RELOAD);
+	}
 	
 }
