@@ -10,4 +10,14 @@ public class Event {
 	public int getEID() {
 		return eid;
 	}
+	
+	private boolean canceled = false;
+	
+	public boolean isCanceled() {
+		return canceled;
+	}
+	
+	public void cancel() {
+		canceled = true;
+	}
 }

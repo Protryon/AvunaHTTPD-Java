@@ -62,6 +62,7 @@ public class EventBus {
 			}
 			for (int r = 0; r < recvs[id].length; r++) {
 				recvs[id][r].receive(this, event);
+				if (event.isCanceled()) break;
 			}
 		}
 	}
