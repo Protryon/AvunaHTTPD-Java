@@ -8,8 +8,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.event.Event;
+import org.avuna.httpd.event.EventBus;
 import org.avuna.httpd.http.Method;
-import org.avuna.httpd.http.networking.Packet;
+import org.avuna.httpd.http.event.EventClearCache;
+import org.avuna.httpd.http.event.EventGenerateResponse;
+import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
@@ -36,18 +40,7 @@ public class PatchInline extends Patch {
 		sizeLimit = Integer.parseInt(json.getNode("sizeLimit").getValue());
 	}
 	
-	@Override
-	public boolean shouldProcessPacket(Packet packet) {
-		return false;
-	}
-	
-	@Override
-	public void processPacket(Packet packet) {
-		
-	}
-	
-	@Override
-	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
+	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request) {
 		String ua = request.headers.hasHeader("User-Agent") ? request.headers.getHeader("User-Agent").toLowerCase() : "";
 		boolean g = false;
 		for (String pua : uas) {
@@ -59,7 +52,7 @@ public class PatchInline extends Patch {
 		if (!g) return false;
 		String ct = response.headers.hasHeader("Content-Type") ? response.headers.getHeader("Content-Type") : "";
 		if (ct.length() == 0) return false;
-		return response.statusCode == 200 && data != null && data.length > 0 && (ct.startsWith("text/html") || ct.startsWith("text/css"));
+		return response.statusCode == 200 && response.body != null && (ct.startsWith("text/html") || ct.startsWith("text/css"));
 	}
 	
 	// html
@@ -71,12 +64,6 @@ public class PatchInline extends Patch {
 	private final Pattern inlineCSS = Pattern.compile("url\\([^\\)]*", Pattern.CASE_INSENSITIVE);
 	
 	private final HashMap<String, String> cacheBase64 = new HashMap<String, String>();
-	
-	public void clearCache() {
-		cacheBase64.clear();
-		subreqs.clear();
-		cdata.clear();
-	}
 	
 	private final Comparator<SubReq> subReqComparator = new Comparator<SubReq>() {
 		public int compare(SubReq x, SubReq y) {
@@ -142,15 +129,15 @@ public class PatchInline extends Patch {
 	private final HashMap<Long, SubReq[]> subreqs = new HashMap<Long, SubReq[]>();
 	private final HashMap<Long, byte[]> cdata = new HashMap<Long, byte[]>();
 	
-	@Override
-	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
+	public void processResponse(ResponsePacket response, RequestPacket request) {
 		CRC32 process = new CRC32();
-		process.update(data);
+		process.update(response.body.data);
 		long l = process.getValue();
 		if (cdata.containsKey(l)) {
-			return cdata.get(l);
+			response.body.data = cdata.get(l);
+			return;
 		}
-		String html = new String(data); // TODO: encoding support
+		String html = new String(response.body.data); // TODO: encoding support
 		boolean greqs = false;
 		SubReq[] subreqs = null;
 		if (this.subreqs.containsKey(l)) {
@@ -307,12 +294,27 @@ public class PatchInline extends Patch {
 		}
 		byte[] hb = html.getBytes();
 		cdata.put(l, hb);
-		return hb;
+		response.body.data = hb;
 	}
 	
 	@Override
-	public void processMethod(RequestPacket request, ResponsePacket response) {
-		
+	public void receive(EventBus bus, Event event) {
+		if (event instanceof EventGenerateResponse) {
+			EventGenerateResponse egr = (EventGenerateResponse)event;
+			ResponsePacket response = egr.getResponse();
+			RequestPacket request = egr.getRequest();
+			if (shouldProcessResponse(response, request)) processResponse(response, request);
+		}else if (event instanceof EventClearCache) {
+			cacheBase64.clear();
+			subreqs.clear();
+			cdata.clear();
+		}
+	}
+	
+	@Override
+	public void register(EventBus bus) {
+		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, -600);
+		bus.registerEvent(HTTPEventID.CLEARCACHE, this, 0);
 	}
 	
 }

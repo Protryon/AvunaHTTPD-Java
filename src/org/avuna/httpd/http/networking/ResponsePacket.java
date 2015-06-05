@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.Method;
-import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.http.plugins.javaloader.JavaLoaderStream;
 import org.avuna.httpd.util.Logger;
 
@@ -43,8 +42,6 @@ public class ResponsePacket extends Packet {
 	
 	public byte[] serialize(boolean data, boolean head) {
 		try {
-			byte[] finalc = this.body == null ? null : this.body.data;
-			finalc = request.host.getHost().patchBus.processResponse(this, this.request, finalc);
 			if (this.drop) {
 				return null;
 			}
@@ -61,15 +58,14 @@ public class ResponsePacket extends Packet {
 			}
 			cachedSerialize = ser.toString().getBytes();
 			byte[] add = null;
-			if (data && finalc != null) {
+			if (data && body != null) {
 				if (!this.headers.hasHeader("Transfer-Encoding")) {
-					add = finalc;
+					add = body.data;
 				}else {
 					// cachedPacket = this;
 					cachedSerialize = new byte[0];
 					return new byte[0];
 				}
-				this.body = new Resource(finalc, this.headers.hasHeader("Content-Type") ? this.headers.getHeader("Content-Type") : "text/html", this.request.target, this.body.effectiveOverride, "");
 			}else {
 				add = new byte[0];// AvunaHTTPD.crlf.getBytes();
 			}

@@ -15,4 +15,8 @@ public class EventResponseSent extends Event {
 		this.response = response;
 	}
 	
+	public boolean canCancel() {
+		return false;
+	}
+	
 }

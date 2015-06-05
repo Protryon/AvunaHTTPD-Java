@@ -1,11 +1,12 @@
 package org.avuna.httpd.http.plugins.base;
 
-import org.avuna.httpd.http.networking.Packet;
-import org.avuna.httpd.http.networking.RequestPacket;
+import org.avuna.httpd.event.Event;
+import org.avuna.httpd.event.EventBus;
+import org.avuna.httpd.http.event.EventResponseFinished;
+import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
 import org.avuna.httpd.http.plugins.PatchRegistry;
-import org.avuna.httpd.util.ConfigNode;
 
 public class PatchContentLength extends Patch {
 	
@@ -14,39 +15,22 @@ public class PatchContentLength extends Patch {
 	}
 	
 	@Override
-	public void formatConfig(ConfigNode json) {
-		super.formatConfig(json);
-	}
-	
-	@Override
-	public boolean shouldProcessPacket(Packet packet) {
-		return false;
-	}
-	
-	@Override
-	public void processPacket(Packet packet) {
-		
-	}
-	
-	@Override
-	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return !response.headers.hasHeader("Transfer-Encoding");
-	}
-	
-	@Override
-	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		response.headers.removeHeaders("Content-Length");
-		if (data != null) {
-			response.headers.addHeader("Content-Length", data.length + "");
-			if (!response.headers.hasHeader("Content-Type")) response.headers.addHeader("Content-Type", response.body.type);
-		}else {
-			response.headers.addHeader("Content-Length", "0");
+	public void receive(EventBus bus, Event event) {
+		if (event instanceof EventResponseFinished) {
+			EventResponseFinished egr = (EventResponseFinished)event;
+			ResponsePacket response = egr.getResponse();
+			if (response.headers.hasHeader("Transfer-Encoding")) return;
+			if (response.body != null) {
+				response.headers.updateHeader("Content-Length", response.body.data.length + "");
+				if (!response.headers.hasHeader("Content-Type")) response.headers.addHeader("Content-Type", response.body.type);
+			}else {
+				response.headers.updateHeader("Content-Length", "0");
+			}
 		}
-		return data;
 	}
 	
 	@Override
-	public void processMethod(RequestPacket request, ResponsePacket response) {
-		
+	public void register(EventBus bus) {
+		bus.registerEvent(HTTPEventID.RESPONSEFINISHED, this, -999);
 	}
 }

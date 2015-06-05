@@ -13,12 +13,18 @@ public class EventBus {
 			if (id >= recvs.length) {
 				IEventReceiver[][] nr = new IEventReceiver[id + 1][];
 				System.arraycopy(recvs, 0, nr, 0, recvs.length);
+				int ol = recvs.length;
 				recvs = nr;
-				recvs[id] = new IEventReceiver[0];
+				for (; ol < id + 1; ol++) {
+					recvs[ol] = new IEventReceiver[0];
+				}
 				int[][] np = new int[id + 1][];
 				System.arraycopy(priorities, 0, np, 0, priorities.length);
+				ol = priorities.length;
 				priorities = np;
-				np[id] = new int[0];
+				for (; ol < id + 1; ol++) {
+					priorities[ol] = new int[0];
+				}
 			}
 			IEventReceiver[] ida = new IEventReceiver[recvs[id].length + 1];
 			System.arraycopy(recvs[id], 0, ida, 0, ida.length - 1);

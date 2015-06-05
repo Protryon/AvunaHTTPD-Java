@@ -1,6 +1,9 @@
 package org.avuna.httpd.http.plugins.base;
 
-import org.avuna.httpd.http.networking.Packet;
+import org.avuna.httpd.event.Event;
+import org.avuna.httpd.event.EventBus;
+import org.avuna.httpd.http.event.EventGenerateResponse;
+import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
@@ -11,11 +14,7 @@ public class PatchCacheControl extends Patch {
 	
 	public PatchCacheControl(String name, PatchRegistry registry) {
 		super(name, registry);
-		reload();
 	}
-	
-	private String[] cache = null;
-	private int maxAge = 604800;
 	
 	@Override
 	public void formatConfig(ConfigNode json) {
@@ -24,46 +23,31 @@ public class PatchCacheControl extends Patch {
 		if (!json.containsNode("cache")) json.insertNode("cache", "text/css;application/javascript;image/*");
 	}
 	
-	public void reload() {
-		maxAge = Integer.parseInt((String)pcfg.getNode("maxage").getValue());
-		cache = ((String)pcfg.getNode("cache").getValue()).split(";");
-	}
-	
 	@Override
-	public boolean shouldProcessPacket(Packet packet) {
-		return false;
-	}
-	
-	@Override
-	public void processPacket(Packet packet) {
-		
-	}
-	
-	@Override
-	public void processMethod(RequestPacket request, ResponsePacket response) {
-		
-	}
-	
-	@Override
-	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return request.parent == null && response.body != null && response.headers.hasHeader("Content-Type");
-	}
-	
-	@Override
-	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		String ct = response.headers.getHeader("Content-Type");
-		if (ct.contains(";")) ct = ct.substring(0, ct.indexOf(";")).trim();
-		boolean nc = true;
-		for (String s : cache) {
-			if (!s.endsWith("*") && s.equals(ct)) {
-				nc = false;
-				break;
-			}else if (s.endsWith("*") && ct.startsWith(s.substring(0, s.length() - 1))) {
-				nc = false;
-				break;
+	public void receive(EventBus bus, Event event) {
+		if (event instanceof EventGenerateResponse) {
+			EventGenerateResponse egr = (EventGenerateResponse)event;
+			ResponsePacket response = egr.getResponse();
+			RequestPacket request = egr.getRequest();
+			if (!(request.parent == null && response.body != null && response.headers.hasHeader("Content-Type"))) return;
+			String ct = response.headers.getHeader("Content-Type");
+			if (ct.contains(";")) ct = ct.substring(0, ct.indexOf(";")).trim();
+			boolean nc = true;
+			for (String s : ((String)pcfg.getNode("cache").getValue()).split(";")) {
+				if (!s.endsWith("*") && s.equals(ct)) {
+					nc = false;
+					break;
+				}else if (s.endsWith("*") && ct.startsWith(s.substring(0, s.length() - 1))) {
+					nc = false;
+					break;
+				}
 			}
+			response.headers.addHeader("Cache-Control: max-age=" + Integer.parseInt((String)pcfg.getNode("maxage").getValue()) + (nc ? ", no-cache" : ""));
 		}
-		response.headers.addHeader("Cache-Control: max-age=" + maxAge + (nc ? ", no-cache" : ""));
-		return data;
+	}
+	
+	@Override
+	public void register(EventBus bus) {
+		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, 900);
 	}
 }

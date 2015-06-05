@@ -8,4 +8,7 @@ public class EventPreExit extends Event {
 		super(HTTPEventID.PREEXIT);
 	}
 	
+	public boolean canCancel() {
+		return false;
+	}
 }

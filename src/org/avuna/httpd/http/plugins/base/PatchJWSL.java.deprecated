@@ -2,7 +2,6 @@ package org.avuna.httpd.http.plugins.base;
 
 import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
-import org.avuna.httpd.http.networking.Packet;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
@@ -18,16 +17,6 @@ public class PatchJWSL extends Patch {
 	@Override
 	public void formatConfig(ConfigNode json) {
 		super.formatConfig(json);
-	}
-	
-	@Override
-	public boolean shouldProcessPacket(Packet packet) {
-		return false;
-	}
-	
-	@Override
-	public void processPacket(Packet packet) {
-		
 	}
 	
 	@Override
@@ -83,10 +72,5 @@ public class PatchJWSL extends Patch {
 		// TODO: proper header mod
 		response.headers.updateHeader("Content-Type", "text/html");
 		return sdata.getBytes();
-	}
-	
-	@Override
-	public void processMethod(RequestPacket request, ResponsePacket response) {
-		
 	}
 }

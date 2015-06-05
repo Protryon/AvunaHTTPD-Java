@@ -2,6 +2,7 @@ package org.avuna.httpd.http;
 
 import java.text.SimpleDateFormat;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.http.event.EventMethodLookup;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.util.Logger;
@@ -50,8 +51,9 @@ public class ResponseGenerator {
 				response.body = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "The requested host was not found on this server. Please contratc your server administrator.");
 				return false;
 			}
-			// Now we handle all of our patches such as php or jhtml which fill in the response.
-			if (!request.host.getHost().patchBus.processMethod(request, response)) {
+			EventMethodLookup elm = new EventMethodLookup(request.method, request, response);
+			request.host.getHost().eventBus.callEvent(elm);
+			if (!elm.isCanceled()) {
 				generateDefaultResponse(response, StatusCode.NOT_YET_IMPLEMENTED);
 				response.body = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.NOT_YET_IMPLEMENTED, "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
 				return false;

@@ -6,6 +6,10 @@ import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.ITerminatable;
 import org.avuna.httpd.http.ResponseGenerator;
+import org.avuna.httpd.http.event.EventGenerateResponse;
+import org.avuna.httpd.http.event.EventPreprocessRequest;
+import org.avuna.httpd.http.event.EventResponseFinished;
+import org.avuna.httpd.http.event.EventResponseSent;
 import org.avuna.httpd.util.Logger;
 
 public class ThreadWorker extends Thread implements ITerminatable {
@@ -38,27 +42,32 @@ public class ThreadWorker extends Thread implements ITerminatable {
 				boolean main = outgoingResponse.request.parent == null;
 				String add = main ? "" : "-SUB";
 				long benchStart = System.nanoTime();
-				host.patchBus.processPacket(incomingRequest);
-				if (incomingRequest.drop) {
-					incomingRequest.work.s.close();
-					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
+				EventPreprocessRequest epr = new EventPreprocessRequest(incomingRequest);
+				host.eventBus.callEvent(epr);
+				if (incomingRequest.drop || epr.isCanceled()) {
+					incomingRequest.work.close();
+					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
 					continue;
 				}
-				boolean cont = ResponseGenerator.process(incomingRequest, outgoingResponse);
-				if (cont) host.patchBus.processPacket(outgoingResponse);
+				ResponseGenerator.process(incomingRequest, outgoingResponse);
+				EventGenerateResponse epr2 = new EventGenerateResponse(incomingRequest, outgoingResponse);
+				host.eventBus.callEvent(epr2);
+				EventResponseFinished epr3 = new EventResponseFinished(outgoingResponse);
+				host.eventBus.callEvent(epr3);
 				if (outgoingResponse.drop) {
-					incomingRequest.work.s.close();
-					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " returned DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
+					incomingRequest.work.close();
+					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
 					continue;
 				}
 				if (main) outgoingResponse.prewrite();
 				else outgoingResponse.subwrite();
 				if (outgoingResponse.drop) {
-					incomingRequest.work.s.close();
-					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " returned DROPPED took: " + (outgoingResponse.bwt - benchStart) / 1000000D + " ms");
+					incomingRequest.work.close();
+					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " DROPPED took: " + (outgoingResponse.bwt - benchStart) / 1000000D + " ms");
 					continue;
 				}
 				outgoingResponse.done = true;
+				host.eventBus.callEvent(new EventResponseSent(outgoingResponse));
 				// Logger.log((benchStart - ps) / 1000000D + " ps-start");
 				// Logger.log((set - benchStart) / 1000000D + " start-set");
 				// Logger.log((proc1 - set) / 1000000D + " set-proc1");
