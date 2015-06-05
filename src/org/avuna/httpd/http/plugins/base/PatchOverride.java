@@ -32,6 +32,9 @@ public class PatchOverride extends Patch {
 		return packet instanceof RequestPacket;
 	}
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void processPacket(Packet packet) {
 		RequestPacket request = (RequestPacket)packet;

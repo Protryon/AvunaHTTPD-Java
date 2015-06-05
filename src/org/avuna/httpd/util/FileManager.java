@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
+
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostHTTP;
@@ -18,6 +19,7 @@ import org.avuna.httpd.http.plugins.Patch;
 import org.avuna.httpd.http.plugins.base.PatchChunked;
 import org.avuna.httpd.http.plugins.base.PatchGZip;
 import org.avuna.httpd.http.plugins.base.PatchInline;
+import org.avuna.httpd.http.plugins.base.PatchOverride;
 import org.avuna.httpd.http.plugins.javaloader.lib.HTMLCache;
 import org.avuna.httpd.http.plugins.javaloader.lib.JavaLoaderUtil;
 import org.avuna.httpd.http.util.OverrideConfig;
@@ -238,8 +240,9 @@ public class FileManager {
 	 * append index file path from host configuration. Set extra parameters
 	 * to child of path.
 	 * 
-	 * @param reqTarget request URL
+	 * @param reqTarget2 request URL
 	 * @param request Incoming packet for host data
+	 * @see PatchOverride#processPacket(org.avuna.httpd.http.networking.Packet)
 	 * @return absolute file system path and parameter string (as child)
 	 */
 	public File getAbsolutePath(String reqTarget2, RequestPacket request) {
@@ -317,6 +320,14 @@ public class FileManager {
 		return abs;
 	}
 	
+	/**
+	 * Correct from Windows directory index characters to Unix style index
+	 * for htdocs for incoming request.
+	 * 
+	 * @param reqTarget request URL
+	 * @param request Incoming packet
+	 * @return htdocs absolute path in Unix format
+	 */
 	public String correctForIndex(String reqTarget, RequestPacket request) {
 		String p = getAbsolutePath(reqTarget, request).getAbsolutePath().replace("\\", "/");
 		return p.substring(request.host.getHTDocs().getAbsolutePath().replace("\\", "/").length());
@@ -330,6 +341,15 @@ public class FileManager {
 	public static final HashMap<String, OverrideConfig> cConfigCache = new HashMap<String, OverrideConfig>();
 	private static long cacheClock = 0L;
 	
+	/**
+	 * Instantiates an {@link OverrideConfig} from *.override files in htdocs,
+	 * adds it to to the {@link #cConfigCache} with path as key.
+	 * 
+	 * @param file name of override file
+	 * @param path path to override file
+	 * @return
+	 * @throws IOException
+	 */
 	public OverrideConfig loadDirective(File file, String path) throws IOException { // TODO: load superdirectory directives.
 		if (!file.exists()) return null;
 		OverrideConfig cfg = new OverrideConfig(file);
