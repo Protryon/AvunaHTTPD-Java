@@ -197,7 +197,7 @@ public class PatchFCGI extends Patch {
 			String oabs = response.body.oabs.replace("\\", "/");
 			String htds = request.host.getHTDocs().getAbsolutePath().replace("\\", "/");
 			session.param("SCRIPT_NAME", oabs.substring(0, htds.length()));
-			session.param("SERVER_NAME", request.headers.getHeader("Host"));
+			if (request.headers.hasHeader("Host")) session.param("SERVER_NAME", request.headers.getHeader("Host"));
 			int port = request.host.getHost().getPort();
 			session.param("SERVER_PORT", port + "");
 			session.param("SERVER_PROTOCOL", request.httpVersion);
