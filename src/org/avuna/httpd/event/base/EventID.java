@@ -1,6 +1,6 @@
 package org.avuna.httpd.event.base;
 
-public class EventID {
+public abstract class EventID {
 	public static final int CONNECTED = 0;
 	public static final int DISCONNECTED = 1;
 	public static final int POSTINIT = 2;
