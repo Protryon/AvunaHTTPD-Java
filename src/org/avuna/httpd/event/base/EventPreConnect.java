@@ -1,4 +1,4 @@
-package org.avuna.httpd.http.event;
+package org.avuna.httpd.event.base;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -23,7 +23,7 @@ public class EventPreConnect extends Event {
 	}
 	
 	public EventPreConnect(Socket s, DataOutputStream out, DataInputStream in) {
-		super(HTTPEventID.PRECONNECT);
+		super(EventID.PRECONNECT);
 		this.s = s;
 		this.out = out;
 		this.in = in;

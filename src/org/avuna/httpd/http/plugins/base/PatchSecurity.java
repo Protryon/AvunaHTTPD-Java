@@ -3,7 +3,8 @@ package org.avuna.httpd.http.plugins.base;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
-import org.avuna.httpd.http.event.EventPreConnect;
+import org.avuna.httpd.event.base.EventID;
+import org.avuna.httpd.event.base.EventPreConnect;
 import org.avuna.httpd.http.event.EventPreprocessRequest;
 import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
@@ -68,7 +69,7 @@ public class PatchSecurity extends Patch {
 	@Override
 	public void register(EventBus bus) {
 		bus.registerEvent(HTTPEventID.PREPROCESSREQUEST, this, 999);
-		bus.registerEvent(HTTPEventID.PRECONNECT, this, 999);
+		bus.registerEvent(EventID.PRECONNECT, this, 999);
 	}
 	
 }

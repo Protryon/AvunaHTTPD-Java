@@ -1,4 +1,4 @@
-package org.avuna.httpd.http.event;
+package org.avuna.httpd.event.base;
 
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.http.networking.Work;
@@ -11,7 +11,7 @@ public class EventDisconnected extends Event {
 	}
 	
 	public EventDisconnected(Work work) {
-		super(HTTPEventID.DISCONNECTED);
+		super(EventID.DISCONNECTED);
 		this.work = work;
 	}
 	

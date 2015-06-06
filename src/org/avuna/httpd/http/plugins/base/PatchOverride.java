@@ -6,11 +6,12 @@ import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
+import org.avuna.httpd.event.base.EventID;
+import org.avuna.httpd.event.base.EventReload;
 import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.event.EventGenerateResponse;
 import org.avuna.httpd.http.event.EventPreprocessRequest;
-import org.avuna.httpd.http.event.EventReload;
 import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
@@ -113,7 +114,7 @@ public class PatchOverride extends Patch {
 	public void register(EventBus bus) {
 		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, 800);
 		bus.registerEvent(HTTPEventID.PREPROCESSREQUEST, this, 800);
-		bus.registerEvent(HTTPEventID.RELOAD, this, 0);
+		bus.registerEvent(EventID.RELOAD, this, 0);
 	}
 	
 }

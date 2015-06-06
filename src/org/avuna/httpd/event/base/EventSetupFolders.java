@@ -1,11 +1,11 @@
-package org.avuna.httpd.http.event;
+package org.avuna.httpd.event.base;
 
 import org.avuna.httpd.event.Event;
 
 public class EventSetupFolders extends Event {
 	
 	public EventSetupFolders() {
-		super(HTTPEventID.SETUPFOLDERS);
+		super(EventID.SETUPFOLDERS);
 	}
 	
 	public boolean canCancel() {

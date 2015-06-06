@@ -3,9 +3,9 @@ package org.avuna.httpd.com.base;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.com.Command;
 import org.avuna.httpd.com.CommandContext;
+import org.avuna.httpd.event.base.EventReload;
 import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostHTTP;
-import org.avuna.httpd.http.event.EventReload;
 
 public class CommandReload extends Command {
 	

@@ -11,11 +11,12 @@ import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
+import org.avuna.httpd.event.base.EventID;
+import org.avuna.httpd.event.base.EventReload;
 import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.event.EventGenerateResponse;
-import org.avuna.httpd.http.event.EventReload;
 import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
@@ -51,7 +52,7 @@ public class PatchFCGI extends Patch {
 	@Override
 	public void register(EventBus bus) {
 		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, -600);
-		bus.registerEvent(HTTPEventID.RELOAD, this, 0);
+		bus.registerEvent(EventID.RELOAD, this, 0);
 	}
 	
 	public void reloadus() {

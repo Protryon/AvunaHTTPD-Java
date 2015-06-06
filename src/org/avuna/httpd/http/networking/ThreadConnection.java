@@ -4,10 +4,10 @@ import java.io.IOException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.event.base.EventDisconnected;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.HostHTTPM;
 import org.avuna.httpd.hosts.ITerminatable;
-import org.avuna.httpd.http.event.EventDisconnected;
 import org.avuna.httpd.util.Logger;
 
 public class ThreadConnection extends Thread implements ITerminatable {

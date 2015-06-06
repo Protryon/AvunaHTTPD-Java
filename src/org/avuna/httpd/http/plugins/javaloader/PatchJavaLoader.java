@@ -16,6 +16,10 @@ import java.util.zip.CRC32;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
+import org.avuna.httpd.event.base.EventID;
+import org.avuna.httpd.event.base.EventPostInit;
+import org.avuna.httpd.event.base.EventPreExit;
+import org.avuna.httpd.event.base.EventReload;
 import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.VHost;
@@ -24,9 +28,6 @@ import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.event.EventGenerateResponse;
-import org.avuna.httpd.http.event.EventPostInit;
-import org.avuna.httpd.http.event.EventPreExit;
-import org.avuna.httpd.http.event.EventReload;
 import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
@@ -368,9 +369,9 @@ public class PatchJavaLoader extends Patch {
 	@Override
 	public void register(EventBus bus) {
 		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, -500);
-		bus.registerEvent(HTTPEventID.RELOAD, this, 0);
-		bus.registerEvent(HTTPEventID.PREEXIT, this, 0);
-		bus.registerEvent(HTTPEventID.POSTINIT, this, 0);
+		bus.registerEvent(EventID.RELOAD, this, 0);
+		bus.registerEvent(EventID.PREEXIT, this, 0);
+		bus.registerEvent(EventID.POSTINIT, this, 0);
 	}
 	
 }

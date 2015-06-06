@@ -6,8 +6,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
+import org.avuna.httpd.event.base.EventDisconnected;
 import org.avuna.httpd.hosts.HostHTTP;
-import org.avuna.httpd.http.event.EventDisconnected;
 import org.avuna.httpd.http.networking.httpm.MasterConn;
 
 public class Work {

@@ -1,11 +1,11 @@
-package org.avuna.httpd.http.event;
+package org.avuna.httpd.event.base;
 
 import org.avuna.httpd.event.Event;
 
 public class EventPostInit extends Event {
 	
 	public EventPostInit() {
-		super(HTTPEventID.POSTINIT);
+		super(EventID.POSTINIT);
 	}
 	
 	public boolean canCancel() {
