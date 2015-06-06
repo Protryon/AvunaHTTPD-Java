@@ -29,6 +29,9 @@ public class PatchOverride extends Patch {
 	private ArrayList<String> nogo = new ArrayList<String>();
 	private HashMap<String, HashMap<String, Object>> overrides = new HashMap<String, HashMap<String, Object>>();
 	
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public void receive(EventBus bus, Event event) {
 		if (event instanceof EventGenerateResponse) {
