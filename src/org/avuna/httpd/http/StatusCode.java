@@ -21,6 +21,8 @@ public class StatusCode {
 	 */
 	public static final StatusCode SWITCHING_PROTOCOLS = new StatusCode(101, "Switching Protocols");
 	
+	public static final StatusCode IM_A_TEAPOT = new StatusCode(418, "I'm a teapot"); // RFC 2324
+	
 	/**
 	 * Status 401 Unauthorized
 	 */

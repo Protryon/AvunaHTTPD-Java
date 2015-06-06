@@ -14,6 +14,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.zip.CRC32;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.event.Event;
+import org.avuna.httpd.event.EventBus;
 import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.VHost;
@@ -21,7 +23,11 @@ import org.avuna.httpd.hosts.VHostM;
 import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.http.StatusCode;
-import org.avuna.httpd.http.networking.Packet;
+import org.avuna.httpd.http.event.EventGenerateResponse;
+import org.avuna.httpd.http.event.EventPostInit;
+import org.avuna.httpd.http.event.EventPreExit;
+import org.avuna.httpd.http.event.EventReload;
+import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
@@ -37,14 +43,6 @@ import org.avuna.httpd.util.Logger;
 public class PatchJavaLoader extends Patch {
 	
 	private Config config = null;
-	
-	public void postload() {
-		for (JavaLoaderSession session : sessions) {
-			if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
-				jl.postinit();
-			}
-		}
-	}
 	
 	public PatchJavaLoader(String name, PatchRegistry registry) {
 		super(name, registry);
@@ -231,61 +229,6 @@ public class PatchJavaLoader extends Patch {
 		if (!json.containsNode("lib")) json.insertNode("lib", "lib");
 	}
 	
-	public void preExit() {
-		super.preExit();
-		try {
-			DatabaseManager.closeAll();
-		}catch (SQLException e) {
-			Logger.logError(e);
-		}
-		config.save();
-		for (JavaLoader jl : security) {
-			jl.destroy();
-		}
-		for (JavaLoaderSession session : sessions) {
-			if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
-				jl.destroy();
-			}
-		}
-	}
-	
-	public void reload() throws IOException {
-		super.reload();
-		HTMLCache.reloadAll();
-		config.load();
-		flushjl();
-		// for (JavaLoaderSession session : sessions) {
-		// if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
-		// ConfigNode ocfg = null;
-		// if (!config.containsNode(session.getVHost().getHostPath())) {
-		// config.insertNode(session.getVHost().getHostPath());
-		// }
-		// ocfg = config.getNode(session.getVHost().getHostPath());
-		// if (!ocfg.containsNode(jl.getClass().getName())) {
-		// ocfg.insertNode(jl.getClass().getName());
-		// }
-		// jl.pcfg = ocfg.getNode(jl.getClass().getName());
-		// jl.host = session == null ? null : session.getVHost();
-		// jl.reload();
-		// }
-		// }
-	}
-	
-	@Override
-	public boolean shouldProcessPacket(Packet packet) {
-		return false;
-	}
-	
-	@Override
-	public void processPacket(Packet packet) {
-		
-	}
-	
-	@Override
-	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return response.headers.hasHeader("Content-Type") && response.headers.getHeader("Content-Type").equals("application/x-java") && response.body != null && data != null && data.length > 0;
-	}
-	
 	public JavaLoader getFromClass(Class<? extends JavaLoader> cls) {
 		for (JavaLoaderSession session : sessions) {
 			if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
@@ -299,88 +242,135 @@ public class PatchJavaLoader extends Patch {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		try {
-			response.headers.updateHeader("Content-Type", "text/html");
-			String name = "";
-			CRC32 crc = new CRC32();
-			HashMap<String, String> loadedClasses = request.host.getJLS().getLoadedClasses();
-			JavaLoaderClassLoader jlcl = request.host.getJLS().getJLCL();
-			HashMap<String, JavaLoader> jls = request.host.getJLS().getJLS();
-			crc.update(data);
-			String sha = crc.getValue() + "";
-			synchronized (loadedClasses) {
-				name = loadedClasses.get(sha);
-				if (name == null || name.equals("")) {
-					name = jlcl.addClass(data);
-					loadedClasses.put(sha, name);
-				}
-			}
-			JavaLoader loader = null;
-			if (!jls.containsKey(name)) {
-				Class<?> loaderClass = jlcl.loadClass(name);
-				if (loaderClass == null || !JavaLoader.class.isAssignableFrom(loaderClass)) {
-					return null;
-				}
-				ConfigNode ocfg = null;
-				if (!config.containsNode(request.host.getHostPath())) {
-					config.insertNode(request.host.getHostPath());
-				}
-				ocfg = config.getNode(request.host.getHostPath());
-				if (!ocfg.containsNode(name)) {
-					ocfg.insertNode(name);
-				}
-				loader = ((Class<? extends JavaLoader>)loaderClass).newInstance();
-				loader.pcfg = ocfg.getNode(name);
-				loader.host = request.host;
-				loader.init();
-				jls.put(name, loader);
-			}else {
-				loader = jls.get(name);
-			}
-			if (loader == null) return null;
-			request.procJL();
-			byte[] ndata = null;
-			int type = loader.getType();
-			boolean doout = true;
+	public void receive(EventBus bus, Event event) {
+		if (event instanceof EventGenerateResponse) {
+			EventGenerateResponse egr = (EventGenerateResponse)event;
+			ResponsePacket response = egr.getResponse();
+			RequestPacket request = egr.getRequest();
+			if (!(response.headers.hasHeader("Content-Type") && response.headers.getHeader("Content-Type").equals("application/x-java") && response.body != null && response.body != null)) return;
 			try {
-				request.work.blockTimeout = true;
-				if (type == 0) {
-					ndata = ((JavaLoaderBasic)loader).generate(response, request);
-				}else if (type == 1) {
-					HTMLBuilder out = new HTMLBuilder(new StringWriter());
-					// long st = System.nanoTime();
-					
-					doout = ((JavaLoaderPrint)loader).generate(out, response, request);
-					// System.out.println((System.nanoTime() - st) / 1000000D);
-					String s = out.toString();
-					ndata = s.getBytes();
-				}else if (type == 2) {
-					response.reqStream = (JavaLoaderStream)loader;
+				response.headers.updateHeader("Content-Type", "text/html");
+				String name = "";
+				CRC32 crc = new CRC32();
+				HashMap<String, String> loadedClasses = request.host.getJLS().getLoadedClasses();
+				JavaLoaderClassLoader jlcl = request.host.getJLS().getJLCL();
+				HashMap<String, JavaLoader> jls = request.host.getJLS().getJLS();
+				crc.update(response.body.data);
+				String sha = crc.getValue() + "";
+				synchronized (loadedClasses) {
+					name = loadedClasses.get(sha);
+					if (name == null || name.equals("")) {
+						name = jlcl.addClass(response.body.data);
+						loadedClasses.put(sha, name);
+					}
 				}
+				JavaLoader loader = null;
+				if (!jls.containsKey(name)) {
+					Class<?> loaderClass = jlcl.loadClass(name);
+					if (loaderClass == null || !JavaLoader.class.isAssignableFrom(loaderClass)) {
+						response.body.data = new byte[0];
+						return;
+					}
+					ConfigNode ocfg = null;
+					if (!config.containsNode(request.host.getHostPath())) {
+						config.insertNode(request.host.getHostPath());
+					}
+					ocfg = config.getNode(request.host.getHostPath());
+					if (!ocfg.containsNode(name)) {
+						ocfg.insertNode(name);
+					}
+					loader = ((Class<? extends JavaLoader>)loaderClass).newInstance();
+					loader.pcfg = ocfg.getNode(name);
+					loader.host = request.host;
+					loader.init();
+					jls.put(name, loader);
+				}else {
+					loader = jls.get(name);
+				}
+				if (loader == null) {
+					response.body.data = new byte[0];
+					return;
+				}
+				request.procJL();
+				byte[] ndata = null;
+				int type = loader.getType();
+				boolean doout = true;
+				try {
+					request.work.blockTimeout = true;
+					if (type == 0) {
+						ndata = ((JavaLoaderBasic)loader).generate(response, request);
+					}else if (type == 1) {
+						HTMLBuilder out = new HTMLBuilder(new StringWriter());
+						// long st = System.nanoTime();
+						
+						doout = ((JavaLoaderPrint)loader).generate(out, response, request);
+						// System.out.println((System.nanoTime() - st) / 1000000D);
+						String s = out.toString();
+						ndata = s.getBytes();
+					}else if (type == 2) {
+						response.reqStream = (JavaLoaderStream)loader;
+					}
+				}catch (Exception e) {
+					Logger.logError(e);
+					ResponseGenerator.generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
+					Resource rsc = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "Avuna had a critical error attempting to serve your page. Please contact your server administrator and try again. This error has been recorded in the Avuna log file.");
+					response.headers.updateHeader("Content-Type", rsc.type);
+					response.body = rsc;
+					return;
+				}finally {
+					request.work.blockTimeout = false;
+				}
+				// System.out.println((digest - start) / 1000000D + " start-digest");
+				// System.out.println((loaded - digest) / 1000000D + " digest-loaded");
+				// System.out.println((loadert - loaded) / 1000000D + " loaded-loadert");
+				// System.out.println((proc - loadert) / 1000000D + " loadert-proc");
+				// System.out.println((cur - proc) / 1000000D + " proc-cur");
+				response.body.data = !doout ? new byte[0] : ndata;
 			}catch (Exception e) {
 				Logger.logError(e);
 				ResponseGenerator.generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
 				Resource rsc = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "Avuna had a critical error attempting to serve your page. Please contact your server administrator and try again. This error has been recorded in the Avuna log file.");
 				response.headers.updateHeader("Content-Type", rsc.type);
-				return rsc.data;
-			}finally {
-				request.work.blockTimeout = false;
+				response.body = rsc;
 			}
-			// System.out.println((digest - start) / 1000000D + " start-digest");
-			// System.out.println((loaded - digest) / 1000000D + " digest-loaded");
-			// System.out.println((loadert - loaded) / 1000000D + " loaded-loadert");
-			// System.out.println((proc - loadert) / 1000000D + " loadert-proc");
-			// System.out.println((cur - proc) / 1000000D + " proc-cur");
-			return !doout ? new byte[0] : ndata;
-		}catch (Exception e) {
-			Logger.logError(e);
+		}else if (event instanceof EventReload) {
+			try {
+				HTMLCache.reloadAll();
+				config.load();
+				flushjl();
+			}catch (IOException e) {
+				Logger.logError(e);
+			}
+		}else if (event instanceof EventPreExit) {
+			try {
+				DatabaseManager.closeAll();
+			}catch (SQLException e) {
+				Logger.logError(e);
+			}
+			config.save();
+			for (JavaLoader jl : security) {
+				jl.destroy();
+			}
+			for (JavaLoaderSession session : sessions) {
+				if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
+					jl.destroy();
+				}
+			}
+		}else if (event instanceof EventPostInit) {
+			for (JavaLoaderSession session : sessions) {
+				if (session.getJLS() != null) for (JavaLoader jl : session.getJLS().values()) {
+					jl.postinit();
+				}
+			}
 		}
-		return null;
 	}
 	
 	@Override
-	public void processMethod(RequestPacket request, ResponsePacket response) {
-		
+	public void register(EventBus bus) {
+		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, -500);
+		bus.registerEvent(HTTPEventID.RELOAD, this, 0);
+		bus.registerEvent(HTTPEventID.PREEXIT, this, 0);
+		bus.registerEvent(HTTPEventID.POSTINIT, this, 0);
 	}
+	
 }

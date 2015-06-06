@@ -3,9 +3,11 @@ package org.avuna.httpd.http.networking;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.avuna.httpd.hosts.HostHTTP;
+import org.avuna.httpd.http.event.EventDisconnected;
 import org.avuna.httpd.http.networking.httpm.MasterConn;
 
 public class Work {
@@ -35,5 +37,10 @@ public class Work {
 		if (ssl) {
 			sslprep = new ByteArrayOutputStream();
 		}
+	}
+	
+	public void close() throws IOException {
+		s.close();
+		host.eventBus.callEvent(new EventDisconnected(this));
 	}
 }

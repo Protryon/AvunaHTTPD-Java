@@ -7,17 +7,21 @@ public class Event {
 		this.eid = eid;
 	}
 	
-	public int getEID() {
+	public final int getEID() {
 		return eid;
 	}
 	
 	private boolean canceled = false;
 	
-	public boolean isCanceled() {
+	public final boolean isCanceled() {
 		return canceled;
 	}
 	
-	public void cancel() {
-		canceled = true;
+	public boolean canCancel() {
+		return true;
+	}
+	
+	public final void cancel() {
+		if (canCancel()) canceled = true;
 	}
 }

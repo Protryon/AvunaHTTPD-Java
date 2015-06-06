@@ -14,12 +14,10 @@ import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.http.StatusCode;
+import org.avuna.httpd.http.event.EventClearCache;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.plugins.Patch;
 import org.avuna.httpd.http.plugins.base.PatchChunked;
-import org.avuna.httpd.http.plugins.base.PatchGZip;
-import org.avuna.httpd.http.plugins.base.PatchInline;
-import org.avuna.httpd.http.plugins.base.PatchOverride;
 import org.avuna.httpd.http.plugins.javaloader.lib.HTMLCache;
 import org.avuna.httpd.http.plugins.javaloader.lib.JavaLoaderUtil;
 import org.avuna.httpd.http.util.OverrideConfig;
@@ -153,10 +151,7 @@ public class FileManager {
 		cConfigCache.clear();
 		for (Host host : AvunaHTTPD.hosts.values()) {
 			if (host instanceof HostHTTP) {
-				PatchInline pi = ((PatchInline)((HostHTTP)host).registry.getPatchForClass(PatchInline.class));
-				if (pi != null) pi.clearCache();
-				PatchGZip pg = ((PatchGZip)((HostHTTP)host).registry.getPatchForClass(PatchGZip.class));
-				if (pg != null) pg.clearCache();
+				((HostHTTP)host).eventBus.callEvent(new EventClearCache());
 			}
 		}
 		
@@ -472,7 +467,7 @@ public class FileManager {
 						tbCache.remove(delKeys[i]);
 					}
 					cConfigCache.clear();
-					((PatchInline)request.host.getHost().registry.getPatchForClass(PatchInline.class)).clearCache();
+					request.host.getHost().eventBus.callEvent(new EventClearCache());
 				}
 			}
 			if (resource == null) {

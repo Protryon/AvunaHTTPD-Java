@@ -6,9 +6,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.event.Event;
+import org.avuna.httpd.event.EventBus;
 import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.http.StatusCode;
-import org.avuna.httpd.http.networking.Packet;
+import org.avuna.httpd.http.event.EventGenerateResponse;
+import org.avuna.httpd.http.event.EventReload;
+import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
@@ -39,11 +43,6 @@ public class PatchAuth extends Patch {
 			if (!auth.containsNode("realm")) auth.insertNode("realm", "Generic Auth Title");
 			auths.add(new Auth(auth.getNode("userlist").getValue(), (auth.getNode("cacheUsers").getValue()).equals("true"), auth.getNode("dirMatch").getValue(), auth.getNode("realm").getValue()));
 		}
-		
-	}
-	
-	public void reload() throws IOException {
-		super.reload();
 		for (Auth a : auths) {
 			a.usersLoaded = false;
 			a.ull.clear();
@@ -105,18 +104,7 @@ public class PatchAuth extends Patch {
 	
 	private ArrayList<Auth> auths;
 	
-	@Override
-	public boolean shouldProcessPacket(Packet packet) {
-		return false;
-	}
-	
-	@Override
-	public void processPacket(Packet packet) {
-		
-	}
-	
-	@Override
-	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
+	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request) {
 		if (request.parent != null) return false;
 		if (response.body != null) {
 			for (Auth auth : auths) {
@@ -129,37 +117,52 @@ public class PatchAuth extends Patch {
 	}
 	
 	@Override
-	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		Auth auth = null;
-		for (Auth tauth : auths) {
-			if (tauth.matchesDir(request.target)) {
-				auth = tauth;
-				break;
-			}
-		}
-		if (auth == null) return null;
-		try {
-			if (request.headers.hasHeader("Authorization")) {
-				String as = request.headers.getHeader("Authorization");
-				if (as.startsWith("Basic ")) {
-					as = as.substring(6);
-					as = new String(new BASE64Decoder().decodeBuffer(as));
-					if (auth.isAuth(as)) {
-						return data;
-					}
+	public void receive(EventBus bus, Event event) {
+		if (event instanceof EventGenerateResponse) {
+			EventGenerateResponse egr = (EventGenerateResponse)event;
+			ResponsePacket response = egr.getResponse();
+			RequestPacket request = egr.getRequest();
+			if (!shouldProcessResponse(response, request)) return;
+			Auth auth = null;
+			for (Auth tauth : auths) {
+				if (tauth.matchesDir(request.target)) {
+					auth = tauth;
+					break;
 				}
 			}
-			ResponseGenerator.generateDefaultResponse(response, StatusCode.UNAUTHORIZED);
-			response.body = null;
-			response.headers.addHeader("WWW-Authenticate", "Basic realm=\"" + auth.realm + "\"");
-		}catch (Exception e) {
-			Logger.logError(e);
+			if (auth == null) {
+				ResponseGenerator.generateDefaultResponse(response, StatusCode.UNAUTHORIZED);
+				response.body = null;
+				return;
+			}
+			try {
+				if (request.headers.hasHeader("Authorization")) {
+					String as = request.headers.getHeader("Authorization");
+					if (as.startsWith("Basic ")) {
+						as = as.substring(6);
+						as = new String(new BASE64Decoder().decodeBuffer(as));
+						if (auth.isAuth(as)) {
+							return;
+						}
+					}
+				}
+				ResponseGenerator.generateDefaultResponse(response, StatusCode.UNAUTHORIZED);
+				response.body = null;
+				response.headers.addHeader("WWW-Authenticate", "Basic realm=\"" + auth.realm + "\"");
+			}catch (Exception e) {
+				Logger.logError(e);
+			}
+		}else if (event instanceof EventReload) {
+			// for (Auth a : auths) {
+			// a.usersLoaded = false;
+			// a.ull.clear();
+			// } from format config
 		}
-		return null;
 	}
 	
 	@Override
-	public void processMethod(RequestPacket request, ResponsePacket response) {
-		
+	public void register(EventBus bus) {
+		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, -400);
+		bus.registerEvent(HTTPEventID.RELOAD, this, 0);
 	}
 }

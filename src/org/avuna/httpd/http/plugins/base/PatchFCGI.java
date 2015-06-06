@@ -9,10 +9,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.event.Event;
+import org.avuna.httpd.event.EventBus;
 import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.http.StatusCode;
-import org.avuna.httpd.http.networking.Packet;
+import org.avuna.httpd.http.event.EventGenerateResponse;
+import org.avuna.httpd.http.event.EventReload;
+import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.networking.Work;
@@ -29,13 +33,28 @@ public class PatchFCGI extends Patch {
 	
 	public PatchFCGI(String name, PatchRegistry registry) {
 		super(name, registry);
+		reloadus();
 	}
 	
-	public void load() {
-		reload();
+	@Override
+	public void receive(EventBus bus, Event event) {
+		if (event instanceof EventGenerateResponse) {
+			EventGenerateResponse egr = (EventGenerateResponse)event;
+			ResponsePacket response = egr.getResponse();
+			RequestPacket request = egr.getRequest();
+			if (shouldProcessResponse(response, request)) processResponse(response, request);
+		}else if (event instanceof EventReload) {
+			reloadus();
+		}
 	}
 	
-	public void reload() {
+	@Override
+	public void register(EventBus bus) {
+		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, -600);
+		bus.registerEvent(HTTPEventID.RELOAD, this, 0);
+	}
+	
+	public void reloadus() {
 		if (!pcfg.getNode("enabled").getValue().equals("true")) return;
 		for (IFCGIManager fcgi : fcgis.values()) {
 			try {
@@ -103,19 +122,8 @@ public class PatchFCGI extends Patch {
 		}
 	}
 	
-	@Override
-	public boolean shouldProcessPacket(Packet packet) {
-		return false;
-	}
-	
-	@Override
-	public void processPacket(Packet packet) {
-		
-	}
-	
-	@Override
-	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		if (!response.headers.hasHeader("Content-Type") || data == null) return false;
+	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request) {
+		if (!response.headers.hasHeader("Content-Type") || response.body == null) return false;
 		String ct = response.headers.getHeader("Content-Type");
 		boolean gct = false;
 		major:
@@ -131,13 +139,7 @@ public class PatchFCGI extends Patch {
 		return gct;
 	}
 	
-	@Override
-	public void processMethod(RequestPacket request, ResponsePacket response) {
-		
-	}
-	
-	@Override
-	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
+	public void processResponse(ResponsePacket response, RequestPacket request) {
 		try {
 			String get = request.target;
 			if (get.contains("#")) {
@@ -174,7 +176,7 @@ public class PatchFCGI extends Patch {
 				ResponseGenerator.generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
 				Resource er = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "Avuna encountered a critical error attempting to contact the FCGI Server! Please contact your system administrator and notify them to check their logs.");
 				response.headers.updateHeader("Content-Type", er.type);
-				return er.data;
+				response.body = er;
 			}
 			FCGISession session = new FCGISession(conn);
 			session.start();
@@ -283,10 +285,14 @@ public class PatchFCGI extends Patch {
 				response.headers.updateHeader("Content-Type", "text/html");
 			}
 			s.close();
-			return bout.toByteArray();
+			response.body.data = bout.toByteArray();
+			return;
 		}catch (IOException e) {
 			Logger.logError(e); // TODO: throws HTMLException?
+			ResponseGenerator.generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
+			Resource er = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "Avuna encountered a critical error attempting to contact the FCGI Server! Please contact your system administrator and notify them to check their logs.");
+			response.headers.updateHeader("Content-Type", er.type);
+			response.body = er;
 		}
-		return null;// TODO: to prevent PHP leaks
 	}
 }

@@ -7,6 +7,7 @@ import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.HostHTTPM;
 import org.avuna.httpd.hosts.ITerminatable;
+import org.avuna.httpd.http.event.EventDisconnected;
 import org.avuna.httpd.util.Logger;
 
 public class ThreadConnection extends Thread implements ITerminatable {
@@ -33,6 +34,7 @@ public class ThreadConnection extends Thread implements ITerminatable {
 				continue;
 			}
 			if (focus.s.isClosed()) {
+				host.eventBus.callEvent(new EventDisconnected(focus));
 				String ip = focus.s.getInetAddress().getHostAddress();
 				Integer cur = HostHTTP.connIPs.get(ip);
 				if (cur == null) cur = 1;
@@ -96,14 +98,14 @@ public class ThreadConnection extends Thread implements ITerminatable {
 					}else {
 						if (focus.sns >= System.nanoTime()) {
 							if (AvunaHTTPD.bannedIPs.contains(focus.s.getInetAddress().getHostAddress())) {
-								focus.s.close();
+								focus.close();
 							}else {
 								readd = true;
 							}
 							continue;
 						}else {
 							readd = false;
-							focus.s.close();
+							focus.close();
 							String ip = focus.s.getInetAddress().getHostAddress();
 							Integer cur = HostHTTP.connIPs.get(ip);
 							if (cur == null) cur = 1;
@@ -118,7 +120,7 @@ public class ThreadConnection extends Thread implements ITerminatable {
 					RequestPacket incomingRequest = RequestPacket.read(focus.sslprep != null ? focus.sslprep.toByteArray() : null, focus.in, host);
 					if (focus.sslprep != null) focus.sslprep.reset();
 					if (incomingRequest == null) {
-						focus.s.close();
+						focus.close();
 						continue;
 					}
 					
@@ -151,7 +153,7 @@ public class ThreadConnection extends Thread implements ITerminatable {
 					}else {
 						// Logger.logError(e);
 						try {
-							focus.s.close();
+							focus.close();
 						}catch (IOException ex) {
 							Logger.logError(ex);
 						}
@@ -171,7 +173,7 @@ public class ThreadConnection extends Thread implements ITerminatable {
 				if (!(e instanceof SocketTimeoutException)) {
 					if (!(e instanceof SocketException || e instanceof StringIndexOutOfBoundsException)) Logger.logError(e);
 					try {
-						focus.s.close();
+						focus.close();
 					}catch (IOException ex) {
 						Logger.logError(ex);
 					}

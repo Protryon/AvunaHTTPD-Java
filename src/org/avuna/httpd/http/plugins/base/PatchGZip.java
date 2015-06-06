@@ -5,12 +5,15 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.zip.CRC32;
 import java.util.zip.GZIPOutputStream;
-import org.avuna.httpd.http.networking.Packet;
+import org.avuna.httpd.event.Event;
+import org.avuna.httpd.event.EventBus;
+import org.avuna.httpd.http.event.EventClearCache;
+import org.avuna.httpd.http.event.EventGenerateResponse;
+import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Patch;
 import org.avuna.httpd.http.plugins.PatchRegistry;
-import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 
 public class PatchGZip extends Patch {
@@ -19,63 +22,46 @@ public class PatchGZip extends Patch {
 		super(name, registry);
 	}
 	
-	@Override
-	public void formatConfig(ConfigNode json) {
-		super.formatConfig(json);
-	}
-	
-	@Override
-	public boolean shouldProcessPacket(Packet packet) {
-		return false;
-	}
-	
-	@Override
-	public void processPacket(Packet packet) {
-		
-	}
-	
-	@Override
-	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		return request.parent == null && request.headers.hasHeader("Accept-Encoding") && request.headers.getHeader("Accept-Encoding").contains("gzip") && !response.headers.hasHeader("Content-Encoding") && ((data != null && data.length > 0) || (response.body != null && response.body.tooBig));
-	}
-	
 	private final HashMap<Long, byte[]> pregzip = new HashMap<Long, byte[]>();
 	
-	public void clearCache() {
-		pregzip.clear();
-	}
-	
 	@Override
-	public byte[] processResponse(ResponsePacket response, RequestPacket request, byte[] data) {
-		byte[] data2 = data;
-		try {
-			if (data != null && data.length > 0) {
+	public void receive(EventBus bus, Event event) {
+		if (event instanceof EventGenerateResponse) {
+			EventGenerateResponse egr = (EventGenerateResponse)event;
+			ResponsePacket response = egr.getResponse();
+			RequestPacket request = egr.getRequest();
+			if (!(request.parent == null && request.headers.hasHeader("Accept-Encoding") && request.headers.getHeader("Accept-Encoding").contains("gzip") && !response.headers.hasHeader("Content-Encoding") && response.body != null && !response.body.tooBig)) return;
+			byte[] data2 = response.body.data;
+			try {
 				CRC32 crc = new CRC32();
-				crc.update(data);
+				crc.update(data2);
 				long l = crc.getValue();
 				if (pregzip.containsKey(l)) {
 					data2 = pregzip.get(l);
 				}else {
 					ByteArrayOutputStream bout = new ByteArrayOutputStream();
 					GZIPOutputStream gout = new GZIPOutputStream(bout);
-					gout.write(data, 0, data.length);
+					gout.write(data2, 0, data2.length);
 					gout.flush();
 					gout.close();
 					data2 = bout.toByteArray();
 					pregzip.put(l, data2);
 				}
+				response.headers.addHeader("Content-Encoding", "gzip");
+				response.headers.addHeader("Vary", "Accept-Encoding");
+			}catch (IOException e) {
+				Logger.logError(e);
 			}
-			response.headers.addHeader("Content-Encoding", "gzip");
-			response.headers.addHeader("Vary", "Accept-Encoding");
-		}catch (IOException e) {
-			Logger.logError(e);
+			response.body.data = data2;
+		}else if (event instanceof EventClearCache) {
+			pregzip.clear();
 		}
-		return data2;
 	}
 	
 	@Override
-	public void processMethod(RequestPacket request, ResponsePacket response) {
-		
+	public void register(EventBus bus) {
+		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, -800);
+		bus.registerEvent(HTTPEventID.CLEARCACHE, this, 0);
 	}
 	
 }

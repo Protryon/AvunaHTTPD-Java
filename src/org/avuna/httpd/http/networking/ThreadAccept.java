@@ -8,6 +8,7 @@ import java.net.SocketException;
 import javax.net.ssl.SSLServerSocket;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostHTTP;
+import org.avuna.httpd.http.event.EventPreConnect;
 import org.avuna.httpd.http.plugins.base.PatchSecurity;
 import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSecurity;
 import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
@@ -40,7 +41,7 @@ public class ThreadAccept extends Thread {
 				}
 				if (!host.isUnix() && AvunaHTTPD.bannedIPs.contains(s.getInetAddress().getHostAddress())) {
 					s.close();
-					continue;
+					continue; // TODO: move out all security code
 				}
 				s.setSoTimeout(1000);
 				PatchSecurity ps = (PatchSecurity)host.registry.getPatchForClass(PatchSecurity.class);
@@ -60,6 +61,12 @@ public class ThreadAccept extends Thread {
 				DataOutputStream out = new DataOutputStream(s.getOutputStream());
 				out.flush();
 				DataInputStream in = new DataInputStream(s.getInputStream());
+				EventPreConnect epc = new EventPreConnect(s, out, in);
+				host.eventBus.callEvent(epc);
+				if (epc.isCanceled()) {
+					s.close();
+					continue;
+				}
 				host.addWork(host, s, in, out, server instanceof SSLServerSocket);
 			}catch (SocketException e) {
 				if (!server.isClosed()) Logger.logError(e);

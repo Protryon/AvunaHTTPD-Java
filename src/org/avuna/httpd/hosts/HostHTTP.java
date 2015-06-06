@@ -10,6 +10,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.event.EventBus;
+import org.avuna.httpd.http.event.EventConnected;
+import org.avuna.httpd.http.event.EventPostInit;
+import org.avuna.httpd.http.event.EventPreExit;
+import org.avuna.httpd.http.event.EventSetupFolders;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.networking.ThreadAccept;
@@ -30,10 +35,11 @@ public class HostHTTP extends Host {
 	protected int mc;
 	public final PatchRegistry registry;
 	public final PatchBus patchBus;
+	public final EventBus eventBus;
 	private int maxPostSize = 65535;
 	
 	public void postload() throws IOException {
-		patchBus.postload();
+		eventBus.callEvent(new EventPostInit());
 	}
 	
 	public int getMaxPostSize() {
@@ -48,12 +54,14 @@ public class HostHTTP extends Host {
 		super(name, Protocol.HTTP);
 		this.registry = new PatchRegistry(this);
 		patchBus = new PatchBus(registry);
+		eventBus = new EventBus();
 	}
 	
 	protected HostHTTP(String name, Protocol protocol) {
 		super(name, protocol);
 		this.registry = new PatchRegistry(this);
 		patchBus = new PatchBus(registry);
+		eventBus = new EventBus();
 	}
 	
 	public void loadBases() {
@@ -154,8 +162,20 @@ public class HostHTTP extends Host {
 		if (cur == null) cur = 0;
 		cur += 1;
 		connIPs.put(ip, cur);
-		workQueue.add(new Work(host, s, in, out, ssl));
+		Work w = new Work(host, s, in, out, ssl);
+		workQueue.add(w);
 		Logger.log(ip + " connected to " + host.getHostname() + ".");
+		EventConnected epc = new EventConnected(w);
+		host.eventBus.callEvent(epc);
+		if (epc.isCanceled()) {
+			try {
+				w.close();
+			}catch (IOException e) {
+				
+			}
+			
+		}
+		
 	}
 	
 	public void clearIPs(String ip) {
@@ -172,7 +192,7 @@ public class HostHTTP extends Host {
 	}
 	
 	public void preExit() {
-		patchBus.preExit();
+		eventBus.callEvent(new EventPreExit());
 	}
 	
 	public void setupFolders() {
@@ -180,6 +200,7 @@ public class HostHTTP extends Host {
 			vhost.setupFolders();
 		}
 		new File(getConfig().getNode("plugins").getValue()).mkdirs();
+		eventBus.callEvent(new EventSetupFolders());
 		patchBus.setupFolders();
 	}
 	

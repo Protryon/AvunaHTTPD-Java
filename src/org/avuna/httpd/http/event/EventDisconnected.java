@@ -15,4 +15,8 @@ public class EventDisconnected extends Event {
 		this.work = work;
 	}
 	
+	public boolean canCancel() {
+		return false;
+	}
+	
 }
