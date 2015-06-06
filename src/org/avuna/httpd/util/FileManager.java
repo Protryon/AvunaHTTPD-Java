@@ -342,7 +342,7 @@ public class FileManager {
 	private static long cacheClock = 0L;
 	
 	/**
-	 * Instantiates an {@link OverrideConfig} from *.override files in htdocs,
+	 * Instantiates an {@link OverrideConfig} from .override files in htdocs,
 	 * adds it to to the {@link #cConfigCache} with path as key.
 	 * 
 	 * @param file name of override file
@@ -358,10 +358,26 @@ public class FileManager {
 		return cfg;
 	}
 	
+	/**
+	 * @param path
+	 * @return path to last index "/" or path if no index included
+	 */
 	public String getSuperDirectory(String path) {
 		return path.contains("/") ? path.substring(0, path.lastIndexOf("/") + 1) : path;
 	}
 	
+	/**
+	 * Sets {@link Resource#effectiveOverride} from {@link #cConfigCache}
+	 * or loads values from lowest child directory in host tree .override
+	 * file if it exists.
+	 * 
+	 * @param request URL request
+	 * @param resource page content
+	 * @param htds the host document source path
+	 * @see Resource
+	 * @return resource with {@link Resource#effectiveOverride}
+	 * @throws IOException
+	 */
 	public Resource preloadOverride(RequestPacket request, Resource resource, String htds) throws IOException {
 		if (resource == null) return null;
 		String rt = request.target;
@@ -393,6 +409,18 @@ public class FileManager {
 		return resource;
 	}
 	
+	/**
+	 * Check incoming request against cache. If request is cached and not
+	 * expired return cached resource. If cache has expired clear caches.
+	 * Otherwise read htdocs file and build resource.
+	 * 
+	 * @param reqTarget URl request
+	 * @param request page content
+	 * @see Resource
+	 * @see PatchInline
+	 * @see PatchChunked
+	 * @return resource
+	 */
 	public Resource getResource(String reqTarget, RequestPacket request) {
 		try {
 			String rt = reqTarget;
