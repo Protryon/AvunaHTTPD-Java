@@ -21,13 +21,28 @@ import org.avuna.httpd.http.plugins.javaloader.lib.HTMLCache;
 import org.avuna.httpd.http.plugins.javaloader.lib.JavaLoaderUtil;
 import org.avuna.httpd.http.util.OverrideConfig;
 
+/**
+ * General utility for File type objects.
+ * 
+ * @author Max
+ *
+ */
 public class FileManager {
 	public FileManager() {
 		
 	}
 	
+	/**
+	 * Character array of valid hex values.
+	 */
 	private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
 	
+	/**
+	 * Converts a byte array to a string in hex format.
+	 * 
+	 * @param bytes a byte array
+	 * @return String in hex
+	 */
 	public String bytesToHex(byte[] bytes) {
 		char[] hexChars = new char[bytes.length * 2];
 		for (int j = 0; j < bytes.length; j++) {
@@ -43,10 +58,23 @@ public class FileManager {
 	private HashMap<String, File> base = new HashMap<String, File>();
 	private HashMap<HostHTTP, File> plugins = new HashMap<HostHTTP, File>();
 	
+	/**
+	 * Get object dir value if exists or get value from {@link AvunaHTTPD#mainConfig mainConfig}.
+	 * 
+	 * @return dir
+	 */
 	public File getMainDir() {
 		return dir == null ? (dir = new File(AvunaHTTPD.mainConfig.getNode("dir").getValue())) : dir;
 	}
 	
+	/** 
+	 * Get plugins value from host configuration if exists else get it from
+	 * the host "plugins" node.
+	 * 
+	 * @param host
+	 * @see HashMap#put(Object, Object)
+	 * @return plugins value
+	 */
 	public File getPlugins(HostHTTP host) {
 		if (plugins.containsKey(host)) {
 			return plugins.get(host);
@@ -57,10 +85,23 @@ public class FileManager {
 		}
 	}
 	
+	/**
+	 * Get logs value if exists else get value from {@link AvunaHTTPD#mainConfig mainConfig}.
+	 * 
+	 * @return logs value
+	 */
 	public File getLogs() {
 		return logs == null ? (logs = new File(AvunaHTTPD.mainConfig.getNode("logs").getValue())) : logs;
 	}
 	
+	/**
+	 * Get plugin value if exists else create new plugin entry in plugins.
+	 * 
+	 * @param p plugin object
+	 * @see HashMap
+	 * @see Object#hashCode
+	 * @return plugin
+	 */
 	public File getPlugin(Patch p) {
 		if (!plugin.containsKey(p.hashCode() + "" + p.registry.host.hashCode())) {
 			plugin.put(p.hashCode() + "" + p.registry.host.hashCode(), new File(getPlugins(p.registry.host), p.name));
@@ -68,6 +109,12 @@ public class FileManager {
 		return plugin.get(p.hashCode() + "" + p.registry.host.hashCode());
 	}
 	
+	/**
+	 * Get base file value for object else get main directory and set it.
+	 * 
+	 * @param name
+	 * @return name base file name
+	 */
 	public File getBaseFile(String name) {
 		if (!base.containsKey(name)) {
 			base.put(name, new File(getMainDir(), name));
@@ -75,6 +122,14 @@ public class FileManager {
 		return base.get(name);
 	}
 	
+	/**
+	 * Clear the HTML cache, including extCache, lwiCache, and tbCache,
+	 * except where extCache has key "application/x-java". Also clears
+	 * Patch maps.
+	 * 
+	 * @see EventBus#callEvent
+	 * @throws IOException
+	 */
 	public void clearCache() throws IOException {
 		HTMLCache.reloadAll();
 		String[] delKeys = new String[cache.size()];
@@ -122,6 +177,17 @@ public class FileManager {
 		}
 	}
 	
+	/**
+	 * Takes error page request, if error page is in configuration deliver it
+	 * back, else deliver standard html notice.
+	 * 
+	 * @param request
+	 * @param reqTarget
+	 * @param status
+	 * @param info
+	 * @see Resource
+	 * @return error page if configured, else standard error message.
+	 */
 	public Resource getErrorPage(RequestPacket request, String reqTarget, StatusCode status, String info) {
 		ConfigNode errorPages = request.host.getHost().getConfig().getNode("errorpages");
 		if (errorPages.containsNode(status.getStatus() + "")) {
@@ -162,6 +228,16 @@ public class FileManager {
 	
 	private boolean lwi = false;// TODO: thread safety?
 	
+	/**
+	 * Retrieve file system path to requested URL. If request is to directory,
+	 * append index file path from host configuration. Set extra parameters
+	 * to child of path.
+	 * 
+	 * @param reqTarget2 request URL
+	 * @param request Incoming packet for host data
+	 * @see PatchOverride#processPacket(org.avuna.httpd.http.networking.Packet)
+	 * @return absolute file system path and parameter string (as child)
+	 */
 	public File getAbsolutePath(String reqTarget2, RequestPacket request) {
 		String reqTarget = reqTarget2;
 		lwi = false;
@@ -237,6 +313,14 @@ public class FileManager {
 		return abs;
 	}
 	
+	/**
+	 * Correct from Windows directory index characters to Unix style index
+	 * for htdocs for incoming request.
+	 * 
+	 * @param reqTarget request URL
+	 * @param request Incoming packet
+	 * @return htdocs absolute path in Unix format
+	 */
 	public String correctForIndex(String reqTarget, RequestPacket request) {
 		String p = getAbsolutePath(reqTarget, request).getAbsolutePath().replace("\\", "/");
 		return p.substring(request.host.getHTDocs().getAbsolutePath().replace("\\", "/").length());
@@ -250,6 +334,15 @@ public class FileManager {
 	public static final HashMap<String, OverrideConfig> cConfigCache = new HashMap<String, OverrideConfig>();
 	private static long cacheClock = 0L;
 	
+	/**
+	 * Instantiates an {@link OverrideConfig} from .override files in htdocs,
+	 * adds it to to the {@link #cConfigCache} with path as key.
+	 * 
+	 * @param file name of override file
+	 * @param path path to override file
+	 * @return
+	 * @throws IOException
+	 */
 	public OverrideConfig loadDirective(File file, String path) throws IOException { // TODO: load superdirectory directives.
 		if (!file.exists()) return null;
 		OverrideConfig cfg = new OverrideConfig(file);
@@ -258,10 +351,26 @@ public class FileManager {
 		return cfg;
 	}
 	
+	/**
+	 * @param path
+	 * @return path to last index "/" or path if no index included
+	 */
 	public String getSuperDirectory(String path) {
 		return path.contains("/") ? path.substring(0, path.lastIndexOf("/") + 1) : path;
 	}
 	
+	/**
+	 * Sets {@link Resource#effectiveOverride} from {@link #cConfigCache}
+	 * or loads values from lowest child directory in host tree .override
+	 * file if it exists.
+	 * 
+	 * @param request URL request
+	 * @param resource page content
+	 * @param htds the host document source path
+	 * @see Resource
+	 * @return resource with {@link Resource#effectiveOverride}
+	 * @throws IOException
+	 */
 	public Resource preloadOverride(RequestPacket request, Resource resource, String htds) throws IOException {
 		if (resource == null) return null;
 		String rt = request.target;
@@ -293,6 +402,18 @@ public class FileManager {
 		return resource;
 	}
 	
+	/**
+	 * Check incoming request against cache. If request is cached and not
+	 * expired return cached resource. If cache has expired clear caches.
+	 * Otherwise read htdocs file and build resource.
+	 * 
+	 * @param reqTarget URl request
+	 * @param request page content
+	 * @see Resource
+	 * @see EventBus#callEvent
+	 * @see PatchChunked
+	 * @return resource
+	 */
 	public Resource getResource(String reqTarget, RequestPacket request) {
 		try {
 			String rt = reqTarget;
