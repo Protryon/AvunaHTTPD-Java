@@ -128,8 +128,7 @@ public class FileManager {
 	 * except where extCache has key "application/x-java". Also clears
 	 * Patch maps.
 	 * 
-	 * @see PatchInline#clearCache()
-	 * @see PatchGZip#clearCache()
+	 * @see EventBus#callEvent
 	 * @throws IOException
 	 */
 	public void clearCache() throws IOException {
@@ -412,7 +411,7 @@ public class FileManager {
 	 * @param reqTarget URl request
 	 * @param request page content
 	 * @see Resource
-	 * @see PatchInline
+	 * @see EventBus#callEvent
 	 * @see PatchChunked
 	 * @return resource
 	 */
