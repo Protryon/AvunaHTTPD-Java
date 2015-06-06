@@ -62,14 +62,14 @@ public class EventBus {
 	
 	public void callEvent(Event event) {
 		int id = event.getEID();
-		synchronized (recvs) {
-			if (id >= recvs.length || recvs[id].length == 0) {
-				return;
-			}
-			for (int r = 0; r < recvs[id].length; r++) {
-				recvs[id][r].receive(this, event);
-				if (event.isCanceled()) break;
-			}
+		// synchronized (recvs) {
+		if (id >= recvs.length || recvs[id].length == 0) {
+			return;
 		}
+		for (int r = 0; r < recvs[id].length; r++) {
+			recvs[id][r].receive(this, event);
+			if (event.isCanceled()) break;
+		}
+		// }
 	}
 }

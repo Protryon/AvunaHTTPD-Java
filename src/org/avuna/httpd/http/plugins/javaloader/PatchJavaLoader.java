@@ -255,12 +255,12 @@ public class PatchJavaLoader extends Patch {
 				HashMap<String, String> loadedClasses = request.host.getJLS().getLoadedClasses();
 				JavaLoaderClassLoader jlcl = request.host.getJLS().getJLCL();
 				HashMap<String, JavaLoader> jls = request.host.getJLS().getJLS();
-				crc.update(request.body.data);
+				crc.update(response.body.data);
 				String sha = crc.getValue() + "";
 				synchronized (loadedClasses) {
 					name = loadedClasses.get(sha);
 					if (name == null || name.equals("")) {
-						name = jlcl.addClass(request.body.data);
+						name = jlcl.addClass(response.body.data);
 						loadedClasses.put(sha, name);
 					}
 				}
@@ -268,7 +268,7 @@ public class PatchJavaLoader extends Patch {
 				if (!jls.containsKey(name)) {
 					Class<?> loaderClass = jlcl.loadClass(name);
 					if (loaderClass == null || !JavaLoader.class.isAssignableFrom(loaderClass)) {
-						request.body.data = new byte[0];
+						response.body.data = new byte[0];
 						return;
 					}
 					ConfigNode ocfg = null;
@@ -288,7 +288,7 @@ public class PatchJavaLoader extends Patch {
 					loader = jls.get(name);
 				}
 				if (loader == null) {
-					request.body.data = new byte[0];
+					response.body.data = new byte[0];
 					return;
 				}
 				request.procJL();
