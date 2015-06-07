@@ -61,9 +61,6 @@ public class ZoneFile {
 	}
 	
 	public static String[] congealArgsEscape(String[] args) {
-		if (args[0].equals("TXT")) {
-			System.out.print("");
-		}
 		String[] tcargs = new String[args.length];
 		int nl = 0;
 		boolean iq = false;
