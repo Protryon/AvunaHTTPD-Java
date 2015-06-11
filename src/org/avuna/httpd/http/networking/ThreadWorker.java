@@ -10,6 +10,7 @@ import org.avuna.httpd.http.event.EventGenerateResponse;
 import org.avuna.httpd.http.event.EventPreprocessRequest;
 import org.avuna.httpd.http.event.EventResponseFinished;
 import org.avuna.httpd.http.event.EventResponseSent;
+import org.avuna.httpd.util.Benchmark;
 import org.avuna.httpd.util.Logger;
 
 public class ThreadWorker extends Thread implements ITerminatable {
@@ -37,11 +38,16 @@ public class ThreadWorker extends Thread implements ITerminatable {
 				continue;
 			}
 			try {
+				Benchmark bm = new Benchmark(false);
+				bm.startSection("req");
+				bm.startSection("head");
 				ResponsePacket outgoingResponse = incomingRequest.child;
 				outgoingResponse.request = incomingRequest;
 				boolean main = outgoingResponse.request.parent == null;
 				String add = main ? "" : "-SUB";
 				long benchStart = System.nanoTime();
+				bm.endSection("head");
+				bm.startSection("preproc");
 				EventPreprocessRequest epr = new EventPreprocessRequest(incomingRequest);
 				host.eventBus.callEvent(epr);
 				if (incomingRequest.drop || epr.isCanceled()) {
@@ -49,9 +55,15 @@ public class ThreadWorker extends Thread implements ITerminatable {
 					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
 					continue;
 				}
+				bm.endSection("preproc");
+				bm.startSection("rg");
 				ResponseGenerator.process(incomingRequest, outgoingResponse);
+				bm.endSection("rg");
+				bm.startSection("gen-resp");
 				EventGenerateResponse epr2 = new EventGenerateResponse(incomingRequest, outgoingResponse);
 				host.eventBus.callEvent(epr2);
+				bm.endSection("gen-resp");
+				bm.startSection("resp-finished");
 				EventResponseFinished epr3 = new EventResponseFinished(outgoingResponse);
 				host.eventBus.callEvent(epr3);
 				if (outgoingResponse.drop) {
@@ -59,6 +71,8 @@ public class ThreadWorker extends Thread implements ITerminatable {
 					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
 					continue;
 				}
+				bm.endSection("resp-finished");
+				bm.startSection("prewrite");
 				if (main) outgoingResponse.prewrite();
 				else outgoingResponse.subwrite();
 				if (outgoingResponse.drop) {
@@ -66,6 +80,9 @@ public class ThreadWorker extends Thread implements ITerminatable {
 					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " DROPPED took: " + (outgoingResponse.bwt - benchStart) / 1000000D + " ms");
 					continue;
 				}
+				bm.endSection("prewrite");
+				bm.startSection("post");
+				
 				outgoingResponse.done = true;
 				host.eventBus.callEvent(new EventResponseSent(outgoingResponse));
 				// Logger.log((benchStart - ps) / 1000000D + " ps-start");
@@ -79,6 +96,9 @@ public class ThreadWorker extends Thread implements ITerminatable {
 					Logger.log(AvunaHTTPD.crlf + incomingRequest.toString().trim());
 				}
 				Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " returned " + outgoingResponse.statusCode + " " + outgoingResponse.reasonPhrase + " took: " + (outgoingResponse.bwt - benchStart) / 1000000D + " ms");
+				bm.endSection("post");
+				bm.endSection("req");
+				bm.log();
 			}catch (Exception e) {
 				if (!(e instanceof SocketException || e instanceof StringIndexOutOfBoundsException)) {
 					Logger.logError(e);
