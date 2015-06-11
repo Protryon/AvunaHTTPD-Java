@@ -486,30 +486,31 @@ public class FileManager {
 					PatchChunked chunked = (PatchChunked)request.host.getHost().registry.getPatchForClass(PatchChunked.class);
 					PatchFCGI fcgi = (PatchFCGI)request.host.getHost().registry.getPatchForClass(PatchFCGI.class);
 					PatchJavaLoader jl = (PatchJavaLoader)request.host.getHost().registry.getPatchForClass(PatchJavaLoader.class);
+					boolean dc = chunked != null && chunked.pcfg.getNode("enabled").getValue().equals("true");
+					if (dc && fcgi != null && fcgi.pcfg.getNode("enabled").getValue().equals("true")) {
+						major:
+						for (String key : fcgi.fcgis.keySet()) {
+							String[] pcts = key.split(",");
+							for (String pct : pcts) {
+								if (pct.trim().equals(ext)) {
+									dc = false;
+									break major;
+								}
+							}
+						}
+					}
+					if (dc && jl != null && jl.pcfg.getNode("enabled").getValue().equals("true")) {
+						if (ext.equals("application/x-java")) {
+							dc = false;
+						}
+					}
+					int s = dc ? Integer.parseInt(chunked.pcfg.getNode("minsize").getValue()) : -1;
 					while (i > 0) {
 						i = fin.read(buf);
 						if (i > 0) {
 							bout.write(buf, 0, i);
 						}
-						if (chunked.pcfg.getNode("enabled").getValue().equals("true") && bout.size() > Integer.parseInt(chunked.pcfg.getNode("minsize").getValue())) {
-							boolean ssa = false;
-							if (fcgi != null && fcgi.pcfg.getNode("enabled").getValue().equals("true")) {
-								major:
-								for (String key : fcgi.fcgis.keySet()) {
-									String[] pcts = key.split(",");
-									for (String pct : pcts) {
-										if (pct.trim().equals(ext)) {
-											ssa = true;
-											break major;
-										}
-									}
-								}
-							}
-							if (!ssa && jl != null && jl.pcfg.getNode("enabled").getValue().equals("true")) {
-								if (ext.equals("application/x-java")) {
-									ssa = true;
-								}
-							}
+						if (dc && bout.size() > s) {
 							bout.reset();
 							tooBig = true;
 							break;
