@@ -102,7 +102,7 @@ public class PatchFCGI extends Patch {
 		}
 	}
 	
-	private HashMap<String, IFCGIManager> fcgis = new HashMap<String, IFCGIManager>();
+	public HashMap<String, IFCGIManager> fcgis = new HashMap<String, IFCGIManager>();
 	
 	@Override
 	public void formatConfig(ConfigNode json) {

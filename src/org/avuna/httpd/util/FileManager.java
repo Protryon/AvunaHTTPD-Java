@@ -9,6 +9,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.event.EventBus;
 import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.http.Resource;
@@ -17,6 +18,9 @@ import org.avuna.httpd.http.event.EventClearCache;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.plugins.Patch;
 import org.avuna.httpd.http.plugins.base.PatchChunked;
+import org.avuna.httpd.http.plugins.base.PatchFCGI;
+import org.avuna.httpd.http.plugins.base.PatchOverride;
+import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
 import org.avuna.httpd.http.plugins.javaloader.lib.HTMLCache;
 import org.avuna.httpd.http.plugins.javaloader.lib.JavaLoaderUtil;
 import org.avuna.httpd.http.util.OverrideConfig;
@@ -25,7 +29,6 @@ import org.avuna.httpd.http.util.OverrideConfig;
  * General utility for File type objects.
  * 
  * @author Max
- *
  */
 public class FileManager {
 	public FileManager() {
@@ -67,7 +70,7 @@ public class FileManager {
 		return dir == null ? (dir = new File(AvunaHTTPD.mainConfig.getNode("dir").getValue())) : dir;
 	}
 	
-	/** 
+	/**
 	 * Get plugins value from host configuration if exists else get it from
 	 * the host "plugins" node.
 	 * 
@@ -360,8 +363,7 @@ public class FileManager {
 	}
 	
 	/**
-	 * Sets {@link Resource#effectiveOverride} from {@link #cConfigCache}
-	 * or loads values from lowest child directory in host tree .override
+	 * Sets {@link Resource#effectiveOverride} from {@link #cConfigCache} or loads values from lowest child directory in host tree .override
 	 * file if it exists.
 	 * 
 	 * @param request URL request
@@ -481,13 +483,33 @@ public class FileManager {
 					ByteArrayOutputStream bout = new ByteArrayOutputStream();
 					int i = 1;
 					byte[] buf = new byte[4096];
+					PatchChunked chunked = (PatchChunked)request.host.getHost().registry.getPatchForClass(PatchChunked.class);
+					PatchFCGI fcgi = (PatchFCGI)request.host.getHost().registry.getPatchForClass(PatchFCGI.class);
+					PatchJavaLoader jl = (PatchJavaLoader)request.host.getHost().registry.getPatchForClass(PatchJavaLoader.class);
 					while (i > 0) {
 						i = fin.read(buf);
 						if (i > 0) {
 							bout.write(buf, 0, i);
 						}
-						PatchChunked chunked = (PatchChunked)request.host.getHost().registry.getPatchForClass(PatchChunked.class);
-						if (chunked.pcfg.getNode("enabled").getValue().equals("true") && bout.size() > Integer.parseInt(chunked.pcfg.getNode("minsize").getValue()) && !ext.startsWith("application")) {
+						if (chunked.pcfg.getNode("enabled").getValue().equals("true") && bout.size() > Integer.parseInt(chunked.pcfg.getNode("minsize").getValue())) {
+							boolean ssa = false;
+							if (fcgi != null && fcgi.pcfg.getNode("enabled").getValue().equals("true")) {
+								major:
+								for (String key : fcgi.fcgis.keySet()) {
+									String[] pcts = key.split(",");
+									for (String pct : pcts) {
+										if (pct.trim().equals(ext)) {
+											ssa = true;
+											break major;
+										}
+									}
+								}
+							}
+							if (!ssa && jl != null && jl.pcfg.getNode("enabled").getValue().equals("true")) {
+								if (ext.equals("application/x-java")) {
+									ssa = true;
+								}
+							}
 							bout.reset();
 							tooBig = true;
 							break;
