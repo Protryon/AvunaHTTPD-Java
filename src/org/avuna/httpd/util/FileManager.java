@@ -283,7 +283,11 @@ public class FileManager {
 					try {
 						String sm = SafeMode.readIfSymlink(abs);
 						if (sm != null) {
-							abs = new File(sm);
+							if (sm.startsWith("/")) {
+								abs = new File(sm);
+							}else {
+								abs = new File(abs.getParentFile(), sm);
+							}
 						}
 						if (SafeMode.isHardlink(abs)) {
 							return null;
