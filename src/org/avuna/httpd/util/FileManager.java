@@ -24,6 +24,7 @@ import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
 import org.avuna.httpd.http.plugins.javaloader.lib.HTMLCache;
 import org.avuna.httpd.http.plugins.javaloader.lib.JavaLoaderUtil;
 import org.avuna.httpd.http.util.OverrideConfig;
+import org.avuna.httpd.util.unixsocket.CException;
 
 /**
  * General utility for File type objects.
@@ -278,6 +279,21 @@ public class FileManager {
 				ep += "/" + st;
 			}else {
 				abs = new File(abs, st);
+				if (!AvunaHTTPD.windows) {
+					try {
+						String sm = SafeMode.readIfSymlink(abs);
+						if (sm != null) {
+							abs = new File(sm);
+						}
+						if (SafeMode.isHardlink(abs)) {
+							return null;
+						}
+					}catch (CException e) {
+						Logger.logError(e);
+						return null;
+					}
+					
+				}
 				if (abs.isFile() || (rdtf != null && abs.getAbsolutePath().startsWith(rdtf))) {
 					ext = true;
 				}
@@ -386,7 +402,14 @@ public class FileManager {
 		if (cConfigCache.containsKey(nrt)) {
 			resource.effectiveOverride = cConfigCache.get(nrt);
 		}else {
-			File abs = getAbsolutePath(rt, request).getParentFile();
+			File abs = getAbsolutePath(rt, request);
+			if (abs == null) {
+				return null;
+			}
+			abs = abs.getParentFile();
+			if (abs == null) {
+				return null;
+			}
 			File override = null;
 			do {
 				if (!abs.exists()) abs = abs.getParentFile();
@@ -472,6 +495,15 @@ public class FileManager {
 			}
 			if (resource == null) {
 				File abs = getAbsolutePath(rt, request);
+				if (abs == null) {
+					cache.put(nrt, null);
+					extCache.put(nrt, "text/html");
+					lwi = this.lwi;
+					lwiCache.put(nrt, lwi);
+					absCache.put(nrt, oabs);
+					tbCache.put(nrt, false);
+					return null;
+				}
 				if (!cConfigCache.containsKey(superdir) && abs != null) {
 					directive = loadDirective(new File(abs.getParentFile(), ".override"), superdir);
 				}

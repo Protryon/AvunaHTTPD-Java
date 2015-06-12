@@ -94,6 +94,13 @@ public class SafeMode {
 		return length >= 0 || hl;
 	}
 	
+	public static String readIfSymlink(File f) throws CException {
+		if (AvunaHTTPD.windows) return null;
+		byte[] buf = new byte[1024];
+		int length = CLib.readlink(f.getAbsolutePath(), buf);
+		return length >= 0 ? new String(buf, 0, length) : null;
+	}
+	
 	public static boolean setPerms(File root, int uid, int gid, int chmod) { // TODO: block ALL crontab + chroot
 		// Logger.log("Setting " + root.getAbsolutePath() + " to " + uid + ":" + gid + " chmod " + chmod);
 		// Logger.log(root.getAbsolutePath());

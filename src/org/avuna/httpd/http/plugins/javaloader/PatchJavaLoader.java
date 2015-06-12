@@ -40,6 +40,8 @@ import org.avuna.httpd.util.Config;
 import org.avuna.httpd.util.ConfigFormat;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.util.SafeMode;
+import org.avuna.httpd.util.unixsocket.CException;
 
 public class PatchJavaLoader extends Patch {
 	
@@ -148,6 +150,16 @@ public class PatchJavaLoader extends Patch {
 	public void recurLoad(JavaLoaderSession session, File dir) {
 		
 		for (File f : dir.listFiles()) {
+			if (!AvunaHTTPD.windows) {
+				try {
+					if (SafeMode.isSymlink(f)) {
+						continue;
+					}
+				}catch (CException e) {
+					Logger.logError(e);
+					continue;
+				}
+			}
 			if (f.isDirectory()) {
 				recurLoad(session, f);
 			}else {
