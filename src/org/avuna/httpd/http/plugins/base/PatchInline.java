@@ -96,7 +96,7 @@ public class PatchInline extends Patch {
 		System.arraycopy(hs, pt, f, ps.length - pt, hs.length - pt);
 		h = "";
 		for (String s : f) {
-			if (s.length() == 0) continue;
+			if (s.length() == 0 || s.equals(".")) continue;
 			h += "/" + s;
 		}
 		if (!h.startsWith("/")) h = "/" + h;
