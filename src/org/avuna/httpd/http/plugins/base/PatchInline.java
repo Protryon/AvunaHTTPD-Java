@@ -112,12 +112,24 @@ public class PatchInline extends Patch {
 	
 	private static class SubReq {
 		public final String req;
-		public final int start, end;
+		public final SubReq copy;
+		public int start, end;
 		public final String orig, forig;
 		public int size;
 		
 		public SubReq(String req, int start, int end, String orig, String forig, int size) {
 			this.req = req;
+			this.copy = null;
+			this.start = start;
+			this.end = end;
+			this.orig = orig;
+			this.forig = forig;
+			this.size = size;
+		}
+		
+		public SubReq(SubReq copy, int start, int end, String orig, String forig, int size) {
+			this.req = null;
+			this.copy = copy;
 			this.start = start;
 			this.end = end;
 			this.orig = orig;
@@ -161,7 +173,14 @@ public class PatchInline extends Patch {
 					String oh = href;
 					href = processHREF(request.target, href);
 					if (href == null) continue;
-					genreqs.add(new SubReq(href, mtch.start(), mtch.end(), oh, o, -1));
+					SubReq cp = null;
+					for (SubReq sr : genreqs) {
+						if (sr.req != null && sr.req.equals(href)) {
+							cp = sr;
+							break;
+						}
+					}
+					genreqs.add(cp == null ? new SubReq(href, mtch.start(), mtch.end(), oh, o, -1) : new SubReq(cp, mtch.start(), mtch.end(), oh, o, -1));
 				}
 				mtch = inlineImage.matcher(html);
 				while (mtch.find()) {
@@ -178,7 +197,14 @@ public class PatchInline extends Patch {
 					String oh = href;
 					href = processHREF(request.target, href);
 					if (href == null) continue;
-					genreqs.add(new SubReq(href, mtch.start(), mtch.end(), oh, o, -1));
+					SubReq cp = null;
+					for (SubReq sr : genreqs) {
+						if (sr.req != null && sr.req.equals(href)) {
+							cp = sr;
+							break;
+						}
+					}
+					genreqs.add(cp == null ? new SubReq(href, mtch.start(), mtch.end(), oh, o, -1) : new SubReq(cp, mtch.start(), mtch.end(), oh, o, -1));
 				}
 				mtch = inlineInputImage.matcher(html);
 				while (mtch.find()) {
@@ -195,7 +221,14 @@ public class PatchInline extends Patch {
 					String oh = href;
 					href = processHREF(request.target, href);
 					if (href == null) continue;
-					genreqs.add(new SubReq(href, mtch.start(), mtch.end(), oh, o, -1));
+					SubReq cp = null;
+					for (SubReq sr : genreqs) {
+						if (sr.req != null && sr.req.equals(href)) {
+							cp = sr;
+							break;
+						}
+					}
+					genreqs.add(cp == null ? new SubReq(href, mtch.start(), mtch.end(), oh, o, -1) : new SubReq(cp, mtch.start(), mtch.end(), oh, o, -1));
 				}
 				mtch = inlineScript.matcher(html);
 				while (mtch.find()) {
@@ -212,7 +245,14 @@ public class PatchInline extends Patch {
 					String oh = href;
 					href = processHREF(request.target, href);
 					if (href == null) continue;
-					genreqs.add(new SubReq(href, mtch.start(), mtch.end(), oh, o, -1));
+					SubReq cp = null;
+					for (SubReq sr : genreqs) {
+						if (sr.req != null && sr.req.equals(href)) {
+							cp = sr;
+							break;
+						}
+					}
+					genreqs.add(cp == null ? new SubReq(href, mtch.start(), mtch.end(), oh, o, -1) : new SubReq(cp, mtch.start(), mtch.end(), oh, o, -1));
 				}
 			}else if (ct.startsWith("text/css")) {
 				Matcher mtch = inlineCSS.matcher(html);
@@ -230,10 +270,16 @@ public class PatchInline extends Patch {
 					String oh = href;
 					href = processHREF(request.target, href);
 					if (href == null) continue;
-					genreqs.add(new SubReq(href, mtch.start(), mtch.end(), oh, o, -1));
+					SubReq cp = null;
+					for (SubReq sr : genreqs) {
+						if (sr.req != null && sr.req.equals(href)) {
+							cp = sr;
+							break;
+						}
+					}
+					genreqs.add(cp == null ? new SubReq(href, mtch.start(), mtch.end(), oh, o, -1) : new SubReq(cp, mtch.start(), mtch.end(), oh, o, -1));
 				}
 			}
-			
 			Collections.sort(genreqs, subReqComparator);
 			SubReq[] sa = genreqs.toArray(new SubReq[0]);
 			subreqs = sa;
@@ -243,6 +289,10 @@ public class PatchInline extends Patch {
 		int ri = 0;
 		for (int i = 0; i < subreqs.length; i++) {
 			if (subreqs[i].size > sizeLimit) continue;
+			if (subreqs[i].copy != null) {
+				reqs[ri++] = null;
+				continue;
+			}
 			RequestPacket subreq = request.clone();
 			subreq.parent = request;
 			subreq.target = subreqs[i].req;
@@ -263,8 +313,8 @@ public class PatchInline extends Patch {
 			ResponsePacket[] respsn = new ResponsePacket[resps.length];
 			int nl = 0;
 			for (int i = 0; i < reqs.length; i++) {
-				subreqs[i].size = resps[i].subwrite.length;
-				if (resps[i].subwrite.length <= sizeLimit) {
+				subreqs[i].size = resps[i] == null ? subreqs[i].copy.size : resps[i].subwrite.length;
+				if (subreqs[i].size <= sizeLimit) {
 					srsn[nl] = subreqs[i];
 					respsn[nl++] = resps[i];
 				}
@@ -277,8 +327,14 @@ public class PatchInline extends Patch {
 		}
 		int offset = 0;
 		for (int i = 0; i < resps.length; i++) {
-			if (resps[i] == null || resps[i].subwrite == null) continue;
-			SubReq sr = subreqs[i];
+			if (resps[i] == null) {
+				for (int i2 = 0; i2 < i; i2++) {
+					if (subreqs[i2] == subreqs[i].copy) {
+						resps[i] = resps[i2];
+					}
+				}
+			}
+			if (resps[i].subwrite == null) continue;
 			String base64 = "";
 			String cachePath = resps[i].request.host.getHostPath() + resps[i].request.target;
 			if (!cacheBase64.containsKey(cachePath)) {
@@ -288,6 +344,7 @@ public class PatchInline extends Patch {
 				base64 = cacheBase64.get(cachePath);
 			}
 			String rep = "data:" + resps[i].headers.getHeader("Content-Type") + ";base64," + base64;
+			SubReq sr = subreqs[i];
 			rep = sr.forig.replace(sr.orig, rep);
 			html = html.substring(0, sr.start + offset) + rep + html.substring(sr.end + offset);
 			offset += rep.length() - sr.forig.length();

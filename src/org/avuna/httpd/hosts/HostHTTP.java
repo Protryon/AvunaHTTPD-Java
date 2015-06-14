@@ -229,17 +229,19 @@ public class HostHTTP extends Host {
 	public ResponsePacket[] processSubRequests(RequestPacket... reqs) {
 		ResponsePacket[] resps = new ResponsePacket[reqs.length];
 		for (int i = 0; i < resps.length; i++) {
+			if (reqs[i] == null) continue;
 			resps[i] = new ResponsePacket();
 			reqs[i].child = resps[i];
 			resps[i].request = reqs[i];
 		}
 		for (int i = 0; i < resps.length; i++) {
+			if (reqs[i] == null) continue;
 			addWork(reqs[i]);
 		}
 		major:
 		while (true) {
 			for (ResponsePacket resp : resps) {
-				if (!resp.done) {
+				if (resp != null && !resp.done) {
 					try {
 						Thread.sleep(0L, 100000); // TODO: longer? smarter?
 					}catch (InterruptedException e) {
