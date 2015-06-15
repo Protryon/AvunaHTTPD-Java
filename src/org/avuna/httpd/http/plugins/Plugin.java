@@ -10,10 +10,10 @@ import org.avuna.httpd.util.ConfigFormat;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 
-public abstract class Patch implements IEventReceiver {
+public abstract class Plugin implements IEventReceiver {
 	
 	public final String name;
-	public final PatchRegistry registry;
+	public final PluginRegistry registry;
 	
 	public abstract void receive(EventBus bus, Event event);
 	
@@ -23,7 +23,7 @@ public abstract class Patch implements IEventReceiver {
 		if (!map.containsNode("enabled")) map.insertNode("enabled", "true");
 	}
 	
-	public Patch(String name, PatchRegistry registry) {
+	public Plugin(String name, PluginRegistry registry) {
 		this.name = name;
 		this.registry = registry;
 		pcfg = new Config(name, new File(AvunaHTTPD.fileManager.getPlugin(this), "plugin.cfg"), new ConfigFormat() {

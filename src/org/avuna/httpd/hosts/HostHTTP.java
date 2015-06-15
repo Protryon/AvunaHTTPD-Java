@@ -21,8 +21,8 @@ import org.avuna.httpd.http.networking.ThreadAccept;
 import org.avuna.httpd.http.networking.ThreadConnection;
 import org.avuna.httpd.http.networking.ThreadWorker;
 import org.avuna.httpd.http.networking.Work;
-import org.avuna.httpd.http.plugins.PatchBus;
-import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.http.plugins.PluginBus;
+import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.plugins.base.BaseLoader;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
@@ -33,8 +33,8 @@ public class HostHTTP extends Host {
 	protected int tac, tcc;
 	protected int twc;
 	protected int mc;
-	public final PatchRegistry registry;
-	public final PatchBus patchBus;
+	public final PluginRegistry registry;
+	public final PluginBus patchBus;
 	public final EventBus eventBus;
 	private int maxPostSize = 65535;
 	
@@ -52,15 +52,15 @@ public class HostHTTP extends Host {
 	
 	public HostHTTP(String name) {
 		super(name, Protocol.HTTP);
-		this.registry = new PatchRegistry(this);
-		patchBus = new PatchBus(registry);
+		this.registry = new PluginRegistry(this);
+		patchBus = new PluginBus(registry);
 		eventBus = new EventBus();
 	}
 	
 	protected HostHTTP(String name, Protocol protocol) {
 		super(name, protocol);
-		this.registry = new PatchRegistry(this);
-		patchBus = new PatchBus(registry);
+		this.registry = new PluginRegistry(this);
+		patchBus = new PluginBus(registry);
 		eventBus = new EventBus();
 	}
 	

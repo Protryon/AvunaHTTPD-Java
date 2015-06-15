@@ -9,7 +9,7 @@ import org.avuna.httpd.com.CommandContext;
 import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.VHost;
-import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
+import org.avuna.httpd.http.plugins.javaloader.PluginJavaLoader;
 import org.avuna.httpd.util.Logger;
 
 public class CommandComp extends Command {
@@ -45,8 +45,8 @@ public class CommandComp extends Command {
 		if (us.equals("./")) {
 			us = new File("avuna.jar").getAbsolutePath();
 		}
-		String cp = new File(us).getAbsolutePath() + sep + host.getHTDocs().toString() + sep + host.getHTSrc().toString() + sep + PatchJavaLoader.lib.toString() + sep;
-		for (File f : PatchJavaLoader.lib.listFiles()) {
+		String cp = new File(us).getAbsolutePath() + sep + host.getHTDocs().toString() + sep + host.getHTSrc().toString() + sep + PluginJavaLoader.lib.toString() + sep;
+		for (File f : PluginJavaLoader.lib.listFiles()) {
 			if (!f.isDirectory() && f.getName().endsWith(".jar")) {
 				cp += f.toString() + sep;
 			}

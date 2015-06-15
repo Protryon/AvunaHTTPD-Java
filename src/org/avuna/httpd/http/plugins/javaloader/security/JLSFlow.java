@@ -1,7 +1,7 @@
 package org.avuna.httpd.http.plugins.javaloader.security;
 
 import org.avuna.httpd.http.networking.RequestPacket;
-import org.avuna.httpd.http.plugins.base.PatchInline;
+import org.avuna.httpd.http.plugins.base.PluginInline;
 import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSecurity;
 import org.avuna.httpd.util.Logger;
 
@@ -30,7 +30,7 @@ public class JLSFlow extends JavaLoaderSecurity {
 	@Override
 	public int check(RequestPacket req) {
 		if (!enabled) return 0;
-		PatchInline inline = (PatchInline)req.host.getHost().registry.getPatchForClass(PatchInline.class);
+		PluginInline inline = (PluginInline)req.host.getHost().registry.getPatchForClass(PluginInline.class);
 		if (!inline.pcfg.getNode("enabled").getValue().equals("true")) {
 			Logger.log("[ERROR] Inline is disabled, JLSFlow Security module is unloading!");
 			enabled = false;

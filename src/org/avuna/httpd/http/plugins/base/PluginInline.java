@@ -16,15 +16,15 @@ import org.avuna.httpd.http.event.EventGenerateResponse;
 import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
-import org.avuna.httpd.http.plugins.Patch;
-import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.http.plugins.Plugin;
+import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 import sun.misc.BASE64Encoder;
 
-public class PatchInline extends Patch {
+public class PluginInline extends Plugin {
 	
-	public PatchInline(String name, PatchRegistry registry) {
+	public PluginInline(String name, PluginRegistry registry) {
 		super(name, registry);
 	}
 	

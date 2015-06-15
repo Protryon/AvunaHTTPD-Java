@@ -15,15 +15,15 @@ import org.avuna.httpd.http.event.EventPreprocessRequest;
 import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
-import org.avuna.httpd.http.plugins.Patch;
-import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.http.plugins.Plugin;
+import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.util.CompiledDirective;
 import org.avuna.httpd.http.util.OverrideConfig;
 import org.avuna.httpd.util.Logger;
 
-public class PatchOverride extends Patch {
+public class PluginOverride extends Plugin {
 	
-	public PatchOverride(String name, PatchRegistry registry) {
+	public PluginOverride(String name, PluginRegistry registry) {
 		super(name, registry);
 	}
 	

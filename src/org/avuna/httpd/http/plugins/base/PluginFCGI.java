@@ -21,8 +21,8 @@ import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.networking.Work;
-import org.avuna.httpd.http.plugins.Patch;
-import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.http.plugins.Plugin;
+import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.plugins.base.fcgi.FCGIConnection;
 import org.avuna.httpd.http.plugins.base.fcgi.FCGIConnectionManagerNMPX;
 import org.avuna.httpd.http.plugins.base.fcgi.FCGISession;
@@ -30,9 +30,9 @@ import org.avuna.httpd.http.plugins.base.fcgi.IFCGIManager;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 
-public class PatchFCGI extends Patch {
+public class PluginFCGI extends Plugin {
 	
-	public PatchFCGI(String name, PatchRegistry registry) {
+	public PluginFCGI(String name, PluginRegistry registry) {
 		super(name, registry);
 		reloadus();
 	}

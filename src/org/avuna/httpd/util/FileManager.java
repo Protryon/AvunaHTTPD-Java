@@ -16,11 +16,11 @@ import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.event.EventClearCache;
 import org.avuna.httpd.http.networking.RequestPacket;
-import org.avuna.httpd.http.plugins.Patch;
-import org.avuna.httpd.http.plugins.base.PatchChunked;
-import org.avuna.httpd.http.plugins.base.PatchFCGI;
-import org.avuna.httpd.http.plugins.base.PatchOverride;
-import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
+import org.avuna.httpd.http.plugins.Plugin;
+import org.avuna.httpd.http.plugins.base.PluginChunked;
+import org.avuna.httpd.http.plugins.base.PluginFCGI;
+import org.avuna.httpd.http.plugins.base.PluginOverride;
+import org.avuna.httpd.http.plugins.javaloader.PluginJavaLoader;
 import org.avuna.httpd.http.plugins.javaloader.lib.HTMLCache;
 import org.avuna.httpd.http.plugins.javaloader.lib.JavaLoaderUtil;
 import org.avuna.httpd.http.util.OverrideConfig;
@@ -106,7 +106,7 @@ public class FileManager {
 	 * @see Object#hashCode
 	 * @return plugin
 	 */
-	public File getPlugin(Patch p) {
+	public File getPlugin(Plugin p) {
 		if (!plugin.containsKey(p.hashCode() + "" + p.registry.host.hashCode())) {
 			plugin.put(p.hashCode() + "" + p.registry.host.hashCode(), new File(getPlugins(p.registry.host), p.name));
 		}
@@ -239,7 +239,7 @@ public class FileManager {
 	 * 
 	 * @param reqTarget2 request URL
 	 * @param request Incoming packet for host data
-	 * @see PatchOverride#processPacket(org.avuna.httpd.http.networking.Packet)
+	 * @see PluginOverride#processPacket(org.avuna.httpd.http.networking.Packet)
 	 * @return absolute file system path and parameter string (as child)
 	 */
 	public File getAbsolutePath(String reqTarget2, RequestPacket request) {
@@ -440,7 +440,7 @@ public class FileManager {
 	 * @param request page content
 	 * @see Resource
 	 * @see EventBus#callEvent
-	 * @see PatchChunked
+	 * @see PluginChunked
 	 * @return resource
 	 */
 	public Resource getResource(String reqTarget, RequestPacket request) {
@@ -519,9 +519,9 @@ public class FileManager {
 					ByteArrayOutputStream bout = new ByteArrayOutputStream();
 					int i = 1;
 					byte[] buf = new byte[4096];
-					PatchChunked chunked = (PatchChunked)request.host.getHost().registry.getPatchForClass(PatchChunked.class);
-					PatchFCGI fcgi = (PatchFCGI)request.host.getHost().registry.getPatchForClass(PatchFCGI.class);
-					PatchJavaLoader jl = (PatchJavaLoader)request.host.getHost().registry.getPatchForClass(PatchJavaLoader.class);
+					PluginChunked chunked = (PluginChunked)request.host.getHost().registry.getPatchForClass(PluginChunked.class);
+					PluginFCGI fcgi = (PluginFCGI)request.host.getHost().registry.getPatchForClass(PluginFCGI.class);
+					PluginJavaLoader jl = (PluginJavaLoader)request.host.getHost().registry.getPatchForClass(PluginJavaLoader.class);
 					boolean dc = chunked != null && chunked.pcfg.getNode("enabled").getValue().equals("true");
 					if (dc && fcgi != null && fcgi.pcfg.getNode("enabled").getValue().equals("true")) {
 						major:

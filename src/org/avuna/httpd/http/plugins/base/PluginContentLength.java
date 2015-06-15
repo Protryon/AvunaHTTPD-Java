@@ -5,12 +5,12 @@ import org.avuna.httpd.event.EventBus;
 import org.avuna.httpd.http.event.EventResponseFinished;
 import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.ResponsePacket;
-import org.avuna.httpd.http.plugins.Patch;
-import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.http.plugins.Plugin;
+import org.avuna.httpd.http.plugins.PluginRegistry;
 
-public class PatchContentLength extends Patch {
+public class PluginContentLength extends Plugin {
 	
-	public PatchContentLength(String name, PatchRegistry registry) {
+	public PluginContentLength(String name, PluginRegistry registry) {
 		super(name, registry);
 	}
 	

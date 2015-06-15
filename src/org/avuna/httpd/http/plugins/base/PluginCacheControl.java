@@ -6,13 +6,13 @@ import org.avuna.httpd.http.event.EventGenerateResponse;
 import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
-import org.avuna.httpd.http.plugins.Patch;
-import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.http.plugins.Plugin;
+import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.util.ConfigNode;
 
-public class PatchCacheControl extends Patch {
+public class PluginCacheControl extends Plugin {
 	
-	public PatchCacheControl(String name, PatchRegistry registry) {
+	public PluginCacheControl(String name, PluginRegistry registry) {
 		super(name, registry);
 	}
 	

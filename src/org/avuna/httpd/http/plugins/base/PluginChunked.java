@@ -6,13 +6,13 @@ import org.avuna.httpd.http.event.EventGenerateResponse;
 import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
-import org.avuna.httpd.http.plugins.Patch;
-import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.http.plugins.Plugin;
+import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.util.ConfigNode;
 
-public class PatchChunked extends Patch {
+public class PluginChunked extends Plugin {
 	
-	public PatchChunked(String name, PatchRegistry registry) {
+	public PluginChunked(String name, PluginRegistry registry) {
 		super(name, registry);
 	}
 	

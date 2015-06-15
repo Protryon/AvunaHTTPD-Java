@@ -11,12 +11,12 @@ import org.avuna.httpd.http.event.EventMethodLookup;
 import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
-import org.avuna.httpd.http.plugins.Patch;
-import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.http.plugins.Plugin;
+import org.avuna.httpd.http.plugins.PluginRegistry;
 
-public class PatchGetPostHead extends Patch {
+public class PluginGetPostHead extends Plugin {
 	
-	public PatchGetPostHead(String name, PatchRegistry registry) {
+	public PluginGetPostHead(String name, PluginRegistry registry) {
 		super(name, registry);
 	}
 	

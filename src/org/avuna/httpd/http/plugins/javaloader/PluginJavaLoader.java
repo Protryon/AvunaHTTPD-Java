@@ -31,9 +31,9 @@ import org.avuna.httpd.http.event.EventGenerateResponse;
 import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
-import org.avuna.httpd.http.plugins.Patch;
-import org.avuna.httpd.http.plugins.PatchRegistry;
-import org.avuna.httpd.http.plugins.base.PatchSecurity;
+import org.avuna.httpd.http.plugins.Plugin;
+import org.avuna.httpd.http.plugins.PluginRegistry;
+import org.avuna.httpd.http.plugins.base.PluginSecurity;
 import org.avuna.httpd.http.plugins.javaloader.lib.DatabaseManager;
 import org.avuna.httpd.http.plugins.javaloader.lib.HTMLCache;
 import org.avuna.httpd.util.Config;
@@ -43,18 +43,18 @@ import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.SafeMode;
 import org.avuna.httpd.util.unixsocket.CException;
 
-public class PatchJavaLoader extends Patch {
+public class PluginJavaLoader extends Plugin {
 	
 	private Config config = null;
 	
-	public PatchJavaLoader(String name, PatchRegistry registry) {
+	public PluginJavaLoader(String name, PluginRegistry registry) {
 		super(name, registry);
 		log("Loading JavaLoader Config & Security");
-		PatchSecurity sec = ((PatchSecurity)registry.getPatchForClass(PatchSecurity.class));
+		PluginSecurity sec = ((PluginSecurity)registry.getPatchForClass(PluginSecurity.class));
 		boolean sece = sec.pcfg.getNode("enabled").getValue().equals("true");
 		if (sece) {
 			try {
-				secjlcl = new JavaLoaderClassLoader(new URL[]{AvunaHTTPD.fileManager.getPlugin(registry.getPatchForClass(PatchSecurity.class)).toURI().toURL()}, this.getClass().getClassLoader());
+				secjlcl = new JavaLoaderClassLoader(new URL[]{AvunaHTTPD.fileManager.getPlugin(registry.getPatchForClass(PluginSecurity.class)).toURI().toURL()}, this.getClass().getClassLoader());
 			}catch (MalformedURLException e1) {
 				e1.printStackTrace();
 			}
@@ -69,7 +69,7 @@ public class PatchJavaLoader extends Patch {
 		}catch (IOException e1) {
 			Logger.logError(e1);
 		}
-		if (sece) ((PatchSecurity)registry.getPatchForClass(PatchSecurity.class)).loadBases(this);
+		if (sece) ((PluginSecurity)registry.getPatchForClass(PluginSecurity.class)).loadBases(this);
 		log("Loading JavaLoader Libs");
 		try {
 			lib = new File(AvunaHTTPD.fileManager.getMainDir(), pcfg.getNode("lib").getValue());
@@ -120,9 +120,9 @@ public class PatchJavaLoader extends Patch {
 			System.gc();
 			Thread.sleep(1000L);
 			sessions.clear();
-			PatchSecurity sec = ((PatchSecurity)registry.getPatchForClass(PatchSecurity.class));
+			PluginSecurity sec = ((PluginSecurity)registry.getPatchForClass(PluginSecurity.class));
 			boolean sece = sec.pcfg.getNode("enabled").getValue().equals("true");
-			if (sece) ((PatchSecurity)registry.getPatchForClass(PatchSecurity.class)).loadBases(this);
+			if (sece) ((PluginSecurity)registry.getPatchForClass(PluginSecurity.class)).loadBases(this);
 			for (Host host : AvunaHTTPD.hosts.values()) {
 				if (!(host instanceof HostHTTP)) continue;
 				HostHTTP host2 = (HostHTTP)host;

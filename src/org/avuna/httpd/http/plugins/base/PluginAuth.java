@@ -16,15 +16,15 @@ import org.avuna.httpd.http.event.EventGenerateResponse;
 import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
-import org.avuna.httpd.http.plugins.Patch;
-import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.http.plugins.Plugin;
+import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 import sun.misc.BASE64Decoder;
 
-public class PatchAuth extends Patch {
+public class PluginAuth extends Plugin {
 	
-	public PatchAuth(String name, PatchRegistry registry) {
+	public PluginAuth(String name, PluginRegistry registry) {
 		super(name, registry);
 	}
 	
@@ -73,7 +73,7 @@ public class PatchAuth extends Patch {
 		public boolean isAuth(String up) {
 			if (!cacheUsers || !usersLoaded) {
 				try {
-					File ul = new File(AvunaHTTPD.fileManager.getPlugin(PatchAuth.this), userlist);
+					File ul = new File(AvunaHTTPD.fileManager.getPlugin(PluginAuth.this), userlist);
 					if (!ul.exists()) ul.createNewFile();
 					Scanner scan = new Scanner(new FileInputStream(ul));
 					boolean cr = false;

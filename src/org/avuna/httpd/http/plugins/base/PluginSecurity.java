@@ -8,10 +8,10 @@ import org.avuna.httpd.event.base.EventPreConnect;
 import org.avuna.httpd.http.event.EventPreprocessRequest;
 import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
-import org.avuna.httpd.http.plugins.Patch;
-import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.http.plugins.Plugin;
+import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSecurity;
-import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
+import org.avuna.httpd.http.plugins.javaloader.PluginJavaLoader;
 import org.avuna.httpd.http.plugins.javaloader.security.JLSCompression;
 import org.avuna.httpd.http.plugins.javaloader.security.JLSConnectionFlood;
 import org.avuna.httpd.http.plugins.javaloader.security.JLSGetFlood;
@@ -21,13 +21,13 @@ import org.avuna.httpd.http.plugins.javaloader.security.JLSRequestFlood;
 import org.avuna.httpd.http.plugins.javaloader.security.JLSUserAgent;
 import org.avuna.httpd.util.ConfigNode;
 
-public class PatchSecurity extends Patch {
+public class PluginSecurity extends Plugin {
 	
-	public PatchSecurity(String name, PatchRegistry registry) {
+	public PluginSecurity(String name, PluginRegistry registry) {
 		super(name, registry);
 	}
 	
-	public void loadBases(PatchJavaLoader pjl) {
+	public void loadBases(PluginJavaLoader pjl) {
 		pjl.loadBaseSecurity(new JLSPardon());
 		pjl.loadBaseSecurity(new JLSConnectionFlood());
 		pjl.loadBaseSecurity(new JLSPostFlood());
@@ -51,9 +51,9 @@ public class PatchSecurity extends Patch {
 		if (event instanceof EventPreprocessRequest) {
 			EventPreprocessRequest epp = (EventPreprocessRequest)event;
 			RequestPacket request = epp.getRequest();
-			if (request.parent != null || PatchJavaLoader.security == null || PatchJavaLoader.security.size() < 1) return;
+			if (request.parent != null || PluginJavaLoader.security == null || PluginJavaLoader.security.size() < 1) return;
 			int chance = 0;
-			for (JavaLoaderSecurity sec : PatchJavaLoader.security) {
+			for (JavaLoaderSecurity sec : PluginJavaLoader.security) {
 				chance += sec.check(request.userIP);
 				chance += sec.check(request);
 			}

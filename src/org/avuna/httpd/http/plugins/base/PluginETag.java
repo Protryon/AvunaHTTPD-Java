@@ -10,12 +10,12 @@ import org.avuna.httpd.http.event.EventGenerateResponse;
 import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
-import org.avuna.httpd.http.plugins.Patch;
-import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.http.plugins.Plugin;
+import org.avuna.httpd.http.plugins.PluginRegistry;
 
-public class PatchETag extends Patch {
+public class PluginETag extends Plugin {
 	
-	public PatchETag(String name, PatchRegistry registry) {
+	public PluginETag(String name, PluginRegistry registry) {
 		super(name, registry);
 	}
 	

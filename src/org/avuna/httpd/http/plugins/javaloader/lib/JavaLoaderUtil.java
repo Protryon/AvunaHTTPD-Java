@@ -6,7 +6,7 @@ import java.sql.Statement;
 import org.avuna.httpd.hosts.VHost;
 import org.avuna.httpd.http.plugins.javaloader.JavaLoader;
 import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSecurity;
-import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
+import org.avuna.httpd.http.plugins.javaloader.PluginJavaLoader;
 
 public class JavaLoaderUtil {
 	public static String htmlescape(String html) {
@@ -50,7 +50,7 @@ public class JavaLoaderUtil {
 				return host.getJLS().getJLS().get(jlc);
 			}
 		}else {
-			for (JavaLoaderSecurity jls : PatchJavaLoader.security) {
+			for (JavaLoaderSecurity jls : PluginJavaLoader.security) {
 				if (jls.getClass().getName().equals(jlc)) {
 					return jls;
 				}

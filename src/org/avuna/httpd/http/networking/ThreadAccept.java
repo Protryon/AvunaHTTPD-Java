@@ -9,9 +9,9 @@ import javax.net.ssl.SSLServerSocket;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.base.EventPreConnect;
 import org.avuna.httpd.hosts.HostHTTP;
-import org.avuna.httpd.http.plugins.base.PatchSecurity;
+import org.avuna.httpd.http.plugins.base.PluginSecurity;
 import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSecurity;
-import org.avuna.httpd.http.plugins.javaloader.PatchJavaLoader;
+import org.avuna.httpd.http.plugins.javaloader.PluginJavaLoader;
 import org.avuna.httpd.util.Logger;
 
 public class ThreadAccept extends Thread {
@@ -44,11 +44,11 @@ public class ThreadAccept extends Thread {
 					continue; // TODO: move out all security code
 				}
 				s.setSoTimeout(1000);
-				PatchSecurity ps = (PatchSecurity)host.registry.getPatchForClass(PatchSecurity.class);
+				PluginSecurity ps = (PluginSecurity)host.registry.getPatchForClass(PluginSecurity.class);
 				if (ps != null && ps.pcfg.getNode("enabled").getValue().equals("true")) {
-					int minDrop = Integer.parseInt((String)host.registry.getPatchForClass(PatchSecurity.class).pcfg.getNode("minDrop").getValue());
+					int minDrop = Integer.parseInt((String)host.registry.getPatchForClass(PluginSecurity.class).pcfg.getNode("minDrop").getValue());
 					int chance = 0;
-					for (JavaLoaderSecurity sec : PatchJavaLoader.security) {
+					for (JavaLoaderSecurity sec : PluginJavaLoader.security) {
 						chance += sec.check(s.getInetAddress().getHostAddress());
 					}
 					if (chance >= minDrop) {

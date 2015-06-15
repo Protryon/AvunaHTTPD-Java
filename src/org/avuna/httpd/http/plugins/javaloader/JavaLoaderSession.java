@@ -13,7 +13,7 @@ public final class JavaLoaderSession {
 	public JavaLoaderSession(VHost vhost, URL[] urls) {
 		this.vhost = vhost;
 		this.jlcl = new JavaLoaderClassLoader(urls.clone(), this.getClass().getClassLoader());
-		PatchJavaLoader.sessions.add(this);
+		PluginJavaLoader.sessions.add(this);
 	}
 	
 	public VHost getVHost() {

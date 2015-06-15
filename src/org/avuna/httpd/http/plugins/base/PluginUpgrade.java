@@ -7,12 +7,12 @@ import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.event.EventGenerateResponse;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
-import org.avuna.httpd.http.plugins.Patch;
-import org.avuna.httpd.http.plugins.PatchRegistry;
+import org.avuna.httpd.http.plugins.Plugin;
+import org.avuna.httpd.http.plugins.PluginRegistry;
 
-public class PatchUpgrade extends Patch {
+public class PluginUpgrade extends Plugin {
 	
-	public PatchUpgrade(String name, PatchRegistry registry) {
+	public PluginUpgrade(String name, PluginRegistry registry) {
 		super(name, registry);
 	}
 	
