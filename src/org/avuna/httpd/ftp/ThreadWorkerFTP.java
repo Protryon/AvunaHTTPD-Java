@@ -1,18 +1,17 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/*
+ * Avuna HTTPD - General Server Applications
+ * Copyright (C) 2015 Maxwell Bruce
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 package org.avuna.httpd.ftp;
 
@@ -56,6 +55,11 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 				continue;
 			}
 			if (focus.s.isClosed()) {
+				try {
+					focus.close();
+				}catch (IOException e) {
+					Logger.logError(e);
+				}
 				continue;
 			}
 			boolean canAdd = true;
@@ -74,10 +78,10 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 						}
 						continue;
 					}else {
-						if (focus.sns >= System.nanoTime()) {
+						if (focus.sns >= System.nanoTime() || (focus.psv != null && focus.psv.hold)) {
 							boolean sleep = host.workQueue.isEmpty();
 							if (AvunaHTTPD.bannedIPs.contains(focus.s.getInetAddress().getHostAddress())) {
-								focus.s.close();
+								focus.close();
 							}else {
 								readd = true;
 							}
@@ -96,7 +100,7 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 							}catch (IOException ex) {
 								// Logger.logError(ex);
 							}
-							focus.s.close();
+							focus.close();
 							continue;
 						}
 					}
@@ -139,7 +143,7 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 						// Logger.logError(ex);
 					}
 					try {
-						focus.s.close();
+						focus.close();
 					}catch (IOException ex) {
 						Logger.logError(ex);
 					}
