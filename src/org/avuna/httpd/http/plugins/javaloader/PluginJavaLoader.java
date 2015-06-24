@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.plugins.javaloader;
 
@@ -22,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -66,11 +53,11 @@ public class PluginJavaLoader extends Plugin {
 	public PluginJavaLoader(String name, PluginRegistry registry) {
 		super(name, registry);
 		log("Loading JavaLoader Config & Security");
-		PluginSecurity sec = ((PluginSecurity)registry.getPatchForClass(PluginSecurity.class));
+		PluginSecurity sec = ((PluginSecurity) registry.getPatchForClass(PluginSecurity.class));
 		boolean sece = sec.pcfg.getNode("enabled").getValue().equals("true");
 		if (sece) {
 			try {
-				secjlcl = new JavaLoaderClassLoader(new URL[]{AvunaHTTPD.fileManager.getPlugin(registry.getPatchForClass(PluginSecurity.class)).toURI().toURL()}, this.getClass().getClassLoader());
+				secjlcl = new JavaLoaderClassLoader(new URL[] { AvunaHTTPD.fileManager.getPlugin(registry.getPatchForClass(PluginSecurity.class)).toURI().toURL() }, this.getClass().getClassLoader());
 			}catch (MalformedURLException e1) {
 				e1.printStackTrace();
 			}
@@ -85,32 +72,32 @@ public class PluginJavaLoader extends Plugin {
 		}catch (IOException e1) {
 			Logger.logError(e1);
 		}
-		if (sece) ((PluginSecurity)registry.getPatchForClass(PluginSecurity.class)).loadBases(this);
+		if (sece) ((PluginSecurity) registry.getPatchForClass(PluginSecurity.class)).loadBases(this);
 		log("Loading JavaLoader Libs");
 		try {
 			lib = new File(AvunaHTTPD.fileManager.getMainDir(), pcfg.getNode("lib").getValue());
 			if (!lib.exists() || !lib.isDirectory()) {
 				lib.mkdirs();
 			}
-			URLClassLoader sysloader = (URLClassLoader)ClassLoader.getSystemClassLoader();
+			URLClassLoader sysloader = (URLClassLoader) ClassLoader.getSystemClassLoader();
 			Class<URLClassLoader> sysclass = URLClassLoader.class;
 			
 			try {
 				Method method = sysclass.getDeclaredMethod("addURL", URL.class);
 				method.setAccessible(true);
-				method.invoke(sysloader, new Object[]{lib.toURI().toURL()});
+				method.invoke(sysloader, new Object[] { lib.toURI().toURL() });
 				for (File f : lib.listFiles()) {
 					if (!f.isDirectory() && f.getName().endsWith(".jar")) {
-						method.invoke(sysloader, new Object[]{f.toURI().toURL()});
+						method.invoke(sysloader, new Object[] { f.toURI().toURL() });
 					}
 				}
 			}catch (Throwable t) {
 				Logger.logError(t);
 			}
-			HostHTTP host2 = (HostHTTP)registry.host;
+			HostHTTP host2 = (HostHTTP) registry.host;
 			for (VHost vhost : host2.getVHosts()) {
 				if (vhost.getHTDocs() == null) continue;
-				vhost.initJLS(new URL[]{vhost.getHTDocs().toURI().toURL()});
+				vhost.initJLS(new URL[] { vhost.getHTDocs().toURI().toURL() });
 				recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 			}
 			if (sece) {
@@ -136,15 +123,15 @@ public class PluginJavaLoader extends Plugin {
 			System.gc();
 			Thread.sleep(1000L);
 			sessions.clear();
-			PluginSecurity sec = ((PluginSecurity)registry.getPatchForClass(PluginSecurity.class));
+			PluginSecurity sec = ((PluginSecurity) registry.getPatchForClass(PluginSecurity.class));
 			boolean sece = sec.pcfg.getNode("enabled").getValue().equals("true");
-			if (sece) ((PluginSecurity)registry.getPatchForClass(PluginSecurity.class)).loadBases(this);
+			if (sece) ((PluginSecurity) registry.getPatchForClass(PluginSecurity.class)).loadBases(this);
 			for (Host host : AvunaHTTPD.hosts.values()) {
 				if (!(host instanceof HostHTTP)) continue;
-				HostHTTP host2 = (HostHTTP)host;
+				HostHTTP host2 = (HostHTTP) host;
 				for (VHost vhost : host2.getVHosts()) {
 					if (vhost.isChild() || vhost instanceof VHostM) continue;
-					vhost.initJLS(new URL[]{vhost.getHTDocs().toURI().toURL()});
+					vhost.initJLS(new URL[] { vhost.getHTDocs().toURI().toURL() });
 					recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 				}
 			}
@@ -202,7 +189,7 @@ public class PluginJavaLoader extends Plugin {
 							continue;
 						}
 						Class<?> cls = (session == null ? secjlcl : session.getJLCL()).loadClass(name);
-						if (JavaLoader.class.isAssignableFrom(cls)) {
+						if (JavaLoader.class.isAssignableFrom(cls) && !Modifier.isAbstract(cls.getModifiers())) {
 							ConfigNode ocfg = null;
 							if (!config.containsNode(session.getVHost().getHostPath())) {
 								config.insertNode(session.getVHost().getHostPath());
@@ -211,11 +198,11 @@ public class PluginJavaLoader extends Plugin {
 							if (!ocfg.containsNode(name)) {
 								ocfg.insertNode(name);
 							}
-							JavaLoader jl = (JavaLoader)cls.newInstance();
+							JavaLoader jl = (JavaLoader) cls.newInstance();
 							jl.pcfg = ocfg.getNode(name);
 							jl.host = session == null ? null : session.getVHost();
 							if (jl.getType() == 3) {
-								security.add((JavaLoaderSecurity)jl);
+								security.add((JavaLoaderSecurity) jl);
 							}else {
 								CRC32 crc = new CRC32();
 								crc.update(b);
@@ -227,6 +214,7 @@ public class PluginJavaLoader extends Plugin {
 					}
 				}catch (Exception e) {
 					Logger.logError(e);
+					Logger.log("Error loading: " + f.getAbsolutePath());
 				}
 			}
 		}
@@ -273,7 +261,7 @@ public class PluginJavaLoader extends Plugin {
 	@Override
 	public void receive(EventBus bus, Event event) {
 		if (event instanceof EventGenerateResponse) {
-			EventGenerateResponse egr = (EventGenerateResponse)event;
+			EventGenerateResponse egr = (EventGenerateResponse) event;
 			ResponsePacket response = egr.getResponse();
 			RequestPacket request = egr.getRequest();
 			if (!(response.headers.hasHeader("Content-Type") && response.headers.getHeader("Content-Type").equals("application/x-java") && response.body != null && response.body != null)) return;
@@ -308,7 +296,7 @@ public class PluginJavaLoader extends Plugin {
 					if (!ocfg.containsNode(name)) {
 						ocfg.insertNode(name);
 					}
-					loader = ((Class<? extends JavaLoader>)loaderClass).newInstance();
+					loader = ((Class<? extends JavaLoader>) loaderClass).newInstance();
 					loader.pcfg = ocfg.getNode(name);
 					loader.host = request.host;
 					loader.init();
@@ -327,17 +315,17 @@ public class PluginJavaLoader extends Plugin {
 				try {
 					request.work.blockTimeout = true;
 					if (type == 0) {
-						ndata = ((JavaLoaderBasic)loader).generate(response, request);
+						ndata = ((JavaLoaderBasic) loader).generate(response, request);
 					}else if (type == 1) {
 						HTMLBuilder out = new HTMLBuilder(new StringWriter());
 						// long st = System.nanoTime();
 						
-						doout = ((JavaLoaderPrint)loader).generate(out, response, request);
+						doout = ((JavaLoaderPrint) loader).generate(out, response, request);
 						// System.out.println((System.nanoTime() - st) / 1000000D);
 						String s = out.toString();
 						ndata = s.getBytes();
 					}else if (type == 2) {
-						response.reqStream = (JavaLoaderStream)loader;
+						response.reqStream = (JavaLoaderStream) loader;
 					}
 				}catch (Exception e) {
 					Logger.logError(e);
