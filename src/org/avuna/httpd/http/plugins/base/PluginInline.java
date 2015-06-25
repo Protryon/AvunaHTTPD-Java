@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.plugins.base;
 
@@ -132,6 +118,7 @@ public class PluginInline extends Plugin {
 		public int start, end;
 		public final String orig, forig;
 		public int size;
+		public boolean failed = false;
 		
 		public SubReq(String req, int start, int end, String orig, String forig, int size) {
 			this.req = req;
@@ -303,8 +290,11 @@ public class PluginInline extends Plugin {
 		}
 		RequestPacket[] reqs = new RequestPacket[subreqs.length];
 		int ri = 0;
+		int fri = 0;
 		for (int i = 0; i < subreqs.length; i++) {
-			if (subreqs[i].size > sizeLimit) continue;
+			if (subreqs[i].size > sizeLimit) {
+				continue;
+			}
 			if (subreqs[i].copy != null) {
 				reqs[ri++] = null;
 				continue;
@@ -330,41 +320,49 @@ public class PluginInline extends Plugin {
 			int nl = 0;
 			for (int i = 0; i < reqs.length; i++) {
 				subreqs[i].size = resps[i] == null ? subreqs[i].copy.size : resps[i].subwrite.length;
-				if (subreqs[i].size <= sizeLimit) {
-					srsn[nl] = subreqs[i];
-					respsn[nl++] = resps[i];
+				if (subreqs[i].size > sizeLimit) {
+					subreqs[i].failed = true;
 				}
+				srsn[nl] = subreqs[i];
+				respsn[nl++] = resps[i];
 			}
-			this.subreqs.put(l, subreqs);
 			subreqs = new SubReq[nl];
 			resps = new ResponsePacket[nl];
 			System.arraycopy(srsn, 0, subreqs, 0, nl);
 			System.arraycopy(respsn, 0, resps, 0, nl);
+			this.subreqs.put(l, subreqs);// put back above?
 		}
 		int offset = 0;
 		for (int i = 0; i < resps.length; i++) {
-			if (resps[i] == null) {
-				for (int i2 = 0; i2 < i; i2++) {
-					if (subreqs[i2] == subreqs[i].copy) {
-						resps[i] = resps[i2];
+			SubReq sr = subreqs[i];
+			boolean fre = sr.failed;
+			String rep = null;
+			if (fre) {
+				rep = "http" + (request.ssl ? "s" : "") + "://" + request.headers.getHeader("Host") + (sr.copy == null ? sr.req : sr.copy.req);
+			}else {
+				if (resps[i] == null) {
+					for (int i2 = 0; i2 < i; i2++) {
+						if (subreqs[i2] == subreqs[i].copy) {
+							resps[i] = resps[i2];
+						}
 					}
 				}
+				if (resps[i].subwrite == null) continue;
+				String base64 = "";
+				String cachePath = resps[i].request.host.getHostPath() + resps[i].request.target;
+				if (!cacheBase64.containsKey(cachePath)) {
+					base64 = new BASE64Encoder().encode(resps[i].subwrite).replace(AvunaHTTPD.crlf, "");
+					cacheBase64.put(cachePath, base64);
+				}else {
+					base64 = cacheBase64.get(cachePath);
+				}
+				rep = "data:" + resps[i].headers.getHeader("Content-Type") + ";base64," + base64;
 			}
-			if (resps[i].subwrite == null) continue;
-			String base64 = "";
-			String cachePath = resps[i].request.host.getHostPath() + resps[i].request.target;
-			if (!cacheBase64.containsKey(cachePath)) {
-				base64 = new BASE64Encoder().encode(resps[i].subwrite).replace(AvunaHTTPD.crlf, "");
-				cacheBase64.put(cachePath, base64);
-			}else {
-				base64 = cacheBase64.get(cachePath);
-			}
-			String rep = "data:" + resps[i].headers.getHeader("Content-Type") + ";base64," + base64;
-			SubReq sr = subreqs[i];
 			rep = sr.forig.replace(sr.orig, rep);
 			html = html.substring(0, sr.start + offset) + rep + html.substring(sr.end + offset);
 			offset += rep.length() - sr.forig.length();
 		}
+		System.out.println(request.target);
 		byte[] hb = html.getBytes();
 		cdata.put(l, hb);
 		response.body.data = hb;
@@ -373,7 +371,7 @@ public class PluginInline extends Plugin {
 	@Override
 	public void receive(EventBus bus, Event event) {
 		if (event instanceof EventGenerateResponse) {
-			EventGenerateResponse egr = (EventGenerateResponse)event;
+			EventGenerateResponse egr = (EventGenerateResponse) event;
 			ResponsePacket response = egr.getResponse();
 			RequestPacket request = egr.getRequest();
 			if (shouldProcessResponse(response, request)) processResponse(response, request);

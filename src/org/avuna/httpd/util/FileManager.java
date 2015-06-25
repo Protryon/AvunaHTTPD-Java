@@ -1,18 +1,5 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/*
+ * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.util;
 
@@ -42,27 +29,22 @@ import org.avuna.httpd.http.plugins.javaloader.lib.JavaLoaderUtil;
 import org.avuna.httpd.http.util.OverrideConfig;
 import org.avuna.httpd.util.unixsocket.CException;
 
-/**
- * General utility for File type objects.
+/** General utility for File type objects.
  * 
- * @author Max
- */
+ * @author Max */
 public class FileManager {
 	public FileManager() {
 		
 	}
 	
-	/**
-	 * Character array of valid hex values.
-	 */
+	/** Character array of valid hex values. */
 	private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
 	
-	/**
-	 * Converts a byte array to a string in hex format.
+	/** Converts a byte array to a string in hex format.
 	 * 
-	 * @param bytes a byte array
-	 * @return String in hex
-	 */
+	 * @param bytes
+	 *            a byte array
+	 * @return String in hex */
 	public String bytesToHex(byte[] bytes) {
 		char[] hexChars = new char[bytes.length * 2];
 		for (int j = 0; j < bytes.length; j++) {
@@ -78,23 +60,18 @@ public class FileManager {
 	private HashMap<String, File> base = new HashMap<String, File>();
 	private HashMap<HostHTTP, File> plugins = new HashMap<HostHTTP, File>();
 	
-	/**
-	 * Get object dir value if exists or get value from {@link AvunaHTTPD#mainConfig mainConfig}.
+	/** Get object dir value if exists or get value from {@link AvunaHTTPD#mainConfig mainConfig}.
 	 * 
-	 * @return dir
-	 */
+	 * @return dir */
 	public File getMainDir() {
 		return dir == null ? (dir = new File(AvunaHTTPD.mainConfig.getNode("dir").getValue())) : dir;
 	}
 	
-	/**
-	 * Get plugins value from host configuration if exists else get it from
-	 * the host "plugins" node.
+	/** Get plugins value from host configuration if exists else get it from the host "plugins" node.
 	 * 
 	 * @param host
 	 * @see HashMap#put(Object, Object)
-	 * @return plugins value
-	 */
+	 * @return plugins value */
 	public File getPlugins(HostHTTP host) {
 		if (plugins.containsKey(host)) {
 			return plugins.get(host);
@@ -105,23 +82,20 @@ public class FileManager {
 		}
 	}
 	
-	/**
-	 * Get logs value if exists else get value from {@link AvunaHTTPD#mainConfig mainConfig}.
+	/** Get logs value if exists else get value from {@link AvunaHTTPD#mainConfig mainConfig}.
 	 * 
-	 * @return logs value
-	 */
+	 * @return logs value */
 	public File getLogs() {
 		return logs == null ? (logs = new File(AvunaHTTPD.mainConfig.getNode("logs").getValue())) : logs;
 	}
 	
-	/**
-	 * Get plugin value if exists else create new plugin entry in plugins.
+	/** Get plugin value if exists else create new plugin entry in plugins.
 	 * 
-	 * @param p plugin object
+	 * @param p
+	 *            plugin object
 	 * @see HashMap
 	 * @see Object#hashCode
-	 * @return plugin
-	 */
+	 * @return plugin */
 	public File getPlugin(Plugin p) {
 		if (!plugin.containsKey(p.hashCode() + "" + p.registry.host.hashCode())) {
 			plugin.put(p.hashCode() + "" + p.registry.host.hashCode(), new File(getPlugins(p.registry.host), p.name));
@@ -129,12 +103,10 @@ public class FileManager {
 		return plugin.get(p.hashCode() + "" + p.registry.host.hashCode());
 	}
 	
-	/**
-	 * Get base file value for object else get main directory and set it.
+	/** Get base file value for object else get main directory and set it.
 	 * 
 	 * @param name
-	 * @return name base file name
-	 */
+	 * @return name base file name */
 	public File getBaseFile(String name) {
 		if (!base.containsKey(name)) {
 			base.put(name, new File(getMainDir(), name));
@@ -142,14 +114,10 @@ public class FileManager {
 		return base.get(name);
 	}
 	
-	/**
-	 * Clear the HTML cache, including extCache, lwiCache, and tbCache,
-	 * except where extCache has key "application/x-java". Also clears
-	 * Patch maps.
+	/** Clear the HTML cache, including extCache, lwiCache, and tbCache, except where extCache has key "application/x-java". Also clears Patch maps.
 	 * 
 	 * @see EventBus#callEvent
-	 * @throws IOException
-	 */
+	 * @throws IOException */
 	public void clearCache() throws IOException {
 		HTMLCache.reloadAll();
 		String[] delKeys = new String[cache.size()];
@@ -169,7 +137,7 @@ public class FileManager {
 		cConfigCache.clear();
 		for (Host host : AvunaHTTPD.hosts.values()) {
 			if (host instanceof HostHTTP) {
-				((HostHTTP)host).eventBus.callEvent(new EventClearCache());
+				((HostHTTP) host).eventBus.callEvent(new EventClearCache());
 			}
 		}
 		
@@ -179,6 +147,7 @@ public class FileManager {
 		String[] delKeys = new String[cache.size()];
 		int delSize = 0;
 		for (String file : cache.keySet()) {
+			if (extCache.get(file) == null) continue;
 			if (extCache.get(file).equals("application/x-java")) {
 				if (delSize > delKeys.length) {
 					String[] ndk = new String[delKeys.length + 1];
@@ -197,17 +166,14 @@ public class FileManager {
 		}
 	}
 	
-	/**
-	 * Takes error page request, if error page is in configuration deliver it
-	 * back, else deliver standard html notice.
+	/** Takes error page request, if error page is in configuration deliver it back, else deliver standard html notice.
 	 * 
 	 * @param request
 	 * @param reqTarget
 	 * @param status
 	 * @param info
 	 * @see Resource
-	 * @return error page if configured, else standard error message.
-	 */
+	 * @return error page if configured, else standard error message. */
 	public Resource getErrorPage(RequestPacket request, String reqTarget, StatusCode status, String info) {
 		ConfigNode errorPages = request.host.getHost().getConfig().getNode("errorpages");
 		if (errorPages.containsNode(status.getStatus() + "")) {
@@ -248,16 +214,14 @@ public class FileManager {
 	
 	private boolean lwi = false;// TODO: thread safety?
 	
-	/**
-	 * Retrieve file system path to requested URL. If request is to directory,
-	 * append index file path from host configuration. Set extra parameters
-	 * to child of path.
+	/** Retrieve file system path to requested URL. If request is to directory, append index file path from host configuration. Set extra parameters to child of path.
 	 * 
-	 * @param reqTarget2 request URL
-	 * @param request Incoming packet for host data
+	 * @param reqTarget2
+	 *            request URL
+	 * @param request
+	 *            Incoming packet for host data
 	 * @see PluginOverride#processPacket(org.avuna.httpd.http.networking.Packet)
-	 * @return absolute file system path and parameter string (as child)
-	 */
+	 * @return absolute file system path and parameter string (as child) */
 	public File getAbsolutePath(String reqTarget2, RequestPacket request) {
 		String reqTarget = reqTarget2;
 		lwi = false;
@@ -352,14 +316,13 @@ public class FileManager {
 		return abs;
 	}
 	
-	/**
-	 * Correct from Windows directory index characters to Unix style index
-	 * for htdocs for incoming request.
+	/** Correct from Windows directory index characters to Unix style index for htdocs for incoming request.
 	 * 
-	 * @param reqTarget request URL
-	 * @param request Incoming packet
-	 * @return htdocs absolute path in Unix format
-	 */
+	 * @param reqTarget
+	 *            request URL
+	 * @param request
+	 *            Incoming packet
+	 * @return htdocs absolute path in Unix format */
 	public String correctForIndex(String reqTarget, RequestPacket request) {
 		String p = getAbsolutePath(reqTarget, request).getAbsolutePath().replace("\\", "/");
 		return p.substring(request.host.getHTDocs().getAbsolutePath().replace("\\", "/").length());
@@ -373,15 +336,14 @@ public class FileManager {
 	public static final HashMap<String, OverrideConfig> cConfigCache = new HashMap<String, OverrideConfig>();
 	private static long cacheClock = 0L;
 	
-	/**
-	 * Instantiates an {@link OverrideConfig} from .override files in htdocs,
-	 * adds it to to the {@link #cConfigCache} with path as key.
+	/** Instantiates an {@link OverrideConfig} from .override files in htdocs, adds it to to the {@link #cConfigCache} with path as key.
 	 * 
-	 * @param file name of override file
-	 * @param path path to override file
+	 * @param file
+	 *            name of override file
+	 * @param path
+	 *            path to override file
 	 * @return
-	 * @throws IOException
-	 */
+	 * @throws IOException */
 	public OverrideConfig loadDirective(File file, String path) throws IOException { // TODO: load superdirectory directives.
 		if (!file.exists()) return null;
 		OverrideConfig cfg = new OverrideConfig(file);
@@ -390,25 +352,23 @@ public class FileManager {
 		return cfg;
 	}
 	
-	/**
-	 * @param path
-	 * @return path to last index "/" or path if no index included
-	 */
+	/** @param path
+	 * @return path to last index "/" or path if no index included */
 	public String getSuperDirectory(String path) {
 		return path.contains("/") ? path.substring(0, path.lastIndexOf("/") + 1) : path;
 	}
 	
-	/**
-	 * Sets {@link Resource#effectiveOverride} from {@link #cConfigCache} or loads values from lowest child directory in host tree .override
-	 * file if it exists.
+	/** Sets {@link Resource#effectiveOverride} from {@link #cConfigCache} or loads values from lowest child directory in host tree .override file if it exists.
 	 * 
-	 * @param request URL request
-	 * @param resource page content
-	 * @param htds the host document source path
+	 * @param request
+	 *            URL request
+	 * @param resource
+	 *            page content
+	 * @param htds
+	 *            the host document source path
 	 * @see Resource
 	 * @return resource with {@link Resource#effectiveOverride}
-	 * @throws IOException
-	 */
+	 * @throws IOException */
 	public Resource preloadOverride(RequestPacket request, Resource resource, String htds) throws IOException {
 		if (resource == null) return null;
 		String rt = request.target;
@@ -447,18 +407,16 @@ public class FileManager {
 		return resource;
 	}
 	
-	/**
-	 * Check incoming request against cache. If request is cached and not
-	 * expired return cached resource. If cache has expired clear caches.
-	 * Otherwise read htdocs file and build resource.
+	/** Check incoming request against cache. If request is cached and not expired return cached resource. If cache has expired clear caches. Otherwise read htdocs file and build resource.
 	 * 
-	 * @param reqTarget URl request
-	 * @param request page content
+	 * @param reqTarget
+	 *            URl request
+	 * @param request
+	 *            page content
 	 * @see Resource
 	 * @see EventBus#callEvent
 	 * @see PluginChunked
-	 * @return resource
-	 */
+	 * @return resource */
 	public Resource getResource(String reqTarget, RequestPacket request) {
 		try {
 			String rt = reqTarget;
@@ -535,13 +493,12 @@ public class FileManager {
 					ByteArrayOutputStream bout = new ByteArrayOutputStream();
 					int i = 1;
 					byte[] buf = new byte[4096];
-					PluginChunked chunked = (PluginChunked)request.host.getHost().registry.getPatchForClass(PluginChunked.class);
-					PluginFCGI fcgi = (PluginFCGI)request.host.getHost().registry.getPatchForClass(PluginFCGI.class);
-					PluginJavaLoader jl = (PluginJavaLoader)request.host.getHost().registry.getPatchForClass(PluginJavaLoader.class);
+					PluginChunked chunked = (PluginChunked) request.host.getHost().registry.getPatchForClass(PluginChunked.class);
+					PluginFCGI fcgi = (PluginFCGI) request.host.getHost().registry.getPatchForClass(PluginFCGI.class);
+					PluginJavaLoader jl = (PluginJavaLoader) request.host.getHost().registry.getPatchForClass(PluginJavaLoader.class);
 					boolean dc = chunked != null && chunked.pcfg.getNode("enabled").getValue().equals("true");
 					if (dc && fcgi != null && fcgi.pcfg.getNode("enabled").getValue().equals("true")) {
-						major:
-						for (String key : fcgi.fcgis.keySet()) {
+						major: for (String key : fcgi.fcgis.keySet()) {
 							String[] pcts = key.split(",");
 							for (String pct : pcts) {
 								if (pct.trim().equals(ext)) {
