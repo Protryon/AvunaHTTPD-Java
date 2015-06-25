@@ -290,7 +290,6 @@ public class PluginInline extends Plugin {
 		}
 		RequestPacket[] reqs = new RequestPacket[subreqs.length];
 		int ri = 0;
-		int fri = 0;
 		for (int i = 0; i < subreqs.length; i++) {
 			if (subreqs[i].size > sizeLimit) {
 				continue;
