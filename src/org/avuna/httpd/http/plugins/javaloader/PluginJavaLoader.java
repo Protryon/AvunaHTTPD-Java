@@ -37,6 +37,7 @@ import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.plugins.base.PluginSecurity;
+import org.avuna.httpd.http.plugins.javaloader.lib.AssetLibrary;
 import org.avuna.httpd.http.plugins.javaloader.lib.DatabaseManager;
 import org.avuna.httpd.http.plugins.javaloader.lib.HTMLCache;
 import org.avuna.httpd.util.Config;
@@ -353,6 +354,7 @@ public class PluginJavaLoader extends Plugin {
 		}else if (event instanceof EventReload) {
 			try {
 				HTMLCache.reloadAll();
+				AssetLibrary.reloadAll();// TODO: if we flushjl at all reloads, then this is usually unneeded?
 				config.load();
 				flushjl();
 			}catch (IOException e) {
