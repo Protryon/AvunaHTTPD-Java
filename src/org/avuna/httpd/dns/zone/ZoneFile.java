@@ -1,18 +1,5 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/*
+ * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.dns.zone;
 
@@ -44,7 +31,7 @@ public class ZoneFile {
 		for (IDirective id : dirs) {
 			if (!rnd && id instanceof RoundStartDirective) {
 				rnd = true;
-				rl = ((RoundStartDirective)id).limit;
+				rl = ((RoundStartDirective) id).limit;
 				ndirs.add(id);
 			}else if (rnd && id instanceof RoundStopDirective) {
 				rnd = false;
@@ -115,7 +102,8 @@ public class ZoneFile {
 		boolean round = false;
 		while (s.hasNextLine()) {
 			ln++;
-			String line = s.nextLine().trim();
+			String line = s.nextLine();
+			if (line.contains("#")) line = line.substring(0, line.indexOf("#")).trim();
 			if (line.length() == 0) continue;
 			String com = line.substring(0, line.contains(" ") ? line.indexOf(" ") : line.length());
 			line = line.substring(com.length()).trim();
@@ -247,23 +235,23 @@ public class ZoneFile {
 		PrintStream ps = new PrintStream(f);
 		for (IDirective dir : dirs) {
 			if (dir instanceof DNSRecord) {
-				DNSRecord rec = (DNSRecord)dir;
+				DNSRecord rec = (DNSRecord) dir;
 				String l = escape(rec.getDomain()) + " " + escape(rec.getType().name) + " " + rec.getTimeToLive();
 				for (String ss : rec.getTV()) {
 					l += " " + escape(ss);
 				}
 				ps.println(l);
 			}else if (dir instanceof Directive) {
-				Directive idir = (Directive)dir;
+				Directive idir = (Directive) dir;
 				String l = idir.name;
 				for (String s : idir.args) {
 					l += " " + escape(s);
 				}
 				ps.println(l);
 				if (dir instanceof ImportDirective) {
-					((ImportDirective)dir).zf.save();
+					((ImportDirective) dir).zf.save();
 				}else if (dir instanceof ZoneDirective) {
-					((ZoneDirective)dir).zf.save();
+					((ZoneDirective) dir).zf.save();
 				}
 			}
 		}
