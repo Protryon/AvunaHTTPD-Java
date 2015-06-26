@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.plugins.base;
 
@@ -46,13 +32,11 @@ public class PluginOverride extends Plugin {
 	private ArrayList<String> nogo = new ArrayList<String>();
 	private HashMap<String, HashMap<String, Object>> overrides = new HashMap<String, HashMap<String, Object>>();
 	
-	/**
-	 * {@inheritDoc}
-	 */
+	/** {@inheritDoc} */
 	@Override
 	public void receive(EventBus bus, Event event) {
 		if (event instanceof EventGenerateResponse) {
-			EventGenerateResponse egr = (EventGenerateResponse)event;
+			EventGenerateResponse egr = (EventGenerateResponse) event;
 			ResponsePacket response = egr.getResponse();
 			RequestPacket request = egr.getRequest();
 			if (request.forbode) {
@@ -70,7 +54,7 @@ public class PluginOverride extends Plugin {
 				response.body.type = request.overrideType;
 			}
 		}else if (event instanceof EventPreprocessRequest) {
-			EventPreprocessRequest egr = (EventPreprocessRequest)event;
+			EventPreprocessRequest egr = (EventPreprocessRequest) event;
 			RequestPacket request = egr.getRequest();
 			try {
 				request.body = AvunaHTTPD.fileManager.preloadOverride(request, request.body, request.host.getHTDocs().getAbsolutePath());
@@ -94,33 +78,33 @@ public class PluginOverride extends Plugin {
 			OverrideConfig cfg = request.body.effectiveOverride;
 			for (CompiledDirective d : cfg.getDirectives()) {
 				switch (d.directive) {
-				case forbid:
-					if (rt.matches(d.args[0])) {
-						request.forbode = true;
-					}
-					break;
-				case redirect:
-					request.oredir = rt.replaceAll(d.args[0], d.args[1]);
-					break;
-				case index:
-					request.overrideIndex = d.args;
-					break;
-				case mime:
-					if (rt.matches(d.args[1])) {
-						request.overrideType = d.args[0];
+					case forbid:
+						if (rt.matches(d.args[0])) {
+							request.forbode = true;
+						}
 						break;
-					}
-					break;
-				case cache:
-					if (rt.matches(d.args[1])) {
-						request.overrideCache = d.args[0].equals("off") ? 0 : Integer.parseInt(d.args[0]);
+					case redirect:
+						request.oredir = rt.replaceAll(d.args[0], d.args[1]);
 						break;
-					}
-					break;
-				case rewrite:
-					request.rags1 = d.args[0];
-					request.rags2 = d.args[1];
-					break;
+					case index:
+						request.overrideIndex = d.args;
+						break;
+					case mime:
+						if (rt.matches(d.args[1])) {
+							request.overrideType = d.args[0];
+							break;
+						}
+						break;
+					case cache:
+						if (rt.matches(d.args[1])) {
+							request.overrideCache = d.args[0].equals("off") ? 0 : Integer.parseInt(d.args[0]);
+							break;
+						}
+						break;
+					case rewrite:
+						request.rags1 = d.args[0];
+						request.rags2 = d.args[1];
+						break;
 				}
 			}
 		}else if (event instanceof EventReload) {
