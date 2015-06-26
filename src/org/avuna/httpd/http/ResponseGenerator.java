@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http;
 
@@ -23,30 +9,24 @@ import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.util.Logger;
 
-/**
- * Creates a http response coming from the server.
- */
+/** Creates a http response coming from the server. */
 public class ResponseGenerator {
 	
-	/**
-	 * Our constructor
-	 */
+	/** Our constructor */
 	public ResponseGenerator() {
 		
 	}
 	
-	/**
-	 * Date format that isn't being used.
-	 */
+	/** Date format that isn't being used. */
 	public static final SimpleDateFormat sdf = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss zzz");
 	
-	/**
-	 * Processes a request and fills in the ResponsePacket
+	/** Processes a request and fills in the ResponsePacket
 	 * 
-	 * @param request the request
-	 * @param response the response to fill in
-	 * @return returns the success of handling the request.
-	 */
+	 * @param request
+	 *            the request
+	 * @param response
+	 *            the response to fill in
+	 * @return returns the success of handling the request. */
 	public static boolean process(RequestPacket request, ResponsePacket response) {
 		// Check if httpVersion is compatible
 		if (!request.httpVersion.equals("HTTP/1.1")) {
@@ -88,12 +68,12 @@ public class ResponseGenerator {
 		}
 	}
 	
-	/**
-	 * Generates the stausCode, httpVersion and reasonPhrase for the response
+	/** Generates the stausCode, httpVersion and reasonPhrase for the response
 	 * 
-	 * @param response the response packet
-	 * @param status the status to set.
-	 */
+	 * @param response
+	 *            the response packet
+	 * @param status
+	 *            the status to set. */
 	public static void generateDefaultResponse(ResponsePacket response, StatusCode status) {
 		response.statusCode = status.getStatus();
 		response.httpVersion = "HTTP/1.1";

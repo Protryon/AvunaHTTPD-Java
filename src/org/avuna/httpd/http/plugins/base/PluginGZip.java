@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.plugins.base;
 
@@ -43,10 +29,12 @@ public class PluginGZip extends Plugin {
 	@Override
 	public void receive(EventBus bus, Event event) {
 		if (event instanceof EventGenerateResponse) {
-			EventGenerateResponse egr = (EventGenerateResponse)event;
+			EventGenerateResponse egr = (EventGenerateResponse) event;
 			ResponsePacket response = egr.getResponse();
 			RequestPacket request = egr.getRequest();
-			if (!(request.parent == null && request.headers.hasHeader("Accept-Encoding") && request.headers.getHeader("Accept-Encoding").contains("gzip") && !response.headers.hasHeader("Content-Encoding") && response.body != null && !response.body.tooBig)) return;
+			String ae = request.headers.getHeader("Accept-Encoding");
+			if (ae == null || !ae.contains("gzip")) return;
+			if (request.parent != null || response.headers.hasHeader("Content-Encoding") || response.body == null || response.body.tooBig) return;
 			byte[] data2 = response.body.data;
 			try {
 				CRC32 crc = new CRC32();

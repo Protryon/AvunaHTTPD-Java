@@ -22,6 +22,7 @@ import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.util.StringUtil;
 import sun.misc.BASE64Encoder;
 
 public class PluginInline extends Plugin {
@@ -43,17 +44,12 @@ public class PluginInline extends Plugin {
 	}
 	
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request) {
-		String ua = request.headers.hasHeader("User-Agent") ? request.headers.getHeader("User-Agent").toLowerCase() : "";
-		boolean g = false;
-		for (String pua : uas) {
-			if (ua.contains(pua)) {
-				g = true;
-				break;
-			}
-		}
-		if (!g) return false;
-		String ct = response.headers.hasHeader("Content-Type") ? response.headers.getHeader("Content-Type") : "";
-		if (ct.length() == 0) return false;
+		String ua = request.headers.getHeader("User-Agent");
+		if (ua == null) return false;
+		ua = StringUtil.toLowerCase(ua);
+		if (!StringUtil.containsAny(ua, uas)) return false;
+		String ct = response.headers.getHeader("Content-Type");
+		if (ct == null) return false;
 		return response.statusCode == 200 && response.body != null && (ct.startsWith("text/html") || ct.startsWith("text/css"));
 	}
 	
@@ -143,11 +139,13 @@ public class PluginInline extends Plugin {
 	
 	private final HashMap<Long, SubReq[]> subreqs = new HashMap<Long, SubReq[]>();
 	private final HashMap<Long, byte[]> cdata = new HashMap<Long, byte[]>();
+	private final ArrayList<Long> skip = new ArrayList<Long>();
 	
 	public void processResponse(ResponsePacket response, RequestPacket request) {
 		CRC32 process = new CRC32();
 		process.update(response.body.data);
 		long l = process.getValue();
+		if (skip.contains(l)) return;
 		if (cdata.containsKey(l)) {
 			response.body.data = cdata.get(l);
 			return;
@@ -312,7 +310,7 @@ public class PluginInline extends Plugin {
 			System.arraycopy(reqs, 0, rp, 0, ri);
 			reqs = rp;
 		}
-		ResponsePacket[] resps = request.host.getHost().processSubRequests(reqs);
+		ResponsePacket[] resps = reqs.length == 0 ? new ResponsePacket[0] : request.host.getHost().processSubRequests(reqs);
 		if (greqs) {
 			SubReq[] srsn = new SubReq[subreqs.length];
 			ResponsePacket[] respsn = new ResponsePacket[resps.length];
@@ -332,6 +330,10 @@ public class PluginInline extends Plugin {
 			this.subreqs.put(l, subreqs);// put back above?
 		}
 		int offset = 0;
+		if (resps.length == 0) {
+			skip.add(l);
+			return;
+		}
 		for (int i = 0; i < resps.length; i++) {
 			SubReq sr = subreqs[i];
 			boolean fre = sr.failed;

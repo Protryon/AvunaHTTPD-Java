@@ -1,34 +1,18 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/*
+ * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.networking;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.Method;
 import org.avuna.httpd.http.plugins.javaloader.JavaLoaderStream;
 import org.avuna.httpd.util.Logger;
 
-/**
- * This is for responeses to the client.
- */
+/** This is for responeses to the client. */
 public class ResponsePacket extends Packet {
 	public int statusCode = 200;
 	public String reasonPhrase = "";
@@ -64,7 +48,7 @@ public class ResponsePacket extends Packet {
 			StringBuilder ser = new StringBuilder();
 			if (head) {
 				ser.append((this.httpVersion + " " + this.statusCode + " " + this.reasonPhrase + AvunaHTTPD.crlf));
-				HashMap<String, ArrayList<String>> hdrs = this.headers.getHeaders();
+				HashMap<String, String[]> hdrs = this.headers.getHeaders();
 				for (String key : hdrs.keySet()) {
 					for (String val : hdrs.get(key)) {
 						ser.append((key + ": " + val + AvunaHTTPD.crlf));

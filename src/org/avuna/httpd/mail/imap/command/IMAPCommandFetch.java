@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.mail.imap.command;
 
@@ -54,11 +40,11 @@ public class IMAPCommandFetch extends IMAPCommand {
 			}
 			for (Email e : toFetch) {
 				if (tps[0].equals("all")) {
-					tps = new String[]{"FLAGS", "INTERNALDATE", "RFC822.SIZE", "ENVELOPE"};
+					tps = new String[] { "FLAGS", "INTERNALDATE", "RFC822.SIZE", "ENVELOPE" };
 				}else if (tps[0].equals("fast")) {
-					tps = new String[]{"FLAGS", "INTERNALDATE", "RFC822.SIZE"};
+					tps = new String[] { "FLAGS", "INTERNALDATE", "RFC822.SIZE" };
 				}else if (tps[0].equals("full")) {
-					tps = new String[]{"FLAGS", "INTERNALDATE", "RFC822.SIZE", "ENVELOPE", "BODY"};
+					tps = new String[] { "FLAGS", "INTERNALDATE", "RFC822.SIZE", "ENVELOPE", "BODY" };
 				}
 				StringBuilder ret = new StringBuilder().append(e.uid).append(" FETCH (");
 				boolean notrim = false;
@@ -165,9 +151,9 @@ public class IMAPCommandFetch extends IMAPCommand {
 							s2 = "text";
 						}
 						if (s2.equals("")) {
-							LinkedHashMap<String, ArrayList<String>> hdrs = e.headers.getHeaders();
+							LinkedHashMap<String, String[]> hdrs = e.headers.getHeaders();
 							for (String ss : hdrs.keySet()) {
-								ArrayList<String> values = hdrs.get(ss);
+								String[] values = hdrs.get(ss);
 								for (String sss : values) {
 									mhd.append(ss).append(": ").append(sss).append(AvunaHTTPD.crlf);
 								}
@@ -186,9 +172,9 @@ public class IMAPCommandFetch extends IMAPCommand {
 								}
 								value = value.toLowerCase().trim();
 								if (value.equals("header")) {
-									LinkedHashMap<String, ArrayList<String>> hdrs = e.headers.getHeaders();
+									LinkedHashMap<String, String[]> hdrs = e.headers.getHeaders();
 									for (String ss : hdrs.keySet()) {
-										ArrayList<String> values = hdrs.get(ss);
+										String[] values = hdrs.get(ss);
 										for (String sss : values) {
 											mhd.append(ss).append(": ").append(sss).append(AvunaHTTPD.crlf);
 										}
@@ -221,15 +207,14 @@ public class IMAPCommandFetch extends IMAPCommand {
 									if (limit) {
 										limitList = value.substring(value.indexOf("(") + 1, value.indexOf(")")).split(" ");
 									}
-									LinkedHashMap<String, ArrayList<String>> hdrs = e.headers.getHeaders();
-									b:
-									for (String ss : hdrs.keySet()) {
+									LinkedHashMap<String, String[]> hdrs = e.headers.getHeaders();
+									b: for (String ss : hdrs.keySet()) {
 										for (String l : limitList) {
 											if (ss.equalsIgnoreCase(l)) {
 												continue b;
 											}
 										}
-										ArrayList<String> values = hdrs.get(ss);
+										String[] values = hdrs.get(ss);
 										for (String sss : values) {
 											mhd.append(ss).append(": ").append(sss).append(AvunaHTTPD.crlf);
 										}
