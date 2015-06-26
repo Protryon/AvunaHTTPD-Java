@@ -361,7 +361,6 @@ public class PluginInline extends Plugin {
 			html = html.substring(0, sr.start + offset) + rep + html.substring(sr.end + offset);
 			offset += rep.length() - sr.forig.length();
 		}
-		System.out.println(request.target);
 		byte[] hb = html.getBytes();
 		cdata.put(l, hb);
 		response.body.data = hb;
