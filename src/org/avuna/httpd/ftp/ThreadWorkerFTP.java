@@ -79,6 +79,7 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 									// Logger.logError(e);
 								}
 							}
+							focus.sns = 0L;
 							continue;
 						}else {
 							readd = false;
