@@ -88,6 +88,7 @@ public class Headers {
 	 * @return value from the name/key */
 	public String getHeader(String name) {
 		String[] hdrs = getHeaders(name);
+		if (hdrs == null) return null;
 		if (hdrs.length >= 1) return hdrs[0];
 		return null;
 	}
