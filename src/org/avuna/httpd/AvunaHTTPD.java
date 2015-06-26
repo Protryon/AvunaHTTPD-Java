@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd;
 
@@ -63,8 +49,8 @@ public class AvunaHTTPD {
 	public static Config mainConfig, hostsConfig;
 	public static final FileManager fileManager = new FileManager();
 	public static final HashMap<String, String> extensionToMime = new HashMap<String, String>();
-	public static final String crlf = new String(new byte[]{13, 10});
-	public static final byte[] crlfb = new byte[]{13, 10};
+	public static final String crlf = new String(new byte[] { 13, 10 });
+	public static final byte[] crlfb = new byte[] { 13, 10 };
 	public static final CommandRegistry commandRegistry = new CommandRegistry();
 	static {
 		commandRegistry.registerCommand(new CommandHelp(), "help");
@@ -81,12 +67,10 @@ public class AvunaHTTPD {
 	}
 	public static final CommandContext mainCommandContext = commandRegistry.newContext(System.out, new Scanner(System.in));
 	
-	/**
-	 * Setup folders if they don't exist.
+	/** Setup folders if they don't exist.
 	 * 
 	 * @see FileManager
-	 * @see Host#setupFolders()
-	 */
+	 * @see Host#setupFolders() */
 	public static void setupFolders() {
 		fileManager.getMainDir().mkdirs();
 		fileManager.getLogs().mkdirs();
@@ -95,12 +79,10 @@ public class AvunaHTTPD {
 		}
 	}
 	
-	/**
-	 * Creates default scripts if they don't exist.
+	/** Creates default scripts if they don't exist.
 	 * 
 	 * @throws IOException
-	 * @see FileManager
-	 */
+	 * @see FileManager */
 	public static void setupScripts() throws IOException {
 		String os = System.getProperty("os.name").toLowerCase();
 		if (os.contains("windows")) {
@@ -133,7 +115,7 @@ public class AvunaHTTPD {
 				fout.close();
 			}
 		}else {
-			String ll = new String(new byte[]{0x0A});
+			String ll = new String(new byte[] { 0x0A });
 			File f = fileManager.getBaseFile("run.sh");
 			if (!f.exists()) {
 				FileOutputStream fout = new FileOutputStream(f);
@@ -165,15 +147,14 @@ public class AvunaHTTPD {
 		}
 	}
 	
-	/**
-	 * Checks file names in String array, creates mime.txt from unpack dir if it exists.
+	/** Checks file names in String array, creates mime.txt from unpack dir if it exists.
 	 * 
-	 * @throws IOException if no files end in .so or .dll
-	 */
+	 * @throws IOException
+	 *             if no files end in .so or .dll */
 	public static void unpack() {
 		try {
 			setupScripts();
-			String[] unpacks = new String[]{"mime.txt", "jni/amd64/libAvunaHTTPD_JNI.so", "jni/i386/libAvunaHTTPD_JNI.so"};
+			String[] unpacks = new String[] { "mime.txt", "jni/amd64/libAvunaHTTPD_JNI.so", "jni/i386/libAvunaHTTPD_JNI.so" };
 			for (String up : unpacks) {
 				if (windows && up.endsWith(".so")) continue;
 				if (!windows && up.endsWith(".dll")) continue;
@@ -203,11 +184,9 @@ public class AvunaHTTPD {
 		}
 	}
 	
-	/**
-	 * Reads in mime.txt file to {@link #extensionToMime}
+	/** Reads in mime.txt file to {@link #extensionToMime}
 	 * 
-	 * @throws IOException
-	 */
+	 * @throws IOException */
 	public static void loadUnpacked() {
 		try {
 			File mime = fileManager.getBaseFile("mime.txt");
@@ -236,8 +215,7 @@ public class AvunaHTTPD {
 	public static long lastbipc = 0L;
 	public static final boolean windows = System.getProperty("os.name").toLowerCase().contains("windows");
 	
-	/**
-	 * This is the main method for running Avuna
+	/** This is the main method for running Avuna
 	 * <p>
 	 * If first arg is "cmd" attach remote access service {@link ComClient#run(String, int)} <br>
 	 * Optional args (cmd {@code ip} {@code port}):
@@ -287,8 +265,8 @@ public class AvunaHTTPD {
 	 * <p>
 	 * Start command line processor {@link Scanner#hasNextLine()}, {@link Scanner#nextLine()}, {@link CommandRegistry#processCommand(String, CommandContext)}
 	 * 
-	 * @param args string array arguments to run Avuna
-	 */
+	 * @param args
+	 *            string array arguments to run Avuna */
 	public static void main(String[] args) {
 		try {
 			boolean dosetid = false;
@@ -328,8 +306,7 @@ public class AvunaHTTPD {
 			File us = null;
 			try {
 				us = new File(AvunaHTTPD.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());
-			}catch (Exception e) {
-			}
+			}catch (Exception e) {}
 			File fcfg = null;
 			if (dosetid) {
 				fcfg = new File(args[1]);
@@ -428,7 +405,7 @@ public class AvunaHTTPD {
 				p.waitFor();
 				InputStream in = p.getInputStream();
 				while (in.available() > 0) {
-					System.out.append((char)in.read());
+					System.out.append((char) in.read());
 				}
 				return;
 			}
@@ -476,7 +453,7 @@ public class AvunaHTTPD {
 							continue;
 						}
 						try {
-							Host h = (Host)HostRegistry.getHost(p).getConstructors()[0].newInstance(key);
+							Host h = (Host) HostRegistry.getHost(p).getConstructors()[0].newInstance(key);
 							h.formatConfig(host);
 							hosts.put(key, h);
 						}catch (Exception e) {
@@ -496,7 +473,7 @@ public class AvunaHTTPD {
 			Logger.log("Loaded Configs");
 			for (Host host : hosts.values()) {
 				if (host instanceof HostHTTP) {
-					((HostHTTP)host).loadBases();
+					((HostHTTP) host).loadBases();
 				}
 			}
 			if (unpack) {
@@ -512,8 +489,7 @@ public class AvunaHTTPD {
 				SafeMode.recurPerms(cfg.getParentFile(), Integer.parseInt(mainConfig.getNode("uid").getValue()), Integer.parseInt(mainConfig.getNode("gid").getValue()));
 			}
 			if (!windows && CLib.getuid() == 0 && !mainConfig.getNode("uid").getValue().equals("0")) {
-				major:
-				while (true) {
+				major: while (true) {
 					for (Host h : hosts.values()) {
 						if (!h.loaded) {
 							Thread.sleep(1L);
@@ -530,7 +506,7 @@ public class AvunaHTTPD {
 			}
 			for (Host host : hosts.values()) {
 				if (host instanceof HostHTTP) {
-					((HostHTTP)host).loadCustoms();
+					((HostHTTP) host).loadCustoms();
 				}
 			}
 			Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -544,7 +520,7 @@ public class AvunaHTTPD {
 			});
 			for (Host host : hosts.values()) {
 				if (host instanceof HostHTTP) {
-					((HostHTTP)host).postload();
+					((HostHTTP) host).postload();
 				}
 			}
 		}catch (Exception e) {
