@@ -2,7 +2,6 @@
 
 package org.avuna.httpd.event;
 
-import org.avuna.httpd.util.Benchmark;
 
 public class EventBus {
 	public EventBus() {
@@ -69,7 +68,6 @@ public class EventBus {
 		if (id >= recvs.length || recvs[id].length == 0) {
 			return;
 		}
-		Benchmark bm = null;
 		for (int r = 0; r < recvs[id].length; r++) {
 			recvs[id][r].receive(this, event);
 			if (event.isCanceled()) break;

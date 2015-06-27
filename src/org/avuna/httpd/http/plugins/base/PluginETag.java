@@ -29,7 +29,7 @@ public class PluginETag extends Plugin {
 			RequestPacket request = egr.getRequest();
 			if ((request.parent != null || response.statusCode != 200 || (request.method != Method.GET && request.method != Method.HEAD) || response.body == null || response.body.data == null || response.body.data.length == 0)) return;
 			CRC32 crc = new CRC32();
-			crc.update(request.body.data);
+			crc.update(response.body.data);
 			String etag = crc.getValue() + "";// bytesToHex(md5.digest(data));
 			if (request.headers.hasHeader("If-None-Match")) {
 				if (request.headers.getHeader("If-None-Match").replace("\"", "").equals(etag)) {
