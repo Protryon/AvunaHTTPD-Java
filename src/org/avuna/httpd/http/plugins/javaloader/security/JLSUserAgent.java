@@ -35,7 +35,6 @@ public class JLSUserAgent extends JavaLoaderSecurity {
 		String ua = StringUtil.toLowerCase(req.headers.getHeader("User-Agent").trim());
 		if (StringUtil.containsAny(ua, this.ua)) {
 			return returnWeight;
-			
 		}
 		return 0;
 	}

@@ -37,6 +37,8 @@ public abstract class StringUtil {
 			for (int o = 0; o < ml.length; o++) {
 				if (matching[o][ml[o]] == inc) {
 					ml[o]++;
+				}else if (ml[o] > 0) {
+					ml[o] = 0;
 				}
 				if (ml[o] == matching[o].length) {
 					return true;

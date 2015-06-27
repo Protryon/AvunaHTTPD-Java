@@ -64,11 +64,16 @@ public class ThreadWorker extends Thread implements ITerminatable {
 				bm.startSection("gen-resp");
 				EventGenerateResponse epr2 = new EventGenerateResponse(incomingRequest, outgoingResponse);
 				host.eventBus.callEvent(epr2);
+				if (epr2.isCanceled() || outgoingResponse.drop) {
+					incomingRequest.work.close();
+					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
+					continue;
+				}
 				bm.endSection("gen-resp");
 				bm.startSection("resp-finished");
 				EventResponseFinished epr3 = new EventResponseFinished(outgoingResponse);
 				host.eventBus.callEvent(epr3);
-				if (outgoingResponse.drop) {
+				if (epr3.isCanceled() || outgoingResponse.drop) {
 					incomingRequest.work.close();
 					Logger.log(incomingRequest.userIP + " " + incomingRequest.method.name + add + " " + incomingRequest.host.getHostPath() + incomingRequest.target + " DROPPED took: " + (System.nanoTime() - benchStart) / 1000000D + " ms");
 					continue;
