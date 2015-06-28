@@ -1,17 +1,4 @@
-/*
- * Avuna HTTPD - General Server Applications
- * Copyright (C) 2015 Maxwell Bruce
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.util;
 
@@ -40,58 +27,64 @@ public class SafeMode {
 		}
 	}
 	
-	public static boolean canUserRead(int uid, int gid, String f) {
+	public static boolean canUserRead(int uid, int gid, int owneruid, int ownergid, int chmod) {
 		if (uid <= 0) return true;
-		try {
-			StatResult stat = new StatResult(f);
-			if (stat.uid == uid) {
-				if ((stat.chmod & 0400) == 0400) return true;
-			}
-			if (stat.gid == gid) {
-				if ((stat.chmod & 0040) == 0040) return true;
-			}
-			if ((stat.chmod & 0004) == 0004) return true;
-			return false;
-		}catch (CException e) {
-			Logger.logError(e);
-			return false;
+		if (owneruid == uid) {
+			if ((chmod & 0400) == 0400) return true;
 		}
+		if (owneruid == gid) {
+			if ((chmod & 0040) == 0040) return true;
+		}
+		if ((chmod & 0004) == 0004) return true;
+		return false;
 	}
 	
-	public static boolean canUserWrite(int uid, int gid, String f) {
-		if (uid <= 0) return true;
-		try {
-			StatResult stat = new StatResult(f);
-			if (stat.uid == uid) {
-				if ((stat.chmod & 0200) == 0200) return true;
-			}
-			if (stat.gid == gid) {
-				if ((stat.chmod & 0020) == 0020) return true;
-			}
-			if ((stat.chmod & 0002) == 0002) return true;
-			return false;
-		}catch (CException e) {
-			Logger.logError(e);
-			return false;
-		}
+	public static boolean canUserRead(int uid, int gid, StatResult statResult) {
+		return canUserRead(uid, gid, statResult.uid, statResult.gid, statResult.chmod);
 	}
 	
-	public static boolean canUserExecute(int uid, int gid, String f) {
+	public static boolean canUserRead(int uid, int gid, File f) throws CException {
+		return canUserRead(uid, gid, new StatResult(f.getAbsolutePath()));
+	}
+	
+	public static boolean canUserWrite(int uid, int gid, int owneruid, int ownergid, int chmod) {
 		if (uid <= 0) return true;
-		try {
-			StatResult stat = new StatResult(f);
-			if (stat.uid == uid) {
-				if ((stat.chmod & 0100) == 0100) return true;
-			}
-			if (stat.gid == gid) {
-				if ((stat.chmod & 0010) == 0010) return true;
-			}
-			if ((stat.chmod & 0001) == 0001) return true;
-			return false;
-		}catch (CException e) {
-			Logger.logError(e);
-			return false;
+		if (owneruid == uid) {
+			if ((chmod & 0200) == 0200) return true;
 		}
+		if (owneruid == gid) {
+			if ((chmod & 0020) == 0020) return true;
+		}
+		if ((chmod & 0002) == 0002) return true;
+		return false;
+	}
+	
+	public static boolean canUserWrite(int uid, int gid, StatResult statResult) {
+		return canUserWrite(uid, gid, statResult.uid, statResult.gid, statResult.chmod);
+	}
+	
+	public static boolean canUserWrite(int uid, int gid, File f) throws CException {
+		return canUserWrite(uid, gid, new StatResult(f.getAbsolutePath()));
+	}
+	
+	public static boolean canUserExecute(int uid, int gid, int owneruid, int ownergid, int chmod) {
+		if (uid <= 0) return true;
+		if (owneruid == uid) {
+			if ((chmod & 0100) == 0100) return true;
+		}
+		if (owneruid == gid) {
+			if ((chmod & 0010) == 0010) return true;
+		}
+		if ((chmod & 0001) == 0001) return true;
+		return false;
+	}
+	
+	public static boolean canUserExecute(int uid, int gid, StatResult statResult) {
+		return canUserExecute(uid, gid, statResult.uid, statResult.gid, statResult.chmod);
+	}
+	
+	public static boolean canUserExecute(int uid, int gid, File f) throws CException {
+		return canUserExecute(uid, gid, new StatResult(f.getAbsolutePath()));
 	}
 	
 	public static boolean isHardlink(File f) throws CException {
@@ -148,13 +141,11 @@ public class SafeMode {
 		return true;
 	}
 	
-	/**
-	 * should only be used on an avuna root directory with std perms.
+	/** should only be used on an avuna root directory with std perms.
 	 * 
 	 * @param root
 	 * @param uid
-	 * @param gid
-	 */
+	 * @param gid */
 	public static void recurPerms(File root, int uid, int gid) {
 		recurPerms(root, uid, gid, false);
 	}

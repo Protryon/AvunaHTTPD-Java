@@ -13,14 +13,57 @@ import java.util.Random;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostFTP;
 import org.avuna.httpd.mail.util.StringFormatter;
+import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.SafeMode;
+import org.avuna.httpd.util.SafeMode.StatResult;
+import org.avuna.httpd.util.unixsocket.CException;
 
 public class FTPHandler {
 	
 	public final ArrayList<FTPCommand> commands = new ArrayList<FTPCommand>();
 	private final Random rand = new Random();
 	private static final SimpleDateFormat mdtm = new SimpleDateFormat("yyyyMMddHHmmss");
+	
+	public static boolean checkPerms(int uid, int gid, File f, boolean fileOnly, boolean dirOnly, boolean read, boolean write, boolean execute, boolean mustExist, boolean allowInheritance) throws CException {
+		if (AvunaHTTPD.windows) return true;
+		if (uid < 0 || gid < 0) return false;
+		if (mustExist && !f.exists()) return false;
+		if (fileOnly && !f.isFile()) return false;
+		if (dirOnly && !f.isDirectory()) return false;
+		if (read && !f.canRead()) return false;
+		if (write && !f.canWrite()) return false;
+		if (execute && !f.canExecute()) return false;
+		if (mustExist || f.exists()) {
+			StatResult sr = new SafeMode.StatResult(f.getAbsolutePath());
+			if (read && !SafeMode.canUserRead(uid, gid, sr)) return false;
+			if (write && !SafeMode.canUserWrite(uid, gid, sr)) return false;
+			if (execute && !SafeMode.canUserExecute(uid, gid, sr)) return false;
+			return true;
+		}
+		File pf = f.getParentFile();
+		if (allowInheritance && !read && pf != null && pf.exists()) {
+			StatResult sr = new SafeMode.StatResult(pf.getAbsolutePath());
+			if (write && !SafeMode.canUserRead(uid, gid, sr)) return false;
+			if (!SafeMode.canUserExecute(uid, gid, sr)) return false;
+			return true;
+		}
+		return false;
+	}
+	
+	public static File chroot(File root, String cwd, String file) throws CException {
+		File rf = null;
+		if (file.startsWith("/")) {
+			rf = root;
+		}else {
+			rf = new File(root, cwd);
+		}
+		rf = new File(rf, file);
+		rf = SafeMode.resolveLinks(rf);
+		if (!rf.getAbsolutePath().startsWith(root.getAbsolutePath())) return null;
+		if (SafeMode.isHardlink(rf)) return null;
+		return rf;
+	}
 	
 	public FTPHandler(final HostFTP host) {
 		commands.add(new FTPCommand("user", 0, 100) {
@@ -58,31 +101,15 @@ public class FTPHandler {
 		});
 		commands.add(new FTPCommand("cwd", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				String ncwd = focus.cwd;
-				if (isAbsolute(line)) {
-					ncwd = line;
-				}else {
-					ncwd = ncwd + (ncwd.endsWith("/") ? "" : "/") + line;
-				}
-				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
-				File f = new File(rt, line);
-				f = SafeMode.resolveLinks(f);
-				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || (pf != null && !pf.exists()) || SafeMode.isHardlink(f) || !f.exists()) {
-					focus.writeLine(550, "Failed to open directory.");
-					return;
-				}
+				File f = chroot(focus.root, focus.cwd, line);
 				int uid = host.provider.getUID(focus.user);
-				if (!SafeMode.canUserRead(uid, uid, f.getAbsolutePath())) {
-					focus.writeLine(550, "Permission Denied.");
-					return;
-				}
-				if (!f.isDirectory()) {
+				int gid = host.provider.getGID(focus.user);
+				if (!checkPerms(uid, gid, f, false, true, true, false, true, true, false)) {
 					focus.writeLine(550, "Failed to open directory.");
 					return;
 				}
 				if (f.canRead()) {
-					focus.cwd = ncwd;
+					focus.cwd = chroot(focus.root, f);
 					focus.writeLine(250, "Directory successfully changed.");
 				}else {
 					focus.writeLine(550, "Failed to open directory.");
@@ -242,17 +269,11 @@ public class FTPHandler {
 					focus.writeLine(425, "Use PORT or PASV first.");
 					return;
 				}
-				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
-				File f = new File(rt, line);
-				f = SafeMode.resolveLinks(f);
-				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
-					focus.writeLine(550, "Failed to open file.");
-					return;
-				}
+				File f = chroot(focus.root, focus.cwd, line);
 				int uid = host.provider.getUID(focus.user);
-				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
-					focus.writeLine(550, "Permission Denied.");
+				int gid = host.provider.getGID(focus.user);
+				if (!checkPerms(uid, gid, f, true, false, false, true, false, false, true)) {
+					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
 				boolean s = false;
@@ -277,17 +298,11 @@ public class FTPHandler {
 					focus.writeLine(425, "Use PORT or PASV first.");
 					return;
 				}
-				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
-				File f = new File(rt, line);
-				f = SafeMode.resolveLinks(f);
-				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
-					focus.writeLine(550, "Failed to open file.");
-					return;
-				}
+				File f = chroot(focus.root, focus.cwd, line);
 				int uid = host.provider.getUID(focus.user);
-				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
-					focus.writeLine(550, "Permission Denied.");
+				int gid = host.provider.getGID(focus.user);
+				if (!checkPerms(uid, gid, f, true, false, false, true, false, false, true)) {
+					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
 				boolean s = false;
@@ -315,17 +330,11 @@ public class FTPHandler {
 					focus.writeLine(425, "Use PORT or PASV first.");
 					return;
 				}
-				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
-				File f = new File(rt, line);
-				f = SafeMode.resolveLinks(f);
-				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
-					focus.writeLine(550, "Failed to open file.");
-					return;
-				}
+				File f = chroot(focus.root, focus.cwd, line);
 				int uid = host.provider.getUID(focus.user);
-				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
-					focus.writeLine(550, "Permission Denied.");
+				int gid = host.provider.getGID(focus.user);
+				if (!checkPerms(uid, gid, f, true, false, false, true, false, false, true)) {
+					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
 				try {
@@ -349,25 +358,15 @@ public class FTPHandler {
 					focus.writeLine(425, "Use PORT or PASV first.");
 					return;
 				}
-				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
-				File f = new File(rt, line);
-				f = SafeMode.resolveLinks(f);
-				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || (pf != null && !pf.exists()) || SafeMode.isHardlink(f)) {
-					focus.writeLine(550, "Failed to open file.");
-					return;
-				}
+				File f = chroot(focus.root, focus.cwd, line);
 				int uid = host.provider.getUID(focus.user);
-				if (f.exists() && !SafeMode.canUserRead(uid, uid, f.getAbsolutePath())) {
-					focus.writeLine(550, "Permission Denied.");
+				int gid = host.provider.getGID(focus.user);
+				if (!checkPerms(uid, gid, f, false, false, true, false, false, true, false)) {
+					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
 				if (f.isFile()) f = f.getParentFile();
-				if (f.exists() && f.canRead()) {
-					focus.psv.setType(FTPTransferType.LIST, f);
-				}else {
-					focus.writeLine(550, "Failed to open file.");
-				}
+				focus.psv.setType(FTPTransferType.LIST, f);
 			}
 		});
 		commands.add(new FTPCommand("nlst", 1, 100) {
@@ -376,25 +375,15 @@ public class FTPHandler {
 					focus.writeLine(425, "Use PORT or PASV first.");
 					return;
 				}
-				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
-				File f = new File(rt, line);
-				f = SafeMode.resolveLinks(f);
-				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || (pf != null && !pf.exists()) || SafeMode.isHardlink(f)) {
-					focus.writeLine(550, "Failed to open file.");
-					return;
-				}
+				File f = chroot(focus.root, focus.cwd, line);
 				int uid = host.provider.getUID(focus.user);
-				if (f.exists() && !SafeMode.canUserRead(uid, uid, f.getAbsolutePath())) {
-					focus.writeLine(550, "Permission Denied.");
+				int gid = host.provider.getGID(focus.user);
+				if (!checkPerms(uid, gid, f, false, false, true, false, false, true, false)) {
+					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
 				if (f.isFile()) f = f.getParentFile();
-				if (f.exists() && f.canRead()) {
-					focus.psv.setType(FTPTransferType.NLST, f);
-				}else {
-					focus.writeLine(550, "Failed to open file.");
-				}
+				focus.psv.setType(FTPTransferType.NLST, f);
 			}
 		});
 		commands.add(new FTPCommand("retr", 1, 100) {
@@ -403,127 +392,73 @@ public class FTPHandler {
 					focus.writeLine(425, "Use PORT or PASV first.");
 					return;
 				}
-				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
-				File f = new File(rt, line);
-				f = SafeMode.resolveLinks(f);
-				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
-					focus.writeLine(550, "Failed to open file.");
-					return;
-				}
+				File f = chroot(focus.root, focus.cwd, line);
 				int uid = host.provider.getUID(focus.user);
-				if (f.exists() && !SafeMode.canUserRead(uid, uid, f.getAbsolutePath())) {
-					focus.writeLine(550, "Permission Denied.");
-					return;
-				}
-				if (f.isDirectory()) {
+				int gid = host.provider.getGID(focus.user);
+				if (!checkPerms(uid, gid, f, true, false, true, false, false, true, false)) {
 					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
-				if (f.exists() && f.canRead()) {
-					focus.psv.setType(FTPTransferType.RETR, f);
-				}else {
-					focus.writeLine(550, "Failed to open file.");
-				}
+				focus.psv.setType(FTPTransferType.RETR, f);
 			}
 		});
 		commands.add(new FTPCommand("size", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
-				File f = new File(rt, line);
-				f = SafeMode.resolveLinks(f);
-				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
-					focus.writeLine(550, "Failed to open file.");
-					return;
-				}
+				File f = chroot(focus.root, focus.cwd, line);
 				int uid = host.provider.getUID(focus.user);
-				if (f.exists() && !SafeMode.canUserRead(uid, uid, f.getAbsolutePath())) {
-					focus.writeLine(550, "Permission Denied.");
-					return;
-				}
-				if (f.isDirectory()) {
+				int gid = host.provider.getGID(focus.user);
+				if (!checkPerms(uid, gid, f, true, false, true, false, false, true, false)) {
 					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
-				if (f.exists() && f.canRead()) {
-					focus.writeLine(213, "" + f.length());
-				}else {
-					focus.writeLine(550, "Failed to open file.");
-				}
+				focus.writeLine(213, "" + f.length());
 			}
 		});
 		commands.add(new FTPCommand("dele", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
-				File f = new File(rt, line);
-				f = SafeMode.resolveLinks(f);
-				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
-					focus.writeLine(550, "Delete operation failed.");
-					return;
-				}
+				File f = chroot(focus.root, focus.cwd, line);
 				int uid = host.provider.getUID(focus.user);
-				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
-					focus.writeLine(550, "Permission Denied.");
+				int gid = host.provider.getGID(focus.user);
+				if (!checkPerms(uid, gid, f, true, false, false, true, false, true, false)) {
+					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
-				if (f.isDirectory()) {
-					focus.writeLine(550, "Delete operation failed.");
-					return;
-				}
-				if (f.exists() && f.canWrite()) {
-					f.delete();
-					focus.writeLine(250, "Delete operation successful.");
-				}else {
-					focus.writeLine(550, "Delete operation failed.");
-				}
+				f.delete();
+				focus.writeLine(250, "Delete operation successful.");
 			}
 		});
 		commands.add(new FTPCommand("rnfr", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
-				File f = new File(rt, line);
-				f = SafeMode.resolveLinks(f);
-				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
-					focus.writeLine(550, "Rename failed.");
-					return;
-				}
+				File f = chroot(focus.root, focus.cwd, line);
 				int uid = host.provider.getUID(focus.user);
-				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
-					focus.writeLine(550, "Permission Denied.");
+				int gid = host.provider.getGID(focus.user);
+				if (!checkPerms(uid, gid, f, false, false, true, true, false, true, false)) {
+					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
-				if (f.exists() && f.canWrite()) {
-					focus.rnfr = f.getAbsolutePath();
-					focus.writeLine(350, "Ready for RNTO.");
-				}else {
-					focus.writeLine(550, "Rename failed.");
-				}
+				focus.rnfr = f;
+				focus.writeLine(350, "Ready for RNTO.");
 			}
 		});
 		commands.add(new FTPCommand("rnto", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				if (focus.rnfr.length() == 0) {
+				if (focus.rnfr == null) {
 					focus.writeLine(503, "RNFR required first.");
 					return;
 				}
-				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
-				File f = new File(rt, line);
-				f = SafeMode.resolveLinks(f);
-				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
-					focus.writeLine(550, "Rename failed.");
-					return;
-				}
+				File f = chroot(focus.root, focus.cwd, line);
 				int uid = host.provider.getUID(focus.user);
-				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
-					focus.writeLine(550, "Permission Denied.");
+				int gid = host.provider.getGID(focus.user);
+				if (!checkPerms(uid, gid, f, focus.rnfr.isFile(), focus.rnfr.isDirectory(), false, true, false, false, true)) {
+					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
 				if (!f.exists()) {
-					f.createNewFile();
+					if (focus.rnfr.isDirectory()) {
+						f.mkdirs();
+					}else {
+						f.createNewFile();
+					}
 					SafeMode.setPerms(f, uid, uid, 0640);
 				}
 				try {
@@ -540,7 +475,8 @@ public class FTPHandler {
 					in.close();
 					out.flush();
 					out.close();
-					new File(focus.rnfr).delete();
+					focus.rnfr.delete();
+					focus.rnfr = null;
 					focus.writeLine(250, "Rename successful.");
 				}catch (IOException e) {
 					focus.writeLine(550, "Rename failed.");
@@ -572,39 +508,23 @@ public class FTPHandler {
 		});
 		commands.add(new FTPCommand("mdtm", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
-				File f = new File(rt, line);
-				f = SafeMode.resolveLinks(f);
-				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
-					focus.writeLine(550, "Could not get file modification time.");
-					return;
-				}
+				File f = chroot(focus.root, focus.cwd, line);
 				int uid = host.provider.getUID(focus.user);
-				if ((f.exists() && !SafeMode.canUserRead(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserRead(uid, uid, pf.getAbsolutePath()))) {
-					focus.writeLine(550, "Permission Denied.");
+				int gid = host.provider.getGID(focus.user);
+				if (!checkPerms(uid, gid, f, false, false, true, false, false, true, false)) {
+					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
-				if (f.exists() && f.canRead()) {
-					focus.writeLine(213, mdtm.format(f.lastModified()));
-				}else {
-					focus.writeLine(550, "Could not get file modification time.");
-				}
+				focus.writeLine(213, mdtm.format(f.lastModified()));
 			}
 		});
 		commands.add(new FTPCommand("mkd", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
-				File f = new File(rt, line);
-				f = SafeMode.resolveLinks(f);
-				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
-					focus.writeLine(550, "Create directory operation failed.");
-					return;
-				}
+				File f = chroot(focus.root, focus.cwd, line);
 				int uid = host.provider.getUID(focus.user);
-				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
-					focus.writeLine(550, "Permission Denied.");
+				int gid = host.provider.getGID(focus.user);
+				if (!checkPerms(uid, gid, f, false, true, false, true, true, false, true)) {
+					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
 				if (f.isFile()) f = f.getParentFile();
@@ -619,17 +539,11 @@ public class FTPHandler {
 		});
 		commands.add(new FTPCommand("rmd", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				File rt = isAbsolute(line) ? new File(focus.root) : new File(focus.root, focus.cwd);
-				File f = new File(rt, line);
-				f = SafeMode.resolveLinks(f);
-				File pf = f.getParentFile();
-				if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
-					focus.writeLine(550, "Remove directory operation failed.");
-					return;
-				}
+				File f = chroot(focus.root, focus.cwd, line);
 				int uid = host.provider.getUID(focus.user);
-				if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
-					focus.writeLine(550, "Permission Denied.");
+				int gid = host.provider.getGID(focus.user);
+				if (!checkPerms(uid, gid, f, false, true, false, true, true, true, false)) {
+					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
 				if (f.isFile()) f = f.getParentFile();
@@ -676,20 +590,18 @@ public class FTPHandler {
 						return;
 					}
 					String file = args[2];
-					File rt = isAbsolute(file) ? new File(focus.root) : new File(focus.root, focus.cwd);
-					File f = new File(rt, file);
-					f = SafeMode.resolveLinks(f);
-					File pf = f.getParentFile();
-					if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
-						focus.writeLine(550, "Rename failed.");
-						return;
-					}
+					File f = chroot(focus.root, focus.cwd, file);
 					int uid = host.provider.getUID(focus.user);
-					if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
-						focus.writeLine(550, "Permission Denied.");
+					int gid = host.provider.getGID(focus.user);
+					if (!checkPerms(uid, gid, f, false, false, false, true, false, true, false)) {
+						focus.writeLine(550, "Failed to open file.");
 						return;
 					}
-					
+					if (CLib.chmod(f.getAbsolutePath(), chmod) == 0) {
+						focus.writeLine(200, "Chmod successful.");
+					}else {
+						focus.writeLine(550, "System error when attempted to chmod.");
+					}
 				}
 				focus.writeLine(500, "Unknown SITE command.");
 			}
@@ -721,21 +633,17 @@ public class FTPHandler {
 		});
 	}
 	
-	public static boolean isAbsolute(String line) {
-		return line.startsWith("/");
-	}
-	
-	public static String chroot(String root, String abs) {
-		if (!abs.startsWith(root)) {
+	public static String chroot(File root, File f) {
+		String rabs = root.getAbsolutePath();
+		String abs = f.getAbsolutePath();
+		if (!abs.startsWith(rabs)) {
 			return null;
 		}
-		String nabs = abs.substring(root.length());
+		String nabs = abs.substring(rabs.length());
 		if (AvunaHTTPD.windows) {
 			nabs = nabs.replace("\\", "/");
-			if (!nabs.startsWith("/")) nabs = "/" + nabs;
-		}else {
-			if (!nabs.startsWith("/")) nabs = "/" + nabs;
 		}
+		if (!nabs.startsWith("/")) nabs = "/" + nabs;
 		return nabs;
 	}
 }

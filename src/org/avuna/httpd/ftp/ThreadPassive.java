@@ -1,17 +1,4 @@
-/*
- * Avuna HTTPD - General Server Applications
- * Copyright (C) 2015 Maxwell Bruce
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.ftp;
 
@@ -77,10 +64,10 @@ public class ThreadPassive extends Thread {
 			if (serv instanceof ServerSocket) {
 				do {
 					if (s != null) s.close();
-					s = ((ServerSocket)serv).accept();
+					s = ((ServerSocket) serv).accept();
 				}while (!s.getInetAddress().getHostAddress().equals(work.s.getInetAddress().getHostAddress()));
 			}else {
-				s = new Socket((String)serv, ep);
+				s = new Socket((String) serv, ep);
 			}
 			DataOutputStream out = new DataOutputStream(s.getOutputStream());
 			out.flush();
@@ -88,7 +75,7 @@ public class ThreadPassive extends Thread {
 			try {
 				hold = true;
 				if (ftt == FTPTransferType.STOR || ftt == FTPTransferType.STOU || ftt == FTPTransferType.APPE) {
-					work.writeLine(150, (ftt == FTPTransferType.STOU ? "FILE: " + FTPHandler.chroot(work.root, f.getAbsolutePath()) : "Ok to send data."));
+					work.writeLine(150, (ftt == FTPTransferType.STOU ? "FILE: " + FTPHandler.chroot(work.root, f) : "Ok to send data."));
 					FileOutputStream fout = new FileOutputStream(f, ftt == FTPTransferType.APPE);
 					while (!s.isClosed()) {
 						try {
@@ -178,7 +165,7 @@ public class ThreadPassive extends Thread {
 			}
 			try {
 				if (serv instanceof ServerSocket) {
-					((ServerSocket)serv).close();
+					((ServerSocket) serv).close();
 				}
 			}catch (IOException e) {
 				Logger.logError(e);
