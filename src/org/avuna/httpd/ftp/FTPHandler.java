@@ -584,7 +584,7 @@ public class FTPHandler {
 					}
 					int chmod = -1;
 					try {
-						chmod = Integer.parseInt(args[1]);
+						chmod = Integer.parseInt(args[1], 8);
 					}catch (NumberFormatException e) {
 						focus.writeLine(500, "Bad chmod.");
 						return;
