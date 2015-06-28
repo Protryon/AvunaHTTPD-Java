@@ -1,17 +1,4 @@
-/*
- * Avuna HTTPD - General Server Applications
- * Copyright (C) 2015 Maxwell Bruce
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.ftp;
 
@@ -25,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Random;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostFTP;
+import org.avuna.httpd.mail.util.StringFormatter;
 import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.SafeMode;
 
@@ -665,8 +653,44 @@ public class FTPHandler {
 		});
 		commands.add(new FTPCommand("site", 1, 100) {
 			public void run(FTPWork focus, String line) throws IOException {
-				// String[] args = line.split(" ");
-				
+				String[] args = line.split(" ");
+				args = StringFormatter.congealBySurroundings(args, "\"", "\"");
+				if (args.length == 0) {
+					focus.writeLine(500, "Unknown SITE command.");
+					return;
+				}
+				if (args[0].equalsIgnoreCase("CHMOD")) {
+					if (AvunaHTTPD.windows) {
+						focus.writeLine(500, "Underlying system is Windows.");
+						return;
+					}
+					if (args.length != 3) {
+						focus.writeLine(500, "Unknown SITE command.");
+						return;
+					}
+					int chmod = -1;
+					try {
+						chmod = Integer.parseInt(args[1]);
+					}catch (NumberFormatException e) {
+						focus.writeLine(500, "Bad chmod.");
+						return;
+					}
+					String file = args[2];
+					File rt = isAbsolute(file) ? new File(focus.root) : new File(focus.root, focus.cwd);
+					File f = new File(rt, file);
+					f = SafeMode.resolveLinks(f);
+					File pf = f.getParentFile();
+					if (!f.getAbsolutePath().startsWith(focus.root) || pf == null || !pf.exists() || SafeMode.isHardlink(f)) {
+						focus.writeLine(550, "Rename failed.");
+						return;
+					}
+					int uid = host.provider.getUID(focus.user);
+					if ((f.exists() && !SafeMode.canUserWrite(uid, uid, f.getAbsolutePath())) || (!f.exists() && !SafeMode.canUserWrite(uid, uid, pf.getAbsolutePath()))) {
+						focus.writeLine(550, "Permission Denied.");
+						return;
+					}
+					
+				}
 				focus.writeLine(500, "Unknown SITE command.");
 			}
 		});
