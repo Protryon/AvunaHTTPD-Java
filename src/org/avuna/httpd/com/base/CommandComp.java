@@ -114,6 +114,15 @@ public class CommandComp extends Command {
 		}
 	}
 	
+	/**
+	 * Reads files in source ending in .xjsp and substitutes text between
+	 * <%= and %> tags to valid java.
+	 * 
+	 * @param file java style file embedded with xjsp tags
+	 * @return xjsp File converted to java
+	 * @throws Exception
+	 */
+	
 	private static File convertXJSP(File file) throws Exception {
 		String outPath = file.getParent() + File.separator + file.getName().substring(0, file.getName().lastIndexOf(".")) + ".java";
 		String xjspString = "";
@@ -140,6 +149,15 @@ public class CommandComp extends Command {
 		Files.write(Paths.get(outPath), outWrite.getBytes());
 		return new File(outPath);
 	}
+	
+	/**
+	 * Takes a single or multiple line set and writes a java {@link java.io.PrintWriter#println(String)}
+	 * statement for each line. 
+	 * 
+	 * @param bit string containing contents of html in single or multiple lines.
+	 * @return string containing formatted output
+	 * @throws IOException
+	 */
 	
 	private static String buildLine (String bit) throws IOException {
 		BufferedReader bitReader = new BufferedReader(new StringReader(bit));
