@@ -147,8 +147,7 @@ public class CommandComp extends Command {
 		StringBuilder outBit = new StringBuilder();
 		String bitLine = "";
 		while ((bitLine  = bitReader.readLine()) != null) {
-			String bitLineTrim = bitLine.trim();
-			outBit.append("out.println(\"" + bitLineTrim + "\");\n");
+			outBit.append("out.println(\"" + bitLine.trim() + "\");\n");
 		}
 		return outBit.toString();
 	}
