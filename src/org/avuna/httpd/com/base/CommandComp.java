@@ -166,7 +166,7 @@ public class CommandComp extends Command {
 		while ((bitLine  = bitReader.readLine()) != null) {
 			String bitLineTrim = bitLine.trim();
 			String prefix = "out.println(\"";
-			String suffix = "\");\n";
+			String suffix = "\");" + System.lineSeparator();
 			outBit.append(prefix + bitLineTrim.replaceAll("(?=[]\\[+&|!(){}^\"~*?:\\\\-])", "\\\\\\\\") + suffix);
 		}
 		return outBit.toString();
