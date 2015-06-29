@@ -132,7 +132,6 @@ public class CommandComp extends Command {
 		Matcher m1 = p1.matcher(xjspString);
 		StringBuffer sb1 = new StringBuffer();
 		while (m1.find()) {
-			System.out.println(m1.group(0));
 			String htmlBit = m1.group(1);
 			String htmlLine = buildLine(htmlBit);
 			m1.appendReplacement(sb1, htmlLine);
