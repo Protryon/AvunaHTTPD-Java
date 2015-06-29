@@ -115,13 +115,12 @@ public class CommandComp extends Command {
 	}
 	
 	private static File convertXJSP(File file) throws Exception {
-		File inFile = file;
 		String outPath = file.getParent() + File.separator + file.getName().substring(0, file.getName().lastIndexOf(".")) + ".java";
 		String xjspString = "";
 		String outWrite = "";
 
 		try {
-			byte[] encoded = Files.readAllBytes(Paths.get(inFile.getAbsolutePath()));
+			byte[] encoded = Files.readAllBytes(Paths.get(file.getAbsolutePath()));
 			String fileAsString = new String(encoded, "UTF8");
 			xjspString = fileAsString;
 			}
