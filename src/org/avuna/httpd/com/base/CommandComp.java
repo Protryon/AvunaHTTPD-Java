@@ -16,9 +16,17 @@
 
 package org.avuna.httpd.com.base;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.IOException;
+import java.io.StringReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.com.Command;
 import org.avuna.httpd.com.CommandContext;
@@ -92,14 +100,58 @@ public class CommandComp extends Command {
 		return 0;
 	}
 	
-	private static void recurForComp(ArrayList<String> cfs, File base) {
+	private static void recurForComp(ArrayList<String> cfs, File base) throws Exception {
 		for (File f : base.listFiles()) {
 			if (f.isDirectory()) {
 				recurForComp(cfs, f);
 			}else {
+				String fileName = f.getName();
+				if (fileName.substring(fileName.lastIndexOf(".")).equals(".xjsp")) {
+					f = convertXJSP(f);
+				}
 				cfs.add(f.getAbsolutePath());
 			}
 		}
+	}
+	
+	private static File convertXJSP(File file) throws Exception {
+		File inFile = file;
+		String outPath = file.getParent() + File.separator + file.getName().substring(0, file.getName().lastIndexOf(".")) + ".java";
+		String xjspString = "";
+		String outWrite = "";
+
+		try {
+			byte[] encoded = Files.readAllBytes(Paths.get(inFile.getAbsolutePath()));
+			String fileAsString = new String(encoded, "UTF8");
+			xjspString = fileAsString;
+			}
+		catch(IOException e) {
+			Logger.log("Error reading file '" + file + "'");
+		}
+		Pattern p1 = Pattern.compile("(?s)<%=\\s+(.*?)\\s+%>");
+		Matcher m1 = p1.matcher(xjspString);
+		StringBuffer sb1 = new StringBuffer();
+		while (m1.find()) {
+			System.out.println(m1.group(0));
+			String htmlBit = m1.group(1);
+			String htmlLine = buildLine(htmlBit);
+			m1.appendReplacement(sb1, htmlLine);
+		}
+		m1.appendTail(sb1);
+		outWrite = sb1.toString();
+		Files.write(Paths.get(outPath), outWrite.getBytes());
+		return new File(outPath);
+	}
+	
+	private static String buildLine (String bit) throws IOException {
+		BufferedReader bitReader = new BufferedReader(new StringReader(bit));
+		StringBuilder outBit = new StringBuilder();
+		String bitLine = "";
+		while ((bitLine  = bitReader.readLine()) != null) {
+			String bitLineTrim = bitLine.trim();
+			outBit.append("out.println(\"" + bitLineTrim + "\");\n");
+		}
+		return outBit.toString();
 	}
 	
 	@Override
