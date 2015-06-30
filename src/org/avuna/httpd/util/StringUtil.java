@@ -90,7 +90,6 @@ public abstract class StringUtil {
 				ml = 0;
 			}
 			output[mi++] = input[i];
-			// strncat(output, &input[i], 1);
 		}
 		return output;
 	}
