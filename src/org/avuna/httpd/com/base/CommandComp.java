@@ -208,7 +208,7 @@ public class CommandComp extends Command {
 		return result.toString();
 	}
 	
-	private static final Pattern generate = Pattern.compile("(?s)(\\s*)public boolean generate\\([a-zA-Z.]*?HTMLBuilder ([a-zA-Z0-9_]+?),\\s?[a-zA-Z.]*?ResponsePacket ([a-zA-Z0-9_]+?),\\s?[a-zA-Z.]*?RequestPacket ([a-zA-Z0-9_]+?)\\)\\s*\\{");
+	private static final Pattern generate = Pattern.compile("(?s)(\\s*)public.*?boolean generate\\([a-zA-Z.]*?HTMLBuilder ([a-zA-Z0-9_]+?),\\s?[a-zA-Z.]*?ResponsePacket ([a-zA-Z0-9_]+?),\\s?[a-zA-Z.]*?RequestPacket ([a-zA-Z0-9_]+?)\\)\\s*\\{");
 	private static final Pattern fcomment = Pattern.compile("(?s)\\/\\*%.*\\*\\/");
 	private static final HashMap<String, Pattern> hbns = new HashMap<String, Pattern>();
 	
@@ -245,18 +245,59 @@ public class CommandComp extends Command {
 			if (gen.contains("out.containsKey(\"inst\")")) {
 				System.out.print("");
 			}
-			// TODO: fcomment
 			int lm = 0;
 			boolean inq = false;
+			boolean block = false;
+			boolean hblock = false;
+			int sbi = -1;
 			for (int i = 0; i < gen.length(); i++) {
 				char c = gen.charAt(i);
-				if (!inq && i > 0 && gen.charAt(i - 1) == '/' && c == '/') {
-					int eol = gen.indexOf('\n', i);
-					String ngen = gen.substring(0, i - 1);
-					ngen += gen.substring(eol + 1);
-					// i = eol + 1;
-					gen = ngen;
-				}else if (c == '\"') {
+				if (!inq && i > 0) {
+					char pc = gen.charAt(i - 1);
+					if (!block && pc == '/') {
+						if (c == '/') {
+							int eol = gen.indexOf('\n', i);
+							String ngen = gen.substring(0, i - 1);
+							ngen += gen.substring(eol + 1);
+							gen = ngen;
+						}else if (c == '*') {
+							sbi = i - 1;
+							block = true;
+							if (i < gen.length()) {
+								char nc = gen.charAt(i + 1);
+								if (nc == '%') {
+									hblock = true;
+								}
+							}
+						}
+					}else if (pc == '*') {
+						if (c == '/' && block) {
+							String ngen = gen.substring(0, sbi);
+							if (hblock) {
+								String html = gen.substring(sbi + 3, i - 1);
+								html = html.trim();
+								html = html.replace("\\", "\\\\");
+								html = html.replace("\"", "\\\"");
+								html = html.replace("\r", "");
+								String[] hl = html.split("\n");
+								html = "";
+								for (String hls : hl) {
+									hls = hls.trim();
+									if (hls.startsWith("*")) hls = hls.substring(1);
+									hls = hls.trim();
+									html += hls + "\\r\\n";
+								}
+								ngen += hbn + ".print(\"" + html + "\");";
+								hblock = false;
+							}
+							ngen += gen.substring(i + 1);
+							gen = ngen;
+							i = sbi;
+							block = false;
+						}
+					}
+				}
+				if (!block && c == '\"') {
 					if (i > 0 && gen.charAt(i - 1) != '\\') {
 						inq = !inq;
 					}
