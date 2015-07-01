@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.dns.Type;
+import org.avuna.httpd.mail.util.StringFormatter;
 import org.avuna.httpd.util.Logger;
 
 public class ZoneFile {
@@ -62,39 +63,6 @@ public class ZoneFile {
 		this.f = null;
 	}
 	
-	public static String[] congealArgsEscape(String[] args) {
-		String[] tcargs = new String[args.length];
-		int nl = 0;
-		boolean iq = false;
-		String tmp = "";
-		for (int i = 0; i < args.length; i++) {
-			boolean niq = false;
-			String ct = args[i].trim();
-			if (!iq && ct.startsWith("\"")) {
-				iq = true;
-				niq = true;
-			}
-			if (iq) {
-				tmp += (niq ? ct.substring(1) : ct) + " ";
-			}else {
-				tcargs[nl++] = ct;
-			}
-			if ((!niq || ct.length() > 3) && iq && ct.endsWith("\"") && (ct.length() < 2 || ct.charAt(ct.length() - 2) != '\\')) {
-				iq = false;
-				String n = tmp.trim();
-				if (n.endsWith("\"")) n = n.substring(0, n.length() - 1);
-				tcargs[nl++] = n;
-				tmp = "";
-			}
-		}
-		String[] ret = new String[nl];
-		System.arraycopy(tcargs, 0, ret, 0, nl);
-		for (int i = 0; i < ret.length; i++) {
-			ret[i] = ret[i].replace("\\\"", "\"").replace("\\\\", "\\");
-		}
-		return ret;
-	}
-	
 	private static void subload(File f, ArrayList<IDirective> dirs) throws IOException {
 		int ln = 0;
 		Scanner s = new Scanner(f);
@@ -108,7 +76,7 @@ public class ZoneFile {
 			line = line.substring(com.length()).trim();
 			String[] args = line.split(" ");
 			if (args.length > 0) {
-				args = congealArgsEscape(args);
+				args = StringFormatter.congealArgsEscape(args);
 			}
 			if (com.equals("import")) {
 				if (args.length != 1) {

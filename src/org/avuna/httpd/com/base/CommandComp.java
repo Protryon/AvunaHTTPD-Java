@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -207,8 +208,120 @@ public class CommandComp extends Command {
 		return result.toString();
 	}
 	
+	private static final Pattern generate = Pattern.compile("(?s)(\\s*)public boolean generate\\([a-zA-Z.]*?HTMLBuilder ([a-zA-Z0-9_]+?),\\s?[a-zA-Z.]*?ResponsePacket ([a-zA-Z0-9_]+?),\\s?[a-zA-Z.]*?RequestPacket ([a-zA-Z0-9_]+?)\\)\\s*\\{");
+	private static final Pattern fcomment = Pattern.compile("(?s)\\/\\*%.*\\*\\/");
+	private static final HashMap<String, Pattern> hbns = new HashMap<String, Pattern>();
+	
 	private static String processJava(String java) {
-		return java;
+		StringBuilder result = new StringBuilder();
+		Matcher gm = generate.matcher(java);
+		int ss = 1024;
+		int begin = 0;
+		String hbn = "";
+		while (gm.find()) {
+			if (gm.group(1).length() < ss) {
+				ss = gm.group(1).length();
+				begin = gm.end();
+				hbn = gm.group(2);
+			}
+		}
+		if (hbn.length() > 0) {
+			int end = java.length();
+			int cbc = 0;
+			for (int i = begin; i < java.length(); i++) {// TODO" {} in ""
+				char c = java.charAt(i);
+				if (c == '{') {
+					cbc++;
+				}else if (c == '}') {
+					if (cbc == 0) {
+						end = i;
+						break;
+					}
+					cbc--;
+				}
+			}
+			result.append(java.substring(0, begin));
+			String gen = java.substring(begin, end);
+			if (gen.contains("out.containsKey(\"inst\")")) {
+				System.out.print("");
+			}
+			// TODO: fcomment
+			int lm = 0;
+			boolean inq = false;
+			for (int i = 0; i < gen.length(); i++) {
+				char c = gen.charAt(i);
+				if (!inq && i > 0 && gen.charAt(i - 1) == '/' && c == '/') {
+					int eol = gen.indexOf('\n', i);
+					String ngen = gen.substring(0, i - 1);
+					ngen += gen.substring(eol + 1);
+					// i = eol + 1;
+					gen = ngen;
+				}else if (c == '\"') {
+					if (i > 0 && gen.charAt(i - 1) != '\\') {
+						inq = !inq;
+					}
+				}
+			}
+			// gen = gen.replaceAll("(?s)\\s*\\/\\*[^%].*\\*\\/", "");
+			Pattern lp = null;
+			if (hbns.containsKey(hbn)) {
+				lp = hbns.get(hbn);
+			}else {
+				lp = Pattern.compile("(?s)((?:\\s*" + hbn + "\\.print(?:ln)?\\(\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\"\\);)++)");
+				hbns.put(hbn, lp);
+			}
+			Matcher gme = lp.matcher(gen);
+			int oend = 0;
+			while (gme.find()) {
+				int mstart = gme.start();
+				int mend = gme.end();
+				result.append(gen.substring(oend, mstart)).append(AvunaHTTPD.crlf);
+				String match = gme.group();
+				int olen = match.length();
+				match = match.replace("\r", "");
+				match = match.replace("\n", "");
+				olen = olen - match.length();
+				ArrayList<String> msl = new ArrayList<String>();
+				lm = 0;
+				inq = false;
+				for (int i = 0; i < match.length(); i++) {
+					char c = match.charAt(i);
+					if (c == ';' || c == '{' || c == '}') {
+						if (!inq) {
+							msl.add(match.substring(lm, i));
+							lm = i + 1;
+						}
+					}else if (c == '\"') {
+						if (i > 0 && match.charAt(i - 1) != '\\') {
+							inq = !inq;
+						}
+					}
+				}
+				String[] ms = msl.toArray(new String[0]);
+				result.append(" ").append(hbn).append(".print(\"");
+				for (String s : ms) {
+					String sss = s.trim();
+					if (sss.startsWith(hbn + ".print")) {
+						sss = sss.substring(hbn.length() + 6);
+						boolean ln = false;
+						if (sss.startsWith("ln")) {
+							ln = true;
+							sss = sss.substring(2);
+						}
+						sss = sss.substring(2, sss.length() - 2);
+						result.append(sss);
+						if (ln) {
+							result.append("\\r\\n");
+						}
+					}
+				}
+				result.append("\");" + AvunaHTTPD.crlf);
+				oend = mend;
+			}
+			result.append(gen.substring(oend, gen.length()));
+			result.append(java.substring(end, java.length()));
+		}
+		return result.toString();
 	}
 	
 	private static void recurForComp(ArrayList<File> cfs, File base) throws Exception {
