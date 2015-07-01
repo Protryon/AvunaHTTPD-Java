@@ -209,7 +209,6 @@ public class CommandComp extends Command {
 	}
 	
 	private static final Pattern generate = Pattern.compile("(?s)(\\s*)public.*?boolean generate\\([a-zA-Z.]*?HTMLBuilder ([a-zA-Z0-9_]+?),\\s?[a-zA-Z.]*?ResponsePacket ([a-zA-Z0-9_]+?),\\s?[a-zA-Z.]*?RequestPacket ([a-zA-Z0-9_]+?)\\)\\s*\\{");
-	private static final Pattern fcomment = Pattern.compile("(?s)\\/\\*%.*\\*\\/");
 	private static final HashMap<String, Pattern> hbns = new HashMap<String, Pattern>();
 	
 	private static String processJava(String java) {
@@ -242,9 +241,6 @@ public class CommandComp extends Command {
 			}
 			result.append(java.substring(0, begin));
 			String gen = java.substring(begin, end);
-			if (gen.contains("out.containsKey(\"inst\")")) {
-				System.out.print("");
-			}
 			int lm = 0;
 			boolean inq = false;
 			boolean block = false;
@@ -303,21 +299,33 @@ public class CommandComp extends Command {
 					}
 				}
 			}
-			// gen = gen.replaceAll("(?s)\\s*\\/\\*[^%].*\\*\\/", "");
 			Pattern lp = null;
 			if (hbns.containsKey(hbn)) {
 				lp = hbns.get(hbn);
 			}else {
-				lp = Pattern.compile("(?s)((?:\\s*" + hbn + "\\.print(?:ln)?\\(\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\"\\);)++)");
+				lp = Pattern.compile("(?s)((?:\\s*" + hbn + "\\.print(?:ln)?\\((?:\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\"|\".*?|.*?\"|[^\"]?)\\);)++)");
 				hbns.put(hbn, lp);
 			}
 			Matcher gme = lp.matcher(gen);
 			int oend = 0;
 			while (gme.find()) {
 				int mstart = gme.start();
+				int is = mstart;
+				boolean b1 = false;
+				while (is >= 0) {
+					char c = gen.charAt(is);
+					if (c == ' ' || c == '\t') {
+						
+					}else if (c == ')') {
+						b1 = true;
+						break;
+					}else {
+						break;
+					}
+					is--;
+				}
 				int mend = gme.end();
-				result.append(gen.substring(oend, mstart)).append(AvunaHTTPD.crlf);
-				String match = gme.group();
+				String match = gen.substring(mstart, mend);
 				int olen = match.length();
 				match = match.replace("\r", "");
 				match = match.replace("\n", "");
@@ -339,7 +347,14 @@ public class CommandComp extends Command {
 					}
 				}
 				String[] ms = msl.toArray(new String[0]);
-				result.append(" ").append(hbn).append(".print(\"");
+				if (b1 && ms.length > 0) {
+					mstart = mstart + ms[0].length() + 1;
+					ms[0] = "";
+				}
+				result.append(gen.substring(oend, mstart)).append(AvunaHTTPD.crlf);
+				result.append(" ").append(hbn).append(".print(");
+				String[] ps = new String[ms.length];
+				int psi = 0;
 				for (String s : ms) {
 					String sss = s.trim();
 					if (sss.startsWith(hbn + ".print")) {
@@ -349,14 +364,36 @@ public class CommandComp extends Command {
 							ln = true;
 							sss = sss.substring(2);
 						}
-						sss = sss.substring(2, sss.length() - 2);
-						result.append(sss);
+						sss = sss.substring(1, sss.length() - 1);
 						if (ln) {
-							result.append("\\r\\n");
+							if (sss.endsWith("\"")) {
+								sss = sss.substring(0, sss.length() - 1) + "\\r\\n\"";
+							}else {
+								sss = sss + " + \"\r\n\"";
+							}
 						}
+						ps[psi++] = sss;
 					}
 				}
-				result.append("\");" + AvunaHTTPD.crlf);
+				boolean leq = false;
+				for (int i = 0; i < psi; i++) {
+					if (i > 0) {
+						if (leq && ps[i].startsWith("\"")) {
+							ps[i] = ps[i].substring(1);
+							ps[i - 1] = ps[i - 1].substring(0, ps[i - 1].length() - 1);
+						}else {
+							ps[i] = " + " + ps[i];
+						}
+					}
+					leq = ps[i].endsWith("\"");
+				}
+				for (int i = 0; i < psi; i++) {
+					result.append(ps[i]);
+				}
+				if (psi == 0) {
+					result.append("\"\"");
+				}
+				result.append(");" + AvunaHTTPD.crlf);
 				oend = mend;
 			}
 			result.append(gen.substring(oend, gen.length()));
