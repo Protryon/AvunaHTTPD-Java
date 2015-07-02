@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -19,7 +21,6 @@ import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.VHost;
 import org.avuna.httpd.http.plugins.javaloader.PluginJavaLoader;
-import org.avuna.httpd.util.Logger;
 
 public class CommandComp extends Command {
 	
@@ -53,19 +54,11 @@ public class CommandComp extends Command {
 			return 3;
 		}
 		String sep = AvunaHTTPD.windows ? ";" : ":";
-		String us = null;
-		try {
-			String fp = AvunaHTTPD.class.getProtectionDomain().getCodeSource().getLocation().getPath();
-			us = fp;
-		}catch (Exception e) {
-			Logger.logError(e);
-			context.println("Critical error <Couldn't find us! Are we bound in memory?>!");
-			return -2;
+		String ocp = "";
+		for (URL url : ((URLClassLoader) ClassLoader.getSystemClassLoader()).getURLs()) {
+			ocp += url.toString() + sep;
 		}
-		if (us.equals("./")) {
-			us = new File("avuna.jar").getAbsolutePath();
-		}
-		String cp = new File(us).getAbsolutePath() + sep + host.getHTDocs().toString() + sep + host.getHTSrc().toString() + sep + PluginJavaLoader.lib.toString() + sep;
+		String cp = ocp + host.getHTDocs().toString() + sep + host.getHTSrc().toString() + sep + PluginJavaLoader.lib.toString() + sep;
 		for (File f : PluginJavaLoader.lib.listFiles()) {
 			if (!f.isDirectory() && f.getName().endsWith(".jar")) {
 				cp += f.toString() + sep;
