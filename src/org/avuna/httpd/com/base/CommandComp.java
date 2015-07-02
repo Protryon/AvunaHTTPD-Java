@@ -201,7 +201,7 @@ public class CommandComp extends Command {
 		return result.toString();
 	}
 	
-	private static final Pattern generate = Pattern.compile("(?s)(\\s*)public.*?boolean generate\\([a-zA-Z.]*?HTMLBuilder ([a-zA-Z0-9_]+?),\\s?[a-zA-Z.]*?ResponsePacket ([a-zA-Z0-9_]+?),\\s?[a-zA-Z.]*?RequestPacket ([a-zA-Z0-9_]+?)\\)\\s*\\{");
+	private static final Pattern generate = Pattern.compile("(?s)(\\s*)public.*?boolean generate\\([a-zA-Z. ]*?HTMLBuilder ([a-zA-Z0-9_]+?),\\s?[a-zA-Z. ]*?ResponsePacket ([a-zA-Z0-9_]+?),\\s?[a-zA-Z. ]*?RequestPacket ([a-zA-Z0-9_]+?)\\)\\s*\\{");
 	private static final HashMap<String, Pattern> hbns = new HashMap<String, Pattern>();
 	
 	private static String processJava(String java) {
@@ -296,18 +296,24 @@ public class CommandComp extends Command {
 			if (hbns.containsKey(hbn)) {
 				lp = hbns.get(hbn);
 			}else {
-				lp = Pattern.compile("(?s)((?:\\s*" + hbn + "\\.print(?:ln)?\\((?:\"[^\"\\\\]*(?:\\\\.[^\"\\\\]*)*\"|\".*?|.*?\"|[^\"]?)\\);)++)");
+				lp = Pattern.compile("(?s)(" + hbn + "\\.print(?:ln)?)");
 				hbns.put(hbn, lp);
 			}
 			Matcher gme = lp.matcher(gen);
-			int oend = 0;
+			ArrayList<int[]> sts = new ArrayList<int[]>();
 			while (gme.find()) {
-				int mstart = gme.start();
-				int is = mstart;
+				sts.add(new int[] { gme.start(), gme.end() });
+			}
+			int oend = 0;
+			int genk = -1, benk = -1;
+			for (int gmei = 0; gmei < sts.size(); gmei++) {
+				int[] gmes = sts.get(gmei);
+				int mstart = gmes[0];
+				int is = mstart - 1;
 				boolean b1 = false;
 				while (is >= 0) {
 					char c = gen.charAt(is);
-					if (c == ' ' || c == '\t') {
+					if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
 						
 					}else if (c == ')') {
 						b1 = true;
@@ -317,7 +323,62 @@ public class CommandComp extends Command {
 					}
 					is--;
 				}
-				int mend = gme.end();
+				int mend = gmes[1];
+				int pl = 0;
+				inq = false;
+				boolean lfsc = false;
+				while (mend <= gen.length()) {
+					char c = gen.charAt(mend);
+					if (!inq) {
+						if (c == '(') {
+							pl++;
+						}else if (c == ')') {
+							pl--;
+							if (pl == 0) {
+								lfsc = true;
+							}
+						}else if (c == ';' && lfsc) {
+							mend++;
+							break;
+						}
+					}
+					if (c == '\"') {
+						if (mend > 0 && gen.charAt(mend - 1) != '\\') {
+							inq = !inq;
+						}
+					}
+					mend++;
+				}
+				if (genk == -1) {
+					genk = mstart;
+					benk = mend;
+					continue;
+				}else {
+					boolean f = false;
+					for (int i = benk; i < mstart; i++) {
+						char c = gen.charAt(i);
+						if (!(c == ' ' || c == '\t' || c == '\r' || c == '\n')) {
+							f = true;
+							break;
+						}
+					}
+					if (gmei == sts.size() - 1) {
+						mstart = genk;
+						if (f) {
+							mend = benk;
+						}
+					}else if (f) {
+						int b = genk;
+						int c = benk;
+						genk = b1 ? mend : mstart;
+						benk = mend;
+						mstart = b;
+						mend = c;
+					}else {
+						benk = mend;
+						continue;
+					}
+				}
 				String match = gen.substring(mstart, mend);
 				int olen = match.length();
 				match = match.replace("\r", "");
@@ -362,7 +423,7 @@ public class CommandComp extends Command {
 							if (sss.endsWith("\"")) {
 								sss = sss.substring(0, sss.length() - 1) + "\\r\\n\"";
 							}else {
-								sss = sss + " + \"\r\n\"";
+								sss = sss + " + \"\\r\\n\"";
 							}
 						}
 						ps[psi++] = sss;
