@@ -29,7 +29,7 @@ public class UnixInputStream extends InputStream {
 				throw new SocketException("Connection reset by peer");
 			}else if (i == 32) {
 				throw new SocketException("Broken Pipe");
-			}else System.out.println(sockfd);
+			}else throw new CException(i, "read failed");
 		}
 		return sa[0] & 0xff;
 	}
