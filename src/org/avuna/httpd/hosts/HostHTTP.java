@@ -53,6 +53,8 @@ public class HostHTTP extends Host {
 		if (event instanceof EventReload) {
 			vhosts.clear();
 			formatConfig(getConfig());
+		}else {
+			super.receive(bus, event);
 		}
 	}
 	

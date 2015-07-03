@@ -332,53 +332,13 @@ public class AvunaHTTPD {
 					if (!windows && !map.containsNode("safeMode")) map.insertNode("safeMode", "true", "if true, automatically enforces file permissions. generally reccomended to prevent critical misconfiguration.");
 				}
 			});
+			if (!windows) CLib.umask(0007);
 			mainConfig.load();
-			if (unpack) {
+			if (unpack || windows || (!windows && CLib.getuid() == 0)) {
 				mainConfig.save();
 			}
 			unpack();
 			loadUnpacked();
-			if (!windows) CLib.umask(0007);// no anything for everyone
-			// {
-			// final UnixServerSocket uss = new UnixServerSocket("/tmp2.sock");
-			// uss.bind();
-			// new Thread() {
-			// public void run() {
-			// try {
-			// UnixSocket ss = uss.accept();
-			// DataOutputStream out = new DataOutputStream(ss.getOutputStream());
-			// out.flush();
-			// DataInputStream in = new DataInputStream(ss.getInputStream());
-			// out.write(10);
-			// out.write(10);
-			// out.write(10);
-			// out.flush();
-			// System.out.println(in.available());
-			// System.out.println(in.read());
-			// System.out.println(in.read());
-			// System.out.println(in.read());
-			// ss.close();
-			// }catch (IOException e) {
-			// e.printStackTrace();
-			// }
-			// }
-			// }.start();
-			// long start = System.nanoTime();
-			// UnixSocket cs = new UnixSocket("/tmp2.sock");
-			// DataOutputStream out = new DataOutputStream(cs.getOutputStream());
-			// out.flush();
-			// DataInputStream in = new DataInputStream(cs.getInputStream());
-			// System.out.println(in.read());
-			// System.out.println(in.read());
-			// System.out.println(in.read());
-			// out.write(10);
-			// out.write(10);
-			// out.write(10);
-			// out.flush();
-			// cs.close();
-			// uss.close();
-			// if (true) return;
-			// }
 			if (doucmd) {
 				ComClient.runUnix(args[1]);
 				return;
