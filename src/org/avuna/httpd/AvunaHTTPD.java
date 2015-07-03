@@ -149,8 +149,7 @@ public class AvunaHTTPD {
 	
 	/** Checks file names in String array, creates mime.txt from unpack dir if it exists.
 	 * 
-	 * @throws IOException
-	 *             if no files end in .so or .dll */
+	 * @throws IOException if no files end in .so or .dll */
 	public static void unpack() {
 		try {
 			setupScripts();
@@ -265,8 +264,7 @@ public class AvunaHTTPD {
 	 * <p>
 	 * Start command line processor {@link Scanner#hasNextLine()}, {@link Scanner#nextLine()}, {@link CommandRegistry#processCommand(String, CommandContext)}
 	 * 
-	 * @param args
-	 *            string array arguments to run Avuna */
+	 * @param args string array arguments to run Avuna */
 	public static void main(String[] args) {
 		try {
 			boolean dosetid = false;
@@ -425,6 +423,7 @@ public class AvunaHTTPD {
 			HostMail.unpack();
 			HostFTP.unpack();
 			hostsConfig = new Config("hosts", new File(mainConfig.getNode("hosts").getValue()), new ConfigFormat() {
+				boolean rf = false;
 				
 				@Override
 				public void format(ConfigNode map) {
@@ -440,7 +439,7 @@ public class AvunaHTTPD {
 					// map.put("dns", new LinkedHashMap<String, Object>());
 					// nd = true;
 					// }
-					for (String key : map.getSubnodes()) {
+					if (!rf) for (String key : map.getSubnodes()) {
 						ConfigNode host = map.getNode(key);
 						if (!host.containsNode("enabled")) host.insertNode("enabled", (nc && key.equals("com")) ? "false" : "true");
 						if (!host.containsNode("protocol")) host.insertNode("protocol", ((nd && key.equals("dns")) ? "dns" : ((nc && key.equals("com")) ? "com" : "http")), "set to http/httpm/com/dns/mail for respective servers, load avuna with these to have other config options autofill.");
@@ -461,6 +460,7 @@ public class AvunaHTTPD {
 							continue;
 						}
 					}
+					rf = true;
 				}
 				
 			});

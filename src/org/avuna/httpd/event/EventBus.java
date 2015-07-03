@@ -2,11 +2,7 @@
 
 package org.avuna.httpd.event;
 
-
 public class EventBus {
-	public EventBus() {
-		
-	}
 	
 	private IEventReceiver[][] recvs = new IEventReceiver[0][];
 	private int[][] priorities = new int[0][];

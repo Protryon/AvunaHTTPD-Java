@@ -23,7 +23,6 @@ import org.avuna.httpd.event.base.EventID;
 import org.avuna.httpd.event.base.EventPostInit;
 import org.avuna.httpd.event.base.EventPreExit;
 import org.avuna.httpd.event.base.EventReload;
-import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.VHost;
 import org.avuna.httpd.hosts.VHostM;
@@ -37,9 +36,7 @@ import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.plugins.base.PluginSecurity;
-import org.avuna.httpd.http.plugins.javaloader.lib.AssetLibrary;
 import org.avuna.httpd.http.plugins.javaloader.lib.DatabaseManager;
-import org.avuna.httpd.http.plugins.javaloader.lib.HTMLCache;
 import org.avuna.httpd.util.Config;
 import org.avuna.httpd.util.ConfigFormat;
 import org.avuna.httpd.util.ConfigNode;
@@ -110,10 +107,6 @@ public class PluginJavaLoader extends Plugin {
 		config.save();
 	}
 	
-	public void saveConfig() {
-		config.save();
-	}
-	
 	public void flushjl() {
 		try {
 			for (JavaLoaderSession jls : sessions) {
@@ -127,14 +120,11 @@ public class PluginJavaLoader extends Plugin {
 			PluginSecurity sec = ((PluginSecurity) registry.getPatchForClass(PluginSecurity.class));
 			boolean sece = sec.pcfg.getNode("enabled").getValue().equals("true");
 			if (sece) ((PluginSecurity) registry.getPatchForClass(PluginSecurity.class)).loadBases(this);
-			for (Host host : AvunaHTTPD.hosts.values()) {
-				if (!(host instanceof HostHTTP)) continue;
-				HostHTTP host2 = (HostHTTP) host;
-				for (VHost vhost : host2.getVHosts()) {
-					if (vhost.isChild() || vhost instanceof VHostM) continue;
-					vhost.initJLS(new URL[] { vhost.getHTDocs().toURI().toURL() });
-					recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
-				}
+			HostHTTP host2 = this.registry.host;
+			for (VHost vhost : host2.getVHosts()) {
+				if (vhost.isChild() || vhost instanceof VHostM) continue;
+				vhost.initJLS(new URL[] { vhost.getHTDocs().toURI().toURL() });
+				recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 			}
 			if (sece) {
 				recurLoad(null, AvunaHTTPD.fileManager.getPlugin(sec));
@@ -152,7 +142,6 @@ public class PluginJavaLoader extends Plugin {
 	protected static ArrayList<JavaLoaderSession> sessions = new ArrayList<JavaLoaderSession>();
 	
 	public void recurLoad(JavaLoaderSession session, File dir) {
-		
 		for (File f : dir.listFiles()) {
 			if (!AvunaHTTPD.windows) {
 				try {
@@ -353,10 +342,11 @@ public class PluginJavaLoader extends Plugin {
 			}
 		}else if (event instanceof EventReload) {
 			try {
-				HTMLCache.reloadAll();
-				AssetLibrary.reloadAll();// TODO: if we flushjl at all reloads, then this is usually unneeded?
+				// HTMLCache.reloadAll();
+				// AssetLibrary.reloadAll();// TODO: if we flushjl at all reloads, then this is usually unneeded?
 				config.load();
 				flushjl();
+				config.save();
 			}catch (IOException e) {
 				Logger.logError(e);
 			}
@@ -366,7 +356,6 @@ public class PluginJavaLoader extends Plugin {
 			}catch (SQLException e) {
 				Logger.logError(e);
 			}
-			config.save();
 			for (JavaLoader jl : security) {
 				jl.destroy();
 			}

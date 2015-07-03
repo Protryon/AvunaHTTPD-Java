@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.hosts;
 
@@ -26,10 +12,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
 import org.avuna.httpd.event.base.EventConnected;
 import org.avuna.httpd.event.base.EventPostInit;
 import org.avuna.httpd.event.base.EventPreExit;
+import org.avuna.httpd.event.base.EventReload;
 import org.avuna.httpd.event.base.EventSetupFolders;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
@@ -51,7 +39,6 @@ public class HostHTTP extends Host {
 	protected int mc;
 	public final PluginRegistry registry;
 	public final PluginBus patchBus;
-	public final EventBus eventBus;
 	private int maxPostSize = 65535;
 	
 	public void postload() throws IOException {
@@ -62,6 +49,13 @@ public class HostHTTP extends Host {
 		return maxPostSize;
 	}
 	
+	public void receive(EventBus bus, Event event) {
+		if (event instanceof EventReload) {
+			vhosts.clear();
+			formatConfig(getConfig());
+		}
+	}
+	
 	public void addVHost(VHost vhost) {
 		vhosts.add(vhost);
 	}
@@ -70,14 +64,12 @@ public class HostHTTP extends Host {
 		super(name, Protocol.HTTP);
 		this.registry = new PluginRegistry(this);
 		patchBus = new PluginBus(registry);
-		eventBus = new EventBus();
 	}
 	
 	protected HostHTTP(String name, Protocol protocol) {
 		super(name, protocol);
 		this.registry = new PluginRegistry(this);
 		patchBus = new PluginBus(registry);
-		eventBus = new EventBus();
 	}
 	
 	public void loadBases() {
@@ -196,7 +188,7 @@ public class HostHTTP extends Host {
 	
 	public void clearIPs(String ip) {
 		for (Object worko : workQueue.toArray()) {
-			Work work = (Work)worko;
+			Work work = (Work) worko;
 			if (work.s.getInetAddress().getHostAddress().equals(ip)) {
 				workQueue.remove(work);
 			}
@@ -254,8 +246,7 @@ public class HostHTTP extends Host {
 			if (reqs[i] == null) continue;
 			addWork(reqs[i]);
 		}
-		major:
-		while (true) {
+		major: while (true) {
 			for (ResponsePacket resp : resps) {
 				if (resp != null && !resp.done) {
 					try {
@@ -319,7 +310,7 @@ public class HostHTTP extends Host {
 					String ij = ourvh.getNode("inheritjls").getValue();
 					for (Host host : AvunaHTTPD.hosts.values()) {
 						if (host.name.equals(ij.substring(0, ij.indexOf("/")))) {
-							parent = ((HostHTTP)host).getVHostByName(ij.substring(ij.indexOf("/") + 1));
+							parent = ((HostHTTP) host).getVHostByName(ij.substring(ij.indexOf("/") + 1));
 						}
 					}
 					if (parent == null) {

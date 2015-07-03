@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.hosts;
 
@@ -33,19 +19,33 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.event.Event;
+import org.avuna.httpd.event.EventBus;
+import org.avuna.httpd.event.IEventReceiver;
+import org.avuna.httpd.event.base.EventID;
+import org.avuna.httpd.event.base.EventReload;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.unixsocket.UnixServerSocket;
 
-public abstract class Host extends Thread implements ITerminatable {
+public abstract class Host extends Thread implements ITerminatable, IEventReceiver {
 	protected final String name;
 	protected final Protocol protocol;
 	private boolean isStarted = false;
+	public final EventBus eventBus;
 	
 	public Host(String threadName, Protocol protocol) {
 		super(threadName + " Host");
 		this.name = threadName;
 		this.protocol = protocol;
+		eventBus = new EventBus();
+		eventBus.registerEvent(EventID.RELOAD, this, 0);
+	}
+	
+	public void receive(EventBus bus, Event event) {
+		if (event instanceof EventReload) {
+			formatConfig(getConfig());
+		}
 	}
 	
 	public void setupFolders() {
@@ -127,19 +127,17 @@ public abstract class Host extends Thread implements ITerminatable {
 			}
 			KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 			kmf.init(ks, keyPassword.toCharArray());
-			TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
-				public void checkClientTrusted(X509Certificate[] certs, String authType) {
-				}
+			TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+				public void checkClientTrusted(X509Certificate[] certs, String authType) {}
 				
-				public void checkServerTrusted(X509Certificate[] certs, String authType) {
-				}
+				public void checkServerTrusted(X509Certificate[] certs, String authType) {}
 				
 				public X509Certificate[] getAcceptedIssuers() {
 					return null;
 				}
-			}};
+			} };
 			SSLContext sc = null;
-			String[] possibleProtocols = new String[]{"TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1", "TLSv1.0"};
+			String[] possibleProtocols = new String[] { "TLSv1.3", "TLSv1.2", "TLSv1.1", "TLSv1", "TLSv1.0" };
 			for (int i = 0; i < possibleProtocols.length; i++) {
 				try {
 					sc = SSLContext.getInstance(possibleProtocols[i]);
@@ -216,7 +214,7 @@ public abstract class Host extends Thread implements ITerminatable {
 	}
 	
 	public int getPort() {
-		return Integer.parseInt((String)getConfig().getNode("port").getValue());
+		return Integer.parseInt((String) getConfig().getNode("port").getValue());
 	}
 	
 	public abstract void setup(ServerSocket s);
