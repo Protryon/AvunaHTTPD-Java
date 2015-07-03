@@ -1,14 +1,15 @@
-/*
- * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.com;
 
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.Scanner;
 
 public class CommandContext {
 	private String selectedHost = "main", selectedVHost = "main";
 	private PrintStream out = null;
+	private PrintWriter out2 = null;
 	private Scanner in = null;
 	private int[] status = new int[0];
 	private int[] cmdRan = new int[0];
@@ -31,11 +32,21 @@ public class CommandContext {
 	}
 	
 	public void println(String line) {
-		if (out != null) out.println(line);
+		if (out != null) {
+			out.println(line);
+		}else if (out2 != null) {
+			out2.println(line);
+		}
 	}
 	
 	protected CommandContext(CommandRegistry registry, PrintStream out, Scanner in) {
 		this.out = out;
+		this.in = in;
+		this.registry = registry;
+	}
+	
+	protected CommandContext(CommandRegistry registry, PrintWriter out, Scanner in) {
+		this.out2 = out;
 		this.in = in;
 		this.registry = registry;
 	}
@@ -64,8 +75,18 @@ public class CommandContext {
 		return in;
 	}
 	
+	public PrintWriter getOut2() {
+		return out2;
+	}
+	
 	public void setOut(PrintStream out) {
 		this.out = out;
+		this.out2 = null;
+	}
+	
+	public void setOut(PrintWriter out) {
+		this.out = null;
+		this.out2 = out;
 	}
 	
 	public void setIn(Scanner in) {
