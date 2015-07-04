@@ -332,8 +332,8 @@ public class AvunaHTTPD {
 					if (!windows && !map.containsNode("safeMode")) map.insertNode("safeMode", "true", "if true, automatically enforces file permissions. generally reccomended to prevent critical misconfiguration.");
 				}
 			});
-			if (!windows) CLib.umask(0007);
 			mainConfig.load();
+			if (!windows) CLib.umask(0007);
 			if (unpack || windows || (!windows && CLib.getuid() == 0)) {
 				mainConfig.save();
 			}
@@ -370,7 +370,6 @@ public class AvunaHTTPD {
 			if (!windows && CLib.getuid() == 0) {
 				System.out.println("[NOTIFY] Running as root, will load servers and attempt de-escalate, if configured.");
 			}
-			// CLib.umask(0077);
 			HostRegistry.addHost(Protocol.HTTP, HostHTTP.class);
 			HostRegistry.addHost(Protocol.HTTPM, HostHTTPM.class);
 			HostRegistry.addHost(Protocol.COM, HostCom.class);
