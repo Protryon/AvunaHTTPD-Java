@@ -91,6 +91,7 @@ public class PluginOverride extends Plugin {
 						break;
 					case mime:
 						if (rt.matches(d.args[1])) {
+							
 							request.overrideType = d.args[0];
 							break;
 						}

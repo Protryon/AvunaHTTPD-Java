@@ -41,8 +41,7 @@ public class FileManager {
 	
 	/** Converts a byte array to a string in hex format.
 	 * 
-	 * @param bytes
-	 *            a byte array
+	 * @param bytes a byte array
 	 * @return String in hex */
 	public String bytesToHex(byte[] bytes) {
 		char[] hexChars = new char[bytes.length * 2];
@@ -90,8 +89,7 @@ public class FileManager {
 	
 	/** Get plugin value if exists else create new plugin entry in plugins.
 	 * 
-	 * @param p
-	 *            plugin object
+	 * @param p plugin object
 	 * @see HashMap
 	 * @see Object#hashCode
 	 * @return plugin */
@@ -215,10 +213,8 @@ public class FileManager {
 	
 	/** Retrieve file system path to requested URL. If request is to directory, append index file path from host configuration. Set extra parameters to child of path.
 	 * 
-	 * @param reqTarget2
-	 *            request URL
-	 * @param request
-	 *            Incoming packet for host data
+	 * @param reqTarget2 request URL
+	 * @param request Incoming packet for host data
 	 * @see PluginOverride#processPacket(org.avuna.httpd.http.networking.Packet)
 	 * @return absolute file system path and parameter string (as child) */
 	public File getAbsolutePath(String reqTarget2, RequestPacket request) {
@@ -317,10 +313,8 @@ public class FileManager {
 	
 	/** Correct from Windows directory index characters to Unix style index for htdocs for incoming request.
 	 * 
-	 * @param reqTarget
-	 *            request URL
-	 * @param request
-	 *            Incoming packet
+	 * @param reqTarget request URL
+	 * @param request Incoming packet
 	 * @return htdocs absolute path in Unix format */
 	public String correctForIndex(String reqTarget, RequestPacket request) {
 		String p = getAbsolutePath(reqTarget, request).getAbsolutePath().replace("\\", "/");
@@ -337,10 +331,8 @@ public class FileManager {
 	
 	/** Instantiates an {@link OverrideConfig} from .override files in htdocs, adds it to to the {@link #cConfigCache} with path as key.
 	 * 
-	 * @param file
-	 *            name of override file
-	 * @param path
-	 *            path to override file
+	 * @param file name of override file
+	 * @param path path to override file
 	 * @return
 	 * @throws IOException */
 	public OverrideConfig loadDirective(File file, String path) throws IOException { // TODO: load superdirectory directives.
@@ -359,12 +351,9 @@ public class FileManager {
 	
 	/** Sets {@link Resource#effectiveOverride} from {@link #cConfigCache} or loads values from lowest child directory in host tree .override file if it exists.
 	 * 
-	 * @param request
-	 *            URL request
-	 * @param resource
-	 *            page content
-	 * @param htds
-	 *            the host document source path
+	 * @param request URL request
+	 * @param resource page content
+	 * @param htds the host document source path
 	 * @see Resource
 	 * @return resource with {@link Resource#effectiveOverride}
 	 * @throws IOException */
@@ -412,10 +401,8 @@ public class FileManager {
 	
 	/** Check incoming request against cache. If request is cached and not expired return cached resource. If cache has expired clear caches. Otherwise read htdocs file and build resource.
 	 * 
-	 * @param reqTarget
-	 *            URl request
-	 * @param request
-	 *            page content
+	 * @param reqTarget URl request
+	 * @param request page content
 	 * @see Resource
 	 * @see EventBus#callEvent
 	 * @see PluginChunked
@@ -492,6 +479,9 @@ public class FileManager {
 				if (abs != null && abs.exists()) {
 					ext = abs.getName().substring(abs.getName().lastIndexOf(".") + 1);
 					ext = AvunaHTTPD.extensionToMime.containsKey(ext) ? AvunaHTTPD.extensionToMime.get(ext) : "application/octet-stream";
+					if (request.overrideType != null) {
+						ext = request.overrideType;
+					}
 					FileInputStream fin = new FileInputStream(abs);
 					ByteArrayOutputStream bout = new ByteArrayOutputStream();
 					int i = 1;
