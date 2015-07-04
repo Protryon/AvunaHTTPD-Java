@@ -458,8 +458,8 @@ public class AvunaHTTPD {
 					}
 					break;
 				}
-				CLib.setuid(Integer.parseInt(mainConfig.getNode("uid").getValue()));
 				CLib.setgid(Integer.parseInt(mainConfig.getNode("gid").getValue()));
+				CLib.setuid(Integer.parseInt(mainConfig.getNode("uid").getValue()));
 				Logger.log("[NOTIFY] De-escalated to uid " + CLib.getuid());
 			}else if (!windows) {
 				Logger.log("[NOTIFY] We did NOT de-escalate, currently running as uid " + CLib.getuid());

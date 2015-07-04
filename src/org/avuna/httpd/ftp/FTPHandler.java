@@ -32,10 +32,10 @@ public class FTPHandler {
 		if (f.exists()) {
 			if (fileOnly && !f.isFile()) return false;
 			if (mustExist && dirOnly && !f.isDirectory()) return false;
+			if (read && !f.canRead()) return false;
+			if (write && !f.canWrite()) return false;
+			if (execute && !f.canExecute()) return false;
 		}
-		if (read && !f.canRead()) return false;
-		if (write && !f.canWrite()) return false;
-		if (execute && !f.canExecute()) return false;
 		if (mustExist || f.exists()) {
 			StatResult sr = new SafeMode.StatResult(f.getAbsolutePath());
 			if (read && !SafeMode.canUserRead(uid, gid, sr)) return false;
