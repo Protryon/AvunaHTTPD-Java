@@ -333,11 +333,12 @@ public class AvunaHTTPD {
 				}
 			});
 			mainConfig.load();
+			
+			unpack();
 			if (!windows) CLib.umask(0007);
 			if (unpack || windows || (!windows && CLib.getuid() == 0)) {
 				mainConfig.save();
 			}
-			unpack();
 			loadUnpacked();
 			if (doucmd) {
 				ComClient.runUnix(args[1]);
