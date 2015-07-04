@@ -29,8 +29,10 @@ public class FTPHandler {
 		if (AvunaHTTPD.windows) return true;
 		if (uid < 0 || gid < 0) return false;
 		if (mustExist && !f.exists()) return false;
-		if (fileOnly && !f.isFile()) return false;
-		if (dirOnly && !f.isDirectory()) return false;
+		if (f.exists()) {
+			if (fileOnly && !f.isFile()) return false;
+			if (mustExist && dirOnly && !f.isDirectory()) return false;
+		}
 		if (read && !f.canRead()) return false;
 		if (write && !f.canWrite()) return false;
 		if (execute && !f.canExecute()) return false;
