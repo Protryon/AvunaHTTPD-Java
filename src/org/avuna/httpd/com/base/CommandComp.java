@@ -452,6 +452,8 @@ public class CommandComp extends Command {
 			}
 			result.append(gen.substring(oend, gen.length()));
 			result.append(java.substring(end, java.length()));
+		}else {
+			result.append(java);
 		}
 		return result.toString();
 	}
