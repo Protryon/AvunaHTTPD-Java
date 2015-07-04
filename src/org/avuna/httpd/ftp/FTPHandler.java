@@ -273,7 +273,6 @@ public class FTPHandler {
 				int uid = host.provider.getUID(focus.user);
 				int gid = host.provider.getGID(focus.user);
 				if (!checkPerms(uid, gid, f, true, false, false, true, false, false, true)) {
-					
 					focus.writeLine(550, "Failed to open file.");
 					return;
 				}
