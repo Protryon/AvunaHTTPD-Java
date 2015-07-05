@@ -39,7 +39,7 @@ public class ZoneFile {
 				if (rl < 1) {
 					ndirs.addAll(rb);
 				}else for (int i = 0; i < rl; i++) {
-					ndirs.add(rb.get(i));
+					if (i < rb.size()) ndirs.add(rb.get(i));
 				}
 				rb.clear();
 				rl = -1;
