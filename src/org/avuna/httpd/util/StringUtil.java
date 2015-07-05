@@ -10,6 +10,24 @@ public abstract class StringUtil {
 		}
 	}
 	
+	public static String escape(String original, char[] spec) {
+		String n = original.replace("\\", "\\\\");
+		for (char c : spec) {
+			n = n.replace(c + "", "\\" + c);
+		}
+		return n;
+	}
+	
+	public static String unescape(String original, char[] spec) {
+		String n = original;
+		for (char c : spec) {
+			n = n.replace("\\" + c, "" + c);
+		}
+		n = original.replace("\\\\", "\\");
+		
+		return n;
+	}
+	
 	public static boolean toLowerCase(char[] input) {
 		boolean ch = false;
 		for (int i = 0; i < input.length; i++) {

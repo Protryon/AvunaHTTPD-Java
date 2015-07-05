@@ -147,10 +147,13 @@ public class PluginInline extends Plugin {
 		long l = process.getValue();
 		if (skip.contains(l)) return;
 		if (cdata.containsKey(l)) {
-			response.body.data = cdata.get(l);
+			String s = new String(cdata.get(l));
+			s = s.replaceAll("(?<=[^\\\\])\\\\h", request.headers.getHeader("Host"));
+			response.body.data = StringUtil.unescape(s, new char[0]).getBytes();
 			return;
 		}
 		String html = new String(response.body.data); // TODO: encoding support
+		html = StringUtil.escape(html, new char[0]);
 		boolean greqs = false;
 		SubReq[] subreqs = null;
 		if (this.subreqs.containsKey(l)) {
@@ -339,7 +342,7 @@ public class PluginInline extends Plugin {
 			boolean fre = sr.failed;
 			String rep = null;
 			if (fre) {
-				rep = "http" + (request.ssl ? "s" : "") + "://" + request.headers.getHeader("Host") + (sr.copy == null ? sr.req : sr.copy.req);
+				rep = "http" + (request.ssl ? "s" : "") + "://\\h" + (sr.copy == null ? sr.req : sr.copy.req);
 			}else {
 				if (resps[i] == null) {
 					for (int i2 = 0; i2 < i; i2++) {
@@ -365,6 +368,9 @@ public class PluginInline extends Plugin {
 		}
 		byte[] hb = html.getBytes();
 		cdata.put(l, hb);
+		html = html.replaceAll("(?<=[^\\\\])\\\\h", request.headers.getHeader("Host"));
+		html = StringUtil.unescape(html, new char[0]);
+		hb = html.getBytes();
 		response.body.data = hb;
 	}
 	
