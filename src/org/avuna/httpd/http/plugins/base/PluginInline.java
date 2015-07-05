@@ -353,9 +353,17 @@ public class PluginInline extends Plugin {
 				}
 				if (resps[i].subwrite == null) continue;
 				String base64 = "";
-				String cachePath = resps[i].request.host.getHostPath() + resps[i].request.target;
+				String cachePath = resps[i].request.host.getHostPath() + resps[i].request.target + request.headers.getHeader("Host");
 				if (!cacheBase64.containsKey(cachePath)) {
-					base64 = new BASE64Encoder().encode(resps[i].subwrite).replace(AvunaHTTPD.crlf, "");
+					byte[] srb = resps[i].subwrite;
+					String ct = resps[i].headers.getHeader("Content-Type");
+					if (ct != null && resps[i].statusCode == 200 && resps[i].body != null && (ct.startsWith("text/html") || ct.startsWith("text/css"))) {
+						String srs = new String(srb);
+						srs = srs.replaceAll("(?<=[^\\\\])\\\\h", request.headers.getHeader("Host"));
+						srs = StringUtil.unescape(srs, new char[0]);
+						srb = srs.getBytes();
+					}
+					base64 = new BASE64Encoder().encode(srb).replace(AvunaHTTPD.crlf, "");
 					cacheBase64.put(cachePath, base64);
 				}else {
 					base64 = cacheBase64.get(cachePath);
@@ -368,9 +376,11 @@ public class PluginInline extends Plugin {
 		}
 		byte[] hb = html.getBytes();
 		cdata.put(l, hb);
-		html = html.replaceAll("(?<=[^\\\\])\\\\h", request.headers.getHeader("Host"));
-		html = StringUtil.unescape(html, new char[0]);
-		hb = html.getBytes();
+		if (request.parent == null) {
+			html = html.replaceAll("(?<=[^\\\\])\\\\h", request.headers.getHeader("Host"));
+			html = StringUtil.unescape(html, new char[0]);
+			hb = html.getBytes();
+		}
 		response.body.data = hb;
 	}
 	
