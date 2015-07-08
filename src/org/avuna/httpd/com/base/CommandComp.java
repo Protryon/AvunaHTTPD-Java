@@ -318,6 +318,13 @@ public class CommandComp extends Command {
 					}else if (c == ')') {
 						b1 = true;
 						break;
+					}else if (c == 'e') {
+						if (is > 5) {
+							if (gen.charAt(is - 1) == 's' && gen.charAt(is - 2) == 'l' && gen.charAt(is - 3) == 'e') {
+								b1 = true;
+								break;
+							}
+						}else break;
 					}else {
 						break;
 					}
