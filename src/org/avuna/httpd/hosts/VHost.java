@@ -19,13 +19,13 @@ package org.avuna.httpd.hosts;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
-import org.avuna.httpd.http.plugins.javaloader.JavaLoaderSession;
+import org.avuna.httpd.http.plugins.avunaagent.AvunaAgentSession;
 
 public class VHost {
 	private final HostHTTP host;
 	private final File htdocs, htsrc;
 	private final String name, vhost;
-	private JavaLoaderSession jls;
+	private AvunaAgentSession jls;
 	private final VHost parent;
 	private ArrayList<VHost> children = new ArrayList<VHost>();
 	
@@ -54,7 +54,7 @@ public class VHost {
 	
 	public void initJLS(URL[] url) {
 		if (this.parent == null) {
-			this.jls = new JavaLoaderSession(this, url);
+			this.jls = new AvunaAgentSession(this, url);
 			for (VHost child : children) {
 				child.jls = this.jls;
 			}
@@ -75,7 +75,7 @@ public class VHost {
 		return debug;
 	}
 	
-	public JavaLoaderSession getJLS() {
+	public AvunaAgentSession getJLS() {
 		return jls;
 	}
 	

@@ -1,25 +1,13 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/*
+ * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.plugins.base;
 
 import java.io.File;
 import org.avuna.httpd.http.plugins.PluginClassLoader;
 import org.avuna.httpd.http.plugins.PluginRegistry;
-import org.avuna.httpd.http.plugins.javaloader.PluginJavaLoader;
+import org.avuna.httpd.http.plugins.avunaagent.PluginAvunaAgent;
+import org.avuna.httpd.http.plugins.security.PluginSecurity;
 
 public class BaseLoader {
 	public static void loadSecBase(PluginRegistry registry) {
@@ -42,7 +30,7 @@ public class BaseLoader {
 		registry.registerPatch(new PluginAuth("Auth", registry));
 		
 		// server side languages
-		registry.registerPatch(new PluginJavaLoader("JavaLoader", registry));
+		registry.registerPatch(new PluginAvunaAgent("AvunaAgent", registry));
 		// PatchRegistry.registerPatch(new PatchJWSL("JWSL")); deprecated
 		registry.registerPatch(new PluginFCGI("FCGI", registry));
 		

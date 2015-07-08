@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
-import org.avuna.httpd.http.plugins.javaloader.lib.Multipart.MultiPartData;
+import org.avuna.httpd.http.plugins.avunaagent.lib.Multipart.MultiPartData;
 import org.avuna.httpd.mail.imap.IMAPCommand;
 import org.avuna.httpd.mail.imap.IMAPWork;
 import org.avuna.httpd.mail.mailbox.Email;

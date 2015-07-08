@@ -20,7 +20,7 @@ import org.avuna.httpd.com.CommandContext;
 import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.VHost;
-import org.avuna.httpd.http.plugins.javaloader.PluginJavaLoader;
+import org.avuna.httpd.http.plugins.avunaagent.PluginAvunaAgent;
 
 public class CommandComp extends Command {
 	
@@ -58,8 +58,8 @@ public class CommandComp extends Command {
 		for (URL url : ((URLClassLoader) ClassLoader.getSystemClassLoader()).getURLs()) {
 			ocp += url.toString() + sep;
 		}
-		String cp = ocp + host.getHTDocs().toString() + sep + host.getHTSrc().toString() + sep + PluginJavaLoader.lib.toString() + sep;
-		for (File f : PluginJavaLoader.lib.listFiles()) {
+		String cp = ocp + host.getHTDocs().toString() + sep + host.getHTSrc().toString() + sep + PluginAvunaAgent.lib.toString() + sep;
+		for (File f : PluginAvunaAgent.lib.listFiles()) {
 			if (!f.isDirectory() && f.getName().endsWith(".jar")) {
 				cp += f.toString() + sep;
 			}
@@ -143,8 +143,8 @@ public class CommandComp extends Command {
 		}
 		result.append("import org.avuna.httpd.http.networking.RequestPacket;").append(AvunaHTTPD.crlf);
 		result.append("import org.avuna.httpd.http.networking.ResponsePacket;").append(AvunaHTTPD.crlf);
-		result.append("import org.avuna.httpd.http.plugins.javaloader.HTMLBuilder;").append(AvunaHTTPD.crlf);
-		result.append("import org.avuna.httpd.http.plugins.javaloader.JavaLoaderPrint;").append(AvunaHTTPD.crlf);
+		result.append("import org.avuna.httpd.http.plugins.avunaagent.HTMLBuilder;").append(AvunaHTTPD.crlf);
+		result.append("import org.avuna.httpd.http.plugins.avunaagent.AvunaAgentPrint;").append(AvunaHTTPD.crlf);
 		ArrayList<int[]> skips = new ArrayList<int[]>();
 		Matcher im = itag.matcher(java);
 		while (im.find()) {
@@ -159,7 +159,7 @@ public class CommandComp extends Command {
 		skips.clear();
 		offset = 0;
 		result.append(AvunaHTTPD.crlf);
-		result.append("public class " + className + " extends JavaLoaderPrint {").append(AvunaHTTPD.crlf);
+		result.append("public class " + className + " extends AvunaAgentPrint {").append(AvunaHTTPD.crlf);
 		Matcher mm = mtag.matcher(java);
 		while (mm.find()) {
 			skips.add(new int[] { mm.start(), mm.end() });

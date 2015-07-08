@@ -19,17 +19,17 @@ package org.avuna.httpd.http.networking;
 import java.io.IOException;
 import java.net.SocketException;
 import org.avuna.httpd.hosts.HostHTTP;
-import org.avuna.httpd.http.plugins.javaloader.JavaLoaderStream;
+import org.avuna.httpd.http.plugins.avunaagent.AvunaAgentStream;
 import org.avuna.httpd.util.Logger;
 
 public class ThreadJavaLoaderStreamWorker extends Thread {
 	private final Work work;
 	private final RequestPacket req;
 	private final ResponsePacket resp;
-	private final JavaLoaderStream reqStream;
+	private final AvunaAgentStream reqStream;
 	private final HostHTTP host;
 	
-	public ThreadJavaLoaderStreamWorker(HostHTTP host, Work work, RequestPacket req, ResponsePacket resp, JavaLoaderStream reqStream) {
+	public ThreadJavaLoaderStreamWorker(HostHTTP host, Work work, RequestPacket req, ResponsePacket resp, AvunaAgentStream reqStream) {
 		this.work = work;
 		this.req = req;
 		this.resp = resp;

@@ -19,12 +19,12 @@ import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.event.EventClearCache;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.plugins.Plugin;
+import org.avuna.httpd.http.plugins.avunaagent.PluginAvunaAgent;
+import org.avuna.httpd.http.plugins.avunaagent.lib.HTMLCache;
+import org.avuna.httpd.http.plugins.avunaagent.lib.AvunaAgentUtil;
 import org.avuna.httpd.http.plugins.base.PluginChunked;
 import org.avuna.httpd.http.plugins.base.PluginFCGI;
 import org.avuna.httpd.http.plugins.base.PluginOverride;
-import org.avuna.httpd.http.plugins.javaloader.PluginJavaLoader;
-import org.avuna.httpd.http.plugins.javaloader.lib.HTMLCache;
-import org.avuna.httpd.http.plugins.javaloader.lib.JavaLoaderUtil;
 import org.avuna.httpd.http.util.OverrideConfig;
 import org.avuna.httpd.util.unixsocket.CException;
 
@@ -180,7 +180,7 @@ public class FileManager {
 				if (resource != null) {
 					if (resource.type.startsWith("text")) {
 						String res = new String(resource.data);
-						res = res.replace("$_statusCode_$", status.getStatus() + "").replace("$_reason_$", status.getPhrase()).replace("$_info_$", JavaLoaderUtil.htmlescape(info)).replace("$_reqTarget_$", JavaLoaderUtil.htmlescape(reqTarget));
+						res = res.replace("$_statusCode_$", status.getStatus() + "").replace("$_reason_$", status.getPhrase()).replace("$_info_$", AvunaAgentUtil.htmlescape(info)).replace("$_reqTarget_$", AvunaAgentUtil.htmlescape(reqTarget));
 						resource.data = res.getBytes();
 					}
 					return resource;
@@ -202,7 +202,7 @@ public class FileManager {
 		pb.append(status.getPhrase());
 		pb.append("</h1>");
 		pb.append("<p>");
-		pb.append(JavaLoaderUtil.htmlescape(info));
+		pb.append(AvunaAgentUtil.htmlescape(info));
 		pb.append("</p>");
 		pb.append("</body></html>");
 		Resource error = new Resource(pb.toString().getBytes(), "text/html");
@@ -488,7 +488,7 @@ public class FileManager {
 					byte[] buf = new byte[4096];
 					PluginChunked chunked = (PluginChunked) request.host.getHost().registry.getPatchForClass(PluginChunked.class);
 					PluginFCGI fcgi = (PluginFCGI) request.host.getHost().registry.getPatchForClass(PluginFCGI.class);
-					PluginJavaLoader jl = (PluginJavaLoader) request.host.getHost().registry.getPatchForClass(PluginJavaLoader.class);
+					PluginAvunaAgent jl = (PluginAvunaAgent) request.host.getHost().registry.getPatchForClass(PluginAvunaAgent.class);
 					boolean dc = chunked != null && chunked.pcfg.getNode("enabled").getValue().equals("true");
 					if (dc && fcgi != null && fcgi.pcfg.getNode("enabled").getValue().equals("true")) {
 						major: for (String key : fcgi.fcgis.keySet()) {

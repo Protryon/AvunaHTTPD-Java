@@ -1,5 +1,4 @@
-/*
- * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.com.base;
 
@@ -55,12 +54,12 @@ public class CommandHTML extends Command {
 		temp.getParentFile().mkdirs();
 		temp.createNewFile();
 		ps = new PrintStream(new FileOutputStream(temp));
-		ps.println("import org.avuna.httpd.http.plugins.javaloader.HTMLBuilder;");
+		ps.println("import org.avuna.httpd.http.plugins.avunaagent.HTMLBuilder;");
 		ps.println("import org.avuna.httpd.http.networking.RequestPacket;");
 		ps.println("import org.avuna.httpd.http.networking.ResponsePacket;");
-		ps.println("import org.avuna.httpd.http.plugins.javaloader.JavaLoaderPrint;");
+		ps.println("import org.avuna.httpd.http.plugins.avunaagent.AvunaAgentPrint;");
 		ps.println();
-		ps.println("public class " + (args.length == 2 ? temp.getName().substring(0, temp.getName().indexOf(".")) : sc2.getName().substring(0, sc2.getName().indexOf("."))) + " extends JavaLoaderPrint {");
+		ps.println("public class " + (args.length == 2 ? temp.getName().substring(0, temp.getName().indexOf(".")) : sc2.getName().substring(0, sc2.getName().indexOf("."))) + " extends AvunaAgentPrint {");
 		ps.println("    public boolean generate(HTMLBuilder out, ResponsePacket response, RequestPacket request) {");
 		while (scan2.hasNextLine()) {
 			String line = scan2.nextLine().trim();

@@ -9,7 +9,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.Headers;
-import org.avuna.httpd.http.plugins.javaloader.lib.Multipart;
+import org.avuna.httpd.http.plugins.avunaagent.lib.Multipart;
 import org.avuna.httpd.util.Logger;
 
 public class Email {

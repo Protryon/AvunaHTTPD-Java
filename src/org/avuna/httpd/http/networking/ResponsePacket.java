@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.Method;
-import org.avuna.httpd.http.plugins.javaloader.JavaLoaderStream;
+import org.avuna.httpd.http.plugins.avunaagent.AvunaAgentStream;
 import org.avuna.httpd.util.Logger;
 
 /** This is for responeses to the client. */
@@ -17,7 +17,7 @@ public class ResponsePacket extends Packet {
 	public int statusCode = 200;
 	public String reasonPhrase = "";
 	public RequestPacket request;
-	public JavaLoaderStream reqStream = null;
+	public AvunaAgentStream reqStream = null;
 	public boolean done = false;
 	public DataInputStream toStream = null;
 	
