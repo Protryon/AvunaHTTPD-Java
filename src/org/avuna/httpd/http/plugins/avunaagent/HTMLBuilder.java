@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.plugins.avunaagent;
 
@@ -21,16 +7,31 @@ import java.io.StringWriter;
 import java.util.HashMap;
 
 public class HTMLBuilder extends PrintWriter {
-	private final StringWriter out;
+	private StringWriter out;
+	private boolean closed = false;
+	private String fnl = null;
 	
 	public HTMLBuilder(StringWriter out) {
 		super(out);
 		this.out = out;
 	}
 	
-	public String toString() {
-		return out.toString();
+	public void clear() {
+		out = new StringWriter();
+		super.out = out;
 	}
+	
+	// TODO inadequate, future writes still write to the buffer but are ignored
+	public void close() {
+		closed = true;
+		fnl = out.toString();
+	}
+	
+	public String toString() {
+		return closed ? fnl : out.toString();
+	}
+	
+	// following are for ease of embedded page programming
 	
 	private HashMap<String, Object> vars = null;
 	
