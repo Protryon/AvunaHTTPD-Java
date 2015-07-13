@@ -3,7 +3,9 @@ package org.avuna.httpd.http.plugins.security;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.UUID;
 import org.avuna.httpd.http.networking.RequestPacket;
+import org.avuna.httpd.http.plugins.avunaagent.lib.SetCookie;
 import org.avuna.httpd.util.Logger;
 
 public class SecurityDatabase {
@@ -67,10 +69,26 @@ public class SecurityDatabase {
 					}
 				}
 			}
-			
-		}else {
-			
+			if (ffn != null && ffn != fn) {
+				// conflicting IP & cookie, minor issue, likely a traveling cell user or revolving proxy, loss of proxy, or change in location
+				// could be a malicious user reusing the same security token to bypass security. take note.
+				// we run with the IP based one
+			}
+		}else { // no cookie
+			avsec = UUID.randomUUID().toString();
+			new SetCookie(request.child).setCookie("avsec", avsec);
+			if (fn == null) {
+				fn = new SecurityNibble();
+			}
+			fn.addSession(avsec);
 		}
-		return new SecurityNibble();
+		if (avsec != null && fn == null) {
+			// invalid avsec cookie
+			avsec = UUID.randomUUID().toString();
+			new SetCookie(request.child).setCookie("avsec", avsec);
+			fn = new SecurityNibble();
+			fn.addSession(avsec);
+		}
+		return fn;
 	}
 }
