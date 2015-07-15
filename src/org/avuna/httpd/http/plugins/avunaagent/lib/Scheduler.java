@@ -1,21 +1,10 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.plugins.avunaagent.lib;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.avuna.httpd.util.Logger;
 
@@ -29,7 +18,7 @@ public class Scheduler {
 				Runnable work = workQueue.poll();
 				if (work == null) {
 					try {
-						Thread.sleep(1L);
+						Thread.sleep(5L);
 					}catch (InterruptedException e) {
 						Logger.logError(e);
 					}
@@ -63,4 +52,38 @@ public class Scheduler {
 		workQueue.add(run);
 	}
 	
+	private final class PassiveRunnable implements Runnable {
+		public PassiveRunnable(Runnable run, int msPerRun) {
+			this.run = run;
+			this.msPerRun = msPerRun;
+		}
+		
+		public Runnable run;
+		public long msPerRun;
+		public long lastRun;
+		
+		public void run() {
+			run.run();
+		}
+	}
+	
+	private final List<PassiveRunnable> apr = Collections.synchronizedList(new ArrayList<PassiveRunnable>());
+	
+	public int runPassive(Runnable run, int msPerRun) {
+		synchronized (apr) {
+			PassiveRunnable pr = new PassiveRunnable(run, msPerRun);
+			apr.add(pr);
+			return apr.size() - 1;
+		}
+	}
+	
+	public Runnable callPassive(int id) {
+		if (id < 0 || id >= apr.size()) throw new IllegalArgumentException("Invalid ID!");
+		PassiveRunnable r = apr.get(id);
+		if (r.lastRun + r.msPerRun > System.currentTimeMillis()) {
+			r.lastRun = System.currentTimeMillis();
+			r.run.run();
+		}
+		return r.run;
+	}
 }

@@ -83,7 +83,7 @@ public class PluginOverride extends Plugin {
 							request.forbode = true;
 						}
 						break;
-					case redirect:
+					case redirect:// TODO: what is this?
 						request.oredir = rt.replaceAll(d.args[0], d.args[1]);
 						break;
 					case index:
