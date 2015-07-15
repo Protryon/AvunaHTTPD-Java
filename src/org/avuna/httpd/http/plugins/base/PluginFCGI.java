@@ -4,11 +4,11 @@ package org.avuna.httpd.http.plugins.base;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.util.HashMap;
-import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
@@ -30,6 +30,7 @@ import org.avuna.httpd.http.plugins.base.fcgi.FCGISession;
 import org.avuna.httpd.http.plugins.base.fcgi.IFCGIManager;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.util.Stream;
 
 public class PluginFCGI extends Plugin {
 	
@@ -252,39 +253,37 @@ public class PluginFCGI extends Plugin {
 			}finally {
 				request.work.blockTimeout = false;
 			}
-			Scanner s = new Scanner(new ByteArrayInputStream(session.getResponse()));
-			boolean tt = true;
+			DataInputStream in = new DataInputStream(new ByteArrayInputStream(session.getResponse()));
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
-			while (s.hasNextLine()) {
-				String line = s.nextLine().trim();
-				if (line.length() > 0) {
-					if (tt && line.contains(":")) {
-						String hn = line.substring(0, line.indexOf(":")).trim();
-						if (hn.equalsIgnoreCase("Expires") || hn.equalsIgnoreCase("Last-Modified")) continue;
-						String hd = line.substring(line.indexOf(":") + 1).trim();
-						if (hn.equalsIgnoreCase("Status")) {
-							response.statusCode = Integer.parseInt(hd.substring(0, hd.indexOf(" ")));
-							response.reasonPhrase = hd.substring(hd.indexOf(" ") + 1);
-						}else {
-							if (hn.equals("Set-Cookie")) {
-								response.headers.addHeader(hn, hd);
-							}else {
-								response.headers.updateHeader(hn, hd);
-							}
-						}
+			String line;
+			while ((line = Stream.readLine(in)) != null) {
+				if (line.length() == 0) break;
+				line = line.trim();
+				if (line.contains(":")) {
+					String hn = line.substring(0, line.indexOf(":")).trim();
+					if (hn.equalsIgnoreCase("Expires") || hn.equalsIgnoreCase("Last-Modified")) continue;
+					String hd = line.substring(line.indexOf(":") + 1).trim();
+					if (hn.equalsIgnoreCase("Status")) {
+						response.statusCode = Integer.parseInt(hd.substring(0, hd.indexOf(" ")));
+						response.reasonPhrase = hd.substring(hd.indexOf(" ") + 1);
 					}else {
-						tt = false;
-						bout.write((line + AvunaHTTPD.crlf).getBytes());
-						if (line.equals("</html>")) break;
+						if (hn.equals("Set-Cookie")) {
+							response.headers.addHeader(hn, hd);
+						}else {
+							response.headers.updateHeader(hn, hd);
+						}
 					}
-				}else {
-					tt = false;
 				}
 			}
+			byte[] buf = new byte[1024];
+			int i = 0;
+			do {
+				i = in.read(buf);
+				if (i > 0) bout.write(buf, 0, i);
+			}while (i > 0);
 			if (response.headers.getHeader("Content-Type").equals("application/x-php")) {
 				response.headers.updateHeader("Content-Type", "text/html");
 			}
-			s.close();
 			response.body.data = bout.toByteArray();
 			return;
 		}catch (IOException e) {
