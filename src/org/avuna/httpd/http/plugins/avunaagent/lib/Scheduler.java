@@ -69,7 +69,7 @@ public class Scheduler {
 	
 	private final List<PassiveRunnable> apr = Collections.synchronizedList(new ArrayList<PassiveRunnable>());
 	
-	public int runPassive(Runnable run, int msPerRun) {
+	public int addPassive(Runnable run, int msPerRun) {
 		synchronized (apr) {
 			PassiveRunnable pr = new PassiveRunnable(run, msPerRun);
 			apr.add(pr);
@@ -77,7 +77,7 @@ public class Scheduler {
 		}
 	}
 	
-	public Runnable callPassive(int id) {
+	public Runnable runPassive(int id) {
 		if (id < 0 || id >= apr.size()) throw new IllegalArgumentException("Invalid ID!");
 		PassiveRunnable r = apr.get(id);
 		if (r.lastRun + r.msPerRun > System.currentTimeMillis()) {
