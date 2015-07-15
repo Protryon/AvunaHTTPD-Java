@@ -73,6 +73,8 @@ public class Scheduler {
 		synchronized (apr) {
 			PassiveRunnable pr = new PassiveRunnable(run, msPerRun);
 			apr.add(pr);
+			pr.lastRun = System.currentTimeMillis();
+			run.run();
 			return apr.size() - 1;
 		}
 	}
@@ -80,7 +82,7 @@ public class Scheduler {
 	public Runnable runPassive(int id) {
 		if (id < 0 || id >= apr.size()) throw new IllegalArgumentException("Invalid ID!");
 		PassiveRunnable r = apr.get(id);
-		if (r.lastRun + r.msPerRun > System.currentTimeMillis()) {
+		if (r.lastRun + r.msPerRun < System.currentTimeMillis()) {
 			r.lastRun = System.currentTimeMillis();
 			r.run.run();
 		}
