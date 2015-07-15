@@ -180,7 +180,7 @@ public class PluginFCGI extends Plugin {
 			}
 			FCGISession session = new FCGISession(conn);
 			session.start();
-			session.param("SERVER_ADDR", pcfg.getNode("server_addr") + "");
+			session.param("SERVER_ADDR", pcfg.getNode("server_addr").getValue() + "");
 			session.param("REQUEST_URI", rq + (get.length() > 0 ? "?" + get : ""));
 			
 			rq = AvunaHTTPD.fileManager.correctForIndex(rq, request);
