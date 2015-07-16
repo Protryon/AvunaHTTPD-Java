@@ -50,7 +50,7 @@ public class PluginAvunaAgent extends Plugin {
 	
 	public PluginAvunaAgent(String name, PluginRegistry registry) {
 		super(name, registry);
-		log("Loading JavaLoader Config & Security");
+		log("Loading AvunaAgent Config & Security");
 		PluginSecurity sec = ((PluginSecurity) registry.getPatchForClass(PluginSecurity.class));
 		boolean sece = sec.pcfg.getNode("enabled").getValue().equals("true");
 		if (sece) {
@@ -71,7 +71,7 @@ public class PluginAvunaAgent extends Plugin {
 			Logger.logError(e1);
 		}
 		if (sece) ((PluginSecurity) registry.getPatchForClass(PluginSecurity.class)).loadBases(this);
-		log("Loading JavaLoader Libs");
+		log("Loading AvunaAgent Libraries");
 		try {
 			lib = new File(AvunaHTTPD.fileManager.getMainDir(), pcfg.getNode("lib").getValue());
 			if (!lib.exists() || !lib.isDirectory()) {
