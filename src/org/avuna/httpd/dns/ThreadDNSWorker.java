@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.dns;
 
@@ -64,7 +50,7 @@ public class ThreadDNSWorker extends Thread implements ITerminatable {
 		boolean hasType = ht;
 		for (IDirective d : zf.getDirectives(true)) {
 			if (d instanceof DNSRecord) {
-				DNSRecord r = (DNSRecord)d;
+				DNSRecord r = (DNSRecord) d;
 				if (!r.getType().matches(q.getType())) continue;
 				boolean matches = domainMatches(q.getDomain(), r.getDomain(), hasType);
 				if (matches) {
@@ -79,14 +65,19 @@ public class ThreadDNSWorker extends Thread implements ITerminatable {
 					responseRecord.setData(data);
 					// Logger.log("DNS: " + q.getDomain() + " for type# " + q.getType() + " returned " + AvunaHTTPD.fileManager.bytesToHex(responseRecord.getData()));
 					records.add(responseRecord);
+					if (r.getType() == Type.PTR || r.getType() == Type.CNAME || r.getType() == Type.DNAME || r.getType() == Type.NS) {
+						// TODO: recursion
+					}else if (r.getType() == Type.MX) {
+						// TODO: recursion
+					}// TODO: what else to recurse?
 				}
 			}else if (d instanceof ZoneDirective) {
-				boolean matches = q.getDomain().matches(((ZoneDirective)d).zr);
+				boolean matches = q.getDomain().matches(((ZoneDirective) d).zr);
 				if (matches) {
-					if (processZoneForRecord(q, ((ZoneDirective)d).zf, records, hasType)) hasType = true;
+					if (processZoneForRecord(q, ((ZoneDirective) d).zf, records, hasType)) hasType = true;
 				}
 			}else if (d instanceof ImportDirective) {
-				if (processZoneForRecord(q, ((ImportDirective)d).zf, records, hasType)) hasType = true;
+				if (processZoneForRecord(q, ((ImportDirective) d).zf, records, hasType)) hasType = true;
 			}
 			// System.out.println("Response for " + responseRecord.getDomain() + " data: " + new String(responseRecord.getData()));
 		}
@@ -107,9 +98,9 @@ public class ThreadDNSWorker extends Thread implements ITerminatable {
 			try {
 				Query query = null;
 				if (focus.UDP) {
-					query = new Query(((WorkUDP)focus).query);
+					query = new Query(((WorkUDP) focus).query);
 				}else {
-					WorkTCP wt = ((WorkTCP)focus);
+					WorkTCP wt = ((WorkTCP) focus);
 					byte[] qb = new byte[wt.in.readShort()];
 					wt.in.readFully(qb);
 					query = new Query(qb);
@@ -137,7 +128,7 @@ public class ThreadDNSWorker extends Thread implements ITerminatable {
 					}
 					header.setAncount(resps.size());
 					// System.out.println(resps.size());
-					Query response = new Query(header, query.getQd(), resps.toArray(new ResourceRecord[]{}), null, null);
+					Query response = new Query(header, query.getQd(), resps.toArray(new ResourceRecord[] {}), null, null);
 					byte[] rb = response.encode();
 					if (rb.length >= 512) {
 						response.getHeader().setTc(true);
@@ -146,11 +137,11 @@ public class ThreadDNSWorker extends Thread implements ITerminatable {
 					}
 					// System.out.println("2: " + Util.bytesToHex(rb));
 					if (focus.UDP) {
-						WorkUDP wu = (WorkUDP)focus;
+						WorkUDP wu = (WorkUDP) focus;
 						DatagramPacket sendPacket2 = new DatagramPacket(rb, rb.length, wu.rip, wu.rport);
 						wu.server.send(sendPacket2);
 					}else {
-						WorkTCP wt = ((WorkTCP)focus);
+						WorkTCP wt = ((WorkTCP) focus);
 						wt.out.writeShort(rb.length);
 						wt.out.write(rb);
 						wt.out.flush();
@@ -161,7 +152,7 @@ public class ThreadDNSWorker extends Thread implements ITerminatable {
 			}catch (SocketException e) {
 				if (!focus.UDP) {
 					try {
-						((WorkTCP)focus).s.close();
+						((WorkTCP) focus).s.close();
 					}catch (IOException e1) {
 						Logger.logError(e1);
 					}
@@ -171,7 +162,7 @@ public class ThreadDNSWorker extends Thread implements ITerminatable {
 			}finally {
 				if (!focus.UDP) {
 					try {
-						((WorkTCP)focus).s.close();
+						((WorkTCP) focus).s.close();
 					}catch (IOException e) {
 						Logger.logError(e);
 					}
