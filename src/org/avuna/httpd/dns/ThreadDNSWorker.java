@@ -66,9 +66,15 @@ public class ThreadDNSWorker extends Thread implements ITerminatable {
 					// Logger.log("DNS: " + q.getDomain() + " for type# " + q.getType() + " returned " + AvunaHTTPD.fileManager.bytesToHex(responseRecord.getData()));
 					records.add(responseRecord);
 					if (r.getType() == Type.PTR || r.getType() == Type.CNAME || r.getType() == Type.DNAME || r.getType() == Type.NS) {
-						// TODO: recursion
+						Question q2 = new Question();
+						q2.setDomain(r.getArgs()[0]);
+						q2.setType(Type.A.id);
+						processZoneForRecord(q2, zf, records, true);
 					}else if (r.getType() == Type.MX) {
-						// TODO: recursion
+						Question q2 = new Question();
+						q2.setDomain(r.getArgs()[1]);
+						q2.setType(Type.A.id);
+						processZoneForRecord(q2, zf, records, true);
 					}// TODO: what else to recurse?
 				}
 			}else if (d instanceof ZoneDirective) {

@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.dns.zone;
 
@@ -30,6 +16,11 @@ public class DNSRecord implements IDirective {
 	private final byte[] data;
 	private final String[] tv;
 	private static final Random rand = new Random();
+	private final String[] args;
+	
+	public String[] getArgs() {
+		return args;
+	}
 	
 	public String getDomain() {
 		return domain;
@@ -92,7 +83,7 @@ public class DNSRecord implements IDirective {
 		}else if (type == Type.TXT) {
 			byte[] db = args[0].getBytes();
 			fd = new byte[db.length + 1];
-			fd[0] = (byte)db.length;
+			fd[0] = (byte) db.length;
 			System.arraycopy(db, 0, fd, 1, db.length);
 		}else if (type == Type.SRV) {
 			if (args.length != 4) {
@@ -125,21 +116,23 @@ public class DNSRecord implements IDirective {
 		return fd;
 	}
 	
-	public DNSRecord(String domain, Type type, int ttlr1, int ttlr2, byte[] data, String[] tv) {
+	public DNSRecord(String domain, Type type, int ttlr1, int ttlr2, byte[] data, String[] tv, String[] args) {
 		this.domain = domain;
 		this.type = type;
 		this.ttlr1 = ttlr1;
 		this.ttlr2 = ttlr2;
 		this.data = data;
 		this.tv = tv;
+		this.args = args;
 	}
 	
-	public DNSRecord(String domain, String ip, int ttlr1, int ttlr2) {
+	public DNSRecord(String domain, String ip, int ttlr1, int ttlr2, String[] args) {
 		this.domain = domain;
 		this.type = Type.A;
 		this.ttlr1 = ttlr1;
 		this.ttlr2 = ttlr2;
 		this.data = Util.ipToByte(ip);
-		this.tv = new String[]{ip};
+		this.tv = new String[] { ip };
+		this.args = args;
 	}
 }

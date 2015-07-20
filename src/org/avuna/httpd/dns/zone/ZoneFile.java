@@ -182,7 +182,7 @@ public class ZoneFile {
 		args = nargs;
 		byte[] fd = DNSRecord.getDataFromArgs(type, args);
 		if (fd == null) return null;
-		return new DNSRecord(domain, type, ttlr1, ttlr2, fd, pa);
+		return new DNSRecord(domain, type, ttlr1, ttlr2, fd, pa, args);
 	}
 	
 	public void load() throws IOException {
