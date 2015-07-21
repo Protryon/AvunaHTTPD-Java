@@ -88,7 +88,7 @@ public class Config extends ConfigNode {
 	 * @param in */
 	private void readMap(ConfigNode map, Scanner in) {
 		while (in.hasNextLine()) {
-			String line = in.nextLine();
+			String line = in.nextLine().trim();
 			String comment = null;
 			if (line.contains("#")) {
 				comment = line.substring(line.indexOf("#") + 1).trim();
