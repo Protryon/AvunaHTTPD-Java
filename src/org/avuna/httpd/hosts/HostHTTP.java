@@ -316,7 +316,7 @@ public class HostHTTP extends Host {
 						}
 					}
 					if (parent == null) {
-						Logger.log("Invalid inheritjls! Skipping");
+						Logger.log("Invalid inheritjls! Skipping.");
 						continue;
 					}
 					vhost = new VHost(this.getHostname() + "/" + vkey, this, ourvh.getNode("host").getValue(), parent);
