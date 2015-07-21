@@ -1,5 +1,4 @@
-/*
- * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.util;
 
@@ -89,18 +88,20 @@ public class Config extends ConfigNode {
 	 * @param in */
 	private void readMap(ConfigNode map, Scanner in) {
 		while (in.hasNextLine()) {
-			String line = in.nextLine().trim();
+			String line = in.nextLine();
 			String comment = null;
 			if (line.contains("#")) {
 				comment = line.substring(line.indexOf("#") + 1).trim();
 				line = line.substring(0, line.indexOf("#")).trim();
 			}
+			if (line.length() == 0) continue;
 			if (line.endsWith("{")) {
 				String name = line.substring(0, line.length() - 1);
 				boolean base = pl++ == 0;
 				if (!base) {
 					ConfigNode subnode = new ConfigNode(name);
-					map.insertNode(subnode).setComment(comment);
+					subnode.setComment(comment);
+					map.insertNode(subnode);
 					readMap(subnode, in);
 				}
 			}else if (line.equals("}")) {
@@ -109,7 +110,7 @@ public class Config extends ConfigNode {
 			}else if (line.contains("=")) {
 				String key = line.substring(0, line.indexOf("="));
 				String value = line.substring(key.length() + 1);
-				map.insertNode(new ConfigNode(key, value)).setComment(comment);
+				map.insertNode(new ConfigNode(key, value).setComment(comment));
 			}
 		}
 	}
