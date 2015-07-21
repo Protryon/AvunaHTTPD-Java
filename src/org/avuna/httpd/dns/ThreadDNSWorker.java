@@ -52,8 +52,12 @@ public class ThreadDNSWorker extends Thread implements ITerminatable {
 			if (d instanceof DNSRecord) {
 				DNSRecord r = (DNSRecord) d;
 				if (!r.getType().matches(q.getType())) {
-					if (!(q.getType() == Type.A.id && r.getType() == Type.CNAME)) {
+					if (q.getType() != Type.A.id) {
 						continue;
+					}else {
+						if (!(r.getType() == Type.CNAME || r.getType() == Type.AAAA)) {
+							continue;
+						}
 					}
 				}
 				boolean matches = domainMatches(q.getDomain(), r.getDomain(), hasType);
