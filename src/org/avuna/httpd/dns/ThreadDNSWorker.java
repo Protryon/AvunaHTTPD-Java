@@ -51,7 +51,11 @@ public class ThreadDNSWorker extends Thread implements ITerminatable {
 		for (IDirective d : zf.getDirectives(true)) {
 			if (d instanceof DNSRecord) {
 				DNSRecord r = (DNSRecord) d;
-				if (!r.getType().matches(q.getType())) continue;
+				if (!r.getType().matches(q.getType())) {
+					if (!(q.getType() == Type.A.id && r.getType() == Type.CNAME)) {
+						continue;
+					}
+				}
 				boolean matches = domainMatches(q.getDomain(), r.getDomain(), hasType);
 				if (matches) {
 					hasType = true;
