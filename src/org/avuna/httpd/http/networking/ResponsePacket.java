@@ -1,11 +1,8 @@
-/*
- * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.networking;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.Method;
@@ -21,25 +18,15 @@ public class ResponsePacket extends Packet {
 	public boolean done = false;
 	public DataInputStream toStream = null;
 	
+	/** Only to be called by the Worker thread, used to generate the final packet. */
 	public byte[] serialize() {
 		return serialize(true, true);
 	}
 	
-	// public ResponsePacket clone() {
-	// ResponsePacket n = new ResponsePacket();
-	// n.statusCode = statusCode;
-	// n.reasonPhrase = reasonPhrase;
-	// n.request = request;
-	// n.httpVersion = httpVersion;
-	// n.headers = headers.clone();
-	// n.body = body.clone();
-	// n.reqTransfer = reqTransfer;
-	// return n;
-	// }
-	
+	/** Buffered headers after serializing for use if debug mode is enabled. */
 	public byte[] cachedSerialize = null;
-	public ResponsePacket cachedPacket = null;
 	
+	/** Only to be called by the Worker thread, used to generate the final packet. */
 	public byte[] serialize(boolean data, boolean head) {
 		try {
 			if (this.drop) {
@@ -80,17 +67,23 @@ public class ResponsePacket extends Packet {
 		return new byte[0];
 	}
 	
+	/** After serialization, returns the headers in text form. */
 	public String toString() {
 		return new String(cachedSerialize);
 	}
 	
+	/** Time at finishing of response generation, used for benchmarking */
 	public long bwt = 0L;
+	/** Whether we want to request a transfer to a stream thread. */
 	public boolean reqTransfer = false;
-	
+	/** When doing a subrequest, this is the headerless content, uncompressed. */
 	public byte[] subwrite = null;
+	/** Whether we are a valid sub response. */
 	public boolean validSub = true;
+	/** If true, we will close the connection after sending this packet. Set by the header, "Connection: Close" */
 	public boolean close = false;
 	
+	/** Calls serialization, and does some stream logic. */
 	public void prewrite() {
 		subwrite = serialize(request.method != Method.HEAD, true);
 		if (this.headers.hasHeader("Transfer-Encoding")) {
@@ -115,6 +108,7 @@ public class ResponsePacket extends Packet {
 		}
 	}
 	
+	/** Died down version of prewrite() for sub responses. */
 	public void subwrite() {
 		subwrite = serialize(true, false);
 		if (this.headers.hasHeader("Transfer-Encoding")) {
@@ -125,19 +119,5 @@ public class ResponsePacket extends Packet {
 			}
 		}
 		this.bwt = System.nanoTime();
-	}
-	
-	public void write(DataOutputStream out, boolean deprecated) throws IOException {
-		byte[] write = serialize(request.method != Method.HEAD, true);
-		this.bwt = System.nanoTime();
-		if (write == null) {
-			return;
-		}else if (write.length == 0) {
-			
-		}else {
-			out.write(write);
-			write = null;
-			out.flush();
-		}
 	}
 }

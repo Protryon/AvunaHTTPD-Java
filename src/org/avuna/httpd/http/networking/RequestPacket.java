@@ -18,32 +18,55 @@ import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.util.Logger;
 
 public class RequestPacket extends Packet {
-	public String target = "/", extraPath = "";
+	/** Raw HTTP target including Get variables & # stuff. */
+	public String target = "/";
+	/** Extra path */
+	public String extraPath = "";
+	/** HTTP Method of the Request. */
 	public Method method = Method.GET;
+	/** Set to a textual form of the IP address if a TCP connection(not UNIX), ex. 123.123.123.123 */
 	public String userIP = "";
+	/** What port the user connected to, same as the host's port. */
 	public int userPort = 80;
+	/** Whether this request was sent over HTTPS. */
 	public boolean ssl = false;
+	/** The VHost as determined by the Host header. */
 	public VHost host = null;
+	/** If true, a 403 Forbidden will be returned, used for Overrides. */
 	public boolean forbode = false;
+	/** From overrides, if set, will return a Found & redirect. */
 	public String oredir = "";
+	/** If we override the index, this contains the new index. */
 	public String[] overrideIndex = null;
+	/** The overriding mime type. */
 	public String overrideType = null;
+	/** If -1+, will override any caching for this file. */
 	public int overrideCache = -2;
+	/** The Work/connection that this Request came from/ */
 	public Work work = null;
+	/** If a sub request, this will have the calling super. */
 	public RequestPacket parent = null;
+	/** The ResponsePacket that will or has been formed from us. */
 	public ResponsePacket child = null;
+	/** The order in the request sequence when pipelining. */
 	public int order = -1;
+	/** Used for rewriting from override. */
 	public String rags1 = null, rags2 = null;
-	// javaloader vars
+	/** A map of each get variable, only reliable during an AvunaAgent processing. */
 	public HashMap<String, String> get = new HashMap<String, String>();
+	/** A map of each post variable, only reliable during an AvunaAgent processing. */
 	public HashMap<String, String> post = new HashMap<String, String>();
+	/** A map of each cookie, only reliable during an AvunaAgent processing. */
 	public HashMap<String, String> cookie = new HashMap<String, String>();
+	/** For the planned HTTP/2 support. */
 	public boolean http2Upgrade = false;
 	
+	/** Returns true if we are a POST with a body. */
 	public boolean isValidPost() {
 		return method == Method.POST && body != null && body.data != null;
 	}
 	
+	/** Clones the Request, used mostly for creating a sub request. */
 	public RequestPacket clone() {
 		RequestPacket ret = new RequestPacket();
 		ret.headers = headers.clone();
@@ -69,6 +92,7 @@ public class RequestPacket extends Packet {
 		return ret;
 	}
 	
+	/** Gets the get/post/cookie variables and puts them in the HashMaps for Avuna Agents. */
 	public void procJL() throws UnsupportedEncodingException {
 		String get = target.contains("?") ? target.substring(target.indexOf("?") + 1) : "";
 		for (String kd : get.split("&")) {
@@ -100,11 +124,13 @@ public class RequestPacket extends Packet {
 		}
 	}
 	
+	/** Serializes and writes the request, used for tunneling. */
 	public void write(DataOutputStream out) throws IOException {
 		out.write(serialize());
 		out.flush();
 	}
 	
+	/** Reads a line from a DataInputStream. */
 	private static String readLine(DataInputStream in) throws IOException {
 		ByteArrayOutputStream writer = new ByteArrayOutputStream();
 		int i = in.read();
@@ -116,6 +142,7 @@ public class RequestPacket extends Packet {
 		return writer.toString();
 	}
 	
+	/** Reads a line from a DataInputStream, with some prepared bytes from doing an SSL poll. */
 	private static String readLine(byte[] sslprep, DataInputStream in) throws IOException {
 		if (sslprep == null) return readLine(in);
 		ByteArrayOutputStream writer = new ByteArrayOutputStream();
@@ -129,6 +156,7 @@ public class RequestPacket extends Packet {
 		return writer.toString();
 	}
 	
+	/** Reads the RequestPacket. */
 	public static RequestPacket read(byte[] sslprep, DataInputStream in, HostHTTP host) throws IOException {
 		RequestPacket incomingRequest = new RequestPacket();
 		String reqLine = "";
@@ -192,6 +220,7 @@ public class RequestPacket extends Packet {
 		return incomingRequest;
 	}
 	
+	/** Serializes the request packet, mostly used for tunneling. */
 	public byte[] serialize() {
 		try {
 			ByteArrayOutputStream ser = new ByteArrayOutputStream();

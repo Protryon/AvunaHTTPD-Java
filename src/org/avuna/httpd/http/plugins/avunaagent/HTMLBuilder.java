@@ -16,12 +16,13 @@ public class HTMLBuilder extends PrintWriter {
 		this.out = out;
 	}
 	
+	/** Clears the buffer, erasing any previously written data. */
 	public void clear() {
 		out = new StringWriter();
 		super.out = out;
 	}
 	
-	// TODO inadequate, future writes still write to the buffer but are ignored
+	/** Prevents any future writing, but does not throw errors if you do, intended for cleaner code flow. */
 	public void close() {
 		closed = true;
 		fnl = out.toString();
@@ -35,15 +36,20 @@ public class HTMLBuilder extends PrintWriter {
 	
 	private HashMap<String, Object> vars = null;
 	
+	/** Set a value in the internal HashMap, useful for cleaner nested Avuna Agents. */
 	public void set(String name, Object value) {
 		if (vars == null) vars = new HashMap<String, Object>();
 		vars.put(name, value);
 	}
 	
+	/** Gets a value from the internal HashMap, useful for cleaner nested Avuna Agents. */
+	
 	public Object get(String name) {
 		if (vars == null) return null;
 		return vars.get(name);
 	}
+	
+	/** See if a value in the internal HashMap exists, useful for cleaner nested Avuna Agents. */
 	
 	public boolean containsKey(String name) {
 		if (vars == null) return false;
