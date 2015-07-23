@@ -9,7 +9,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.Event;
@@ -93,24 +95,12 @@ public class HostHTTP extends Host {
 		return null;
 	}
 	
-	public Work pollQueue() {
-		return workQueue.poll();
-	}
-	
-	public boolean emptyQueue() {
-		return workQueue.isEmpty();
-	}
-	
 	public RequestPacket pollReqQueue() {
 		return reqWorkQueue.poll();
 	}
 	
 	public boolean emptyReqQueue() {
 		return reqWorkQueue.isEmpty();
-	}
-	
-	public int sizeQueue() {
-		return workQueue.size();
 	}
 	
 	public int sizeReqQueue() {
@@ -143,24 +133,41 @@ public class HostHTTP extends Host {
 		
 	}
 	
-	public void clearWork() {
-		workQueue.clear();
+	public List<Work> works = Collections.synchronizedList(new ArrayList<Work>());
+	
+	public void readdWork(Work w) {
+		w.inUse = false;
+		works.add(w);
 	}
 	
-	public int getQueueSize() {
-		return workQueue.size();
+	public Work getWork() {
+		synchronized (works) {
+			for (Work work : works) {
+				if (work.inUse) continue;
+				try {
+					if (work.s.isClosed() || work.in.available() > 0) {
+						work.inUse = true;
+						return work;
+					}
+				}catch (IOException e) {
+					work.inUse = true;
+					return work;
+				}
+				ResponsePacket rp = work.outQueue.peek();
+				if (rp != null && rp.done) {
+					work.inUse = true;
+					return work;
+				}
+			}
+		}
+		return null;
 	}
 	
 	public final ArrayList<Thread> subworkers = new ArrayList<Thread>();
 	
 	public ArrayList<ThreadConnection> conns = new ArrayList<ThreadConnection>();
 	public ArrayList<ThreadWorker> workers = new ArrayList<ThreadWorker>();
-	private ArrayBlockingQueue<Work> workQueue;
 	public static HashMap<String, Integer> connIPs = new HashMap<String, Integer>();
-	
-	public void initQueue(int connlimit) {
-		workQueue = new ArrayBlockingQueue<Work>(connlimit);
-	}
 	
 	public static int getConnectionsForIP(String ip) {
 		return connIPs.containsKey(ip) ? connIPs.get(ip) : 0;
@@ -173,7 +180,7 @@ public class HostHTTP extends Host {
 		cur += 1;
 		connIPs.put(ip, cur);
 		Work w = new Work(host, s, in, out, ssl);
-		workQueue.add(w);
+		works.add(w);
 		Logger.log(ip + " connected to " + host.getHostname() + ".");
 		EventConnected epc = new EventConnected(w);
 		host.eventBus.callEvent(epc);
@@ -189,16 +196,26 @@ public class HostHTTP extends Host {
 	}
 	
 	public void clearIPs(String ip) {
-		for (Object worko : workQueue.toArray()) {
-			Work work = (Work) worko;
-			if (work.s.getInetAddress().getHostAddress().equals(ip)) {
-				workQueue.remove(work);
+		synchronized (works) {
+			for (int i = 0; i < works.size(); i++) {
+				Work work = works.get(i);
+				if (work.s.getInetAddress().getHostAddress().equals(ip)) {
+					works.remove(i--);
+				}
 			}
 		}
 	}
 	
-	public void readdWork(Work work) {
-		workQueue.add(work);
+	public void removeWork(Work tr) {
+		synchronized (works) {
+			for (int i = 0; i < works.size(); i++) {
+				Work work = works.get(i);
+				if (work == tr) {
+					works.remove(i--);
+					break;
+				}
+			}
+		}
 	}
 	
 	public void preExit() {
@@ -252,7 +269,7 @@ public class HostHTTP extends Host {
 			for (ResponsePacket resp : resps) {
 				if (resp != null && !resp.done) {
 					try {
-						Thread.sleep(0L, 100000); // TODO: longer? smarter?
+						Thread.sleep(0L, 400000); // TODO: longer? smarter?
 					}catch (InterruptedException e) {
 						Logger.logError(e);
 					}
@@ -330,7 +347,7 @@ public class HostHTTP extends Host {
 	}
 	
 	public void setup(ServerSocket s) {
-		initQueue(mc < 1 ? 10000000 : mc);
+		// initQueue(mc < 1 ? 10000000 : mc);
 		initQueue();
 		for (int i = 0; i < twc; i++) {
 			ThreadWorker tw = new ThreadWorker(this);
@@ -340,6 +357,9 @@ public class HostHTTP extends Host {
 		}
 		for (int i = 0; i < tcc; i++) {
 			ThreadConnection tc = new ThreadConnection(this);
+			try {
+				Thread.sleep(0L, 500000);
+			}catch (InterruptedException e) {}
 			addTerm(tc);
 			tc.start();
 		}

@@ -32,7 +32,7 @@ public class ThreadAccept extends Thread {
 				Socket s = server.accept();
 				s.setTcpNoDelay(true);
 				s.setSoTimeout(1000);
-				if (cl >= 0 && host.sizeQueue() >= cl) {
+				if (cl >= 0 && host.works.size() >= cl) {
 					s.close();
 					continue;
 				}

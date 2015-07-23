@@ -59,7 +59,7 @@ public class HostHTTPM extends HostHTTP {
 	}
 	
 	public void setup(ServerSocket s) {
-		initQueue(mc < 1 ? 10000000 : mc);
+		// initQueue(mc < 1 ? 10000000 : mc);
 		initQueue();
 		for (int i = 0; i < twc; i++) {
 			ThreadMWorker tmw = new ThreadMWorker(this);
@@ -68,6 +68,9 @@ public class HostHTTPM extends HostHTTP {
 		}
 		for (int i = 0; i < tcc; i++) {
 			ThreadConnection tc = new ThreadConnection(this);
+			try {
+				Thread.sleep(0L, 500000);
+			}catch (InterruptedException e) {}
 			addTerm(tc);
 			tc.start();
 		}
