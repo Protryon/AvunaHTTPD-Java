@@ -29,7 +29,7 @@ public class ThreadConnection extends Thread implements ITerminatable {
 			Work focus = host.getWork();
 			if (focus == null) {
 				try {
-					Thread.sleep(5L);
+					Thread.sleep(2L, 500000);
 				}catch (InterruptedException e) {
 					// Logger.logError(e);
 				}
