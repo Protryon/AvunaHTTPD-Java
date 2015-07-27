@@ -2,11 +2,9 @@
 
 package org.avuna.httpd.http.networking;
 
-import java.io.IOException;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import org.avuna.httpd.AvunaHTTPD;
-import org.avuna.httpd.event.base.EventDisconnected;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.HostHTTPM;
 import org.avuna.httpd.hosts.ITerminatable;
@@ -36,13 +34,7 @@ public class ThreadConnection extends Thread implements ITerminatable {
 				continue;
 			}
 			if (focus.s.isClosed()) {
-				host.eventBus.callEvent(new EventDisconnected(focus));
-				String ip = focus.s.getInetAddress().getHostAddress();
-				Integer cur = HostHTTP.connIPs.get(ip);
-				if (cur == null) cur = 1;
-				cur -= 1;
-				HostHTTP.connIPs.put(ip, cur);
-				Logger.log(ip + " closed.");
+				focus.close();
 				continue;
 			}
 			boolean canAdd = true;
@@ -81,7 +73,7 @@ public class ThreadConnection extends Thread implements ITerminatable {
 					try {
 						int sp = focus.in.read();
 						if (sp == -1) {
-							focus.s.close();
+							focus.close();
 							readd = false;
 							continue;
 						}
@@ -108,12 +100,6 @@ public class ThreadConnection extends Thread implements ITerminatable {
 						}else {
 							readd = false;
 							focus.close();
-							String ip = focus.s.getInetAddress().getHostAddress();
-							Integer cur = HostHTTP.connIPs.get(ip);
-							if (cur == null) cur = 1;
-							cur -= 1;
-							HostHTTP.connIPs.put(ip, cur);
-							Logger.log(ip + " closed.");
 							continue;
 						}
 					}
@@ -154,17 +140,7 @@ public class ThreadConnection extends Thread implements ITerminatable {
 						readd = true;
 					}else {
 						// Logger.logError(e);
-						try {
-							focus.close();
-						}catch (IOException ex) {
-							Logger.logError(ex);
-						}
-						String ip = focus.s.getInetAddress().getHostAddress();
-						Integer cur = HostHTTP.connIPs.get(ip);
-						if (cur == null) cur = 1;
-						cur -= 1;
-						HostHTTP.connIPs.put(ip, cur);
-						Logger.log(ip + " closed.");
+						focus.close();
 						readd = false;
 					}
 				}else {
@@ -174,17 +150,7 @@ public class ThreadConnection extends Thread implements ITerminatable {
 			}catch (Exception e) {
 				if (!(e instanceof SocketTimeoutException)) {
 					if (!(e instanceof SocketException || e instanceof StringIndexOutOfBoundsException)) Logger.logError(e);
-					try {
-						focus.close();
-					}catch (IOException ex) {
-						Logger.logError(ex);
-					}
-					String ip = focus.s.getInetAddress().getHostAddress();
-					Integer cur = HostHTTP.connIPs.get(ip);
-					if (cur == null) cur = 1;
-					cur -= 1;
-					HostHTTP.connIPs.put(ip, cur);
-					Logger.log(ip + " closed.");
+					focus.close();
 					readd = false;
 				}
 			}finally {

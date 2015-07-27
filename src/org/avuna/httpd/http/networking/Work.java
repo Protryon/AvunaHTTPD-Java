@@ -11,6 +11,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import org.avuna.httpd.event.base.EventDisconnected;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.http.networking.httpm.MasterConn;
+import org.avuna.httpd.util.Logger;
 
 public class Work {
 	public final Socket s;
@@ -42,8 +43,18 @@ public class Work {
 		}
 	}
 	
-	public void close() throws IOException {
-		s.close();
+	public void close() {
+		String ip = s.getInetAddress().getHostAddress();
+		Integer cur = HostHTTP.connIPs.get(ip);
+		if (cur == null) cur = 1;
+		cur -= 1;
+		HostHTTP.connIPs.put(ip, cur);
+		Logger.log(ip + " closed.");
+		try {
+			s.close();
+		}catch (IOException e) {
+			Logger.logError(e);
+		}
 		host.eventBus.callEvent(new EventDisconnected(this));
 	}
 }
