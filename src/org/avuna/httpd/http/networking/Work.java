@@ -44,6 +44,7 @@ public class Work {
 	}
 	
 	public void close() {
+		host.removeWork(this);
 		String ip = s.getInetAddress().getHostAddress();
 		Integer cur = HostHTTP.connIPs.get(ip);
 		if (cur == null) cur = 1;

@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -142,12 +143,64 @@ public class HostHTTP extends Host {
 	
 	public Work getWork() {
 		synchronized (works) {
-			for (Work work : works) {
+			for (int i = 0; i < works.size(); i++) {
+				Work work = works.get(i);
 				if (work.inUse) continue;
 				try {
-					if (work.s.isClosed() || work.in.available() > 0) {
-						work.inUse = true;
-						return work;
+					if (work.s.isClosed()) {
+						work.close();
+						i--;
+						continue;
+					}else {
+						ResponsePacket lrp = work.outQueue.peek();
+						if (work.in.available() > 0 || (lrp != null && lrp.done)) {
+							work.inUse = true;
+							return work;
+						}else {
+							if (work.ssl) {
+								work.inUse = true;
+								work.s.setSoTimeout(1);
+								try {
+									int sp = work.in.read();
+									if (sp == -1) {
+										work.close();
+										i--;
+										continue;
+									}
+									work.sslprep.write(sp);
+								}catch (SocketTimeoutException e) {
+									
+								}finally {
+									work.s.setSoTimeout(1000);
+								}
+								if (work.in.available() > 0) {
+									return work;
+								}else {
+									work.inUse = false;
+								}
+							}
+							if (!work.blockTimeout) {
+								work.inUse = true;
+								if (work.sns == 0L) {
+									work.sns = System.nanoTime() + 10000000000L;
+									work.inUse = false;
+									continue;
+								}else {
+									if (work.sns >= System.nanoTime()) {
+										if (AvunaHTTPD.bannedIPs.contains(work.s.getInetAddress().getHostAddress())) {
+											work.close();
+											i--;
+										}
+										work.inUse = false;
+										continue;
+									}else {
+										work.close();
+										i--;
+										continue;
+									}
+								}
+							}
+						}
 					}
 				}catch (IOException e) {
 					work.inUse = true;
@@ -203,15 +256,7 @@ public class HostHTTP extends Host {
 	}
 	
 	public void removeWork(Work tr) {
-		synchronized (works) {
-			for (int i = 0; i < works.size(); i++) {
-				Work work = works.get(i);
-				if (work == tr) {
-					works.remove(i--);
-					break;
-				}
-			}
-		}
+		works.remove(tr);
 	}
 	
 	public void preExit() {

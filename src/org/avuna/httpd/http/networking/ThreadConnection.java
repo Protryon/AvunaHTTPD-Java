@@ -155,7 +155,7 @@ public class ThreadConnection extends Thread implements ITerminatable {
 				}
 			}finally {
 				if (!readd || !canAdd) {
-					host.removeWork(focus);
+					focus.close();
 				}else {
 					focus.inUse = false;
 				}
