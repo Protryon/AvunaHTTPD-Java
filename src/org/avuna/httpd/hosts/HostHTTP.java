@@ -180,18 +180,14 @@ public class HostHTTP extends Host {
 		cur += 1;
 		connIPs.put(ip, cur);
 		Work w = new Work(host, s, in, out, ssl);
-		works.add(w);
 		Logger.log(ip + " connected to " + host.getHostname() + ".");
 		EventConnected epc = new EventConnected(w);
 		host.eventBus.callEvent(epc);
 		if (epc.isCanceled()) {
-			try {
-				w.close();
-			}catch (IOException e) {
-				
-			}
-			
+			w.close();
+			return;
 		}
+		works.add(w);
 		
 	}
 	
