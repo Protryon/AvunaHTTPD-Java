@@ -20,8 +20,8 @@ import org.avuna.httpd.http.event.EventClearCache;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.avunaagent.PluginAvunaAgent;
-import org.avuna.httpd.http.plugins.avunaagent.lib.HTMLCache;
 import org.avuna.httpd.http.plugins.avunaagent.lib.AvunaAgentUtil;
+import org.avuna.httpd.http.plugins.avunaagent.lib.HTMLCache;
 import org.avuna.httpd.http.plugins.base.PluginChunked;
 import org.avuna.httpd.http.plugins.base.PluginFCGI;
 import org.avuna.httpd.http.plugins.base.PluginOverride;
@@ -441,7 +441,7 @@ public class FileManager {
 					tooBig = tbCache.get(nrt);
 					oabs = absCache.get(nrt);
 					directive = cConfigCache.get(superdir);
-				}else if (!tc && cc > 0) {
+				}else if (!tc && cc >= 0) {
 					cacheClock = t;
 					String[] delKeys = new String[cache.size()];
 					int delSize = 0;
