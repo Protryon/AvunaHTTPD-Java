@@ -325,9 +325,6 @@ public class HostHTTP extends Host {
 	
 	public void formatConfig(ConfigNode map, boolean loadVHosts) {
 		super.formatConfig(map);
-		if (!map.containsNode("errorpages")) map.insertNode("errorpages", null, "subvalues are errorcode=errorpage, ie 404=/404.html");
-		if (!map.containsNode("index")) map.insertNode("index", "index.class,index.php,index.html", "format is filename,filename,etc");
-		if (!map.containsNode("cacheClock")) map.insertNode("cacheClock", "-1", "-1=forever, 0=never >0=MS per cache clear");
 		if (!map.containsNode("maxPostSize")) map.insertNode("maxPostSize", "65535", "max post size in KB");
 		this.maxPostSize = Integer.parseInt(map.getNode("maxPostSize").getValue());
 		if (!map.containsNode("acceptThreadCount")) map.insertNode("acceptThreadCount", "4", "number of accept threads");
@@ -354,6 +351,9 @@ public class HostHTTP extends Host {
 			if (!vhost.containsNode("htsrc")) vhost.insertNode("htsrc", AvunaHTTPD.fileManager.getBaseFile("htsrc").toString());
 			// }
 			if (!vhost.containsNode("inheritjls")) vhost.insertNode("inheritjls", "", "set to host/vhost to inherit another hosts javaloaders; used for HTTPS, you would want to inherit JLS to sync them in memory.");
+			if (!vhost.containsNode("errorpages")) vhost.insertNode("errorpages", null, "subvalues are errorcode=errorpage, ie \"404=/404.html\", does not support PHP/AvunaAgent pages.");
+			if (!vhost.containsNode("index")) vhost.insertNode("index", "index.class,index.php,index.html", "format is filename,filename,etc");
+			if (!vhost.containsNode("cacheClock")) vhost.insertNode("cacheClock", "-1", "-1=forever, 0=never >0=MS per cache clear");
 		}
 		if (loadVHosts) {
 			for (String vkey : vhosts.getSubnodes()) {
@@ -372,9 +372,9 @@ public class HostHTTP extends Host {
 						Logger.log("Invalid inheritjls! Skipping.");
 						continue;
 					}
-					vhost = new VHost(this.getHostname() + "/" + vkey, this, ourvh.getNode("host").getValue(), parent);
+					vhost = new VHost(this.getHostname() + "/" + vkey, this, ourvh.getNode("host").getValue(), parent, Integer.parseInt(ourvh.getNode("cacheClock").getValue()), ourvh.getNode("index").getValue(), ourvh.getNode("errorpages"));
 				}else {
-					vhost = new VHost(this.getHostname() + "/" + vkey, this, new File(ourvh.getNode("htdocs").getValue()), new File(ourvh.getNode("htsrc").getValue()), ourvh.getNode("host").getValue());
+					vhost = new VHost(this.getHostname() + "/" + vkey, this, new File(ourvh.getNode("htdocs").getValue()), new File(ourvh.getNode("htsrc").getValue()), ourvh.getNode("host").getValue(), Integer.parseInt(ourvh.getNode("cacheClock").getValue()), ourvh.getNode("index").getValue(), ourvh.getNode("errorpages"));
 				}
 				vhost.setDebug(ourvh.getNode("debug").getValue().equals("true"));
 				this.addVHost(vhost);

@@ -172,7 +172,7 @@ public class FileManager {
 	 * @see Resource
 	 * @return error page if configured, else standard error message. */
 	public Resource getErrorPage(RequestPacket request, String reqTarget, StatusCode status, String info) {
-		ConfigNode errorPages = request.host.getHost().getConfig().getNode("errorpages");
+		ConfigNode errorPages = request.host.getErrorPages();
 		if (errorPages.containsNode(status.getStatus() + "")) {
 			try {
 				String path = errorPages.getNode(status.getStatus() + "").getValue();
@@ -289,7 +289,7 @@ public class FileManager {
 			if (request.overrideIndex != null) {
 				index = request.overrideIndex;
 			}else {
-				index = request.host.getHost().getConfig().getNode("index").getValue().split(",");
+				index = request.host.getIndex();
 			}
 			for (String i : index) {
 				i = i.trim();
@@ -426,7 +426,7 @@ public class FileManager {
 			String oabs = null;
 			if (cache.containsKey(nrt)) {
 				long t = System.currentTimeMillis();
-				long cc = Integer.parseInt(request.host.getHost().getConfig().getNode("cacheClock").getValue());
+				long cc = request.host.getCacheClock();
 				if (request.overrideCache >= -1) {
 					cc = request.overrideCache;
 				}

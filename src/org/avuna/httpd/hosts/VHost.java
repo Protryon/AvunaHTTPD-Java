@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.hosts;
 
@@ -20,6 +6,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import org.avuna.httpd.http.plugins.avunaagent.AvunaAgentSession;
+import org.avuna.httpd.util.ConfigNode;
 
 public class VHost {
 	private final HostHTTP host;
@@ -27,25 +14,46 @@ public class VHost {
 	private final String name, vhost;
 	private AvunaAgentSession jls;
 	private final VHost parent;
+	private final int cacheClock;
+	private final String[] index;
+	private final ConfigNode errorpages;
 	private ArrayList<VHost> children = new ArrayList<VHost>();
 	
-	public VHost(String name, HostHTTP host, String vhost, VHost parent) {
+	public VHost(String name, HostHTTP host, String vhost, VHost parent, int cacheClock, String index, ConfigNode errorpages) {
 		this.name = name;
 		this.host = host;
 		this.htdocs = parent.htdocs;
 		this.htsrc = parent.htsrc;
 		this.vhost = vhost;
 		this.parent = parent;
+		this.cacheClock = cacheClock;
+		this.index = index.split(",");
+		this.errorpages = errorpages;
 		parent.children.add(this);
 	}
 	
-	public VHost(String name, HostHTTP host, File htdocs, File htsrc, String vhost) {
+	public VHost(String name, HostHTTP host, File htdocs, File htsrc, String vhost, int cacheClock, String index, ConfigNode errorpages) {
 		this.name = name;
 		this.host = host;
 		this.htdocs = htdocs;
 		this.htsrc = htsrc;
 		this.vhost = vhost;
 		this.parent = null;
+		this.cacheClock = cacheClock;
+		this.index = index.split(",");
+		this.errorpages = errorpages;
+	}
+	
+	public int getCacheClock() {
+		return cacheClock;
+	}
+	
+	public String[] getIndex() {
+		return index;
+	}
+	
+	public ConfigNode getErrorPages() {
+		return errorpages;
 	}
 	
 	public boolean isChild() {

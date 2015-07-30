@@ -28,8 +28,6 @@ public class HostHTTPM extends HostHTTP {
 	
 	public void formatConfig(ConfigNode map) {
 		super.formatConfig(map, false);
-		map.removeNode("index");
-		map.removeNode("cacheClock");
 		ConfigNode vhosts = map.getNode("vhosts");
 		for (String vkey : vhosts.getSubnodes()) {
 			ConfigNode vhost = vhosts.getNode(vkey);
@@ -39,11 +37,9 @@ public class HostHTTPM extends HostHTTP {
 			vhost.removeNode("inheritjls");
 			vhost.removeNode("htdocs");
 			vhost.removeNode("htsrc");
-			// if (!System.getProperty("os.name").toLowerCase().contains("windows")) {
-			// if (!vhost.containsNode("spawn")) vhost.insertNode("spawn", "true");
-			// if (!vhost.containsNode("uid")) vhost.insertNode(AvunaHTTPD.mainConfig.get("uid"));
-			// if (!vhost.containsNode("gid")) vhost.insertNode(AvunaHTTPD.mainConfig.get("gid"));
-			// }
+			vhost.removeNode("index");
+			vhost.removeNode("cacheClock");
+			vhost.removeNode("errorpages");
 			if (!AvunaHTTPD.windows && !vhost.containsNode("unix")) vhost.insertNode("unix", "false", "enabled unix socket. if true, set the ip to the unix socket file, port is ignored.");
 			if (!vhost.containsNode("ip")) vhost.insertNode("ip", "127.0.0.1", "ip or unix socket file to forward to");
 			if (!vhost.containsNode("port")) vhost.insertNode("port", "6844", "port to forward if ip");
