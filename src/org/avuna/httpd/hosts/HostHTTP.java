@@ -136,6 +136,10 @@ public class HostHTTP extends Host {
 	
 	public List<Work> works = Collections.synchronizedList(new ArrayList<Work>());
 	
+	public int workSize() {
+		return works.size();
+	}
+	
 	public void readdWork(Work w) {
 		w.inUse = false;
 		works.add(w);
@@ -236,7 +240,14 @@ public class HostHTTP extends Host {
 			return;
 		}
 		works.add(w);
-		
+		for (ThreadConnection conn : conns) {
+			if (conn.getState() == State.WAITING) {
+				synchronized (conn) {
+					conn.notify();
+				}
+				break;
+			}
+		}
 	}
 	
 	public void clearIPs(String ip) {

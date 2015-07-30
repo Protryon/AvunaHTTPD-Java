@@ -34,9 +34,7 @@ public class ThreadWorker extends Thread implements ITerminatable {
 					synchronized (this) {
 						this.wait();
 					}
-				}catch (InterruptedException e) {
-					// Logger.logError(e);
-				}
+				}catch (InterruptedException e) {}
 				continue;
 			}
 			try {

@@ -26,11 +26,17 @@ public class ThreadConnection extends Thread implements ITerminatable {
 		while (keepRunning) {
 			Work focus = host.getWork();
 			if (focus == null) {
+				if (host.workSize() == 0) {
+					try {
+						synchronized (this) {
+							this.wait();
+						}
+						continue;
+					}catch (InterruptedException e) {}
+				}
 				try {
 					Thread.sleep(2L, 500000);
-				}catch (InterruptedException e) {
-					// Logger.logError(e);
-				}
+				}catch (InterruptedException e) {}
 				continue;
 			}
 			if (focus.s.isClosed()) {
@@ -139,7 +145,6 @@ public class ThreadConnection extends Thread implements ITerminatable {
 					if (focus.tos < 10) {
 						readd = true;
 					}else {
-						// Logger.logError(e);
 						focus.close();
 						readd = false;
 						continue;
