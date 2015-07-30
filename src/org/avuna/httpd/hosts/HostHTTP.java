@@ -206,11 +206,6 @@ public class HostHTTP extends Host {
 					work.inUse = true;
 					return work;
 				}
-				ResponsePacket rp = work.outQueue.peek();
-				if (rp != null && rp.done) {
-					work.inUse = true;
-					return work;
-				}
 			}
 		}
 		return null;

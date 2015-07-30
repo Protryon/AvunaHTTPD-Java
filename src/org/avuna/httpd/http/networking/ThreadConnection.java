@@ -142,6 +142,7 @@ public class ThreadConnection extends Thread implements ITerminatable {
 						// Logger.logError(e);
 						focus.close();
 						readd = false;
+						continue;
 					}
 				}else {
 					readd = true;
@@ -152,6 +153,7 @@ public class ThreadConnection extends Thread implements ITerminatable {
 					if (!(e instanceof SocketException || e instanceof StringIndexOutOfBoundsException)) Logger.logError(e);
 					focus.close();
 					readd = false;
+					continue;
 				}
 			}finally {
 				if (!readd || !canAdd) {
