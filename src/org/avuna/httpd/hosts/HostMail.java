@@ -1,18 +1,5 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/*
+ * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.hosts;
 
@@ -100,7 +87,7 @@ public class HostMail extends Host {
 		if (!map.containsNode("imap-port")) map.insertNode("imap-port", "143", "IMAP port");
 		if (!map.containsNode("imap-tls-port")) map.insertNode("imap-tls-port", "993", "IMAPS port");
 		if (!map.containsNode("ip")) map.insertNode("ip", "0.0.0.0", "bind ip");
-		if (!map.containsNode("ssl")) map.insertNode("ssl", "configure to enable imaps/smtps/starttls");
+		if (!map.containsNode("ssl")) map.insertNode("ssl", null, "configure to enable imaps/smtps/starttls");
 		ConfigNode ssl = map.getNode("ssl");
 		if (!ssl.containsNode("enabled")) ssl.insertNode("enabled", "false");
 		if (!ssl.containsNode("keyFile")) ssl.insertNode("keyFile", AvunaHTTPD.fileManager.getBaseFile("ssl/keyFile").toString());
