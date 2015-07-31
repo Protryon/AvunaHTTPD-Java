@@ -361,16 +361,32 @@ public class HostHTTP extends Host {
 			if (!vhost.containsNode("htdocs")) vhost.insertNode("htdocs", AvunaHTTPD.fileManager.getBaseFile("htdocs").toString());
 			if (!vhost.containsNode("htsrc")) vhost.insertNode("htsrc", AvunaHTTPD.fileManager.getBaseFile("htsrc").toString());
 			// }
-			if (!vhost.containsNode("inheritjls")) vhost.insertNode("inheritjls", "", "set to host/vhost to inherit another hosts javaloaders; used for HTTPS, you would want to inherit JLS to sync them in memory.");
-			if (!vhost.containsNode("errorpages")) vhost.insertNode("errorpages", null, "subvalues are errorcode=errorpage, ie \"404=/404.html\", does not support PHP/AvunaAgent pages.");
-			if (!vhost.containsNode("index")) vhost.insertNode("index", "index.class,index.php,index.html", "format is filename,filename,etc");
-			if (!vhost.containsNode("cacheClock")) vhost.insertNode("cacheClock", "-1", "-1=forever, 0=never >0=MS per cache clear");
+			if (!vhost.containsNode("forward")) vhost.insertNode("forward", "false");
+			boolean forward = vhost.getNode("forward").getValue().equals("true");
+			if (forward) {
+				vhost.removeNode("inheritjls");
+				vhost.removeNode("htdocs");
+				vhost.removeNode("htsrc");
+				vhost.removeNode("index");
+				vhost.removeNode("cacheClock");
+				vhost.removeNode("errorpages");
+				if (!AvunaHTTPD.windows && !vhost.containsNode("forward-unix")) vhost.insertNode("forward-unix", "false", "enabled unix socket. if true, set the ip to the unix socket file, port is ignored.");
+				if (AvunaHTTPD.windows && vhost.containsNode("forward-unix")) vhost.removeNode("forward-unix");
+				if (!vhost.containsNode("forward-ip")) vhost.insertNode("forward-ip", "127.0.0.1", "ip or unix socket file to forward to");
+				if (!vhost.containsNode("forward-port")) vhost.insertNode("forward-port", "80", "port to forward to");
+			}else {
+				if (!vhost.containsNode("inheritjls")) vhost.insertNode("inheritjls", "", "set to host/vhost to inherit another hosts javaloaders; used for HTTPS, you would want to inherit JLS to sync them in memory.");
+				if (!vhost.containsNode("errorpages")) vhost.insertNode("errorpages", null, "subvalues are errorcode=errorpage, ie \"404=/404.html\", does not support PHP/AvunaAgent pages.");
+				if (!vhost.containsNode("index")) vhost.insertNode("index", "index.class,index.php,index.html", "format is filename,filename,etc");
+				if (!vhost.containsNode("cacheClock")) vhost.insertNode("cacheClock", "-1", "-1=forever, 0=never >0=MS per cache clear");
+			}
 		}
 		if (loadVHosts) {
 			for (String vkey : vhosts.getSubnodes()) {
 				ConfigNode ourvh = vhosts.getNode(vkey);
 				if (!ourvh.getNode("enabled").getValue().equals("true")) continue;
 				VHost vhost = null;
+				boolean forward = ourvh.getNode("forward").getValue().equals("true");
 				if (ourvh.containsNode("inheritjls") && ourvh.getNode("inheritjls").getValue().length() > 0) {
 					VHost parent = null;
 					String ij = ourvh.getNode("inheritjls").getValue();
@@ -383,9 +399,9 @@ public class HostHTTP extends Host {
 						Logger.log("Invalid inheritjls! Skipping.");
 						continue;
 					}
-					vhost = new VHost(this.getHostname() + "/" + vkey, this, ourvh.getNode("host").getValue(), parent, Integer.parseInt(ourvh.getNode("cacheClock").getValue()), ourvh.getNode("index").getValue(), ourvh.getNode("errorpages"));
+					vhost = new VHost(this.getHostname() + "/" + vkey, this, ourvh.getNode("host").getValue(), parent, Integer.parseInt(ourvh.getNode("cacheClock").getValue()), ourvh.getNode("index").getValue(), ourvh.getNode("errorpages"), forward, forward && !AvunaHTTPD.windows && ourvh.getNode("forward-unix").getValue().equals("true"), forward ? ourvh.getNode("forward-ip").getValue() : null, forward ? Integer.parseInt(ourvh.getNode("forward-port").getValue()) : -1);
 				}else {
-					vhost = new VHost(this.getHostname() + "/" + vkey, this, new File(ourvh.getNode("htdocs").getValue()), new File(ourvh.getNode("htsrc").getValue()), ourvh.getNode("host").getValue(), Integer.parseInt(ourvh.getNode("cacheClock").getValue()), ourvh.getNode("index").getValue(), ourvh.getNode("errorpages"));
+					vhost = new VHost(this.getHostname() + "/" + vkey, this, forward ? null : new File(ourvh.getNode("htdocs").getValue()), forward ? null : new File(ourvh.getNode("htsrc").getValue()), ourvh.getNode("host").getValue(), forward ? 0 : Integer.parseInt(ourvh.getNode("cacheClock").getValue()), forward ? null : ourvh.getNode("index").getValue(), forward ? null : ourvh.getNode("errorpages"), forward, forward && !AvunaHTTPD.windows && ourvh.getNode("forward-unix").getValue().equals("true"), forward ? ourvh.getNode("forward-ip").getValue() : null, forward ? Integer.parseInt(ourvh.getNode("forward-port").getValue()) : -1);
 				}
 				vhost.setDebug(ourvh.getNode("debug").getValue().equals("true"));
 				this.addVHost(vhost);

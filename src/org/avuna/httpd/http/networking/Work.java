@@ -10,7 +10,6 @@ import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.avuna.httpd.event.base.EventDisconnected;
 import org.avuna.httpd.hosts.HostHTTP;
-import org.avuna.httpd.http.networking.httpm.MasterConn;
 import org.avuna.httpd.util.Logger;
 
 public class Work {
@@ -25,7 +24,9 @@ public class Work {
 	public ByteArrayOutputStream sslprep = null;
 	public ArrayBlockingQueue<ResponsePacket> outQueue = new ArrayBlockingQueue<ResponsePacket>(64);
 	public boolean blockTimeout = false;
-	public MasterConn cn = null;
+	public Socket fn = null;
+	public DataOutputStream fnout = null;
+	public DataInputStream fnin = null;
 	public int rqs = 0;
 	public long rqst = 0L;
 	public boolean inUse = false;

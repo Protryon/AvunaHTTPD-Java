@@ -17,9 +17,30 @@ public class VHost {
 	private final int cacheClock;
 	private final String[] index;
 	private final ConfigNode errorpages;
+	private final boolean forward;
+	private final boolean unix;
+	private final String ip;
+	private final int port;
+	
+	public boolean isForwarding() {
+		return forward;
+	}
+	
+	public boolean isForwardUnix() {
+		return unix;
+	}
+	
+	public String getForwardIP() {
+		return ip;
+	}
+	
+	public int getForwardPort() {
+		return port;
+	}
+	
 	private ArrayList<VHost> children = new ArrayList<VHost>();
 	
-	public VHost(String name, HostHTTP host, String vhost, VHost parent, int cacheClock, String index, ConfigNode errorpages) {
+	public VHost(String name, HostHTTP host, String vhost, VHost parent, int cacheClock, String index, ConfigNode errorpages, boolean forward, boolean unix, String ip, int port) {
 		this.name = name;
 		this.host = host;
 		this.htdocs = parent.htdocs;
@@ -29,10 +50,14 @@ public class VHost {
 		this.cacheClock = cacheClock;
 		this.index = index.split(",");
 		this.errorpages = errorpages;
+		this.forward = forward;
+		this.unix = unix;
+		this.ip = ip;
+		this.port = port;
 		parent.children.add(this);
 	}
 	
-	public VHost(String name, HostHTTP host, File htdocs, File htsrc, String vhost, int cacheClock, String index, ConfigNode errorpages) {
+	public VHost(String name, HostHTTP host, File htdocs, File htsrc, String vhost, int cacheClock, String index, ConfigNode errorpages, boolean forward, boolean unix, String ip, int port) {
 		this.name = name;
 		this.host = host;
 		this.htdocs = htdocs;
@@ -40,8 +65,12 @@ public class VHost {
 		this.vhost = vhost;
 		this.parent = null;
 		this.cacheClock = cacheClock;
-		this.index = index.split(",");
+		this.index = index == null ? null : index.split(",");
 		this.errorpages = errorpages;
+		this.forward = forward;
+		this.unix = unix;
+		this.ip = ip;
+		this.port = port;
 	}
 	
 	public int getCacheClock() {

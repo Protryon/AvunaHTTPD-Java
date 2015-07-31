@@ -25,7 +25,6 @@ import org.avuna.httpd.event.base.EventPreExit;
 import org.avuna.httpd.event.base.EventReload;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.VHost;
-import org.avuna.httpd.hosts.VHostM;
 import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.http.StatusCode;
@@ -122,7 +121,7 @@ public class PluginAvunaAgent extends Plugin {
 			if (sece) ((PluginSecurity) registry.getPatchForClass(PluginSecurity.class)).loadBases(this);
 			HostHTTP host2 = this.registry.host;
 			for (VHost vhost : host2.getVHosts()) {
-				if (vhost.isChild() || vhost instanceof VHostM) continue;
+				if (vhost.isChild() || vhost.isForwarding()) continue;
 				vhost.initJLS(new URL[] { vhost.getHTDocs().toURI().toURL() });
 				recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 			}

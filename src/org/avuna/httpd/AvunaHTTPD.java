@@ -32,7 +32,6 @@ import org.avuna.httpd.hosts.HostCom;
 import org.avuna.httpd.hosts.HostDNS;
 import org.avuna.httpd.hosts.HostFTP;
 import org.avuna.httpd.hosts.HostHTTP;
-import org.avuna.httpd.hosts.HostHTTPM;
 import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.hosts.HostRegistry;
 import org.avuna.httpd.hosts.Protocol;
@@ -372,7 +371,6 @@ public class AvunaHTTPD {
 				System.out.println("[NOTIFY] Running as root, will load servers and attempt de-escalate, if configured.");
 			}
 			HostRegistry.addHost(Protocol.HTTP, HostHTTP.class);
-			HostRegistry.addHost(Protocol.HTTPM, HostHTTPM.class);
 			HostRegistry.addHost(Protocol.COM, HostCom.class);
 			HostRegistry.addHost(Protocol.DNS, HostDNS.class);
 			HostRegistry.addHost(Protocol.MAIL, HostMail.class);
@@ -402,7 +400,7 @@ public class AvunaHTTPD {
 					if (!rf) for (String key : map.getSubnodes()) {
 						ConfigNode host = map.getNode(key);
 						if (!host.containsNode("enabled")) host.insertNode("enabled", (nc && key.equals("com")) ? "false" : "true");
-						if (!host.containsNode("protocol")) host.insertNode("protocol", ((nd && key.equals("dns")) ? "dns" : ((nc && key.equals("com")) ? "com" : "http")), "set to http/httpm/com/dns/mail/ftp for respective servers, load Avuna with these to have other config options autofill.");
+						if (!host.containsNode("protocol")) host.insertNode("protocol", ((nd && key.equals("dns")) ? "dns" : ((nc && key.equals("com")) ? "com" : "http")), "set to http/com/dns/mail/ftp for respective servers, load Avuna with these to have other config options autofill.");
 						Protocol p = Protocol.fromString(host.getNode("protocol").getValue());
 						if (p == null) {
 							Logger.log("Skipping Host: " + key + " due to invalid protocol!");
