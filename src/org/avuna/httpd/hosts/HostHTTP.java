@@ -360,6 +360,7 @@ public class HostHTTP extends Host {
 			// if (!vhost.containsNode("inheritjls")) {
 			if (!vhost.containsNode("htdocs")) vhost.insertNode("htdocs", AvunaHTTPD.fileManager.getBaseFile("htdocs").toString());
 			if (!vhost.containsNode("htsrc")) vhost.insertNode("htsrc", AvunaHTTPD.fileManager.getBaseFile("htsrc").toString());
+			if (!vhost.containsNode("htcfg")) vhost.insertNode("htcfg", AvunaHTTPD.fileManager.getBaseFile("htcfg").toString());
 			// }
 			if (!vhost.containsNode("forward")) vhost.insertNode("forward", "false");
 			boolean forward = vhost.getNode("forward").getValue().equals("true");
@@ -367,6 +368,7 @@ public class HostHTTP extends Host {
 				vhost.removeNode("inheritjls");
 				vhost.removeNode("htdocs");
 				vhost.removeNode("htsrc");
+				vhost.removeNode("htcfg");
 				vhost.removeNode("index");
 				vhost.removeNode("cacheClock");
 				vhost.removeNode("errorpages");
