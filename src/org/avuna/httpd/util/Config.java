@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.HashMap;
 import java.util.Scanner;
+import org.avuna.httpd.AvunaHTTPD;
 
 /** General utility for configuration array and file instantiation. Provides methods for reading and writing of formatted configuration files.
  * 
@@ -64,7 +65,7 @@ public class Config extends ConfigNode {
 			save();
 		}
 		Scanner in = cfg == null ? new Scanner(iconf) : new Scanner(new FileInputStream(cfg));
-		readMap(this, in);
+		readMap(cfg, this, in);
 		in.close();
 		format();
 	}
@@ -81,12 +82,13 @@ public class Config extends ConfigNode {
 	}
 	
 	private int pl = 0;
+	private String incl = null;
 	
 	/** Read configuration file into array.
 	 * 
 	 * @param map
 	 * @param in */
-	private void readMap(ConfigNode map, Scanner in) {
+	private void readMap(File f, ConfigNode map, Scanner in) {
 		while (in.hasNextLine()) {
 			String line = in.nextLine().trim();
 			String comment = null;
@@ -95,14 +97,50 @@ public class Config extends ConfigNode {
 				line = line.substring(0, line.indexOf("#")).trim();
 			}
 			if (line.length() == 0) continue;
-			if (line.endsWith("{")) {
+			if (f != null && line.startsWith("$")) {
+				String path = line.substring(1);
+				File p;
+				if (AvunaHTTPD.windows ? (path.length() < 2 || path.charAt(1) != ':') : !path.startsWith("/")) {
+					p = new File(f.getParentFile(), path);
+				}else {
+					p = new File(path);
+				}
+				if (!p.canRead() || !p.exists()) {
+					System.out.println("Imported config, " + p.getAbsolutePath() + " does not exist, or cannot be read!");
+				}
+				if (p.isDirectory()) {
+					for (File e : p.listFiles()) {
+						Config impcfg = new Config(e.getName().substring(0, e.getName().lastIndexOf(".")), e, null);
+						impcfg.incl = path;
+						impcfg.setComment(comment);
+						try {
+							impcfg.load();
+						}catch (IOException e1) {
+							e1.printStackTrace();
+							Logger.log("Failed to read imported config file: " + e.getAbsolutePath());
+						}
+						map.insertNode(impcfg);
+					}
+				}else {
+					Config impcfg = new Config(p.getName().substring(0, p.getName().lastIndexOf(".")), p, null);
+					impcfg.incl = path;
+					impcfg.setComment(comment);
+					try {
+						impcfg.load();
+					}catch (IOException e1) {
+						e1.printStackTrace();
+						Logger.log("Failed to read imported config file: " + p.getAbsolutePath());
+					}
+					map.insertNode(impcfg);
+				}
+			}else if (line.endsWith("{")) {
 				String name = line.substring(0, line.length() - 1);
 				boolean base = pl++ == 0;
 				if (!base) {
 					ConfigNode subnode = new ConfigNode(name);
 					subnode.setComment(comment);
 					map.insertNode(subnode);
-					readMap(subnode, in);
+					readMap(f, subnode, in);
 				}
 			}else if (line.equals("}")) {
 				pl--;
@@ -111,6 +149,8 @@ public class Config extends ConfigNode {
 				String key = line.substring(0, line.indexOf("="));
 				String value = line.substring(key.length() + 1);
 				map.insertNode(new ConfigNode(key, value).setComment(comment));
+			}else {
+				Logger.log("Invalid config line @ " + (f == null ? "Memory File" : f.getAbsolutePath()));
 			}
 		}
 	}
@@ -124,13 +164,25 @@ public class Config extends ConfigNode {
 		String c2 = map.getComment();
 		out.println(getWTab() + map.getName() + "{" + (c2 != null ? " # " + c2 : ""));
 		tabLevel += 1;
+		String lincl = null;
+		boolean lwc = false;
 		for (String key : map.getSubnodes()) {
 			ConfigNode o = map.getNode(key);
-			if (o.branching()) {
+			if (o.getClass().equals(Config.class)) {
+				Config c = (Config) o;
+				c.save();
+				if (!lwc || !lincl.equals(c.incl)) {
+					out.println(getWTab() + "$" + c.incl);
+					lincl = c.incl;
+				}
+				lwc = true;
+			}else if (o.branching()) {
 				writeMap(o, out);
+				lwc = false;
 			}else {
 				String c = o.getComment();
 				out.println(getWTab() + key + "=" + o.getValue() + (c != null ? " # " + c : ""));
+				lwc = false;
 			}
 		}
 		tabLevel -= 1;

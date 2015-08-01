@@ -194,6 +194,14 @@ public class ConfigNode {
 		return value;
 	}
 	
+	/** Gets a value of a subnode, shortcut w/ error checking for getNode(subnode).getValue(); */
+	public String getValue(String subnode) {
+		if (!branching()) return null;
+		ConfigNode sub = getNode(subnode);
+		if (sub == null) return null;
+		return sub.getValue();
+	}
+	
 	public String toString() {
 		return getName() + (branching() ? "" : ("=" + getValue()));
 	}
