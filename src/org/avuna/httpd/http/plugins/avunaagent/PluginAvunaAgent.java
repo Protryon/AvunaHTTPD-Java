@@ -37,15 +37,12 @@ import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.plugins.avunaagent.lib.DatabaseManager;
 import org.avuna.httpd.http.plugins.security.PluginSecurity;
 import org.avuna.httpd.util.Config;
-import org.avuna.httpd.util.ConfigFormat;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.SafeMode;
 import org.avuna.httpd.util.unixsocket.CException;
 
 public class PluginAvunaAgent extends Plugin {
-	
-	private Config config = null;
 	
 	public PluginAvunaAgent(String name, PluginRegistry registry) {
 		super(name, registry);
@@ -59,16 +56,6 @@ public class PluginAvunaAgent extends Plugin {
 				e1.printStackTrace();
 			}
 		}
-		config = new Config(name, new File(getDirectory(), "config.cfg"), new ConfigFormat() {
-			public void format(ConfigNode map) {
-				
-			}
-		});
-		try {
-			config.load();
-		}catch (IOException e1) {
-			Logger.logError(e1);
-		}
 		if (sece) ((PluginSecurity) registry.getPatchForClass(PluginSecurity.class)).loadBases(this);
 		log("Loading AvunaAgent Libraries");
 		try {
@@ -78,7 +65,6 @@ public class PluginAvunaAgent extends Plugin {
 			}
 			URLClassLoader sysloader = (URLClassLoader) ClassLoader.getSystemClassLoader();
 			Class<URLClassLoader> sysclass = URLClassLoader.class;
-			
 			try {
 				Method method = sysclass.getDeclaredMethod("addURL", URL.class);
 				method.setAccessible(true);
@@ -103,7 +89,6 @@ public class PluginAvunaAgent extends Plugin {
 		}catch (Exception e) {
 			Logger.logError(e);
 		}
-		config.save();
 	}
 	
 	public void flushjl() {
@@ -179,16 +164,19 @@ public class PluginAvunaAgent extends Plugin {
 						}
 						Class<?> cls = (session == null ? secjlcl : session.getJLCL()).loadClass(name);
 						if (AvunaAgent.class.isAssignableFrom(cls) && !Modifier.isAbstract(cls.getModifiers())) {
-							ConfigNode ocfg = null;
-							if (!config.containsNode(session.getVHost().getHostPath())) {
-								config.insertNode(session.getVHost().getHostPath());
-							}
-							ocfg = config.getNode(session.getVHost().getHostPath());
-							if (!ocfg.containsNode(name)) {
-								ocfg.insertNode(name);
-							}
 							AvunaAgent jl = (AvunaAgent) cls.newInstance();
-							jl.pcfg = ocfg.getNode(name);
+							String cn = cls.getName();
+							cn = cn.substring(cn.lastIndexOf(".") + 1);
+							jl.pcfg = new Config(cn, new File(session.getVHost().getHTCfg(), "AvunaAgent/" + cls.getName().replace(".", "/") + ".cfg"), new AvunaAgentConfigFormat(jl) {
+								
+								@Override
+								public void format(ConfigNode map) {
+									us.formatConfig(map);
+								}
+								
+							});
+							((Config) jl.pcfg).load();
+							((Config) jl.pcfg).save();
 							jl.host = session == null ? null : session.getVHost();
 							if (jl.getType() == 3) {
 								security.add((AvunaAgentSecurity) jl);
@@ -211,15 +199,24 @@ public class PluginAvunaAgent extends Plugin {
 	}
 	
 	public void loadBaseSecurity(AvunaAgentSecurity sec) {
-		ConfigNode ocfg = null;
-		if (!config.containsNode("security")) {
-			config.insertNode("security");
+		String cn = sec.getClass().getName();
+		cn = cn.substring(cn.lastIndexOf(".") + 1);
+		Plugin psec = this.registry.getPatchForClass(PluginSecurity.class);
+		if (psec == null) return;
+		sec.pcfg = new Config(cn, new File(AvunaHTTPD.fileManager.getPlugin(psec), "cfg/" + sec.getClass().getName().replace(".", "/") + ".cfg"), new AvunaAgentConfigFormat(sec) {
+			
+			@Override
+			public void format(ConfigNode map) {
+				us.formatConfig(map);
+			}
+			
+		});
+		try {
+			((Config) sec.pcfg).load();
+			((Config) sec.pcfg).save();
+		}catch (IOException e) {
+			Logger.logError(e);
 		}
-		ocfg = config.getNode("security");
-		if (!ocfg.containsNode(sec.getClass().getName())) {
-			ocfg.insertNode(sec.getClass().getName());
-		}
-		sec.pcfg = ocfg.getNode(sec.getClass().getName());
 		sec.host = null;
 		sec.init();
 		security.add(sec);
@@ -277,16 +274,19 @@ public class PluginAvunaAgent extends Plugin {
 						response.body.data = new byte[0];
 						return;
 					}
-					ConfigNode ocfg = null;
-					if (!config.containsNode(request.host.getHostPath())) {
-						config.insertNode(request.host.getHostPath());
-					}
-					ocfg = config.getNode(request.host.getHostPath());
-					if (!ocfg.containsNode(name)) {
-						ocfg.insertNode(name);
-					}
 					loader = ((Class<? extends AvunaAgent>) loaderClass).newInstance();
-					loader.pcfg = ocfg.getNode(name);
+					String cn = loaderClass.getName();
+					cn = cn.substring(cn.lastIndexOf(".") + 1);
+					loader.pcfg = new Config(cn, new File(request.host.getHTCfg(), "AvunaAgent/" + loaderClass.getName().replace(".", "/") + ".cfg"), new AvunaAgentConfigFormat(loader) {
+						
+						@Override
+						public void format(ConfigNode map) {
+							us.formatConfig(map);
+						}
+						
+					});
+					((Config) loader.pcfg).load();
+					((Config) loader.pcfg).save();
 					loader.host = request.host;
 					loader.init();
 					jls.put(name, loader);
@@ -340,15 +340,7 @@ public class PluginAvunaAgent extends Plugin {
 				response.body = rsc;
 			}
 		}else if (event instanceof EventReload) {
-			try {
-				// HTMLCache.reloadAll();
-				// AssetLibrary.reloadAll();// TODO: if we flushjl at all reloads, then this is usually unneeded?
-				config.load();
-				flushjl();
-				config.save();
-			}catch (IOException e) {
-				Logger.logError(e);
-			}
+			flushjl();
 		}else if (event instanceof EventPreExit) {
 			try {
 				DatabaseManager.closeAll();

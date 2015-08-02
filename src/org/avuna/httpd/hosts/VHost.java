@@ -10,7 +10,7 @@ import org.avuna.httpd.util.ConfigNode;
 
 public class VHost {
 	private final HostHTTP host;
-	private final File htdocs, htsrc;
+	private final File htdocs, htsrc, htcfg;
 	private final String name, vhost;
 	private AvunaAgentSession jls;
 	private final VHost parent;
@@ -45,6 +45,7 @@ public class VHost {
 		this.host = host;
 		this.htdocs = parent.htdocs;
 		this.htsrc = parent.htsrc;
+		this.htcfg = parent.htcfg;
 		this.vhost = vhost;
 		this.parent = parent;
 		this.cacheClock = cacheClock;
@@ -57,11 +58,12 @@ public class VHost {
 		parent.children.add(this);
 	}
 	
-	public VHost(String name, HostHTTP host, File htdocs, File htsrc, String vhost, int cacheClock, String index, ConfigNode errorpages, boolean forward, boolean unix, String ip, int port) {
+	public VHost(String name, HostHTTP host, File htdocs, File htsrc, File htcfg, String vhost, int cacheClock, String index, ConfigNode errorpages, boolean forward, boolean unix, String ip, int port) {
 		this.name = name;
 		this.host = host;
 		this.htdocs = htdocs;
 		this.htsrc = htsrc;
+		this.htcfg = htcfg;
 		this.vhost = vhost;
 		this.parent = null;
 		this.cacheClock = cacheClock;
@@ -135,6 +137,10 @@ public class VHost {
 	
 	public File getHTSrc() {
 		return htsrc;
+	}
+	
+	public File getHTCfg() {
+		return htcfg;
 	}
 	
 	public String getHostPath() {

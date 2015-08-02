@@ -15,10 +15,15 @@ public abstract class AvunaAgent {
 		
 	}
 	
+	/** Called many times, this should only be used for enforcing entries in the config, input validation, and storing the values for later use. */
+	public void formatConfig(ConfigNode cfg) {
+		
+	}
+	
 	public ConfigNode pcfg = null;
 	public VHost host = null;
 	
-	/** Convenience for post-configuration stuff. Preferred to overwriting the constructor. */
+	/** Should not override the constructor, use this instead, as it is called after things like the Config is loaded. */
 	public void init() {}
 	
 	/** Called after other plugins(when preloading) & Avuna Agents have been loaded. */
@@ -27,12 +32,6 @@ public abstract class AvunaAgent {
 	/** Used strictly for defining new JavaLoader types, and casting. */
 	public int getType() {
 		return -1;
-	}
-	
-	/** Not called anymore, all Javaloaders are completely reinitialized. */
-	@Deprecated
-	public void reload() {
-		
 	}
 	
 }
