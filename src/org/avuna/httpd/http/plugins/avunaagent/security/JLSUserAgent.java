@@ -5,6 +5,7 @@ package org.avuna.httpd.http.plugins.avunaagent.security;
 import java.util.LinkedHashMap;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.plugins.avunaagent.AvunaAgentSecurity;
+import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.StringUtil;
 
 public class JLSUserAgent extends AvunaAgentSecurity {
@@ -13,13 +14,13 @@ public class JLSUserAgent extends AvunaAgentSecurity {
 	private boolean enabled = true;
 	private String[] ua = null;
 	
-	public void init() {
-		if (!pcfg.containsNode("returnWeight")) pcfg.insertNode("returnWeight", "100");
-		if (!pcfg.containsNode("enabled")) pcfg.insertNode("enabled", "true");
-		if (!pcfg.containsNode("userAgents")) pcfg.insertNode("userAgents", "wordpress,sql,php,scan");
-		this.returnWeight = Integer.parseInt(pcfg.getNode("returnWeight").getValue());
-		this.enabled = pcfg.getNode("enabled").getValue().equals("true");
-		this.ua = pcfg.getNode("userAgents").getValue().split(",");
+	public void formatConfig(ConfigNode map) {
+		if (!map.containsNode("returnWeight")) map.insertNode("returnWeight", "100");
+		if (!map.containsNode("enabled")) map.insertNode("enabled", "true");
+		if (!map.containsNode("userAgents")) map.insertNode("userAgents", "wordpress,sql,php,scan");
+		this.returnWeight = Integer.parseInt(map.getNode("returnWeight").getValue());
+		this.enabled = map.getNode("enabled").getValue().equals("true");
+		this.ua = map.getNode("userAgents").getValue().split(",");
 	}
 	
 	public void reload(LinkedHashMap<String, Object> cfg) {
