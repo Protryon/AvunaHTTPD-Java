@@ -186,8 +186,8 @@ public class PluginFCGI extends Plugin {
 			
 			rq = AvunaHTTPD.fileManager.correctForIndex(rq, request);
 			
-			session.param("CONTENT_LENGTH", request.body.data.length + "");
-			session.param("CONTENT_TYPE", request.body.type);
+			session.param("CONTENT_LENGTH", (request.body == null || request.body.data == null) ? "0" : request.body.data.length + "");
+			if (request.body != null && request.body.type != null) session.param("CONTENT_TYPE", request.body.type);
 			session.param("GATEWAY_INTERFACE", "CGI/1.1");
 			// session.param("PATH_INFO", request.extraPath);
 			// session.param("PATH_TRANSLATED", new File(request.host.getHTDocs(), URLDecoder.decode(request.extraPath)).getAbsolutePath());
