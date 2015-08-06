@@ -25,7 +25,6 @@ import org.avuna.httpd.com.base.CommandHTML;
 import org.avuna.httpd.com.base.CommandHTMLDir;
 import org.avuna.httpd.com.base.CommandHelp;
 import org.avuna.httpd.com.base.CommandMem;
-import org.avuna.httpd.com.base.CommandPHP;
 import org.avuna.httpd.com.base.CommandRegister;
 import org.avuna.httpd.com.base.CommandReload;
 import org.avuna.httpd.com.base.CommandRestart;
@@ -61,7 +60,6 @@ public class AvunaHTTPD {
 		commandRegistry.registerCommand(new CommandHTML(), "html");
 		commandRegistry.registerCommand(new CommandHTMLDir(), "htmldir");
 		commandRegistry.registerCommand(new CommandMem(), "mem");
-		commandRegistry.registerCommand(new CommandPHP(), "php");
 		commandRegistry.registerCommand(new CommandRegister(), "register");
 		commandRegistry.registerCommand(new CommandReload(), "reload");
 		commandRegistry.registerCommand(new CommandRestart(), "restart");
