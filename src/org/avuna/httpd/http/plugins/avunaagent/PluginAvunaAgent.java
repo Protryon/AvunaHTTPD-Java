@@ -81,7 +81,7 @@ public class PluginAvunaAgent extends Plugin {
 				disabled = true;
 				return;
 			}
-			vhost.initJLS(new URL[] { vhost.getHTDocs().toURI().toURL() });
+			vhost.initJLS(this, new URL[] { vhost.getHTDocs().toURI().toURL() });
 			recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 			if (sece) {
 				recurLoad(null, sec.config);
@@ -139,7 +139,7 @@ public class PluginAvunaAgent extends Plugin {
 			if (sece) ((PluginSecurity) registry.getPatchForClass(PluginSecurity.class)).loadBases(this);
 			VHost vhost = this.registry.host;
 			if (vhost.isChild() || vhost.isForwarding()) return;
-			vhost.initJLS(new URL[] { vhost.getHTDocs().toURI().toURL() });
+			vhost.initJLS(this, new URL[] { vhost.getHTDocs().toURI().toURL() });
 			recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 			if (sece) {
 				recurLoad(null, sec.config);
@@ -154,7 +154,7 @@ public class PluginAvunaAgent extends Plugin {
 		}
 	}
 	
-	protected static ArrayList<AvunaAgentSession> sessions = new ArrayList<AvunaAgentSession>();
+	protected ArrayList<AvunaAgentSession> sessions = new ArrayList<AvunaAgentSession>();
 	
 	public void recurLoad(AvunaAgentSession session, File dir) {
 		for (File f : dir.listFiles()) {
@@ -173,6 +173,8 @@ public class PluginAvunaAgent extends Plugin {
 			}else {
 				try {
 					if (f.getName().endsWith(".class")) {
+						Plugin psec = this.registry.getPatchForClass(PluginSecurity.class);
+						if (psec == null && session == null) return;
 						ByteArrayOutputStream bout = new ByteArrayOutputStream();
 						FileInputStream fin = new FileInputStream(f);
 						int i = 1;
@@ -198,7 +200,7 @@ public class PluginAvunaAgent extends Plugin {
 							AvunaAgent jl = (AvunaAgent) cls.newInstance();
 							String cn = cls.getName();
 							cn = cn.substring(cn.lastIndexOf(".") + 1);
-							jl.pcfg = new Config(cn, new File(session.getVHost().getHTCfg(), "AvunaAgent/" + cls.getName().replace(".", "/") + ".cfg"), new AvunaAgentConfigFormat(jl) {
+							jl.pcfg = new Config(cn, new File(session == null ? (((Config) psec.pcfg).getFile()).getParentFile() : session.getVHost().getHTCfg(), "AvunaAgent/" + cls.getName().replace(".", "/") + ".cfg"), new AvunaAgentConfigFormat(jl) {
 								
 								@Override
 								public void format(ConfigNode map) {

@@ -47,6 +47,7 @@ public class ThreadWorker extends Thread implements ITerminatable {
 			try {
 				if (incomingRequest.host == null) {
 					incomingRequest.work.close(); // TODO 500 ISE
+					continue;
 				}
 				if (incomingRequest.host.isForwarding()) {
 					VHost vh = incomingRequest.host;

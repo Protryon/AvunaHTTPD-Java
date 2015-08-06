@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.plugins.avunaagent.AvunaAgentSession;
+import org.avuna.httpd.http.plugins.avunaagent.PluginAvunaAgent;
 import org.avuna.httpd.http.plugins.base.BaseLoader;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
@@ -122,9 +123,9 @@ public class VHost {
 		return parent != null;
 	}
 	
-	public void initJLS(URL[] url) {
+	public void initJLS(PluginAvunaAgent pll, URL[] url) {
 		if (this.parent == null) {
-			this.jls = new AvunaAgentSession(this, url);
+			this.jls = new AvunaAgentSession(pll, this, url);
 			for (VHost child : children) {
 				child.jls = this.jls;
 			}

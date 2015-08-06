@@ -136,6 +136,7 @@ public class HostHTTP extends Host {
 	public void deleteVHostByName(String name) {
 		for (int i = 0; i < vhosts.size(); i++) {
 			if (vhosts.get(i).getName().equals(this.name + "/" + name)) {
+				vhosts.get(i).destroy();
 				vhosts.remove(i);
 				return;
 			}
