@@ -2,6 +2,7 @@
 
 package org.avuna.httpd.http.plugins.security;
 
+import java.io.File;
 import java.io.IOException;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.Event;
@@ -28,8 +29,8 @@ import org.avuna.httpd.util.Logger;
 
 public class PluginSecurity extends Plugin {
 	
-	public PluginSecurity(String name, PluginRegistry registry) {
-		super(name, registry);
+	public PluginSecurity(String name, PluginRegistry registry, File config) {
+		super(name, registry, config);
 	}
 	
 	public void loadBases(PluginAvunaAgent pjl) {

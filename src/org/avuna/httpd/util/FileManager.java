@@ -18,7 +18,6 @@ import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.event.EventClearCache;
 import org.avuna.httpd.http.networking.RequestPacket;
-import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.avunaagent.PluginAvunaAgent;
 import org.avuna.httpd.http.plugins.avunaagent.lib.AvunaAgentUtil;
 import org.avuna.httpd.http.plugins.avunaagent.lib.HTMLCache;
@@ -54,9 +53,7 @@ public class FileManager {
 	}
 	
 	private File dir = null, logs = null;
-	private HashMap<String, File> plugin = new HashMap<String, File>();
 	private HashMap<String, File> base = new HashMap<String, File>();
-	private HashMap<HostHTTP, File> plugins = new HashMap<HostHTTP, File>();
 	
 	/** Get object dir value if exists or get value from {@link AvunaHTTPD#mainConfig mainConfig}.
 	 * 
@@ -65,39 +62,11 @@ public class FileManager {
 		return dir == null ? (dir = new File(AvunaHTTPD.mainConfig.getNode("dir").getValue())) : dir;
 	}
 	
-	/** Get plugins value from host configuration if exists else get it from the host "plugins" node.
-	 * 
-	 * @param host
-	 * @see HashMap#put(Object, Object)
-	 * @return plugins value */
-	public File getPlugins(HostHTTP host) {
-		if (plugins.containsKey(host)) {
-			return plugins.get(host);
-		}else {
-			File f = new File(host.getConfig().getNode("plugins").getValue());
-			plugins.put(host, f);
-			return f;
-		}
-	}
-	
 	/** Get logs value if exists else get value from {@link AvunaHTTPD#mainConfig mainConfig}.
 	 * 
 	 * @return logs value */
 	public File getLogs() {
 		return logs == null ? (logs = new File(AvunaHTTPD.mainConfig.getNode("logs").getValue())) : logs;
-	}
-	
-	/** Get plugin value if exists else create new plugin entry in plugins.
-	 * 
-	 * @param p plugin object
-	 * @see HashMap
-	 * @see Object#hashCode
-	 * @return plugin */
-	public File getPlugin(Plugin p) {
-		if (!plugin.containsKey(p.hashCode() + "" + p.registry.host.hashCode())) {
-			plugin.put(p.hashCode() + "" + p.registry.host.hashCode(), new File(getPlugins(p.registry.host), p.name));
-		}
-		return plugin.get(p.hashCode() + "" + p.registry.host.hashCode());
 	}
 	
 	/** Get base file value for object else get main directory and set it.
@@ -486,9 +455,9 @@ public class FileManager {
 					ByteArrayOutputStream bout = new ByteArrayOutputStream();
 					int i = 1;
 					byte[] buf = new byte[4096];
-					PluginChunked chunked = (PluginChunked) request.host.getHost().registry.getPatchForClass(PluginChunked.class);
-					PluginFCGI fcgi = (PluginFCGI) request.host.getHost().registry.getPatchForClass(PluginFCGI.class);
-					PluginAvunaAgent jl = (PluginAvunaAgent) request.host.getHost().registry.getPatchForClass(PluginAvunaAgent.class);
+					PluginChunked chunked = (PluginChunked) request.host.registry.getPatchForClass(PluginChunked.class);
+					PluginFCGI fcgi = (PluginFCGI) request.host.registry.getPatchForClass(PluginFCGI.class);
+					PluginAvunaAgent jl = (PluginAvunaAgent) request.host.registry.getPatchForClass(PluginAvunaAgent.class);
 					boolean dc = chunked != null && chunked.pcfg.getNode("enabled").getValue().equals("true");
 					if (dc && fcgi != null && fcgi.pcfg.getNode("enabled").getValue().equals("true")) {
 						major: for (String key : fcgi.fcgis.keySet()) {

@@ -33,8 +33,8 @@ public class JLSFlow extends AvunaAgentSecurity {
 	@Override
 	public int check(RequestPacket req) {
 		if (!enabled) return 0;
-		PluginInline inline = (PluginInline) req.host.getHost().registry.getPatchForClass(PluginInline.class);
-		if (!inline.pcfg.getNode("enabled").getValue().equals("true")) {
+		PluginInline inline = (PluginInline) req.host.registry.getPatchForClass(PluginInline.class);
+		if (inline != null && !inline.pcfg.getNode("enabled").getValue().equals("true")) {
 			Logger.log("[ERROR] Inline is disabled, JLSFlow Security module is unloading!");
 			enabled = false;
 			return 0;

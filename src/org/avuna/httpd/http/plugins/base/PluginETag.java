@@ -2,6 +2,7 @@
 
 package org.avuna.httpd.http.plugins.base;
 
+import java.io.File;
 import java.util.zip.CRC32;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
@@ -17,8 +18,8 @@ import org.avuna.httpd.http.plugins.PluginRegistry;
 
 public class PluginETag extends Plugin {
 	
-	public PluginETag(String name, PluginRegistry registry) {
-		super(name, registry);
+	public PluginETag(String name, PluginRegistry registry, File config) {
+		super(name, registry, config);
 	}
 	
 	@Override

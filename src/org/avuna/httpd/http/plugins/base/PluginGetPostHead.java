@@ -2,6 +2,7 @@
 
 package org.avuna.httpd.http.plugins.base;
 
+import java.io.File;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
@@ -18,8 +19,8 @@ import org.avuna.httpd.http.plugins.PluginRegistry;
 
 public class PluginGetPostHead extends Plugin {
 	
-	public PluginGetPostHead(String name, PluginRegistry registry) {
-		super(name, registry);
+	public PluginGetPostHead(String name, PluginRegistry registry, File config) {
+		super(name, registry, config);
 	}
 	
 	@Override

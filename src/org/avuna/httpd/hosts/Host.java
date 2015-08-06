@@ -54,6 +54,10 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 	
 	private ConfigNode virtualConfig = null;
 	
+	public boolean hasVirtualConfig() {
+		return virtualConfig != null;
+	}
+	
 	public void setVirtualConfig(ConfigNode node) {
 		this.virtualConfig = node;
 	}

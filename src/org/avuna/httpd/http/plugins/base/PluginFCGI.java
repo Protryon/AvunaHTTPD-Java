@@ -5,6 +5,7 @@ package org.avuna.httpd.http.plugins.base;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
@@ -12,8 +13,6 @@ import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
-import org.avuna.httpd.event.base.EventID;
-import org.avuna.httpd.event.base.EventReload;
 import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.http.StatusCode;
@@ -34,39 +33,9 @@ import org.avuna.httpd.util.Stream;
 
 public class PluginFCGI extends Plugin {
 	
-	public PluginFCGI(String name, PluginRegistry registry) {
-		super(name, registry);
-		reloadus();
-	}
-	
-	@Override
-	public void receive(EventBus bus, Event event) {
-		if (event instanceof EventGenerateResponse) {
-			EventGenerateResponse egr = (EventGenerateResponse) event;
-			ResponsePacket response = egr.getResponse();
-			RequestPacket request = egr.getRequest();
-			if (shouldProcessResponse(response, request)) processResponse(response, request);
-		}else if (event instanceof EventReload) {
-			reloadus();
-		}
-	}
-	
-	@Override
-	public void register(EventBus bus) {
-		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, -600);
-		bus.registerEvent(EventID.RELOAD, this, 0);
-	}
-	
-	public void reloadus() {
+	public PluginFCGI(String name, PluginRegistry registry, File config) {
+		super(name, registry, config);
 		if (!pcfg.getNode("enabled").getValue().equals("true")) return;
-		for (IFCGIManager fcgi : fcgis.values()) {
-			try {
-				fcgi.close();
-			}catch (IOException e) {
-				Logger.logError(e);
-			}
-		}
-		fcgis.clear();
 		for (String subs : pcfg.getSubnodes()) {
 			ConfigNode sub = pcfg.getNode(subs);
 			if (!sub.branching()) continue;
@@ -102,6 +71,32 @@ public class PluginFCGI extends Plugin {
 				Logger.log("FCGI server(" + sub.getNode("ip").getValue() + (unix ? "" : ":" + sub.getNode("port").getValue()) + ") NOT accepting connections, disabling FCGI.");
 			}
 		}
+	}
+	
+	@Override
+	public void receive(EventBus bus, Event event) {
+		if (event instanceof EventGenerateResponse) {
+			EventGenerateResponse egr = (EventGenerateResponse) event;
+			ResponsePacket response = egr.getResponse();
+			RequestPacket request = egr.getRequest();
+			if (shouldProcessResponse(response, request)) processResponse(response, request);
+		}
+	}
+	
+	@Override
+	public void register(EventBus bus) {
+		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, -600);
+	}
+	
+	public void destroy() {
+		for (IFCGIManager fcgi : fcgis.values()) {
+			try {
+				fcgi.close();
+			}catch (IOException e) {
+				Logger.logError(e);
+			}
+		}
+		fcgis.clear();
 	}
 	
 	public HashMap<String, IFCGIManager> fcgis = new HashMap<String, IFCGIManager>();

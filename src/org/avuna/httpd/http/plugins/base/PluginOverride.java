@@ -2,14 +2,11 @@
 
 package org.avuna.httpd.http.plugins.base;
 
+import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
-import org.avuna.httpd.event.base.EventID;
-import org.avuna.httpd.event.base.EventReload;
 import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.event.EventGenerateResponse;
@@ -25,12 +22,9 @@ import org.avuna.httpd.util.Logger;
 
 public class PluginOverride extends Plugin {
 	
-	public PluginOverride(String name, PluginRegistry registry) {
-		super(name, registry);
+	public PluginOverride(String name, PluginRegistry registry, File config) {
+		super(name, registry, config);
 	}
-	
-	private ArrayList<String> nogo = new ArrayList<String>();
-	private HashMap<String, HashMap<String, Object>> overrides = new HashMap<String, HashMap<String, Object>>();
 	
 	/** {@inheritDoc} */
 	@Override
@@ -108,9 +102,6 @@ public class PluginOverride extends Plugin {
 						break;
 				}
 			}
-		}else if (event instanceof EventReload) {
-			nogo.clear();
-			overrides.clear();
 		}
 	}
 	
@@ -118,7 +109,6 @@ public class PluginOverride extends Plugin {
 	public void register(EventBus bus) {
 		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, 800);
 		bus.registerEvent(HTTPEventID.PREPROCESSREQUEST, this, 800);
-		bus.registerEvent(EventID.RELOAD, this, 0);
 	}
 	
 }

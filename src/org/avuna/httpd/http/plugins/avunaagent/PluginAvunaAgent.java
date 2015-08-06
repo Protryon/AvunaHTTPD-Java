@@ -21,9 +21,6 @@ import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
 import org.avuna.httpd.event.base.EventID;
 import org.avuna.httpd.event.base.EventPostInit;
-import org.avuna.httpd.event.base.EventPreExit;
-import org.avuna.httpd.event.base.EventReload;
-import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.VHost;
 import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.http.ResponseGenerator;
@@ -44,19 +41,21 @@ import org.avuna.httpd.util.unixsocket.CException;
 
 public class PluginAvunaAgent extends Plugin {
 	
-	public PluginAvunaAgent(String name, PluginRegistry registry) {
-		super(name, registry);
+	private boolean disabled = false;
+	
+	public PluginAvunaAgent(String name, PluginRegistry registry, File config) {
+		super(name, registry, config);
 		log("Loading AvunaAgent Config & Security");
 		PluginSecurity sec = ((PluginSecurity) registry.getPatchForClass(PluginSecurity.class));
-		boolean sece = sec.pcfg.getNode("enabled").getValue().equals("true");
+		boolean sece = sec != null && sec.pcfg.getNode("enabled").getValue().equals("true");
 		if (sece) {
 			try {
-				secjlcl = new AvunaAgentClassLoader(new URL[] { AvunaHTTPD.fileManager.getPlugin(registry.getPatchForClass(PluginSecurity.class)).toURI().toURL() }, this.getClass().getClassLoader());
+				secjlcl = new AvunaAgentClassLoader(new URL[] { sec.config.toURI().toURL() }, this.getClass().getClassLoader());
 			}catch (MalformedURLException e1) {
 				e1.printStackTrace();
 			}
 		}
-		if (sece) ((PluginSecurity) registry.getPatchForClass(PluginSecurity.class)).loadBases(this);
+		if (sece) sec.loadBases(this);
 		log("Loading AvunaAgent Libraries");
 		try {
 			lib = new File(AvunaHTTPD.fileManager.getMainDir(), pcfg.getNode("lib").getValue());
@@ -77,22 +76,56 @@ public class PluginAvunaAgent extends Plugin {
 			}catch (Throwable t) {
 				Logger.logError(t);
 			}
-			HostHTTP host2 = (HostHTTP) registry.host;
-			for (VHost vhost : host2.getVHosts()) {
-				if (vhost.getHTDocs() == null) continue;
-				vhost.initJLS(new URL[] { vhost.getHTDocs().toURI().toURL() });
-				recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
+			VHost vhost = (VHost) registry.host;
+			if (vhost.isForwarding() || vhost.getHTDocs() == null) {
+				disabled = true;
+				return;
 			}
+			vhost.initJLS(new URL[] { vhost.getHTDocs().toURI().toURL() });
+			recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 			if (sece) {
-				recurLoad(null, AvunaHTTPD.fileManager.getPlugin(sec));
+				recurLoad(null, sec.config);
 			}
 		}catch (Exception e) {
 			Logger.logError(e);
 		}
 	}
 	
-	public void flushjl() {
+	public void clearjl() {
+		if (disabled) return;
+		for (AvunaAgent jl : security) {
+			jl.destroy();
+		}
+		for (AvunaAgentSession session : sessions) {
+			if (session.getJLS() != null) for (AvunaAgent jl : session.getJLS().values()) {
+				jl.destroy();
+			}
+		}
+		for (AvunaAgentSession jls : sessions) {
+			jls.unloadJLCL();
+		}
+		security.clear();
+		secjlcl = null;
+		System.gc();
+		sessions.clear();
 		try {
+			Thread.sleep(1000L); // ensure the gc is over
+		}catch (InterruptedException e) {
+			Logger.logError(e);
+		}
+	}
+	
+	public void flushjl() {
+		if (disabled) return;
+		try {
+			for (AvunaAgent jl : security) {
+				jl.destroy();
+			}
+			for (AvunaAgentSession session : sessions) {
+				if (session.getJLS() != null) for (AvunaAgent jl : session.getJLS().values()) {
+					jl.destroy();
+				}
+			}
 			for (AvunaAgentSession jls : sessions) {
 				jls.unloadJLCL();
 			}
@@ -102,16 +135,14 @@ public class PluginAvunaAgent extends Plugin {
 			Thread.sleep(1000L);
 			sessions.clear();
 			PluginSecurity sec = ((PluginSecurity) registry.getPatchForClass(PluginSecurity.class));
-			boolean sece = sec.pcfg.getNode("enabled").getValue().equals("true");
+			boolean sece = sec != null && sec.pcfg.getNode("enabled").getValue().equals("true");
 			if (sece) ((PluginSecurity) registry.getPatchForClass(PluginSecurity.class)).loadBases(this);
-			HostHTTP host2 = this.registry.host;
-			for (VHost vhost : host2.getVHosts()) {
-				if (vhost.isChild() || vhost.isForwarding()) continue;
-				vhost.initJLS(new URL[] { vhost.getHTDocs().toURI().toURL() });
-				recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
-			}
+			VHost vhost = this.registry.host;
+			if (vhost.isChild() || vhost.isForwarding()) return;
+			vhost.initJLS(new URL[] { vhost.getHTDocs().toURI().toURL() });
+			recurLoad(vhost.getJLS(), vhost.getHTDocs()); // TODO: overlapping htdocs may cause some slight delay
 			if (sece) {
-				recurLoad(null, AvunaHTTPD.fileManager.getPlugin(sec));
+				recurLoad(null, sec.config);
 			}
 			for (AvunaAgentSession session : sessions) {
 				if (session.getJLS() != null) for (AvunaAgent jl : session.getJLS().values()) {
@@ -203,7 +234,7 @@ public class PluginAvunaAgent extends Plugin {
 		cn = cn.substring(cn.lastIndexOf(".") + 1);
 		Plugin psec = this.registry.getPatchForClass(PluginSecurity.class);
 		if (psec == null) return;
-		sec.pcfg = new Config(cn, new File(AvunaHTTPD.fileManager.getPlugin(psec), "cfg/" + sec.getClass().getName().replace(".", "/") + ".cfg"), new AvunaAgentConfigFormat(sec) {
+		sec.pcfg = new Config(cn, new File(psec.config, "cfg/" + sec.getClass().getName().replace(".", "/") + ".cfg"), new AvunaAgentConfigFormat(sec) {
 			
 			@Override
 			public void format(ConfigNode map) {
@@ -339,22 +370,6 @@ public class PluginAvunaAgent extends Plugin {
 				response.headers.updateHeader("Content-Type", rsc.type);
 				response.body = rsc;
 			}
-		}else if (event instanceof EventReload) {
-			flushjl();
-		}else if (event instanceof EventPreExit) {
-			try {
-				DatabaseManager.closeAll();
-			}catch (SQLException e) {
-				Logger.logError(e);
-			}
-			for (AvunaAgent jl : security) {
-				jl.destroy();
-			}
-			for (AvunaAgentSession session : sessions) {
-				if (session.getJLS() != null) for (AvunaAgent jl : session.getJLS().values()) {
-					jl.destroy();
-				}
-			}
 		}else if (event instanceof EventPostInit) {
 			for (AvunaAgentSession session : sessions) {
 				if (session.getJLS() != null) for (AvunaAgent jl : session.getJLS().values()) {
@@ -364,11 +379,18 @@ public class PluginAvunaAgent extends Plugin {
 		}
 	}
 	
+	public void destroy() {
+		try {
+			DatabaseManager.closeAll();
+		}catch (SQLException e) {
+			Logger.logError(e);
+		}
+		clearjl();
+	}
+	
 	@Override
 	public void register(EventBus bus) {
 		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, -500);
-		bus.registerEvent(EventID.RELOAD, this, 0);
-		bus.registerEvent(EventID.PREEXIT, this, 0);
 		bus.registerEvent(EventID.POSTINIT, this, 0);
 	}
 	

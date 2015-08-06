@@ -3,6 +3,7 @@
 package org.avuna.httpd.http.plugins.base;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.zip.CRC32;
@@ -20,8 +21,8 @@ import org.avuna.httpd.util.Logger;
 
 public class PluginGZip extends Plugin {
 	
-	public PluginGZip(String name, PluginRegistry registry) {
-		super(name, registry);
+	public PluginGZip(String name, PluginRegistry registry, File config) {
+		super(name, registry, config);
 	}
 	
 	private final HashMap<Long, byte[]> pregzip = new HashMap<Long, byte[]>();

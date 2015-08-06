@@ -2,6 +2,7 @@
 
 package org.avuna.httpd.http.plugins.base;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -27,8 +28,8 @@ import sun.misc.BASE64Encoder;
 
 public class PluginInline extends Plugin {
 	
-	public PluginInline(String name, PluginRegistry registry) {
-		super(name, registry);
+	public PluginInline(String name, PluginRegistry registry, File config) {
+		super(name, registry, config);
 	}
 	
 	private String[] uas;

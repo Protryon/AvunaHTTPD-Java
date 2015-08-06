@@ -1,55 +1,67 @@
-/*
- * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.plugins.base;
 
 import java.io.File;
+import org.avuna.httpd.hosts.HostHTTP;
+import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginClassLoader;
 import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.plugins.avunaagent.PluginAvunaAgent;
 import org.avuna.httpd.http.plugins.security.PluginSecurity;
+import org.avuna.httpd.util.Logger;
 
 public class BaseLoader {
 	public static void loadSecBase(PluginRegistry registry) {
 		// sec
-		registry.registerPatch(new PluginSecurity("Security", registry));
+		registry.registerPatch(new PluginSecurity("Security", registry, new File(registry.getPlugins(), "Security")));
 	}
 	
 	public static void loadBases(PluginRegistry registry) {
 		// sec
 		loadSecBase(registry);
-		registry.registerPatch(new PluginOverride("Override", registry));
+		registry.registerPatch(new PluginOverride("Override", registry, new File(registry.getPlugins(), "Override")));
 		// special
 		// PatchRegistry.registerPatch(new PatchEnforceRedirect("EnforceRedirect")); deprecated
 		// PatchRegistry.registerPatch(new PatchMultiHost("MultiHost")); deprecated
-		registry.registerPatch(new PluginContentType("ContentType", registry));
-		registry.registerPatch(new PluginCacheControl("CacheControl", registry));
+		registry.registerPatch(new PluginContentType("ContentType", registry, new File(registry.getPlugins(), "ContentType")));
+		registry.registerPatch(new PluginCacheControl("CacheControl", registry, new File(registry.getPlugins(), "CacheControl")));
 		// methods
-		registry.registerPatch(new PluginGetPostHead("GetPostHead", registry));
+		registry.registerPatch(new PluginGetPostHead("GetPostHead", registry, new File(registry.getPlugins(), "GetPostHead")));
 		
-		registry.registerPatch(new PluginAuth("Auth", registry));
+		registry.registerPatch(new PluginAuth("Auth", registry, new File(registry.getPlugins(), "Auth")));
 		
 		// server side languages
-		registry.registerPatch(new PluginAvunaAgent("AvunaAgent", registry));
+		registry.registerPatch(new PluginAvunaAgent("AvunaAgent", registry, new File(registry.getPlugins(), "AvunaAgent")));
 		// PatchRegistry.registerPatch(new PatchJWSL("JWSL")); deprecated
-		registry.registerPatch(new PluginFCGI("FCGI", registry));
+		registry.registerPatch(new PluginFCGI("FCGI", registry, new File(registry.getPlugins(), "FCGI")));
 		
-		registry.registerPatch(new PluginInline("Inline", registry));
+		registry.registerPatch(new PluginInline("Inline", registry, new File(registry.getPlugins(), "Inline")));
 		// caching
-		registry.registerPatch(new PluginETag("ETag", registry));
+		registry.registerPatch(new PluginETag("ETag", registry, new File(registry.getPlugins(), "ETag")));
 		
 		// transfer/encoding
-		registry.registerPatch(new PluginGZip("GZip", registry));
+		registry.registerPatch(new PluginGZip("GZip", registry, new File(registry.getPlugins(), "GZip")));
 		
-		registry.registerPatch(new PluginChunked("Chunked", registry));
+		registry.registerPatch(new PluginChunked("Chunked", registry, new File(registry.getPlugins(), "Chunked")));
 		
 		// special
-		registry.registerPatch(new PluginContentLength("ContentLength", registry));
+		registry.registerPatch(new PluginContentLength("ContentLength", registry, new File(registry.getPlugins(), "ContentLength")));
 		
 	}
 	
-	public static void loadCustoms(PluginRegistry registry, File plugins) {
-		PluginClassLoader pcl = new PluginClassLoader();
-		pcl.loadPlugins(registry, plugins);
+	public static void loadCustoms(HostHTTP host, File plugins) {
+		host.pcl = new PluginClassLoader();
+		host.pcl.loadPlugins(host, plugins);
+	}
+	
+	public static void loadCustoms(HostHTTP host, PluginRegistry registry, File plugins) {
+		for (Class<? extends Plugin> patchClass : host.customPlugins)
+			try {
+				registry.registerPatch((Plugin) patchClass.getDeclaredConstructor(String.class).newInstance(patchClass.getName().substring(patchClass.getName().lastIndexOf(".") + 1)));
+			}catch (Exception e) {
+				Logger.logError(e);
+				Logger.log("Failed to load plugin: " + patchClass.getName());
+			}
 	}
 }

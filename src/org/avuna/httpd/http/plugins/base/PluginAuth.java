@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.plugins.base;
 
@@ -21,11 +7,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
-import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
-import org.avuna.httpd.event.base.EventID;
-import org.avuna.httpd.event.base.EventReload;
 import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.event.EventGenerateResponse;
@@ -40,8 +23,8 @@ import sun.misc.BASE64Decoder;
 
 public class PluginAuth extends Plugin {
 	
-	public PluginAuth(String name, PluginRegistry registry) {
-		super(name, registry);
+	public PluginAuth(String name, PluginRegistry registry, File config) {
+		super(name, registry, config);
 	}
 	
 	@Override
@@ -89,7 +72,7 @@ public class PluginAuth extends Plugin {
 		public boolean isAuth(String up) {
 			if (!cacheUsers || !usersLoaded) {
 				try {
-					File ul = new File(AvunaHTTPD.fileManager.getPlugin(PluginAuth.this), userlist);
+					File ul = new File(config.getParentFile(), userlist);
 					if (!ul.exists()) ul.createNewFile();
 					Scanner scan = new Scanner(new FileInputStream(ul));
 					boolean cr = false;
@@ -136,7 +119,7 @@ public class PluginAuth extends Plugin {
 	@Override
 	public void receive(EventBus bus, Event event) {
 		if (event instanceof EventGenerateResponse) {
-			EventGenerateResponse egr = (EventGenerateResponse)event;
+			EventGenerateResponse egr = (EventGenerateResponse) event;
 			ResponsePacket response = egr.getResponse();
 			RequestPacket request = egr.getRequest();
 			if (!shouldProcessResponse(response, request)) return;
@@ -169,17 +152,11 @@ public class PluginAuth extends Plugin {
 			}catch (Exception e) {
 				Logger.logError(e);
 			}
-		}else if (event instanceof EventReload) {
-			// for (Auth a : auths) {
-			// a.usersLoaded = false;
-			// a.ull.clear();
-			// } from format config
 		}
 	}
 	
 	@Override
 	public void register(EventBus bus) {
 		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, -400);
-		bus.registerEvent(EventID.RELOAD, this, 0);
 	}
 }

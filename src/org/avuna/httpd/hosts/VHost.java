@@ -5,8 +5,12 @@ package org.avuna.httpd.hosts;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import org.avuna.httpd.http.plugins.Plugin;
+import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.plugins.avunaagent.AvunaAgentSession;
+import org.avuna.httpd.http.plugins.base.BaseLoader;
 import org.avuna.httpd.util.ConfigNode;
+import org.avuna.httpd.util.Logger;
 
 public class VHost {
 	private final HostHTTP host;
@@ -21,9 +25,17 @@ public class VHost {
 	private final boolean unix;
 	private final String ip;
 	private final int port;
+	private final File plugins;
+	public final PluginRegistry registry;
 	
 	public boolean isForwarding() {
 		return forward;
+	}
+	
+	public void destroy() {
+		for (Plugin pl : registry.patchs) {
+			pl.destroy();
+		}
 	}
 	
 	public boolean isForwardUnix() {
@@ -40,7 +52,7 @@ public class VHost {
 	
 	private ArrayList<VHost> children = new ArrayList<VHost>();
 	
-	public VHost(String name, HostHTTP host, String vhost, VHost parent, int cacheClock, String index, ConfigNode errorpages, boolean forward, boolean unix, String ip, int port) {
+	public VHost(String name, HostHTTP host, String vhost, VHost parent, int cacheClock, String index, ConfigNode errorpages, boolean forward, boolean unix, String ip, int port, File plugins) {
 		this.name = name;
 		this.host = host;
 		this.htdocs = parent.htdocs;
@@ -55,10 +67,12 @@ public class VHost {
 		this.unix = unix;
 		this.ip = ip;
 		this.port = port;
+		this.plugins = plugins;
+		registry = new PluginRegistry(this);
 		parent.children.add(this);
 	}
 	
-	public VHost(String name, HostHTTP host, File htdocs, File htsrc, File htcfg, String vhost, int cacheClock, String index, ConfigNode errorpages, boolean forward, boolean unix, String ip, int port) {
+	public VHost(String name, HostHTTP host, File htdocs, File htsrc, File htcfg, String vhost, int cacheClock, String index, ConfigNode errorpages, boolean forward, boolean unix, String ip, int port, File plugins) {
 		this.name = name;
 		this.host = host;
 		this.htdocs = htdocs;
@@ -73,6 +87,22 @@ public class VHost {
 		this.unix = unix;
 		this.ip = ip;
 		this.port = port;
+		this.plugins = plugins;
+		registry = new PluginRegistry(this);
+	}
+	
+	public void loadBases() {
+		Logger.log("Loading Base Plugins for " + name);
+		BaseLoader.loadBases(registry);
+	}
+	
+	public void loadCustoms() {
+		Logger.log("Loading Custom Plugin Configs for " + name);
+		BaseLoader.loadCustoms(host, registry, plugins);
+	}
+	
+	public File getPlugins() {
+		return plugins;
 	}
 	
 	public int getCacheClock() {
@@ -129,6 +159,11 @@ public class VHost {
 	public void setupFolders() {
 		if (htdocs != null) htdocs.mkdirs();
 		if (htsrc != null) htsrc.mkdirs();
+		if (htcfg != null) htcfg.mkdirs();
+		if (plugins != null) plugins.mkdirs();
+		for (Plugin patch : registry.patchs) {
+			patch.config.mkdirs();
+		}
 	}
 	
 	public File getHTDocs() {

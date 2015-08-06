@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.plugins;
 
@@ -20,6 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.HashMap;
+import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.util.Logger;
 
 public class PluginClassLoader extends ClassLoader {
@@ -27,10 +14,11 @@ public class PluginClassLoader extends ClassLoader {
 		super();
 	}
 	
-	public void loadPlugins(PluginRegistry registry, File dir) {
+	@SuppressWarnings("unchecked")
+	public void loadPlugins(HostHTTP host, File dir) {
 		for (File f : dir.listFiles()) {
 			if (f.isDirectory()) {
-				loadPlugins(registry, f);
+				loadPlugins(host, f);
 			}else if (f.getName().endsWith(".class")) {
 				try {
 					FileInputStream fin = new FileInputStream(f);
@@ -48,8 +36,8 @@ public class PluginClassLoader extends ClassLoader {
 					@SuppressWarnings("deprecation")
 					Class<?> patchClass = defineClass(j, 0, j.length);
 					javaLoaders.put(patchClass.getName(), patchClass);
-					if (patchClass.isAssignableFrom(Plugin.class)) { // TODO: patch priority
-						registry.registerPatch((Plugin)patchClass.getDeclaredConstructor(String.class).newInstance(patchClass.getName().substring(patchClass.getName().lastIndexOf(".") + 1)));
+					if (patchClass.isAssignableFrom(Plugin.class)) {
+						host.addCustomPlugin((Class<? extends Plugin>) patchClass);
 					}
 				}catch (Exception e) {
 					Logger.logError(e);

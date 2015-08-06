@@ -10,9 +10,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
 import org.avuna.httpd.com.ComClient;
 import org.avuna.httpd.com.CommandContext;
 import org.avuna.httpd.com.CommandRegistry;
@@ -206,9 +209,9 @@ public class AvunaHTTPD {
 		}
 	}
 	
-	public static final HashMap<String, Host> hosts = new HashMap<String, Host>();
+	public static final ConcurrentHashMap<String, Host> hosts = new ConcurrentHashMap<String, Host>();
 	
-	public static final ArrayList<String> bannedIPs = new ArrayList<String>();
+	public static final List<String> bannedIPs = Collections.synchronizedList(new ArrayList<String>());
 	
 	public static long lastbipc = 0L;
 	public static final boolean windows = System.getProperty("os.name").toLowerCase().contains("windows");
@@ -429,11 +432,6 @@ public class AvunaHTTPD {
 			lf.createNewFile();
 			Logger.INSTANCE = new Logger(new PrintStream(new FileOutputStream(lf)));
 			Logger.log("Loaded Configs");
-			for (Host host : hosts.values()) {
-				if (host instanceof HostHTTP) {
-					((HostHTTP) host).loadBases();
-				}
-			}
 			if (unpack) {
 				Logger.log("Unpack complete, terminating.");
 				Logger.flush();
@@ -461,11 +459,6 @@ public class AvunaHTTPD {
 				Logger.log("[NOTIFY] De-escalated to uid " + CLib.getuid());
 			}else if (!windows) {
 				Logger.log("[NOTIFY] We did NOT de-escalate, currently running as uid " + CLib.getuid());
-			}
-			for (Host host : hosts.values()) {
-				if (host instanceof HostHTTP) {
-					((HostHTTP) host).loadCustoms();
-				}
 			}
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 				public void run() {

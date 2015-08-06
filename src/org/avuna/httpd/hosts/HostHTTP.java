@@ -18,6 +18,7 @@ import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
 import org.avuna.httpd.event.base.EventConnected;
+import org.avuna.httpd.event.base.EventID;
 import org.avuna.httpd.event.base.EventPostInit;
 import org.avuna.httpd.event.base.EventPreExit;
 import org.avuna.httpd.event.base.EventReload;
@@ -28,23 +29,31 @@ import org.avuna.httpd.http.networking.ThreadAccept;
 import org.avuna.httpd.http.networking.ThreadConnection;
 import org.avuna.httpd.http.networking.ThreadWorker;
 import org.avuna.httpd.http.networking.Work;
-import org.avuna.httpd.http.plugins.PluginBus;
-import org.avuna.httpd.http.plugins.PluginRegistry;
+import org.avuna.httpd.http.plugins.Plugin;
+import org.avuna.httpd.http.plugins.PluginClassLoader;
 import org.avuna.httpd.http.plugins.base.BaseLoader;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Logger;
 
 public class HostHTTP extends Host {
 	
-	private ArrayList<VHost> vhosts = new ArrayList<VHost>();
+	private List<VHost> vhosts = Collections.synchronizedList(new ArrayList<VHost>());
 	protected int tac, tcc;
 	protected int twc;
 	protected int mc;
-	public final PluginRegistry registry;
-	public final PluginBus patchBus;
 	private int maxPostSize = 65535;
+	public PluginClassLoader pcl = null;
+	public final ArrayList<Class<? extends Plugin>> customPlugins = new ArrayList<Class<? extends Plugin>>();
+	
+	public void addCustomPlugin(Class<? extends Plugin> plugin) {
+		customPlugins.add(plugin);
+	}
 	
 	public void postload() throws IOException {
+		for (VHost vhost : vhosts) {
+			vhost.loadBases();
+			vhost.loadCustoms();
+		}
 		eventBus.callEvent(new EventPostInit());
 	}
 	
@@ -53,9 +62,23 @@ public class HostHTTP extends Host {
 	}
 	
 	public void receive(EventBus bus, Event event) {
-		if (event instanceof EventReload) {
+		if (event instanceof EventPreExit) {
+			for (VHost vh : vhosts) {
+				vh.destroy();
+			}
+			vhosts.clear();
+		}else if (event instanceof EventReload) {
+			if (hasVirtualConfig()) return;
+			for (VHost vh : vhosts) {
+				vh.destroy();
+			}
 			vhosts.clear();
 			formatConfig(getConfig());
+			try {
+				postload();
+			}catch (IOException e) {
+				Logger.logError(e);
+			}
 		}else {
 			super.receive(bus, event);
 		}
@@ -67,24 +90,17 @@ public class HostHTTP extends Host {
 	
 	public HostHTTP(String name) {
 		super(name, Protocol.HTTP);
-		this.registry = new PluginRegistry(this);
-		patchBus = new PluginBus(registry);
+		eventBus.registerEvent(EventID.PREEXIT, this, 0);
 	}
 	
 	protected HostHTTP(String name, Protocol protocol) {
 		super(name, protocol);
-		this.registry = new PluginRegistry(this);
-		patchBus = new PluginBus(registry);
-	}
-	
-	public void loadBases() {
-		Logger.log("Loading Base Plugins for " + name);
-		BaseLoader.loadBases(registry);
+		eventBus.registerEvent(EventID.PREEXIT, this, 0);
 	}
 	
 	public void loadCustoms() {
 		Logger.log("Loading Custom Plugins for " + name);
-		BaseLoader.loadCustoms(registry, new File(getConfig().getNode("plugins").getValue()));
+		BaseLoader.loadCustoms(this, new File(getConfig().getNode("plugins").getValue()));
 	}
 	
 	public VHost getVHost(String host) {
@@ -126,7 +142,7 @@ public class HostHTTP extends Host {
 		}
 	}
 	
-	public ArrayList<VHost> getVHosts() {
+	public List<VHost> getVHosts() {
 		return vhosts;
 	}
 	
@@ -275,7 +291,6 @@ public class HostHTTP extends Host {
 		}
 		new File(getConfig().getNode("plugins").getValue()).mkdirs();
 		eventBus.callEvent(new EventSetupFolders());
-		patchBus.setupFolders();
 	}
 	
 	public void clearReqWork() {
@@ -343,7 +358,7 @@ public class HostHTTP extends Host {
 		if (!map.containsNode("workerThreadCount")) map.insertNode("workerThreadCount", "32", "number of HTTP worker threads");
 		if (!map.containsNode("maxConnections")) map.insertNode("maxConnections", "-1", "-1 for infinite, >0 for a maximum amount.");
 		if (!map.containsNode("http2")) map.insertNode("http2", "false", "not fully implemented, reccomended against use");
-		if (!map.containsNode("plugins")) map.insertNode("plugins", AvunaHTTPD.fileManager.getBaseFile("plugins").toString());
+		if (!map.containsNode("plugins")) map.insertNode("plugins", AvunaHTTPD.fileManager.getBaseFile("plugins").toString(), "custom plugin JAR/Class files");
 		tac = Integer.parseInt(map.getNode("acceptThreadCount").getValue());
 		tcc = Integer.parseInt(map.getNode("connThreadCount").getValue());
 		twc = Integer.parseInt(map.getNode("workerThreadCount").getValue());
@@ -382,6 +397,7 @@ public class HostHTTP extends Host {
 				if (!vhost.containsNode("index")) vhost.insertNode("index", "index.class,index.php,index.html", "format is filename,filename,etc");
 				if (!vhost.containsNode("cacheClock")) vhost.insertNode("cacheClock", "-1", "-1=forever, 0=never >0=MS per cache clear");
 			}
+			if (!vhost.containsNode("plugins")) vhost.insertNode("plugins", AvunaHTTPD.fileManager.getBaseFile("plugins").toString(), "plugin config files");
 		}
 		if (loadVHosts) {
 			for (String vkey : vhosts.getSubnodes()) {
@@ -401,9 +417,9 @@ public class HostHTTP extends Host {
 						Logger.log("Invalid inheritjls! Skipping.");
 						continue;
 					}
-					vhost = new VHost(this.getHostname() + "/" + vkey, this, ourvh.getNode("host").getValue(), parent, Integer.parseInt(ourvh.getNode("cacheClock").getValue()), ourvh.getNode("index").getValue(), ourvh.getNode("errorpages"), forward, forward && !AvunaHTTPD.windows && ourvh.getNode("forward-unix").getValue().equals("true"), forward ? ourvh.getNode("forward-ip").getValue() : null, forward ? Integer.parseInt(ourvh.getNode("forward-port").getValue()) : -1);
+					vhost = new VHost(this.getHostname() + "/" + vkey, this, ourvh.getNode("host").getValue(), parent, Integer.parseInt(ourvh.getNode("cacheClock").getValue()), ourvh.getNode("index").getValue(), ourvh.getNode("errorpages"), forward, forward && !AvunaHTTPD.windows && ourvh.getNode("forward-unix").getValue().equals("true"), forward ? ourvh.getNode("forward-ip").getValue() : null, forward ? Integer.parseInt(ourvh.getNode("forward-port").getValue()) : -1, new File(ourvh.getNode("plugins").getValue()));
 				}else {
-					vhost = new VHost(this.getHostname() + "/" + vkey, this, forward ? null : new File(ourvh.getNode("htdocs").getValue()), forward ? null : new File(ourvh.getNode("htsrc").getValue()), forward ? null : new File(ourvh.getNode("htcfg").getValue()), ourvh.getNode("host").getValue(), forward ? 0 : Integer.parseInt(ourvh.getNode("cacheClock").getValue()), forward ? null : ourvh.getNode("index").getValue(), forward ? null : ourvh.getNode("errorpages"), forward, forward && !AvunaHTTPD.windows && ourvh.getNode("forward-unix").getValue().equals("true"), forward ? ourvh.getNode("forward-ip").getValue() : null, forward ? Integer.parseInt(ourvh.getNode("forward-port").getValue()) : -1);
+					vhost = new VHost(this.getHostname() + "/" + vkey, this, forward ? null : new File(ourvh.getNode("htdocs").getValue()), forward ? null : new File(ourvh.getNode("htsrc").getValue()), forward ? null : new File(ourvh.getNode("htcfg").getValue()), ourvh.getNode("host").getValue(), forward ? 0 : Integer.parseInt(ourvh.getNode("cacheClock").getValue()), forward ? null : ourvh.getNode("index").getValue(), forward ? null : ourvh.getNode("errorpages"), forward, forward && !AvunaHTTPD.windows && ourvh.getNode("forward-unix").getValue().equals("true"), forward ? ourvh.getNode("forward-ip").getValue() : null, forward ? Integer.parseInt(ourvh.getNode("forward-port").getValue()) : -1, new File(ourvh.getNode("plugins").getValue()));
 				}
 				vhost.setDebug(ourvh.getNode("debug").getValue().equals("true"));
 				this.addVHost(vhost);

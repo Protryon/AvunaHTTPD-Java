@@ -2,6 +2,7 @@
 
 package org.avuna.httpd.http.plugins.base;
 
+import java.io.File;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
 import org.avuna.httpd.http.event.EventGenerateResponse;
@@ -14,8 +15,8 @@ import org.avuna.httpd.util.ConfigNode;
 
 public class PluginCacheControl extends Plugin {
 	
-	public PluginCacheControl(String name, PluginRegistry registry) {
-		super(name, registry);
+	public PluginCacheControl(String name, PluginRegistry registry, File config) {
+		super(name, registry, config);
 	}
 	
 	@Override
