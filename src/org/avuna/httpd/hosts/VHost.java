@@ -35,6 +35,7 @@ public class VHost {
 	public void destroy() {
 		for (Plugin pl : registry.patchs) {
 			pl.destroy();
+			host.eventBus.removeListener(pl);
 		}
 	}
 	

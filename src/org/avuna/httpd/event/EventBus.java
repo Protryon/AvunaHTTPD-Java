@@ -59,13 +59,24 @@ public class EventBus {
 		}
 	}
 	
+	public void removeListener(IEventReceiver recv) {
+		for (int i = 0; i < recvs.length; i++) {
+			for (int i2 = 0; i2 < recvs[i].length; i2++) {
+				if (recvs[i][i2] == recv) {
+					recvs[i][i2] = null;
+				}
+			}
+		}
+	}
+	
 	public void callEvent(Event event) {
 		int id = event.getEID();
 		if (id >= recvs.length || recvs[id].length == 0) {
 			return;
 		}
 		for (int r = 0; r < recvs[id].length; r++) {
-			recvs[id][r].receive(this, event);
+			IEventReceiver ir = recvs[id][r];
+			if (ir != null) ir.receive(this, event);
 			if (event.isCanceled()) break;
 		}
 	}

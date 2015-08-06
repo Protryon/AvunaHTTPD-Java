@@ -2,6 +2,7 @@
 
 package org.avuna.httpd.com.base;
 
+import java.util.ArrayList;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.com.Command;
 import org.avuna.httpd.com.CommandContext;
@@ -16,7 +17,11 @@ public class CommandReload extends Command {
 		AvunaHTTPD.hostsConfig.load();
 		AvunaHTTPD.fileManager.clearCache();
 		AvunaHTTPD.fileManager.flushjl();
+		ArrayList<Host> rlh = new ArrayList<Host>();
 		for (Host host : AvunaHTTPD.hosts.values()) {
+			if (!host.hasVirtualConfig()) rlh.add(host);
+		}
+		for (Host host : rlh) {
 			host.eventBus.callEvent(new EventReload());
 		}
 		context.println("Avuna Reloaded!");

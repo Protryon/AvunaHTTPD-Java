@@ -13,6 +13,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLServerSocketFactory;
@@ -67,7 +69,7 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 	}
 	
 	public boolean loaded = false;
-	private ArrayList<ITerminatable> terms = new ArrayList<ITerminatable>();
+	private List<ITerminatable> terms = Collections.synchronizedList(new ArrayList<ITerminatable>());
 	
 	public void addTerm(ITerminatable it) {
 		terms.add(it);
