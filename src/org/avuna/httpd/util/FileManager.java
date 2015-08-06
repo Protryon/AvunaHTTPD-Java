@@ -142,7 +142,7 @@ public class FileManager {
 	 * @return error page if configured, else standard error message. */
 	public Resource getErrorPage(RequestPacket request, String reqTarget, StatusCode status, String info) {
 		ConfigNode errorPages = request.host.getErrorPages();
-		if (errorPages.containsNode(status.getStatus() + "")) {
+		if (errorPages != null && errorPages.containsNode(status.getStatus() + "")) {
 			try {
 				String path = errorPages.getNode(status.getStatus() + "").getValue();
 				Resource resource = getResource(path, request);
