@@ -14,6 +14,7 @@ import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.mail.mailbox.Email;
 import org.avuna.httpd.mail.mailbox.EmailAccount;
 import org.avuna.httpd.mail.mailbox.EmailRouter;
+import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Stream;
 
 public class SMTPHandler {
@@ -118,7 +119,11 @@ public class SMTPHandler {
 			public void run(SMTPWork focus, String line) throws IOException {
 				if (line.toLowerCase().startsWith("from:")) {
 					focus.mailFrom = line.substring(5).trim();
-					String[] doms = host.getConfig().getNode("domain").getValue().split(",");
+					String[] doms = null;
+					ConfigNode domsn = host.getConfig().getNode("domain");
+					synchronized (doms) {
+						doms = domsn.getValue().split(",");
+					}
 					boolean gd = false;
 					for (String dom : doms) {
 						if (focus.mailFrom.endsWith(dom)) {
@@ -145,7 +150,12 @@ public class SMTPHandler {
 				if (line.toLowerCase().startsWith("to:")) {
 					String to = line.substring(3).trim();
 					boolean local = false;
-					for (String domain : host.getConfig().getNode("domain").getValue().split(",")) {
+					String[] doms = null;
+					ConfigNode domsn = host.getConfig().getNode("domain");
+					synchronized (doms) {
+						doms = domsn.getValue().split(",");
+					}
+					for (String domain : doms) {
 						if (to.endsWith(domain) || (to.contains("<") && to.endsWith(">") && to.substring(to.indexOf("<") + 1, to.length() - 1).endsWith(domain))) {
 							local = true;
 							break;
@@ -191,7 +201,12 @@ public class SMTPHandler {
 		
 		commands.add(new SMTPCommand("quit", 1, 100) {
 			public void run(SMTPWork focus, String line) throws IOException {
-				focus.writeLine(221, host.getConfig().getNode("domain").getValue().split(",")[0] + " terminating connection.");
+				String dv = null;
+				ConfigNode doms = host.getConfig().getNode("domain");
+				synchronized (doms) {
+					dv = doms.getValue().split(",")[0];
+				}
+				focus.writeLine(221, dv + " terminating connection.");
 				focus.s.close();
 			}
 		});
