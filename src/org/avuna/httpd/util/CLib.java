@@ -1,33 +1,16 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.util;
 
 import java.io.File;
 import org.avuna.httpd.AvunaHTTPD;
 
-/**
-* Loads native system methods via JNI.
-* 
-* @author Max
-* @see FileManager#getBaseFile(String)
-*/
+/** Loads native system methods via JNI.
+ * 
+ * @author Max
+ * @see FileManager#getBaseFile(String) */
 public class CLib {
-	private CLib() {
-	}
+	private CLib() {}
 	
 	public static native int socket(int domain, int type, int protocol);
 	
@@ -78,9 +61,25 @@ public class CLib {
 	
 	public static native int errno();
 	
+	public static boolean failed = false;
+	
 	static {
 		if (!AvunaHTTPD.windows) {
-			System.load(new File(new File(AvunaHTTPD.fileManager.getBaseFile("jni"), System.getProperty("os.arch")), "libAvunaHTTPD_JNI.so").getAbsolutePath());
+			String jvma = System.getProperty("sun.arch.data.model");
+			String arch = System.getProperty("os.arch");
+			String va = null;
+			if (jvma.equals("32")) {
+				if (arch.equals("i386") || arch.equals("amd64")) va = "i386";
+				if (arch.equals("amd64")) Logger.log("[WARNING] You are running a 32-bit JVM on a 64-bit Machine!");
+			}else if (jvma.equals("64")) {
+				if (arch.equals("amd64")) va = "amd64";
+			}
+			if (va != null) {
+				System.load(new File(new File(AvunaHTTPD.fileManager.getBaseFile("jni"), va), "libAvunaHTTPD_JNI.so").getAbsolutePath());
+			}else {
+				Logger.log("[WARNING] JNI Loading failed, we could not find a library for your CPU Architecture.");
+				failed = true;
+			}
 		}
 	}
 }
