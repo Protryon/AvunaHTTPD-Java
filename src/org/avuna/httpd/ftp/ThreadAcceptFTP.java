@@ -1,34 +1,19 @@
-/*
- * Avuna HTTPD - General Server Applications
- * Copyright (C) 2015 Maxwell Bruce
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.ftp;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostFTP;
 import org.avuna.httpd.util.Logger;
 
-/**
- * Handles a single connection.
- */
+/** Handles a single connection. */
 public class ThreadAcceptFTP extends Thread {
 	
 	private final ServerSocket server;
@@ -77,14 +62,14 @@ public class ThreadAcceptFTP extends Thread {
 				out.flush();
 				DataInputStream in = new DataInputStream(s.getInputStream());
 				if (server instanceof SSLServerSocket) {
-					((SSLSocket)s).startHandshake();
+					((SSLSocket) s).startHandshake();
 				}
 				out.write(("220 Avuna HTTPD " + AvunaHTTPD.VERSION + AvunaHTTPD.crlf).getBytes());
 				out.flush();
 				s.setSoTimeout(1000);
 				host.addWork(s, in, out);
 			}catch (Exception e) {
-				if (!(e instanceof SocketException)) Logger.logError(e);
+				if (!(e instanceof IOException)) Logger.logError(e);
 			}
 		}
 	}

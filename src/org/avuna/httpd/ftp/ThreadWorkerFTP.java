@@ -3,7 +3,6 @@
 package org.avuna.httpd.ftp;
 
 import java.io.IOException;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostFTP;
@@ -138,7 +137,7 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 					readd = false;
 				}
 			}catch (Exception e) {
-				if (!(e instanceof SocketException)) Logger.logError(e);
+				if (!(e instanceof IOException)) Logger.logError(e);
 			}finally {
 				if (readd & canAdd) {
 					host.workQueue.add(focus);
