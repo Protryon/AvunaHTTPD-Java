@@ -202,6 +202,20 @@ public class IMAPCommandSearch extends IMAPCommand {
 			}catch (Exception e) {
 				return false;
 			}
+		}else if (com.startsWith("header ")) {
+			com = com.substring(7);
+			String hn = com.substring(0, com.indexOf(" "));
+			com = com.substring(hn.length() + 1); // hd
+			for (int i = 0; i < emails.size(); i++) {
+				Email eml = emails.get(i);
+				if (eml.headers.hasHeader(hn)) {
+					if (com.length() > 0 && !eml.headers.getHeader(hn).equals(com)) {
+						emails.remove(i--);
+					}
+				}else {
+					emails.remove(i--);
+				}
+			}
 		}else {
 			try {
 				ArrayList<Email> toFetch = focus.selectedMailbox.getByIdentifier(com);
@@ -241,8 +255,11 @@ public class IMAPCommandSearch extends IMAPCommand {
 				targ += " " + args[++i].toLowerCase().replace("\"", "");
 				arg = args[i];
 			}
-			if (arg.equals("before") || arg.equals("since") || arg.equals("uid")) {
+			if (arg.equals("before") || arg.equals("since") || arg.equals("uid") || arg.equals("header")) {
 				targ += " " + args[++i].toLowerCase().replace("\"", "");
+			}
+			if (arg.equals("header")) {
+				targ += " " + args[++i].replace("\"", ""); // header value is case sensitive
 			}
 			Logger.log(targ);
 			if (!processList(focus, targ, emails)) {

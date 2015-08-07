@@ -140,7 +140,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 						boolean peek = s.startsWith("body.peek") || s.startsWith("rfc822.header");
 						if (!peek) {
 							if (e.flags.contains("\\Unseen")) e.flags.remove("\\Unseen");
-							if (e.flags.contains("\\Seen")) e.flags.add("\\Seen");
+							if (!e.flags.contains("\\Seen")) e.flags.add("\\Seen");
 						}
 						String s2 = s.startsWith("body") ? s.substring(s.indexOf("[") + 1, s.indexOf("]")) : "";
 						if (s.equals("rfc822")) {
@@ -236,6 +236,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 									mhd.append(e.body);
 								}
 							}
+							mhd.append(AvunaHTTPD.crlf);
 						}
 						int sub = 0;
 						int max = -1;

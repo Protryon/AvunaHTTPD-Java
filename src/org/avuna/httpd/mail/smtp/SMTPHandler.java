@@ -121,7 +121,7 @@ public class SMTPHandler {
 					focus.mailFrom = line.substring(5).trim();
 					String[] doms = null;
 					ConfigNode domsn = host.getConfig().getNode("domain");
-					synchronized (doms) {
+					synchronized (domsn) {
 						doms = domsn.getValue().split(",");
 					}
 					boolean gd = false;
@@ -152,7 +152,7 @@ public class SMTPHandler {
 					boolean local = false;
 					String[] doms = null;
 					ConfigNode domsn = host.getConfig().getNode("domain");
-					synchronized (doms) {
+					synchronized (domsn) {
 						doms = domsn.getValue().split(",");
 					}
 					for (String domain : doms) {

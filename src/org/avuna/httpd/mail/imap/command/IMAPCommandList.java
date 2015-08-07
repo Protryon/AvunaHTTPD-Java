@@ -1,5 +1,4 @@
-/*
- * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.mail.imap.command;
 
@@ -41,7 +40,11 @@ public class IMAPCommandList extends IMAPCommand {
 						m = null;
 					}
 					if (m != null) {
-						focus.writeLine(focus, "*", "LIST (\\HasNoChildren) \"/\" \"" + m.name + "\"");
+						String ef = null;
+						if (m.name.equals("Trash")) ef = "\\Trash";
+						else if (m.name.equals("Drafts")) ef = "\\Drafts";
+						else if (m.name.equals("Sent")) ef = "\\Sent";
+						focus.writeLine(focus, "*", "LIST (\\HasNoChildren" + (ef == null ? "" : " " + ef) + ") \"/\" \"" + m.name + "\"");
 					}
 				}
 				focus.writeLine(focus, "*", "LIST (\\Noselect \\HasChildren) \"/\" \"[Avuna Mail]\"");
@@ -51,7 +54,11 @@ public class IMAPCommandList extends IMAPCommand {
 				if (m == null) {
 					focus.writeLine(focus, letters, "NO Invalid Mailbox.");
 				}else {
-					focus.writeLine(focus, "*", "LIST (\\HasNoChildren \\Important) \"/\" \"" + m.name + "\"");
+					String ef = null;
+					if (m.name.equals("Trash")) ef = "\\Trash";
+					else if (m.name.equals("Drafts")) ef = "\\Drafts";
+					else if (m.name.equals("Sent")) ef = "\\Sent";
+					focus.writeLine(focus, "*", "LIST (\\HasNoChildren" + (ef == null ? "" : " " + ef) + ") \"/\" \"" + m.name + "\"");
 					focus.writeLine(focus, letters, "OK Mailbox list.");
 				}
 			}
