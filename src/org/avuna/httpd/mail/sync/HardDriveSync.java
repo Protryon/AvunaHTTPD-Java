@@ -24,9 +24,28 @@ public class HardDriveSync extends Sync {
 	@Override
 	public void save(ArrayList<EmailAccount> accts) throws IOException {
 		File sync = new File(host.getConfig().getNode("folder").getValue());
+		File[] pf = sync.listFiles();
+		File[][] tf = new File[pf.length][];
+		boolean[][] tu = new boolean[pf.length][];
+		for (int i = 0; i < pf.length; i++) {
+			tf[i] = pf[i].listFiles();
+			tu[i] = new boolean[tf[i].length];
+		}
 		for (EmailAccount acct : accts) {
-			File tsync = new File(sync, acct.email.substring(acct.email.indexOf("@") + 1));
-			File acctf = new File(tsync, acct.email.substring(0, acct.email.indexOf("@")));
+			String dom = acct.email.substring(acct.email.indexOf("@") + 1);
+			File tsync = new File(sync, dom);
+			String mb = acct.email.substring(0, acct.email.indexOf("@"));
+			File acctf = new File(tsync, mb);
+			for (int i = 0; i < tf.length; i++) {
+				if (pf[i].getName().equals(dom)) {
+					for (int o = 0; o < tf[i].length; o++) {
+						if (tf[i][o].getName().equals(mb)) {
+							tu[i][o] = true;
+						}
+					}
+					break;
+				}
+			}
 			acctf.mkdirs();
 			File acctc = new File(acctf, "cfg");
 			acctc.createNewFile();
@@ -68,6 +87,24 @@ public class HardDriveSync extends Sync {
 					}
 				}
 			}
+		}
+		for (int i = 0; i < tu.length; i++) {
+			for (int o = 0; o < tu[i].length; o++) {
+				if (!tu[i][o]) {
+					delete(tf[i][o]);
+				}
+			}
+		}
+	}
+	
+	private static void delete(File f) {
+		if (f.isDirectory()) {
+			for (File sf : f.listFiles()) {
+				delete(sf);
+			}
+			f.delete();
+		}else {
+			f.delete();
 		}
 	}
 	
