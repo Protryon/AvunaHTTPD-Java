@@ -203,7 +203,11 @@ public class PluginAvunaAgent extends Plugin {
 								
 								@Override
 								public void format(ConfigNode map) {
-									us.formatConfig(map);
+									try {
+										us.formatConfig(map);
+									}catch (Exception e) {
+										registry.host.logger.logError(e);
+									}
 								}
 								
 							});
