@@ -52,7 +52,7 @@ public class ThreadAccept extends Thread {
 					s.close();
 					continue;
 				}
-				host.addWork(host, s, in, out, server instanceof SSLServerSocket);
+				host.addWork(s, in, out, server instanceof SSLServerSocket);
 			}catch (SocketException e) {
 				if (!server.isClosed()) host.logger.logError(e);
 			}catch (Exception e) {

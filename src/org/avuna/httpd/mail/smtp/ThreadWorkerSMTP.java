@@ -38,9 +38,7 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 			if (focus == null) {
 				try {
 					Thread.sleep(2L, 500000);
-				}catch (InterruptedException e) {
-					host.logger.logError(e);
-				}
+				}catch (InterruptedException e) {}
 				continue;
 			}
 			if (focus.s.isClosed()) {

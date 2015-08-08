@@ -52,6 +52,7 @@ public class HostHTTP extends Host {
 		for (VHost vhost : vhosts) {
 			vhost.loadBases();
 			vhost.loadCustoms();
+			vhost.eventBus.callEvent(new EventPostInit());
 		}
 		eventBus.callEvent(new EventPostInit());
 	}
@@ -241,16 +242,16 @@ public class HostHTTP extends Host {
 		return connIPs.containsKey(ip) ? connIPs.get(ip) : 0;
 	}
 	
-	public void addWork(HostHTTP host, Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
+	public void addWork(Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
 		String ip = s.getInetAddress().getHostAddress();
 		Integer cur = connIPs.get(ip);
 		if (cur == null) cur = 0;
 		cur += 1;
 		connIPs.put(ip, cur);
-		Work w = new Work(host, s, in, out, ssl);
-		logger.log(ip + " connected to " + host.getHostname() + ".");
+		Work w = new Work(this, s, in, out, ssl);
+		logger.log(ip + " connected to " + getHostname() + ".");
 		EventConnected epc = new EventConnected(w);
-		host.eventBus.callEvent(epc);
+		eventBus.callEvent(epc);
 		if (epc.isCanceled()) {
 			w.close();
 			return;
@@ -288,6 +289,7 @@ public class HostHTTP extends Host {
 	public void setupFolders() {
 		for (VHost vhost : vhosts) {
 			vhost.setupFolders();
+			vhost.eventBus.callEvent(new EventSetupFolders());
 		}
 		new File(getConfig().getNode("plugins").getValue()).mkdirs();
 		eventBus.callEvent(new EventSetupFolders());

@@ -40,7 +40,7 @@ public class ThreadWorkerIMAP extends Thread implements ITerminatable {
 				try {
 					Thread.sleep(2L, 500000);
 				}catch (InterruptedException e) {
-					host.logger.logError(e);
+					
 				}
 				continue;
 			}
