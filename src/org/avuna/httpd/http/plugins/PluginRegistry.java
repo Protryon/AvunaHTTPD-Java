@@ -5,7 +5,6 @@ package org.avuna.httpd.http.plugins;
 import java.io.File;
 import java.util.ArrayList;
 import org.avuna.httpd.hosts.VHost;
-import org.avuna.httpd.util.Logger;
 
 public class PluginRegistry {
 	public final VHost host;
@@ -20,7 +19,7 @@ public class PluginRegistry {
 	
 	public void registerPatch(Plugin p) {
 		if (!p.pcfg.containsNode("enabled") || !p.pcfg.getNode("enabled").getValue().equals("true")) return;
-		Logger.log("Loading patch " + p.name);
+		host.logger.log("Loading patch " + p.name);
 		p.register(host.getHost().eventBus); // TODO: vhost event bus?
 		patchs.add(p);
 	}

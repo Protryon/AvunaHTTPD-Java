@@ -7,7 +7,6 @@ import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.event.EventMethodLookup;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
-import org.avuna.httpd.util.Logger;
 
 /** Creates a http response coming from the server. */
 public class ResponseGenerator {
@@ -22,10 +21,8 @@ public class ResponseGenerator {
 	
 	/** Processes a request and fills in the ResponsePacket
 	 * 
-	 * @param request
-	 *            the request
-	 * @param response
-	 *            the response to fill in
+	 * @param request the request
+	 * @param response the response to fill in
 	 * @return returns the success of handling the request. */
 	public static boolean process(RequestPacket request, ResponsePacket response) {
 		// Check if httpVersion is compatible
@@ -48,7 +45,7 @@ public class ResponseGenerator {
 				return false;
 			}
 			EventMethodLookup elm = new EventMethodLookup(request.method, request, response);
-			request.host.getHost().eventBus.callEvent(elm);
+			request.host.eventBus.callEvent(elm);
 			if (!elm.isCanceled()) {
 				generateDefaultResponse(response, StatusCode.NOT_YET_IMPLEMENTED);
 				response.body = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.NOT_YET_IMPLEMENTED, "The requested URL " + request.target + " via " + request.method.name + " is not yet implemented.");
@@ -61,7 +58,7 @@ public class ResponseGenerator {
 				return true;
 			}
 		}catch (Exception e) {
-			Logger.logError(e);
+			request.host.logger.logError(e);
 			generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
 			response.body = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "The requested URL " + request.target + " caused a server failure.");
 			return false;
@@ -70,10 +67,8 @@ public class ResponseGenerator {
 	
 	/** Generates the stausCode, httpVersion and reasonPhrase for the response
 	 * 
-	 * @param response
-	 *            the response packet
-	 * @param status
-	 *            the status to set. */
+	 * @param response the response packet
+	 * @param status the status to set. */
 	public static void generateDefaultResponse(ResponsePacket response, StatusCode status) {
 		response.statusCode = status.getStatus();
 		response.httpVersion = "HTTP/1.1";

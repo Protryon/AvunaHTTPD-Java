@@ -15,7 +15,6 @@ import org.avuna.httpd.dns.UDPServer;
 import org.avuna.httpd.dns.Work;
 import org.avuna.httpd.dns.zone.ZoneFile;
 import org.avuna.httpd.util.ConfigNode;
-import org.avuna.httpd.util.Logger;
 
 public class HostDNS extends Host {
 	
@@ -35,7 +34,7 @@ public class HostDNS extends Host {
 		try {
 			AvunaHTTPD.fileManager.getBaseFile("dns.cfg").createNewFile();
 		}catch (IOException e) {
-			Logger.logError(e);
+			AvunaHTTPD.logger.logError(e);
 		}
 	}
 	
@@ -49,9 +48,9 @@ public class HostDNS extends Host {
 		twc = Integer.parseInt(map.getNode("workerThreadCount").getValue());
 		mc = Integer.parseInt(map.getNode("maxConnections").getValue());
 		if (this.zf != null) try {
-			this.zf.load();
+			this.zf.load(this);
 		}catch (IOException e) {
-			Logger.logError(e);
+			logger.logError(e);
 		}
 	}
 	
@@ -83,10 +82,10 @@ public class HostDNS extends Host {
 	public void setup(ServerSocket s) {
 		this.zf = new ZoneFile(new File(dnsf));
 		try {
-			this.zf.load();
+			this.zf.load(this);
 		}catch (IOException e1) {
-			Logger.logError(e1);
-			Logger.log("Failed to read DNS zone file!");
+			logger.logError(e1);
+			logger.log("Failed to read DNS zone file!");
 		}
 		initQueue(mc < 1 ? 10000000 : mc);
 		for (int i = 0; i < twc; i++) {
@@ -105,7 +104,7 @@ public class HostDNS extends Host {
 			try {
 				Thread.sleep(1L);
 			}catch (InterruptedException e) {
-				Logger.logError(e);
+				logger.logError(e);
 			}
 	}
 }

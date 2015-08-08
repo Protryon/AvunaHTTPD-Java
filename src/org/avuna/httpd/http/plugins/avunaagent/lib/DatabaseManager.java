@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.plugins.avunaagent.lib;
 
@@ -23,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import org.avuna.httpd.hosts.VHost;
 
 public class DatabaseManager {
 	private Connection conn;
@@ -30,6 +17,7 @@ public class DatabaseManager {
 	private static ArrayList<DatabaseManager> open = new ArrayList<DatabaseManager>();
 	private HashMap<String, ArrayList<ExtendedPStatement>> pstmts = new HashMap<String, ArrayList<ExtendedPStatement>>();
 	private final String jdbc;
+	protected final VHost vhost;
 	
 	public static void closeAll() throws SQLException {
 		for (DatabaseManager db : open) {
@@ -37,8 +25,9 @@ public class DatabaseManager {
 		}
 	}
 	
-	public DatabaseManager(String driver, String ip, String db, String user, String pass) throws SQLException {
+	public DatabaseManager(VHost vhost, String driver, String ip, String db, String user, String pass) throws SQLException {
 		conn = DriverManager.getConnection(jdbc = "jdbc:" + driver + "://" + ip + "/" + db + "?user=" + user + "&password=" + pass);
+		this.vhost = vhost;
 	}
 	
 	private static class ExtendedStatement {

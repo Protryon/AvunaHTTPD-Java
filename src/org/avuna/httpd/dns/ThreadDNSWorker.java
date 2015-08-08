@@ -13,7 +13,6 @@ import org.avuna.httpd.dns.zone.ZoneDirective;
 import org.avuna.httpd.dns.zone.ZoneFile;
 import org.avuna.httpd.hosts.HostDNS;
 import org.avuna.httpd.hosts.ITerminatable;
-import org.avuna.httpd.util.Logger;
 
 public class ThreadDNSWorker extends Thread implements ITerminatable {
 	
@@ -112,12 +111,12 @@ public class ThreadDNSWorker extends Thread implements ITerminatable {
 			try {
 				Query query = null;
 				if (focus.UDP) {
-					query = new Query(((WorkUDP) focus).query);
+					query = new Query(host, ((WorkUDP) focus).query);
 				}else {
 					WorkTCP wt = ((WorkTCP) focus);
 					byte[] qb = new byte[wt.in.readShort()];
 					wt.in.readFully(qb);
-					query = new Query(qb);
+					query = new Query(host, qb);
 				}
 				if (query != null && !query.getHeader().isQr()) {
 					Header qh = query.getHeader();
@@ -143,10 +142,10 @@ public class ThreadDNSWorker extends Thread implements ITerminatable {
 					header.setAncount(resps.size());
 					// System.out.println(resps.size());
 					Query response = new Query(header, query.getQd(), resps.toArray(new ResourceRecord[] {}), null, null);
-					byte[] rb = response.encode();
+					byte[] rb = response.encode(host);
 					if (rb.length >= 512) {
 						response.getHeader().setTc(true);
-						rb = response.encode();
+						rb = response.encode(host);
 						System.arraycopy(rb, 0, rb, 0, 512);
 					}
 					// System.out.println("2: " + Util.bytesToHex(rb));
@@ -168,17 +167,17 @@ public class ThreadDNSWorker extends Thread implements ITerminatable {
 					try {
 						((WorkTCP) focus).s.close();
 					}catch (IOException e1) {
-						Logger.logError(e1);
+						host.logger.logError(e1);
 					}
 				}
 			}catch (Exception e) {
-				Logger.logError(e);
+				host.logger.logError(e);
 			}finally {
 				if (!focus.UDP) {
 					try {
 						((WorkTCP) focus).s.close();
 					}catch (IOException e) {
-						Logger.logError(e);
+						host.logger.logError(e);
 					}
 				}
 			}

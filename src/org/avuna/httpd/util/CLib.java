@@ -70,14 +70,14 @@ public class CLib {
 			String va = null;
 			if (jvma.equals("32")) {
 				if (arch.equals("i386") || arch.equals("amd64")) va = "i386";
-				if (arch.equals("amd64")) Logger.log("[WARNING] You are running a 32-bit JVM on a 64-bit Machine!");
+				if (arch.equals("amd64")) AvunaHTTPD.logger.log("[WARNING] You are running a 32-bit JVM on a 64-bit Machine!");
 			}else if (jvma.equals("64")) {
 				if (arch.equals("amd64")) va = "amd64";
 			}
 			if (va != null) {
 				System.load(new File(new File(AvunaHTTPD.fileManager.getBaseFile("jni"), va), "libAvunaHTTPD_JNI.so").getAbsolutePath());
 			}else {
-				Logger.log("[WARNING] JNI Loading failed, we could not find a library for your CPU Architecture.");
+				AvunaHTTPD.logger.logError("[ERROR] JNI Loading failed, we could not find a library for your CPU Architecture.");
 				failed = true;
 			}
 		}

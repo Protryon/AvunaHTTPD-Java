@@ -14,7 +14,6 @@ import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostFTP;
 import org.avuna.httpd.mail.util.StringFormatter;
 import org.avuna.httpd.util.CLib;
-import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.SafeMode;
 import org.avuna.httpd.util.SafeMode.StatResult;
 import org.avuna.httpd.util.unixsocket.CException;
@@ -203,7 +202,7 @@ public class FTPHandler {
 					focus.writeLine(500, "Illegal PORT command.");
 					return;
 				}
-				focus.psv = new ThreadPassive(focus, ip, port);
+				focus.psv = new ThreadPassive(host, focus, ip, port);
 				focus.psv.start();
 				focus.writeLine(200, "PORT command successful. Consider using PASV.");
 			}
@@ -224,11 +223,11 @@ public class FTPHandler {
 						ps = new ServerSocket(port, 1);
 						int minor = (port % 256);
 						int major = (port - minor) / 256;
-						focus.psv = new ThreadPassive(focus, ps);
+						focus.psv = new ThreadPassive(host, focus, ps);
 						focus.psv.start();
 						focus.writeLine(227, "Entering Passive Mode (" + host.provider.getExternalIP().replace(".", ",") + "," + major + "," + minor + ").");
 					}catch (IOException e) {
-						Logger.logError(e);
+						host.logger.logError(e);
 						ps = null;
 					}
 				}while (ps == null);

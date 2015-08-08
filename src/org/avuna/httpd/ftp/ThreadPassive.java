@@ -14,7 +14,7 @@ import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
-import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.hosts.HostFTP;
 
 public class ThreadPassive extends Thread {
 	private Object serv = null;
@@ -37,14 +37,15 @@ public class ThreadPassive extends Thread {
 	}
 	
 	private boolean st = false;
+	private HostFTP host;
 	
-	public ThreadPassive(FTPWork work, String ip, int port) {
+	public ThreadPassive(HostFTP host, FTPWork work, String ip, int port) {
 		this.serv = ip;
 		this.ep = port;
 		this.work = work;
 	}
 	
-	public ThreadPassive(FTPWork work, ServerSocket serv) {
+	public ThreadPassive(HostFTP host, FTPWork work, ServerSocket serv) {
 		this.serv = serv;
 		this.work = work;
 	}
@@ -56,7 +57,7 @@ public class ThreadPassive extends Thread {
 				try {
 					Thread.sleep(5L);
 				}catch (InterruptedException e) {
-					Logger.logError(e);
+					host.logger.logError(e);
 				}
 			}
 			if (cl) return;
@@ -117,7 +118,7 @@ public class ThreadPassive extends Thread {
 						try {
 							ls.waitFor();
 						}catch (InterruptedException e) {
-							Logger.logError(e);
+							host.logger.logError(e);
 						}
 						Scanner in2 = new Scanner(ls.getInputStream());
 						while (in2.hasNextLine()) {
@@ -151,11 +152,11 @@ public class ThreadPassive extends Thread {
 				hold = false;
 			}
 		}catch (IOException e) {
-			if (!(e instanceof SocketException)) Logger.logError(e);
+			if (!(e instanceof SocketException)) host.logger.logError(e);
 			try {
 				work.writeLine(526, "Transfer failed.");
 			}catch (IOException e1) {
-				Logger.logError(e);
+				host.logger.logError(e);
 			}
 		}finally {
 			if (!cl) {
@@ -168,7 +169,7 @@ public class ThreadPassive extends Thread {
 					((ServerSocket) serv).close();
 				}
 			}catch (IOException e) {
-				Logger.logError(e);
+				host.logger.logError(e);
 			}
 		}
 	}

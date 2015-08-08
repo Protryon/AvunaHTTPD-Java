@@ -15,7 +15,6 @@ import org.avuna.httpd.hosts.VHost;
 import org.avuna.httpd.http.Headers;
 import org.avuna.httpd.http.Method;
 import org.avuna.httpd.http.Resource;
-import org.avuna.httpd.util.Logger;
 
 public class RequestPacket extends Packet {
 	/** Raw HTTP target including Get variables & # stuff. */
@@ -235,7 +234,7 @@ public class RequestPacket extends Packet {
 			if (body != null && body.data != null) ser.write(body.data);
 			return ser.toByteArray();
 		}catch (Exception e) {
-			Logger.logError(e);
+			host.logger.logError(e);
 		}
 		return new byte[0];
 	}

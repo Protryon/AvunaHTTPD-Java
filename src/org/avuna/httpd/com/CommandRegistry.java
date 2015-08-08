@@ -1,25 +1,12 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/*
+ * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.com;
 
 import java.io.PrintStream;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
-import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.AvunaHTTPD;
 
 public class CommandRegistry {
 	public CommandRegistry() {
@@ -41,8 +28,7 @@ public class CommandRegistry {
 	
 	public int processCommand(String cmd, String[] args, CommandContext context) {
 		Command com = null;
-		m:
-		for (String[] ks : cmds.keySet()) {
+		m: for (String[] ks : cmds.keySet()) {
 			for (String k : ks) {
 				if (k.equalsIgnoreCase(cmd)) {
 					com = cmds.get(ks);
@@ -60,7 +46,7 @@ public class CommandRegistry {
 			i = com.processCommand(args, context);
 		}catch (Exception e) {
 			e.printStackTrace(context.getOut());
-			Logger.logError(e);
+			AvunaHTTPD.logger.logError(e);
 		}
 		context.logCommand(com.registeredID, i);
 		return i;

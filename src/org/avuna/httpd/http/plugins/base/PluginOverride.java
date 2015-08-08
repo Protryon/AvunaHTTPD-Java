@@ -18,7 +18,6 @@ import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.util.CompiledDirective;
 import org.avuna.httpd.http.util.OverrideConfig;
-import org.avuna.httpd.util.Logger;
 
 public class PluginOverride extends Plugin {
 	
@@ -53,7 +52,7 @@ public class PluginOverride extends Plugin {
 			try {
 				request.body = AvunaHTTPD.fileManager.preloadOverride(request, request.body, request.host.getHTDocs().getAbsolutePath());
 			}catch (IOException e) {
-				Logger.logError(e);
+				request.host.logger.logError(e);
 			}
 			if (request.body == null || request.body.effectiveOverride == null) return;
 			String rt = request.target;

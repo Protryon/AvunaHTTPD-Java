@@ -13,7 +13,6 @@ import org.avuna.httpd.mail.imap.IMAPCommand;
 import org.avuna.httpd.mail.imap.IMAPWork;
 import org.avuna.httpd.mail.mailbox.Email;
 import org.avuna.httpd.mail.util.StringFormatter;
-import org.avuna.httpd.util.Logger;
 
 public class IMAPCommandFetch extends IMAPCommand {
 	
@@ -36,7 +35,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 			String[] tps = tp.split(" ");
 			tps = StringFormatter.congealBySurroundings(tps, "[", "]");
 			for (String tp2 : tps) {
-				Logger.log(tp2);
+				host.logger.log(tp2);
 			}
 			for (Email e : toFetch) {
 				if (tps[0].equals("all")) {
@@ -160,7 +159,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 							}
 							mhd.append(AvunaHTTPD.crlf);
 							if (e.mp != null) {
-								mhd.append(new String(e.mp.serialize()));
+								mhd.append(new String(e.mp.serialize(host.logger)));
 							}else mhd.append(e.body);
 						}else {
 							String[] kinds = StringFormatter.congealBySurroundings(s2.split(" "), "(", ")");
@@ -181,7 +180,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 									}
 								}else if (value.equals("text")) {
 									if (e.mp != null) {
-										mhd.append(new String(e.mp.serialize()));
+										mhd.append(new String(e.mp.serialize(host.logger)));
 									}else mhd.append(e.body);
 								}else if (value.equals("mime")) {
 									if (e.headers.hasHeader("content-type")) {

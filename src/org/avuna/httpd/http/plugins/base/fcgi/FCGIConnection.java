@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.plugins.base.fcgi;
 
@@ -23,11 +9,11 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.HashMap;
 import java.util.concurrent.ArrayBlockingQueue;
+import org.avuna.httpd.hosts.VHost;
 import org.avuna.httpd.http.plugins.base.fcgi.FCGIConnectionManagerNMPX.AugFCGIConnection;
 import org.avuna.httpd.http.plugins.base.fcgi.packets.FCGIPacket;
 import org.avuna.httpd.http.plugins.base.fcgi.packets.GetValues;
 import org.avuna.httpd.http.plugins.base.fcgi.packets.GetValuesResult;
-import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.unixsocket.UnixSocket;
 
 public class FCGIConnection extends Thread implements IFCGIManager {
@@ -39,8 +25,9 @@ public class FCGIConnection extends Thread implements IFCGIManager {
 	private final int port;
 	private final boolean unix;
 	protected AugFCGIConnection aug = null;
+	private final VHost vhost;
 	
-	public FCGIConnection(String ip, int port) throws IOException {
+	public FCGIConnection(VHost vhost, String ip, int port) throws IOException {
 		super("FCGI Thread");
 		this.ip = ip;
 		this.port = port;
@@ -50,9 +37,10 @@ public class FCGIConnection extends Thread implements IFCGIManager {
 		in = new DataInputStream(s.getInputStream());
 		this.setDaemon(true);
 		unix = false;
+		this.vhost = vhost;
 	}
 	
-	public FCGIConnection(String unixsock) throws IOException {
+	public FCGIConnection(VHost vhost, String unixsock) throws IOException {
 		super("FCGI Thread");
 		this.ip = unixsock;
 		this.port = -1;
@@ -63,6 +51,7 @@ public class FCGIConnection extends Thread implements IFCGIManager {
 		out.flush();
 		in = new DataInputStream(us.getInputStream());
 		this.setDaemon(true);
+		this.vhost = vhost;
 	}
 	
 	public void getSettings() {
@@ -111,7 +100,7 @@ public class FCGIConnection extends Thread implements IFCGIManager {
 					FCGIPacket recv = FCGIPacket.read(in);
 					if (recv.id == 0) {// management
 						if (recv.type == Type.FCGI_GET_VALUES_RESULT) {
-							byte[] res = ((GetValuesResult)recv).content;
+							byte[] res = ((GetValuesResult) recv).content;
 							int i = 0;
 							boolean gs = false;
 							while (i < res.length) {
@@ -127,7 +116,7 @@ public class FCGIConnection extends Thread implements IFCGIManager {
 									canMultiplex = new String(value).equals("1");
 									if (!canMultiplex && !gs) {
 										gs = true;
-										Logger.log("[WARNING] FCGI Server does not support multiplexing, reverting to legacy systems.");
+										vhost.logger.log("[WARNING] FCGI Server does not support multiplexing, reverting to legacy systems.");
 									}
 								}
 							}
@@ -147,17 +136,17 @@ public class FCGIConnection extends Thread implements IFCGIManager {
 				}
 			}
 		}catch (SocketException e) {
-			Logger.log("FCGI Connection closed!");
+			vhost.logger.log("FCGI Connection closed!");
 		}catch (Exception e) {
-			Logger.logError(e);
+			vhost.logger.logError(e);
 		}finally {
 			if (!closing) {
-				Logger.log("Reconnecting!");
+				vhost.logger.log("Reconnecting!");
 				try {
 					if (unix) us.close();
 					else s.close();
 				}catch (IOException e2) {
-					Logger.logError(e2);
+					vhost.logger.logError(e2);
 				}
 				try {
 					Thread.sleep(1000L);
@@ -175,7 +164,7 @@ public class FCGIConnection extends Thread implements IFCGIManager {
 					}
 					run();
 				}catch (Exception e) {
-					Logger.logError(e);
+					vhost.logger.logError(e);
 				}
 			}
 		}

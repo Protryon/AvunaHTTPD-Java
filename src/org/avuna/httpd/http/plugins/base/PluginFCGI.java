@@ -28,7 +28,6 @@ import org.avuna.httpd.http.plugins.base.fcgi.FCGIConnectionManagerNMPX;
 import org.avuna.httpd.http.plugins.base.fcgi.FCGISession;
 import org.avuna.httpd.http.plugins.base.fcgi.IFCGIManager;
 import org.avuna.httpd.util.ConfigNode;
-import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.Stream;
 
 public class PluginFCGI extends Plugin {
@@ -43,7 +42,7 @@ public class PluginFCGI extends Plugin {
 			try {
 				String ip = sub.getNode("ip").getValue();
 				int port = Integer.parseInt(sub.getNode("port").getValue());
-				FCGIConnection sett = unix ? new FCGIConnection(ip) : new FCGIConnection(ip, port);
+				FCGIConnection sett = unix ? new FCGIConnection(registry.host, ip) : new FCGIConnection(registry.host, ip, port);
 				sett.start();
 				boolean cmpx = false;
 				sett.getSettings();
@@ -59,7 +58,7 @@ public class PluginFCGI extends Plugin {
 				sett.close();
 				IFCGIManager mgr = null;
 				if (cmpx) {
-					mgr = unix ? new FCGIConnection(ip) : new FCGIConnection(ip, port);
+					mgr = unix ? new FCGIConnection(registry.host, ip) : new FCGIConnection(registry.host, ip, port);
 				}else {
 					mgr = unix ? new FCGIConnectionManagerNMPX(ip) : new FCGIConnectionManagerNMPX(ip, port);
 				}
@@ -67,8 +66,8 @@ public class PluginFCGI extends Plugin {
 				mgr.start();
 			}catch (Exception e) {
 				fcgis.put(sub.getNode("mime-types").getValue(), null);
-				Logger.logError(e);
-				Logger.log("FCGI server(" + sub.getNode("ip").getValue() + (unix ? "" : ":" + sub.getNode("port").getValue()) + ") NOT accepting connections, disabling FCGI.");
+				registry.host.logger.logError(e);
+				registry.host.logger.log("FCGI server(" + sub.getNode("ip").getValue() + (unix ? "" : ":" + sub.getNode("port").getValue()) + ") NOT accepting connections, disabling FCGI.");
 			}
 		}
 	}
@@ -93,7 +92,7 @@ public class PluginFCGI extends Plugin {
 			try {
 				fcgi.close();
 			}catch (IOException e) {
-				Logger.logError(e);
+				registry.host.logger.logError(e);
 			}
 		}
 		fcgis.clear();
@@ -162,7 +161,7 @@ public class PluginFCGI extends Plugin {
 						}else {
 							FCGIConnectionManagerNMPX fcmx = (FCGIConnectionManagerNMPX) fcgi;
 							if (fcmx == null) continue;
-							conn = fcmx.getNMPX();
+							conn = fcmx.getNMPX(request.host);
 						}
 						break major;
 					}
@@ -242,7 +241,7 @@ public class PluginFCGI extends Plugin {
 						if (i > 600000) break;
 						Thread.sleep(0L, 100000);
 					}catch (InterruptedException e) {
-						Logger.logError(e);
+						request.host.logger.logError(e);
 					}
 				}
 			}finally {
@@ -282,7 +281,7 @@ public class PluginFCGI extends Plugin {
 			response.body.data = bout.toByteArray();
 			return;
 		}catch (IOException e) {
-			Logger.logError(e); // TODO: throws HTMLException?
+			request.host.logger.logError(e);
 			ResponseGenerator.generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
 			Resource er = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "Avuna encountered a critical error attempting to contact the FCGI Server! Please contact your system administrator and notify them to check their logs.");
 			response.headers.updateHeader("Content-Type", er.type);

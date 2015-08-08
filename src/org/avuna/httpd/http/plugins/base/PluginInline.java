@@ -13,6 +13,7 @@ import java.util.zip.CRC32;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
+import org.avuna.httpd.hosts.VHost;
 import org.avuna.httpd.http.Method;
 import org.avuna.httpd.http.event.EventClearCache;
 import org.avuna.httpd.http.event.EventGenerateResponse;
@@ -22,7 +23,6 @@ import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.util.ConfigNode;
-import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.StringUtil;
 import sun.misc.BASE64Encoder;
 
@@ -70,7 +70,7 @@ public class PluginInline extends Plugin {
 		}
 	};
 	
-	private static String processHREF(String parent, String href) {
+	private static String processHREF(VHost vhost, String parent, String href) {
 		String h = href.trim();
 		if (h.startsWith("http://") || h.startsWith("https://") || h.startsWith("//")) {
 			return null; // don't both with offsite stuff, will only increase response time TODO: onsite hard-linking?
@@ -87,7 +87,7 @@ public class PluginInline extends Plugin {
 			}
 		}
 		if (pt > ps.length) {
-			Logger.log("[WARNING] Attempt to escape htdocs from Inline: " + parent + " child: " + href);
+			vhost.logger.log("[WARNING] Attempt to escape htdocs from Inline: " + parent + " child: " + href);
 			return null;
 		}
 		String[] f = new String[ps.length - pt + hs.length - pt];
@@ -176,7 +176,7 @@ public class PluginInline extends Plugin {
 						href = href.substring(0, href.indexOf(" "));
 					}
 					String oh = href;
-					href = processHREF(request.target, href);
+					href = processHREF(request.host, request.target, href);
 					if (href == null) continue;
 					SubReq cp = null;
 					for (SubReq sr : genreqs) {
@@ -200,7 +200,7 @@ public class PluginInline extends Plugin {
 						href = href.substring(0, href.indexOf(" "));
 					}
 					String oh = href;
-					href = processHREF(request.target, href);
+					href = processHREF(request.host, request.target, href);
 					if (href == null) continue;
 					SubReq cp = null;
 					for (SubReq sr : genreqs) {
@@ -224,7 +224,7 @@ public class PluginInline extends Plugin {
 						href = href.substring(0, href.indexOf(" "));
 					}
 					String oh = href;
-					href = processHREF(request.target, href);
+					href = processHREF(request.host, request.target, href);
 					if (href == null) continue;
 					SubReq cp = null;
 					for (SubReq sr : genreqs) {
@@ -248,7 +248,7 @@ public class PluginInline extends Plugin {
 						href = href.substring(0, href.indexOf(" "));
 					}
 					String oh = href;
-					href = processHREF(request.target, href);
+					href = processHREF(request.host, request.target, href);
 					if (href == null) continue;
 					SubReq cp = null;
 					for (SubReq sr : genreqs) {
@@ -273,7 +273,7 @@ public class PluginInline extends Plugin {
 						href = href.contains(")") ? href.substring(0, href.indexOf(")")) : href;
 					}
 					String oh = href;
-					href = processHREF(request.target, href);
+					href = processHREF(request.host, request.target, href);
 					if (href == null) continue;
 					SubReq cp = null;
 					for (SubReq sr : genreqs) {

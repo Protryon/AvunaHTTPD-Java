@@ -1,5 +1,4 @@
-/*
- * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.hosts;
 
@@ -25,7 +24,6 @@ import org.avuna.httpd.mail.smtp.ThreadWorkerSMTP;
 import org.avuna.httpd.mail.sync.HardDriveSync;
 import org.avuna.httpd.mail.sync.Sync;
 import org.avuna.httpd.util.ConfigNode;
-import org.avuna.httpd.util.Logger;
 
 public class HostMail extends Host {
 	
@@ -47,7 +45,7 @@ public class HostMail extends Host {
 	public final ArrayList<ThreadWorkerSMTP> workersSMTP = new ArrayList<ThreadWorkerSMTP>();
 	
 	public void addWorkSMTP(Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
-		workQueueSMTP.add(new SMTPWork(s, in, out, ssl));
+		workQueueSMTP.add(new SMTPWork(this, s, in, out, ssl));
 	}
 	
 	public int getQueueSizeSMTP() {
@@ -62,7 +60,7 @@ public class HostMail extends Host {
 	public final ArrayList<ThreadWorkerIMAP> workersIMAP = new ArrayList<ThreadWorkerIMAP>();
 	
 	public void addWorkIMAP(Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
-		workQueueIMAP.add(new IMAPWork(s, in, out, ssl));
+		workQueueIMAP.add(new IMAPWork(this, s, in, out, ssl));
 	}
 	
 	public int getQueueSizeIMAP() {
@@ -163,13 +161,13 @@ public class HostMail extends Host {
 					try {
 						sync.save(accounts);
 					}catch (IOException e) {
-						Logger.logError(e);
+						logger.logError(e);
 					}
 				}
 			});
 		}catch (Exception e) {
-			Logger.logError(e);
-			Logger.log("Closing " + name + "/" + protocol.name + " Server on " + getConfig().getNode("ip").getValue() + ":" + getConfig().getNode("port").getValue());
+			logger.logError(e);
+			logger.log("Closing " + name + "/" + protocol.name + " Server on " + getConfig().getNode("ip").getValue() + ":" + getConfig().getNode("port").getValue());
 		}finally {
 			loaded = true;
 		}
@@ -178,7 +176,7 @@ public class HostMail extends Host {
 				sync.save(accounts);
 				Thread.sleep(se * 1000L);
 			}catch (Exception e) {
-				Logger.logError(e);
+				logger.logError(e);
 			}
 	}
 	

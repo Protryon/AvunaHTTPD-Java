@@ -6,7 +6,6 @@ import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.plugins.avunaagent.AvunaAgentSecurity;
 import org.avuna.httpd.http.plugins.base.PluginInline;
 import org.avuna.httpd.util.ConfigNode;
-import org.avuna.httpd.util.Logger;
 
 public class JLSFlow extends AvunaAgentSecurity {
 	
@@ -35,7 +34,7 @@ public class JLSFlow extends AvunaAgentSecurity {
 		if (!enabled) return 0;
 		PluginInline inline = (PluginInline) req.host.registry.getPatchForClass(PluginInline.class);
 		if (inline != null && !inline.pcfg.getNode("enabled").getValue().equals("true")) {
-			Logger.log("[ERROR] Inline is disabled, JLSFlow Security module is unloading!");
+			host.logger.log("[ERROR] Inline is disabled, JLSFlow Security module is unloading!");
 			enabled = false;
 			return 0;
 		}

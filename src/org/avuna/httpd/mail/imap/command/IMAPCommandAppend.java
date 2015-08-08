@@ -9,7 +9,6 @@ import org.avuna.httpd.mail.imap.IMAPWork;
 import org.avuna.httpd.mail.mailbox.Email;
 import org.avuna.httpd.mail.mailbox.Mailbox;
 import org.avuna.httpd.mail.util.StringFormatter;
-import org.avuna.httpd.util.Logger;
 
 public class IMAPCommandAppend extends IMAPCommand {
 	
@@ -44,11 +43,11 @@ public class IMAPCommandAppend extends IMAPCommand {
 			focus.in.readFully(data);
 			String ed = new String(data);
 			synchronized (mb.emails) {
-				Email eml = new Email(ed, mb.emails.length + 1, focus.authUser.email);
+				Email eml = new Email(host, ed, mb.emails.length + 1, focus.authUser.email);
 				for (String flag : flags.split(" ")) {
 					eml.flags.add(flag);
 				}
-				Logger.log(ed);
+				host.logger.log(ed);
 				Email[] ne = new Email[mb.emails.length + 1];
 				System.arraycopy(mb.emails, 0, ne, 0, mb.emails.length);
 				ne[ne.length - 1] = eml;

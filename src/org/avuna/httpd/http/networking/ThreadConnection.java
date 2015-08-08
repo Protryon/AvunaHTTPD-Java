@@ -7,7 +7,6 @@ import java.net.SocketTimeoutException;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.hosts.ITerminatable;
-import org.avuna.httpd.util.Logger;
 
 public class ThreadConnection extends Thread implements ITerminatable {
 	private static int nid = 1;
@@ -154,7 +153,7 @@ public class ThreadConnection extends Thread implements ITerminatable {
 				}
 			}catch (Exception e) {
 				if (!(e instanceof SocketTimeoutException)) {
-					if (!(e instanceof SocketException || e instanceof StringIndexOutOfBoundsException)) Logger.logError(e);
+					if (!(e instanceof SocketException || e instanceof StringIndexOutOfBoundsException)) host.logger.logError(e);
 					focus.close();
 					readd = false;
 					continue;

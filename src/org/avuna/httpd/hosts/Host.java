@@ -27,7 +27,7 @@ import org.avuna.httpd.event.IEventReceiver;
 import org.avuna.httpd.event.base.EventID;
 import org.avuna.httpd.event.base.EventReload;
 import org.avuna.httpd.util.ConfigNode;
-import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.util.logging.Logger;
 import org.avuna.httpd.util.unixsocket.UnixServerSocket;
 
 public abstract class Host extends Thread implements ITerminatable, IEventReceiver {
@@ -35,10 +35,12 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 	protected final Protocol protocol;
 	private boolean isStarted = false;
 	public final EventBus eventBus;
+	public final Logger logger;
 	
 	public Host(String threadName, Protocol protocol) {
 		super(threadName + " Host");
 		this.name = threadName;
+		this.logger = new Logger(this);
 		this.protocol = protocol;
 		eventBus = new EventBus();
 		eventBus.registerEvent(EventID.RELOAD, this, 0);
@@ -90,20 +92,20 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 			try {
 				server.close();
 			}catch (IOException e) {
-				Logger.logError(e);
+				logger.logError(e);
 			}
 		}
 	}
 	
 	public final ServerSocket makeServer(String ip, int port, boolean ssl, SSLServerSocketFactory sc) throws IOException {
-		Logger.log("Starting " + name + "/" + protocol.name + " " + (ssl ? "TLS-" : "") + "Server on " + ip + ":" + port);
+		logger.log("Starting " + name + "/" + protocol.name + " " + (ssl ? "TLS-" : "") + "Server on " + ip + ":" + port);
 		if (ssl) {
 			try {
 				ServerSocket server = sc.createServerSocket(port, 50, InetAddress.getByName(ip));
 				servers.add(server);
 				return server;
 			}catch (Exception e) {
-				Logger.logError(e);
+				logger.logError(e);
 				return null;
 			}
 		}else {
@@ -114,7 +116,7 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 	}
 	
 	public final UnixServerSocket makeUnixServer(String file) throws IOException {
-		Logger.log("Starting " + name + "/" + protocol.name + " " + "Server on " + file);
+		logger.log("Starting " + name + "/" + protocol.name + " " + "Server on " + file);
 		UnixServerSocket uss = new UnixServerSocket(file);
 		servers.add(uss);
 		return uss;
@@ -156,13 +158,13 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 				}
 			}
 			if (sc == null) {
-				Logger.log(name + ": No suitable TLS protocols found, please upgrade Java! Host not loaded.");
+				logger.log(name + ": No suitable TLS protocols found, please upgrade Java! Host not loaded.");
 				return null;
 			}
 			sc.init(kmf.getKeyManagers(), trustAllCerts, new SecureRandom());
 			return sc;
 		}catch (Exception e) {
-			Logger.logError(e);
+			logger.logError(e);
 			return null;
 		}
 	}
@@ -196,8 +198,8 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 				setup(makeServer(cfg.getNode("ip").getValue(), Integer.parseInt(cfg.getNode("port").getValue()), isSSL, !isSSL ? null : sslContext.getServerSocketFactory()));
 			}
 		}catch (Exception e) {
-			Logger.logError(e);
-			Logger.log("Closing " + name + "/" + protocol.name + " Server on " + getConfig().getNode("ip").getValue() + ":" + getConfig().getNode("port").getValue());
+			logger.logError(e);
+			logger.log("Closing " + name + "/" + protocol.name + " Server on " + getConfig().getNode("ip").getValue() + ":" + getConfig().getNode("port").getValue());
 		}finally {
 			loaded = true;
 		}

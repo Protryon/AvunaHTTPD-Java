@@ -13,7 +13,6 @@ import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.mail.mailbox.Email;
 import org.avuna.httpd.mail.mailbox.EmailAccount;
 import org.avuna.httpd.mail.mailbox.Mailbox;
-import org.avuna.httpd.util.Logger;
 
 public class HardDriveSync extends Sync {
 	
@@ -158,7 +157,7 @@ public class HardDriveSync extends Sync {
 											byte[] dba = new byte[fin.readInt()];
 											fin.readFully(dba);
 											String data = new String(dba);
-											Email e = new Email(data, uid, from);
+											Email e = new Email(host, data, uid, from);
 											for (String flag : fla) {
 												if (!e.flags.contains(flag)) e.flags.add(flag);
 											}
@@ -176,16 +175,16 @@ public class HardDriveSync extends Sync {
 											fin.close();
 										}
 									}catch (Exception e) {
-										Logger.logError(e);
-										Logger.log("Error loading email: " + eml.getAbsolutePath());
+										host.logger.logError(e);
+										host.logger.log("Error loading email: " + eml.getAbsolutePath());
 									}
 								}
 							}
 						}
 						host.accounts.add(acct);
 					}catch (IOException e) {
-						Logger.logError(e);
-						Logger.log("Error loading account: " + acctf.getAbsolutePath());
+						host.logger.logError(e);
+						host.logger.log("Error loading account: " + acctf.getAbsolutePath());
 					}
 				}
 			}

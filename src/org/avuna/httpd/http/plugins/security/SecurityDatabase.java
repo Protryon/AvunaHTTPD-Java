@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.UUID;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.plugins.avunaagent.lib.SetCookie;
-import org.avuna.httpd.util.Logger;
 
 public class SecurityDatabase {
 	private ArrayList<SecurityNibble> nibbles = new ArrayList<SecurityNibble>();
@@ -19,7 +18,7 @@ public class SecurityDatabase {
 		try {
 			return calcIP(InetAddress.getByName(ip).getAddress());
 		}catch (UnknownHostException e) {
-			Logger.logError(e);
+			// Logger.logError(e);
 			return 0;
 		}
 	}

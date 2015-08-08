@@ -1,18 +1,5 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/*
+ * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.plugins.avunaagent.lib;
 
@@ -23,7 +10,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 import javax.sql.rowset.CachedRowSet;
-import org.avuna.httpd.util.Logger;
 import com.sun.rowset.CachedRowSetImpl;
 
 public class AsynchronousSQL {
@@ -51,11 +37,11 @@ public class AsynchronousSQL {
 					try {
 						Thread.sleep(100L);
 					}catch (InterruptedException e) {
-						Logger.logError(e);
+						manager.vhost.logger.logError(e);
 					}
 				}
 			}catch (SQLException e) {
-				Logger.logError(e);
+				manager.vhost.logger.logError(e);
 			}
 		}
 	}
@@ -77,7 +63,7 @@ public class AsynchronousSQL {
 					try {
 						Thread.sleep(10L);
 					}catch (InterruptedException e) {
-						Logger.logError(e);
+						manager.vhost.logger.logError(e);
 					}
 					continue;
 				}
@@ -86,7 +72,7 @@ public class AsynchronousSQL {
 					stmt = manager.leaseStatement();
 					stmt.execute(query);
 				}catch (SQLException e) {
-					Logger.logError(e);
+					manager.vhost.logger.logError(e);
 				}finally {
 					if (stmt != null) manager.returnStatement(stmt);
 				}
@@ -186,7 +172,7 @@ public class AsynchronousSQL {
 					try {
 						aq.run();
 					}catch (SQLException e) {
-						Logger.logError(e);
+						manager.vhost.logger.logError(e);
 					}
 				}
 			}
@@ -207,7 +193,7 @@ public class AsynchronousSQL {
 			try {
 				aq.run();
 			}catch (SQLException e) {
-				Logger.logError(e);
+				manager.vhost.logger.logError(e);
 			}
 		}
 	}
@@ -231,13 +217,13 @@ public class AsynchronousSQL {
 			try {
 				aq.run();
 			}catch (SQLException e) {
-				Logger.logError(e);
+				manager.vhost.logger.logError(e);
 			}
 		}
 		try {
 			return aq.crs.createShared();
 		}catch (SQLException e) {
-			Logger.logError(e);
+			manager.vhost.logger.logError(e);
 			return null;
 		}
 	}

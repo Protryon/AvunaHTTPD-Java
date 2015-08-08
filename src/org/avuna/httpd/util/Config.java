@@ -117,7 +117,7 @@ public class Config extends ConfigNode {
 							impcfg.load();
 						}catch (IOException e1) {
 							e1.printStackTrace();
-							Logger.log("Failed to read imported config file: " + e.getAbsolutePath());
+							AvunaHTTPD.logger.logError("Failed to read imported config file: " + e.getAbsolutePath());
 						}
 						map.insertNode(impcfg);
 					}
@@ -129,7 +129,7 @@ public class Config extends ConfigNode {
 						impcfg.load();
 					}catch (IOException e1) {
 						e1.printStackTrace();
-						Logger.log("Failed to read imported config file: " + p.getAbsolutePath());
+						AvunaHTTPD.logger.logError("Failed to read imported config file: " + p.getAbsolutePath());
 					}
 					map.insertNode(impcfg);
 				}
@@ -150,7 +150,7 @@ public class Config extends ConfigNode {
 				String value = line.substring(key.length() + 1);
 				map.insertNode(new ConfigNode(key, value).setComment(comment));
 			}else {
-				Logger.log("Invalid config line @ " + (f == null ? "Memory File" : f.getAbsolutePath()));
+				AvunaHTTPD.logger.logError("Invalid config line @ " + (f == null ? "Memory File" : f.getAbsolutePath()));
 			}
 		}
 	}
@@ -207,7 +207,7 @@ public class Config extends ConfigNode {
 			out.flush();
 			out.close();
 		}catch (IOException e) {
-			Logger.logError(e);
+			AvunaHTTPD.logger.logError(e);
 		}
 	}
 }

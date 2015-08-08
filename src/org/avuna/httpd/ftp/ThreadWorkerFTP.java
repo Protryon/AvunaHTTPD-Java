@@ -7,7 +7,6 @@ import java.net.SocketTimeoutException;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostFTP;
 import org.avuna.httpd.hosts.ITerminatable;
-import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.Stream;
 
 public class ThreadWorkerFTP extends Thread implements ITerminatable {
@@ -44,7 +43,7 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 				try {
 					focus.close();
 				}catch (IOException e) {
-					Logger.logError(e);
+					host.logger.logError(e);
 				}
 				continue;
 			}
@@ -132,12 +131,12 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 					try {
 						focus.close();
 					}catch (IOException ex) {
-						Logger.logError(ex);
+						host.logger.logError(ex);
 					}
 					readd = false;
 				}
 			}catch (Exception e) {
-				if (!(e instanceof IOException)) Logger.logError(e);
+				if (!(e instanceof IOException)) host.logger.logError(e);
 			}finally {
 				if (readd & canAdd) {
 					host.workQueue.add(focus);

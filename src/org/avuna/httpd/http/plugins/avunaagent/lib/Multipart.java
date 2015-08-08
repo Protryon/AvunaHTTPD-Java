@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.plugins.avunaagent.lib;
 
@@ -23,23 +9,23 @@ import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.Stream;
+import org.avuna.httpd.util.logging.Logger;
 
 public class Multipart {
 	public final ArrayList<MultiPartData> mpds = new ArrayList<MultiPartData>();
 	public String boundary;
 	public String mct = "";
 	
-	public Multipart(String sct, byte[] content) {
-		this(sct, new ByteArrayInputStream(content));
+	public Multipart(Logger logger, String sct, byte[] content) {
+		this(logger, sct, new ByteArrayInputStream(content));
 	}
 	
-	public Multipart(String sct, InputStream bin) {
-		this(sct, null, bin);
+	public Multipart(Logger logger, String sct, InputStream bin) {
+		this(logger, sct, null, bin);
 	}
 	
-	public byte[] serialize() {
+	public byte[] serialize(Logger logger) {
 		ByteArrayOutputStream bout = new ByteArrayOutputStream();
 		PrintStream pw = new PrintStream(bout);
 		pw.println("--" + boundary);
@@ -54,14 +40,14 @@ public class Multipart {
 			try {
 				bout.write(mpd.data);
 			}catch (IOException e) {
-				Logger.logError(e);
+				logger.logError(e);
 			}
 			pw.println("--" + boundary + ((i == (mpds.size() - 1)) ? "--" : ""));
 		}
 		return bout.toByteArray();
 	}
 	
-	public Multipart(String sct, String boundary, InputStream bin) {
+	public Multipart(Logger logger, String sct, String boundary, InputStream bin) {
 		this.mct = sct;
 		try {
 			if (boundary == null) {
@@ -137,7 +123,7 @@ public class Multipart {
 				mpds.add(new MultiPartData(ct, contentTransferEncoding, rawdisp, extraHeaders, vars, data));
 			}
 		}catch (IOException e) {
-			Logger.logError(e);
+			logger.logError(e);
 		}
 	}
 	

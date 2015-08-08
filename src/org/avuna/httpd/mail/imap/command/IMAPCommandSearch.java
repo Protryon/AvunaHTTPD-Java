@@ -10,7 +10,6 @@ import org.avuna.httpd.mail.imap.IMAPCommand;
 import org.avuna.httpd.mail.imap.IMAPWork;
 import org.avuna.httpd.mail.mailbox.Email;
 import org.avuna.httpd.mail.util.StringFormatter;
-import org.avuna.httpd.util.Logger;
 
 public class IMAPCommandSearch extends IMAPCommand {
 	
@@ -261,7 +260,7 @@ public class IMAPCommandSearch extends IMAPCommand {
 			if (arg.equals("header")) {
 				targ += " " + args[++i].replace("\"", ""); // header value is case sensitive
 			}
-			Logger.log(targ);
+			host.logger.log(targ);
 			if (!processList(focus, targ, emails)) {
 				focus.writeLine(focus, letters, "NO Invalid search.");
 				return;

@@ -10,7 +10,6 @@ import java.net.Socket;
 import javax.net.ssl.SSLServerSocket;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
-import org.avuna.httpd.util.Logger;
 
 /** Handles a single connection. */
 public class ThreadAcceptIMAP extends Thread {
@@ -63,7 +62,7 @@ public class ThreadAcceptIMAP extends Thread {
 				out.flush();
 				host.addWorkIMAP(s, in, out, server instanceof SSLServerSocket);
 			}catch (Exception e) {
-				if (!(e instanceof IOException)) Logger.logError(e);
+				if (!(e instanceof IOException)) host.logger.logError(e);
 			}
 		}
 	}

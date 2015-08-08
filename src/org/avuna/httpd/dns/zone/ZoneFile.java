@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.dns.Type;
+import org.avuna.httpd.hosts.HostDNS;
 import org.avuna.httpd.mail.util.StringFormatter;
-import org.avuna.httpd.util.Logger;
 
 public class ZoneFile {
 	private File f = null;
@@ -63,7 +63,7 @@ public class ZoneFile {
 		this.f = null;
 	}
 	
-	private static void subload(File f, ArrayList<IDirective> dirs) throws IOException {
+	private static void subload(HostDNS host, File f, ArrayList<IDirective> dirs) throws IOException {
 		int ln = 0;
 		Scanner s = new Scanner(f);
 		boolean round = false;
@@ -80,7 +80,7 @@ public class ZoneFile {
 			}
 			if (com.equals("import")) {
 				if (args.length != 1) {
-					Logger.log(f.getAbsolutePath() + ": Invalid import directive at line " + ln);
+					host.logger.log(f.getAbsolutePath() + ": Invalid import directive at line " + ln);
 					continue;
 				}
 				boolean isabs = false;
@@ -93,19 +93,19 @@ public class ZoneFile {
 				}
 				File nf = isabs ? new File(args[0]) : new File(f.getParentFile(), args[0]);
 				if (!nf.exists()) {
-					Logger.log(nf.getAbsolutePath() + ": file does not exist for import at line " + ln);
+					host.logger.log(nf.getAbsolutePath() + ": file does not exist for import at line " + ln);
 					continue;
 				}
 				if (!nf.canRead()) {
-					Logger.log(nf.getAbsolutePath() + ": invalid permissions for import at line " + ln);
+					host.logger.log(nf.getAbsolutePath() + ": invalid permissions for import at line " + ln);
 					continue;
 				}
 				ZoneFile sz = new ZoneFile(nf);
-				sz.load();
+				sz.load(host);
 				dirs.add(new ImportDirective(args, sz));
 			}else if (com.equals("zone")) {
 				if (args.length != 2) {
-					Logger.log(f.getAbsolutePath() + ": Invalid zone directive at line " + ln);
+					host.logger.log(f.getAbsolutePath() + ": Invalid zone directive at line " + ln);
 					continue;
 				}
 				boolean isabs = false;
@@ -118,26 +118,26 @@ public class ZoneFile {
 				}
 				File nf = isabs ? new File(args[1]) : new File(f.getParentFile(), args[1]);
 				if (!nf.exists()) {
-					Logger.log(nf.getAbsolutePath() + ": file does not exist for subzone at line " + ln);
+					host.logger.log(nf.getAbsolutePath() + ": file does not exist for subzone at line " + ln);
 					continue;
 				}
 				if (!nf.canRead()) {
-					Logger.log(nf.getAbsolutePath() + ": invalid permissions for subzone at line " + ln);
+					host.logger.log(nf.getAbsolutePath() + ": invalid permissions for subzone at line " + ln);
 					continue;
 				}
 				ZoneFile sz = new ZoneFile(nf);
-				sz.load();
+				sz.load(host);
 				dirs.add(new ZoneDirective(args, sz));
 			}else if (com.equals("roundstart")) {
 				if (round) {
-					Logger.log(f.getAbsolutePath() + ": roundstart called, when already in round robin at line " + ln + ", ignored.");
+					host.logger.log(f.getAbsolutePath() + ": roundstart called, when already in round robin at line " + ln + ", ignored.");
 					continue;
 				}
 				round = true;
 				dirs.add(new RoundStartDirective(args));
 			}else if (com.equals("roundstop")) {
 				if (!round) {
-					Logger.log(f.getAbsolutePath() + ": roundstop called, when not in round robin at line " + ln + ", ignored.");
+					host.logger.log(f.getAbsolutePath() + ": roundstop called, when not in round robin at line " + ln + ", ignored.");
 					continue;
 				}
 				round = false;
@@ -149,7 +149,7 @@ public class ZoneFile {
 				args = nargs;
 				DNSRecord record = readRecord(args);
 				if (record == null) {
-					Logger.log(f.getAbsolutePath() + ": malformed record at line " + ln);
+					host.logger.log(f.getAbsolutePath() + ": malformed record at line " + ln);
 					continue;
 				}
 				dirs.add(record);
@@ -185,9 +185,9 @@ public class ZoneFile {
 		return new DNSRecord(domain, type, ttlr1, ttlr2, fd, pa, args);
 	}
 	
-	public void load() throws IOException {
+	public void load(HostDNS host) throws IOException {
 		ArrayList<IDirective> dirs = new ArrayList<IDirective>();
-		subload(f, dirs);
+		subload(host, f, dirs);
 		this.dirs.clear();
 		this.dirs.addAll(dirs);
 	}

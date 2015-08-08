@@ -6,7 +6,6 @@ import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.plugins.avunaagent.AvunaAgentSecurity;
 import org.avuna.httpd.util.ConfigNode;
-import org.avuna.httpd.util.Logger;
 
 public class JLSConnectionFlood extends AvunaAgentSecurity {
 	
@@ -31,7 +30,7 @@ public class JLSConnectionFlood extends AvunaAgentSecurity {
 		if (!enabled) return 0;
 		int ips = HostHTTP.getConnectionsForIP(ip);
 		if (ips > maxConcurrentConns) {
-			Logger.log("Connection abuse from " + ip + ", may be banned depending on configuration.");
+			host.logger.log("Connection abuse from " + ip + ", may be banned depending on configuration.");
 			return returnWeight;
 		}
 		return 0;

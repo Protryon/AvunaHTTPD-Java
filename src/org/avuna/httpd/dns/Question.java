@@ -1,27 +1,11 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.dns;
 
 import java.io.ByteArrayOutputStream;
-import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.hosts.HostDNS;
 
-/**
- * Created by JavaProphet on 8/13/14 at 11:27 PM.
- */
+/** Created by JavaProphet on 8/13/14 at 11:27 PM. */
 public class Question extends Section {
 	private String domain = "";
 	private int type = 1;
@@ -46,7 +30,7 @@ public class Question extends Section {
 		this.cls = cls;
 	}
 	
-	public void refactor(byte[] pointers) {
+	public void refactor(HostDNS host, byte[] pointers) {
 		try {
 			ByteArrayOutputStream tout = new ByteArrayOutputStream();
 			ByteArrayOutputStream dom = new ByteArrayOutputStream();
@@ -93,7 +77,7 @@ public class Question extends Section {
 			tout.flush();
 			updateContent(tout.toByteArray());
 		}catch (Exception e) {
-			Logger.logError(e);
+			host.logger.logError(e);
 		}
 	}
 	

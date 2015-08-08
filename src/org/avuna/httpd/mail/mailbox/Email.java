@@ -8,9 +8,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.http.Headers;
 import org.avuna.httpd.http.plugins.avunaagent.lib.Multipart;
-import org.avuna.httpd.util.Logger;
 
 public class Email {
 	public final ArrayList<String> flags = new ArrayList<String>();
@@ -33,7 +33,7 @@ public class Email {
 		return writer.toString();
 	}
 	
-	public Email(String data, int uid, String from) {
+	public Email(HostMail host, String data, int uid, String from) {
 		this.data = new String(data);
 		String line = "";
 		ByteArrayInputStream bin = new ByteArrayInputStream(data.getBytes());
@@ -54,7 +54,7 @@ public class Email {
 				}
 			}
 		}catch (IOException e) {
-			Logger.logError(e);
+			host.logger.logError(e);
 		}
 		String ct = headers.getHeader("Content-Type");
 		boolean mp = ct != null && ct.startsWith("multipart/");
@@ -63,7 +63,7 @@ public class Email {
 		try {
 			bin.read(body);
 		}catch (IOException e) {
-			Logger.logError(e);
+			host.logger.logError(e);
 		}
 		this.body = new String(body);
 		if (mp) {
@@ -76,7 +76,7 @@ public class Email {
 					if (b.startsWith("\"") && b.endsWith("\"")) b = b.substring(1, b.length() - 1);
 				}
 			}
-			this.mp = new Multipart(ct, b, bin);
+			this.mp = new Multipart(host.logger, ct, b, bin);
 			// if (this.mp.mpds.size() > 0) {
 			// MultiPartData mpd = this.mp.mpds.get(0);
 			// if (mpd.contentType != null && mpd.contentType.equals("")) {

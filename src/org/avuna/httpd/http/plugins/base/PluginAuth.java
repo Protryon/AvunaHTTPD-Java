@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
+import org.avuna.httpd.hosts.VHost;
 import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.event.EventGenerateResponse;
@@ -18,7 +19,6 @@ import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.util.ConfigNode;
-import org.avuna.httpd.util.Logger;
 import sun.misc.BASE64Decoder;
 
 public class PluginAuth extends Plugin {
@@ -69,7 +69,7 @@ public class PluginAuth extends Plugin {
 		
 		private ArrayList<String> ull = new ArrayList<String>();
 		
-		public boolean isAuth(String up) {
+		public boolean isAuth(VHost vhost, String up) {
 			if (!cacheUsers || !usersLoaded) {
 				try {
 					File ul = new File(config.getParentFile(), userlist);
@@ -93,7 +93,7 @@ public class PluginAuth extends Plugin {
 					scan.close();
 					return cr;
 				}catch (IOException e) {
-					Logger.logError(e);
+					vhost.logger.logError(e);
 				}
 			}else {
 				return ull.contains(up);
@@ -141,7 +141,7 @@ public class PluginAuth extends Plugin {
 					if (as.startsWith("Basic ")) {
 						as = as.substring(6);
 						as = new String(new BASE64Decoder().decodeBuffer(as));
-						if (auth.isAuth(as)) {
+						if (auth.isAuth(request.host, as)) {
 							return;
 						}
 					}
@@ -150,7 +150,7 @@ public class PluginAuth extends Plugin {
 				response.body = null;
 				response.headers.addHeader("WWW-Authenticate", "Basic realm=\"" + auth.realm + "\"");
 			}catch (Exception e) {
-				Logger.logError(e);
+				request.host.logger.logError(e);
 			}
 		}
 	}

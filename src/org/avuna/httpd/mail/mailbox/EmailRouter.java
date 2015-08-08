@@ -1,18 +1,5 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/*
+ * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.mail.mailbox;
 
@@ -29,7 +16,6 @@ import javax.naming.directory.Attributes;
 import javax.naming.directory.InitialDirContext;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
-import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.Stream;
 
 public class EmailRouter {
@@ -64,7 +50,7 @@ public class EmailRouter {
 				boolean delivered = false;
 				for (int i = 0; i < mx.length; i++) {
 					String mxr = mx[i];
-					Logger.log("Trying " + mxr);
+					host.logger.log("Trying " + mxr);
 					Socket rs = null;
 					try {
 						rs = new Socket(InetAddress.getByName(mxr), 25);
@@ -72,18 +58,18 @@ public class EmailRouter {
 						out.flush();
 						DataInputStream in = new DataInputStream(rs.getInputStream());
 						String header = Stream.readLine(in);
-						Logger.log(header);
+						host.logger.log(header);
 						out.write(("EHLO " + doms[0] + AvunaHTTPD.crlf).getBytes());
-						Logger.log("EHLO " + doms[0]);
+						host.logger.log("EHLO " + doms[0]);
 						out.flush();
 						String line;
 						while ((line = Stream.readLine(in)).length() >= 4 && line.charAt(3) == '-')
-							Logger.log(line);
+							host.logger.log(line);
 						out.write(("MAIL FROM: " + email.from + AvunaHTTPD.crlf).getBytes());
-						Logger.log("MAIL FROM: " + email.from);
+						host.logger.log("MAIL FROM: " + email.from);
 						out.flush();
 						String mresp = Stream.readLine(in);
-						Logger.log(mresp);
+						host.logger.log(mresp);
 						if (!mresp.startsWith("2")) {
 							if (mresp.startsWith("4")) {
 								if (lrt < 3) {
@@ -99,10 +85,10 @@ public class EmailRouter {
 						}
 						if (!to.startsWith("<")) to = "<" + to + ">";
 						out.write(("RCPT TO: " + to + AvunaHTTPD.crlf).getBytes());
-						Logger.log("RCPT TO: " + to);
+						host.logger.log("RCPT TO: " + to);
 						out.flush();
 						String rresp = Stream.readLine(in);
-						Logger.log(rresp);
+						host.logger.log(rresp);
 						if (!rresp.startsWith("2")) {
 							if (rresp.startsWith("4")) {
 								if (lrt < 3) {
@@ -117,10 +103,10 @@ public class EmailRouter {
 							}
 						}
 						out.write(("DATA" + AvunaHTTPD.crlf).getBytes());
-						Logger.log("DATA");
+						host.logger.log("DATA");
 						out.flush();
 						String dresp = Stream.readLine(in);
-						Logger.log(dresp);
+						host.logger.log(dresp);
 						if (!dresp.startsWith("354")) {
 							if (dresp.startsWith("4")) {
 								if (lrt < 3) {
@@ -135,11 +121,11 @@ public class EmailRouter {
 							}
 						}
 						out.write(email.data.getBytes());
-						Logger.log(email.data);
+						host.logger.log(email.data);
 						out.write((AvunaHTTPD.crlf + "." + AvunaHTTPD.crlf).getBytes());
 						out.flush();
 						String fresp = Stream.readLine(in);
-						Logger.log(fresp);
+						host.logger.log(fresp);
 						if (!fresp.startsWith("2")) {
 							if (fresp.startsWith("4")) {
 								if (lrt < 3) {
@@ -156,17 +142,17 @@ public class EmailRouter {
 						delivered = true;
 						break;
 					}catch (Exception e) {
-						Logger.logError(e);
+						host.logger.logError(e);
 					}finally {
 						if (rs != null) try {
 							rs.close();
 						}catch (IOException e) {
-							Logger.logError(e);
+							host.logger.logError(e);
 						}
 					}
 				}
 				if (!delivered) {
-					Logger.log("Mail was not accepted from any server listed in MX!"); // TODO: try again then send a no reciept email back
+					host.logger.log("Mail was not accepted from any server listed in MX!"); // TODO: try again then send a no reciept email back
 				}
 			}
 		}
@@ -175,10 +161,10 @@ public class EmailRouter {
 	// CREDIT: http://www.eyeasme.com/Shayne/MAILHOSTS/mailHostsLookup.html Copyright � 2011 Shayne Steele (shayne.steele@eyeasme.com)
 	private static String[] lookupMailHosts(String domainName) throws NamingException {
 		InitialDirContext iDirC = new InitialDirContext();
-		Attributes attributes = iDirC.getAttributes("dns:/" + domainName, new String[]{"MX"});
+		Attributes attributes = iDirC.getAttributes("dns:/" + domainName, new String[] { "MX" });
 		Attribute attributeMX = attributes.get("MX");
 		if (attributeMX == null) {
-			return (new String[]{domainName});
+			return (new String[] { domainName });
 		}
 		String[][] pvhn = new String[attributeMX.size()][2];
 		for (int i = 0; i < attributeMX.size(); i++) {

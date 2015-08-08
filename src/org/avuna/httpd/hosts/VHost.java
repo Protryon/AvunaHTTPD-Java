@@ -5,13 +5,14 @@ package org.avuna.httpd.hosts;
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
+import org.avuna.httpd.event.EventBus;
 import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.plugins.avunaagent.AvunaAgentSession;
 import org.avuna.httpd.http.plugins.avunaagent.PluginAvunaAgent;
 import org.avuna.httpd.http.plugins.base.BaseLoader;
 import org.avuna.httpd.util.ConfigNode;
-import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.util.logging.Logger;
 
 public class VHost {
 	private final HostHTTP host;
@@ -28,6 +29,8 @@ public class VHost {
 	private final int port;
 	private final File plugins;
 	public final PluginRegistry registry;
+	public final Logger logger;
+	public final EventBus eventBus = new EventBus();
 	
 	public boolean isForwarding() {
 		return forward;
@@ -70,6 +73,7 @@ public class VHost {
 		this.ip = ip;
 		this.port = port;
 		this.plugins = plugins;
+		this.logger = new Logger(this);
 		registry = new PluginRegistry(this);
 		parent.children.add(this);
 	}
@@ -90,16 +94,17 @@ public class VHost {
 		this.ip = ip;
 		this.port = port;
 		this.plugins = plugins;
+		this.logger = new Logger(this);
 		registry = new PluginRegistry(this);
 	}
 	
 	public void loadBases() {
-		Logger.log("Loading Base Plugins for " + name);
+		logger.log("Loading Base Plugins for " + name);
 		BaseLoader.loadBases(registry);
 	}
 	
 	public void loadCustoms() {
-		Logger.log("Loading Custom Plugin Configs for " + name);
+		logger.log("Loading Custom Plugin Configs for " + name);
 		BaseLoader.loadCustoms(host, registry, plugins);
 	}
 	

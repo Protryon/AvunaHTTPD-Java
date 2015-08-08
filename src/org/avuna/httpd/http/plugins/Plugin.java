@@ -9,7 +9,6 @@ import org.avuna.httpd.event.IEventReceiver;
 import org.avuna.httpd.util.Config;
 import org.avuna.httpd.util.ConfigFormat;
 import org.avuna.httpd.util.ConfigNode;
-import org.avuna.httpd.util.Logger;
 
 public abstract class Plugin implements IEventReceiver {
 	
@@ -40,12 +39,12 @@ public abstract class Plugin implements IEventReceiver {
 			pcfg.load();
 			pcfg.save();
 		}catch (Exception e) {
-			Logger.logError(e);
+			registry.host.logger.logError(e);
 		}
 	}
 	
 	public void log(String line) {
-		Logger.log(name + ": " + line);
+		registry.host.logger.log(name + ": " + line);
 	}
 	
 	public final Config pcfg;

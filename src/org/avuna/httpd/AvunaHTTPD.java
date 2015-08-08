@@ -8,7 +8,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,8 +41,8 @@ import org.avuna.httpd.util.Config;
 import org.avuna.httpd.util.ConfigFormat;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.FileManager;
-import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.SafeMode;
+import org.avuna.httpd.util.logging.Logger;
 
 public class AvunaHTTPD {
 	public static final String VERSION = "1.3.0";
@@ -53,6 +52,9 @@ public class AvunaHTTPD {
 	public static final String crlf = new String(new byte[] { 13, 10 });
 	public static final byte[] crlfb = new byte[] { 13, 10 };
 	public static final CommandRegistry commandRegistry = new CommandRegistry();
+	
+	public static Logger logger = null;
+	
 	static {
 		commandRegistry.registerCommand(new CommandHelp(), "help");
 		commandRegistry.registerCommand(new CommandExit(), "exit", "stop");
@@ -160,7 +162,7 @@ public class AvunaHTTPD {
 				File mime = fileManager.getBaseFile(up);
 				mime.getParentFile().mkdirs();
 				if (!mime.exists()) {
-					Logger.log("Unpacking " + up + "...");
+					logger.log("Unpacking " + up + "...");
 					InputStream in = AvunaHTTPD.class.getResourceAsStream("/unpack/" + up);
 					int i = 1;
 					byte[] buf = new byte[4096];
@@ -179,7 +181,7 @@ public class AvunaHTTPD {
 				}
 			}
 		}catch (IOException e) {
-			Logger.logError(e);
+			logger.logError(e);
 		}
 	}
 	
@@ -203,7 +205,7 @@ public class AvunaHTTPD {
 			}
 			s.close();
 		}catch (IOException e) {
-			Logger.logError(e);
+			logger.logError(e);
 		}
 	}
 	
@@ -333,7 +335,8 @@ public class AvunaHTTPD {
 				}
 			});
 			mainConfig.load();
-			
+			Logger.init(fileManager.getLogs());
+			logger = new Logger("");
 			unpack();
 			if (!windows) CLib.umask(0007);
 			if (unpack || windows || (!windows && CLib.getuid() == 0)) {
@@ -404,7 +407,7 @@ public class AvunaHTTPD {
 						if (!host.containsNode("protocol")) host.insertNode("protocol", ((nd && key.equals("dns")) ? "dns" : ((nc && key.equals("com")) ? "com" : "http")), "set to http/com/dns/mail/ftp for respective servers, load Avuna with these to have other config options autofill.");
 						Protocol p = Protocol.fromString(host.getNode("protocol").getValue());
 						if (p == null) {
-							Logger.log("Skipping Host: " + key + " due to invalid protocol!");
+							Logger.stdout.println("Skipping Host: " + key + " due to invalid protocol!");
 							continue;
 						}
 						if (!host.getNode("enabled").getValue().equals("true")) {
@@ -415,7 +418,7 @@ public class AvunaHTTPD {
 							h.formatConfig(host);
 							hosts.put(key, h);
 						}catch (Exception e) {
-							Logger.logError(e);
+							e.printStackTrace(Logger.stderr);
 							continue;
 						}
 					}
@@ -426,16 +429,13 @@ public class AvunaHTTPD {
 			hostsConfig.load();
 			hostsConfig.save();
 			setupFolders();
-			File lf = new File(fileManager.getLogs(), "" + (System.currentTimeMillis() / 1000L));
-			lf.createNewFile();
-			Logger.INSTANCE = new Logger(new PrintStream(new FileOutputStream(lf)));
-			Logger.log("Loaded Configs");
+			logger.log("Loaded Configs");
 			if (unpack) {
-				Logger.log("Unpack complete, terminating.");
-				Logger.flush();
+				logger.log("Unpack complete, terminating.");
+				logger.flush();
 				System.exit(0);
 			}
-			Logger.log("Loading Connection Handling");
+			logger.log("Loading Connection Handling");
 			for (Host h : hosts.values()) {
 				if (!h.hasStarted()) h.start();
 			}
@@ -454,17 +454,17 @@ public class AvunaHTTPD {
 				}
 				CLib.setgid(Integer.parseInt(mainConfig.getNode("gid").getValue()));
 				CLib.setuid(Integer.parseInt(mainConfig.getNode("uid").getValue()));
-				Logger.log("[NOTIFY] De-escalated to uid " + CLib.getuid());
+				logger.log("[NOTIFY] De-escalated to uid " + CLib.getuid());
 			}else if (!windows) {
-				Logger.log("[NOTIFY] We did NOT de-escalate, currently running as uid " + CLib.getuid());
+				logger.log("[NOTIFY] We did NOT de-escalate, currently running as uid " + CLib.getuid());
 			}
 			Runtime.getRuntime().addShutdownHook(new Thread() {
 				public void run() {
-					Logger.log("Softly Terminating!");
+					logger.log("Softly Terminating!");
 					for (Host h : hosts.values()) {
 						h.preExit();
 					}
-					Logger.flush();
+					Logger.flushAll();
 				}
 			});
 			for (Host host : hosts.values()) {
@@ -473,10 +473,10 @@ public class AvunaHTTPD {
 				}
 			}
 		}catch (Exception e) {
-			if (Logger.INSTANCE == null) {
+			if (logger == null) {
 				e.printStackTrace();
 			}else {
-				Logger.logError(e);
+				logger.logError(e);
 			}
 		}
 		@SuppressWarnings("resource")
@@ -488,7 +488,7 @@ public class AvunaHTTPD {
 			}catch (NoSuchElementException fe) {
 				break;
 			}catch (Exception e) {
-				Logger.logError(e);
+				logger.logError(e);
 			}
 		}
 	}

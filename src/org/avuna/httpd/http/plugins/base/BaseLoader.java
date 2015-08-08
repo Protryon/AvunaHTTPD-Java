@@ -9,7 +9,6 @@ import org.avuna.httpd.http.plugins.PluginClassLoader;
 import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.plugins.avunaagent.PluginAvunaAgent;
 import org.avuna.httpd.http.plugins.security.PluginSecurity;
-import org.avuna.httpd.util.Logger;
 
 public class BaseLoader {
 	public static void loadSecBase(PluginRegistry registry) {
@@ -60,8 +59,8 @@ public class BaseLoader {
 			try {
 				registry.registerPatch((Plugin) patchClass.getDeclaredConstructor(String.class).newInstance(patchClass.getName().substring(patchClass.getName().lastIndexOf(".") + 1)));
 			}catch (Exception e) {
-				Logger.logError(e);
-				Logger.log("Failed to load plugin: " + patchClass.getName());
+				host.logger.logError(e);
+				host.logger.log("Failed to load plugin: " + patchClass.getName());
 			}
 	}
 }

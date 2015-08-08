@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.util.HashMap;
 import org.avuna.httpd.hosts.HostHTTP;
-import org.avuna.httpd.util.Logger;
 
 public class PluginClassLoader extends ClassLoader {
 	public PluginClassLoader() {
@@ -40,7 +39,7 @@ public class PluginClassLoader extends ClassLoader {
 						host.addCustomPlugin((Class<? extends Plugin>) patchClass);
 					}
 				}catch (Exception e) {
-					Logger.logError(e);
+					host.logger.logError(e);
 				}
 			}
 		}

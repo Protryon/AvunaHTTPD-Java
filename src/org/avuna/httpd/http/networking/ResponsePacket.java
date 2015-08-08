@@ -7,7 +7,6 @@ import java.util.HashMap;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.http.Method;
 import org.avuna.httpd.http.plugins.avunaagent.AvunaAgentStream;
-import org.avuna.httpd.util.Logger;
 
 /** This is for responeses to the client. */
 public class ResponsePacket extends Packet {
@@ -61,7 +60,7 @@ public class ResponsePacket extends Packet {
 			System.arraycopy(add, 0, total, cachedSerialize.length, add.length);
 			return total;
 		}catch (Exception e) {
-			Logger.logError(e);
+			request.host.logger.logError(e);
 		}
 		cachedSerialize = new byte[0];
 		return new byte[0];

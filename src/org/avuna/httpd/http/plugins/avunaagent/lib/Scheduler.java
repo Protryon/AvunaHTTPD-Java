@@ -6,11 +6,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
-import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.hosts.VHost;
 
 public class Scheduler {
 	private final ArrayBlockingQueue<Runnable> workQueue;
 	private boolean working = true;
+	private final VHost vhost;
 	
 	private final class ThreadWorker extends Thread {
 		public void run() {
@@ -20,20 +21,21 @@ public class Scheduler {
 					try {
 						Thread.sleep(5L);
 					}catch (InterruptedException e) {
-						Logger.logError(e);
+						vhost.logger.logError(e);
 					}
 					continue;
 				}
 				try {
 					work.run();
 				}catch (Exception e) {
-					Logger.logError(e);
+					vhost.logger.logError(e);
 				}
 			}
 		}
 	}
 	
-	public Scheduler(int workerCount, int queueSize) {
+	public Scheduler(VHost vhost, int workerCount, int queueSize) {
+		this.vhost = vhost;
 		if (workerCount <= 0) throw new IllegalArgumentException("WorkerCount must be >= 1");
 		if (queueSize <= 0) throw new IllegalArgumentException("QueueSize must be >= 1");
 		workQueue = new ArrayBlockingQueue<Runnable>(queueSize);

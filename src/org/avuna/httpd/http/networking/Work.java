@@ -10,7 +10,6 @@ import java.net.Socket;
 import java.util.concurrent.ArrayBlockingQueue;
 import org.avuna.httpd.event.base.EventDisconnected;
 import org.avuna.httpd.hosts.HostHTTP;
-import org.avuna.httpd.util.Logger;
 
 public class Work {
 	public final Socket s;
@@ -51,11 +50,11 @@ public class Work {
 		if (cur == null) cur = 1;
 		cur -= 1;
 		HostHTTP.connIPs.put(ip, cur);
-		Logger.log(ip + " closed.");
+		host.logger.log(ip + " closed.");
 		try {
 			s.close();
 		}catch (IOException e) {
-			Logger.logError(e);
+			host.logger.logError(e);
 		}
 		host.eventBus.callEvent(new EventDisconnected(this));
 	}

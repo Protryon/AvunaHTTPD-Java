@@ -25,7 +25,6 @@ import org.avuna.httpd.http.plugins.avunaagent.security.JLSPostFlood;
 import org.avuna.httpd.http.plugins.avunaagent.security.JLSRequestFlood;
 import org.avuna.httpd.http.plugins.avunaagent.security.JLSUserAgent;
 import org.avuna.httpd.util.ConfigNode;
-import org.avuna.httpd.util.Logger;
 
 public class PluginSecurity extends Plugin {
 	
@@ -77,7 +76,7 @@ public class PluginSecurity extends Plugin {
 				try {
 					epc.getSocket().close();
 				}catch (IOException e) {
-					Logger.logError(e);
+					registry.host.logger.logError(e);
 				}
 				AvunaHTTPD.bannedIPs.add(epc.getSocket().getInetAddress().getHostAddress());
 				((HostHTTP) epc.getHost()).clearIPs(epc.getSocket().getInetAddress().getHostAddress()); // TODO: all host types

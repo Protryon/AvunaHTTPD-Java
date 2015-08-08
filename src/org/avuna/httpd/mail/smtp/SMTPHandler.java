@@ -191,7 +191,7 @@ public class SMTPHandler {
 					for (String l : focus.data) {
 						data += l + AvunaHTTPD.crlf;
 					}
-					Email email = new Email(data, -1, focus.mailFrom);
+					Email email = new Email(host, data, -1, focus.mailFrom);
 					email.to.addAll(focus.rcptTo);
 					EmailRouter.route(host, email);
 					focus.writeLine(250, "OK");

@@ -12,7 +12,6 @@ import javax.net.ssl.SSLSocket;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.util.ConfigNode;
-import org.avuna.httpd.util.Logger;
 
 /** Handles a single connection. */
 public class ThreadAcceptSMTP extends Thread {
@@ -74,7 +73,7 @@ public class ThreadAcceptSMTP extends Thread {
 				s.setSoTimeout(1000);
 				host.addWorkSMTP(s, in, out, server instanceof SSLServerSocket);
 			}catch (Exception e) {
-				if (!(e instanceof IOException)) Logger.logError(e);
+				if (!(e instanceof IOException)) host.logger.logError(e);
 			}
 		}
 	}

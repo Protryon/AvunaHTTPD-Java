@@ -1,18 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.dns;
 
@@ -21,11 +7,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import org.avuna.httpd.util.Logger;
+import org.avuna.httpd.hosts.HostDNS;
 
-/**
- * Created by JavaProphet on 8/14/14 at 1:33 AM.
- */
+/** Created by JavaProphet on 8/14/14 at 1:33 AM. */
 public class Query {
 	
 	public Header getHeader() {
@@ -48,40 +32,40 @@ public class Query {
 		return ar;
 	}
 	
-	public byte[] encode() {
+	public byte[] encode(HostDNS host) {
 		try {
 			ByteArrayOutputStream tout = new ByteArrayOutputStream();
 			if (!header.finalized) {
-				header.finalize(new byte[0]);
+				header.finalize(host, new byte[0]);
 			}
 			tout.write(header.getContent());
 			for (Question q : qd) {
 				if (!q.finalized) {
-					q.finalize(tout.toByteArray());
+					q.finalize(host, tout.toByteArray());
 				}
 				tout.write(q.getContent());
 			}
 			for (ResourceRecord r : rr) {
 				if (!r.finalized) {
-					r.finalize(tout.toByteArray());
+					r.finalize(host, tout.toByteArray());
 				}
 				tout.write(r.getContent());
 			}
 			if (ns != null) for (Section n : ns) {
 				if (!n.finalized) {
-					n.finalize(tout.toByteArray());
+					n.finalize(host, tout.toByteArray());
 				}
 				tout.write(n.getContent());
 			}
 			if (ar != null) for (Section a : ar) {
 				if (!a.finalized) {
-					a.finalize(tout.toByteArray());
+					a.finalize(host, tout.toByteArray());
 				}
 				tout.write(a.getContent());
 			}
 			return tout.toByteArray();
 		}catch (Exception e) {
-			Logger.logError(e);
+			host.logger.logError(e);
 			return new byte[0];
 		}
 	}
@@ -92,7 +76,7 @@ public class Query {
 	private ResourceRecord[] ns;
 	private ResourceRecord[] ar;
 	
-	public Query(byte[] data) {
+	public Query(HostDNS host, byte[] data) {
 		try {
 			DataInputStream in = new DataInputStream(new ByteArrayInputStream(data));
 			ByteArrayOutputStream pointerStream = new ByteArrayOutputStream();
@@ -124,7 +108,7 @@ public class Query {
 			byte[] content = new byte[12];
 			System.arraycopy(data, 0, content, 0, content.length);
 			header.setContent(content);
-			header.finalize(new byte[0]);
+			header.finalize(host, new byte[0]);
 			pointerStream.write(header.getContent());
 			pointerStream.flush();
 			int loc = 12;
@@ -146,7 +130,7 @@ public class Query {
 					if (Util.getBit(0, b) && Util.getBit(1, b)) {
 						ByteBuffer buf = ByteBuffer.allocate(2);
 						buf.order(ByteOrder.BIG_ENDIAN);
-						buf.put(0, (byte)((data[ploc] & 0xff) - 192));
+						buf.put(0, (byte) ((data[ploc] & 0xff) - 192));
 						buf.put(1, data[ploc + 1]);
 						if (!pointering) reRead += 2;
 						ploc = buf.getShort(0);
@@ -181,7 +165,7 @@ public class Query {
 				content = new byte[loc - sloc];
 				System.arraycopy(data, sloc, content, 0, content.length);
 				qd[i].setContent(content);
-				qd[i].finalize(pointerStream.toByteArray());
+				qd[i].finalize(host, pointerStream.toByteArray());
 				pointerStream.write(qd[i].getContent());
 				pointerStream.flush();
 			}
@@ -372,7 +356,7 @@ public class Query {
 			this.ns = ns;
 			this.ar = ar;
 		}catch (Exception e) {
-			Logger.logError(e);
+			host.logger.logError(e);
 		}
 	}
 	

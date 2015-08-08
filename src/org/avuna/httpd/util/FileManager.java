@@ -14,6 +14,7 @@ import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.EventBus;
 import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.hosts.HostHTTP;
+import org.avuna.httpd.hosts.VHost;
 import org.avuna.httpd.http.Resource;
 import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.event.EventClearCache;
@@ -155,7 +156,7 @@ public class FileManager {
 					return resource;
 				}
 			}catch (Exception e) {
-				Logger.logError(e);
+				request.host.logger.logError(e);
 			}
 		}
 		StringBuilder pb = new StringBuilder();
@@ -214,7 +215,7 @@ public class FileManager {
 		try {
 			t = URLDecoder.decode(reqTarget, "UTF-8").split("/");
 		}catch (UnsupportedEncodingException e) {
-			Logger.logError(e);
+			request.host.logger.logError(e);
 		}
 		boolean ext = false;
 		String ep = "";
@@ -237,7 +238,7 @@ public class FileManager {
 							return null;
 						}
 					}catch (CException e) {
-						Logger.logError(e);
+						request.host.logger.logError(e);
 						return null;
 					}
 					
@@ -304,10 +305,10 @@ public class FileManager {
 	 * @param path path to override file
 	 * @return
 	 * @throws IOException */
-	public OverrideConfig loadDirective(File file, String path) throws IOException { // TODO: load superdirectory directives.
+	public OverrideConfig loadDirective(VHost vhost, File file, String path) throws IOException { // TODO: load superdirectory directives.
 		if (!file.exists()) return null;
 		OverrideConfig cfg = new OverrideConfig(file);
-		cfg.load();
+		cfg.load(vhost);
 		cConfigCache.put(path, cfg);
 		return cfg;
 	}
@@ -360,7 +361,7 @@ public class FileManager {
 				}
 			}while (override == null);
 			if (override != null) {
-				resource.effectiveOverride = loadDirective(new File(abs, ".override"), nrt);
+				resource.effectiveOverride = loadDirective(request.host, new File(abs, ".override"), nrt);
 			}else {
 				cConfigCache.put(nrt, null);
 			}
@@ -442,7 +443,7 @@ public class FileManager {
 					return null;
 				}
 				if (!cConfigCache.containsKey(superdir) && abs != null) {
-					directive = loadDirective(new File(abs.getParentFile(), ".override"), superdir);
+					directive = loadDirective(request.host, new File(abs.getParentFile(), ".override"), superdir);
 				}
 				oabs = abs.getAbsolutePath();
 				if (abs != null && abs.exists()) {
@@ -510,7 +511,7 @@ public class FileManager {
 			r.tooBig = tooBig;
 			return r;
 		}catch (IOException e) {
-			if (!(e instanceof FileNotFoundException)) Logger.logError(e);
+			if (!(e instanceof FileNotFoundException)) request.host.logger.logError(e);
 			return null;
 		}
 	}

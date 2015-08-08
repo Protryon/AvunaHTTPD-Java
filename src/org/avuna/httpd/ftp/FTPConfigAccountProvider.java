@@ -6,14 +6,14 @@ import java.io.File;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.hosts.HostFTP;
 import org.avuna.httpd.util.ConfigNode;
-import org.avuna.httpd.util.Logger;
 
 public class FTPConfigAccountProvider extends FTPAccountProvider {
 	private final ConfigNode node;
 	private final int uid, gid;
 	
-	public FTPConfigAccountProvider(ConfigNode node) {
+	public FTPConfigAccountProvider(HostFTP host, ConfigNode node) {
 		this.node = node;
 		if (!node.containsNode("root")) node.insertNode("root", "/");
 		if (!AvunaHTTPD.windows) {
@@ -28,7 +28,7 @@ public class FTPConfigAccountProvider extends FTPAccountProvider {
 		if (!node.containsNode("ourip")) try {
 			node.insertNode("ourip", Inet4Address.getLocalHost().getHostAddress(), "should be set to your public ip");
 		}catch (UnknownHostException e) {
-			Logger.logError(e);
+			host.logger.logError(e);
 			node.insertNode("ourip", "127.0.0.1", "should be set to your public ip");
 		}
 		if (!node.containsNode("users")) node.insertNode("users", null, "format is user=pass");

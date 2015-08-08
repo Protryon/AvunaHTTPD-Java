@@ -35,7 +35,6 @@ import org.avuna.httpd.http.plugins.avunaagent.lib.DatabaseManager;
 import org.avuna.httpd.http.plugins.security.PluginSecurity;
 import org.avuna.httpd.util.Config;
 import org.avuna.httpd.util.ConfigNode;
-import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.SafeMode;
 import org.avuna.httpd.util.unixsocket.CException;
 
@@ -50,7 +49,7 @@ public class PluginAvunaAgent extends Plugin {
 		boolean sece = sec != null && sec.pcfg.getNode("enabled").getValue().equals("true");
 		if (sece) {
 			try {
-				secjlcl = new AvunaAgentClassLoader(new URL[] { sec.config.toURI().toURL() }, this.getClass().getClassLoader());
+				secjlcl = new AvunaAgentClassLoader(registry.host, new URL[] { sec.config.toURI().toURL() }, this.getClass().getClassLoader());
 			}catch (MalformedURLException e1) {
 				e1.printStackTrace();
 			}
@@ -74,7 +73,7 @@ public class PluginAvunaAgent extends Plugin {
 					}
 				}
 			}catch (Throwable t) {
-				Logger.logError(t);
+				registry.host.logger.logError(t);
 			}
 			VHost vhost = (VHost) registry.host;
 			if (vhost.isForwarding() || vhost.getHTDocs() == null) {
@@ -87,7 +86,7 @@ public class PluginAvunaAgent extends Plugin {
 				recurLoad(null, sec.config);
 			}
 		}catch (Exception e) {
-			Logger.logError(e);
+			registry.host.logger.logError(e);
 		}
 	}
 	
@@ -111,7 +110,7 @@ public class PluginAvunaAgent extends Plugin {
 		try {
 			Thread.sleep(1000L); // ensure the gc is over
 		}catch (InterruptedException e) {
-			Logger.logError(e);
+			registry.host.logger.logError(e);
 		}
 	}
 	
@@ -150,7 +149,7 @@ public class PluginAvunaAgent extends Plugin {
 				}
 			}
 		}catch (Exception e) {
-			Logger.logError(e);
+			registry.host.logger.logError(e);
 		}
 	}
 	
@@ -164,7 +163,7 @@ public class PluginAvunaAgent extends Plugin {
 						continue;
 					}
 				}catch (CException e) {
-					Logger.logError(e);
+					session.getVHost().logger.logError(e);
 					continue;
 				}
 			}
@@ -210,7 +209,7 @@ public class PluginAvunaAgent extends Plugin {
 							});
 							((Config) jl.pcfg).load();
 							((Config) jl.pcfg).save();
-							jl.host = session == null ? null : session.getVHost();
+							jl.host = session == null ? registry.host : session.getVHost();
 							if (jl.getType() == 3) {
 								security.add((AvunaAgentSecurity) jl);
 							}else {
@@ -223,8 +222,8 @@ public class PluginAvunaAgent extends Plugin {
 						}
 					}
 				}catch (Exception e) {
-					Logger.logError(e);
-					Logger.log("Error loading: " + f.getAbsolutePath());
+					session.getVHost().logger.logError(e);
+					session.getVHost().logger.log("Error loading: " + f.getAbsolutePath());
 				}
 			}
 		}
@@ -248,9 +247,9 @@ public class PluginAvunaAgent extends Plugin {
 			((Config) sec.pcfg).load();
 			((Config) sec.pcfg).save();
 		}catch (IOException e) {
-			Logger.logError(e);
+			registry.host.logger.logError(e);
 		}
-		sec.host = null;
+		sec.host = registry.host;
 		sec.init();
 		security.add(sec);
 	}
@@ -350,7 +349,7 @@ public class PluginAvunaAgent extends Plugin {
 						response.reqStream = (AvunaAgentStream) loader;
 					}
 				}catch (Exception e) {
-					Logger.logError(e);
+					request.host.logger.logError(e);
 					ResponseGenerator.generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
 					Resource rsc = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "Avuna had a critical error attempting to serve your page. Please contact your server administrator and try again. This error has been recorded in the Avuna log file.");
 					response.headers.updateHeader("Content-Type", rsc.type);
@@ -366,7 +365,7 @@ public class PluginAvunaAgent extends Plugin {
 				// System.out.println((cur - proc) / 1000000D + " proc-cur");
 				response.body.data = !doout ? new byte[0] : ndata;
 			}catch (Exception e) {
-				Logger.logError(e);
+				request.host.logger.logError(e);
 				ResponseGenerator.generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
 				Resource rsc = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "Avuna had a critical error attempting to serve your page. Please contact your server administrator and try again. This error has been recorded in the Avuna log file.");
 				response.headers.updateHeader("Content-Type", rsc.type);
@@ -385,7 +384,7 @@ public class PluginAvunaAgent extends Plugin {
 		try {
 			DatabaseManager.closeAll();
 		}catch (SQLException e) {
-			Logger.logError(e);
+			registry.host.logger.logError(e);
 		}
 		clearjl();
 	}

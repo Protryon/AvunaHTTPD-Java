@@ -1,5 +1,4 @@
-/*
- * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.mail.smtp;
 
@@ -8,7 +7,6 @@ import java.net.SocketTimeoutException;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.hosts.ITerminatable;
-import org.avuna.httpd.util.Logger;
 import org.avuna.httpd.util.Stream;
 
 public class ThreadWorkerSMTP extends Thread implements ITerminatable {
@@ -41,7 +39,7 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 				try {
 					Thread.sleep(2L, 500000);
 				}catch (InterruptedException e) {
-					Logger.logError(e);
+					host.logger.logError(e);
 				}
 				continue;
 			}
@@ -75,7 +73,7 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 							try {
 								Thread.sleep(2L, 500000);
 							}catch (InterruptedException e) {
-								Logger.logError(e);
+								host.logger.logError(e);
 							}
 						}
 						continue;
@@ -91,7 +89,7 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 								try {
 									Thread.sleep(2L, 500000);
 								}catch (InterruptedException e) {
-									Logger.logError(e);
+									host.logger.logError(e);
 								}
 							}
 							continue;
@@ -106,7 +104,7 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 					focus.tos = 0;
 					focus.sns = 0L;
 					readd = true;
-					Logger.log(focus.hashCode() + ": " + line);
+					host.logger.log(focus.hashCode() + ": " + line);
 					String cmd = "";
 					if (focus.state != 101) {
 						cmd = line.contains(" ") ? line.substring(0, line.indexOf(" ")) : line;
@@ -133,12 +131,12 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 					try {
 						focus.s.close();
 					}catch (IOException ex) {
-						Logger.logError(ex);
+						host.logger.logError(ex);
 					}
 					readd = false;
 				}
 			}catch (Exception e) {
-				if (!(e instanceof IOException)) Logger.logError(e);
+				if (!(e instanceof IOException)) host.logger.logError(e);
 			}finally {
 				if (readd & canAdd) {
 					host.workQueueSMTP.add(focus);

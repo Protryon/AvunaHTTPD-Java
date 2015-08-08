@@ -11,7 +11,6 @@ import javax.net.ssl.SSLServerSocket;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.base.EventPreConnect;
 import org.avuna.httpd.hosts.HostHTTP;
-import org.avuna.httpd.util.Logger;
 
 public class ThreadAccept extends Thread {
 	private final ServerSocket server;
@@ -55,9 +54,9 @@ public class ThreadAccept extends Thread {
 				}
 				host.addWork(host, s, in, out, server instanceof SSLServerSocket);
 			}catch (SocketException e) {
-				if (!server.isClosed()) Logger.logError(e);
+				if (!server.isClosed()) host.logger.logError(e);
 			}catch (Exception e) {
-				Logger.logError(e);
+				host.logger.logError(e);
 			}
 		}
 	}

@@ -33,7 +33,6 @@ import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginClassLoader;
 import org.avuna.httpd.http.plugins.base.BaseLoader;
 import org.avuna.httpd.util.ConfigNode;
-import org.avuna.httpd.util.Logger;
 
 public class HostHTTP extends Host {
 	
@@ -77,7 +76,7 @@ public class HostHTTP extends Host {
 			try {
 				postload();
 			}catch (IOException e) {
-				Logger.logError(e);
+				logger.logError(e);
 			}
 		}else {
 			super.receive(bus, event);
@@ -99,7 +98,7 @@ public class HostHTTP extends Host {
 	}
 	
 	public void loadCustoms() {
-		Logger.log("Loading Custom Plugins for " + name);
+		logger.log("Loading Custom Plugins for " + name);
 		BaseLoader.loadCustoms(this, new File(getConfig().getNode("plugins").getValue()));
 	}
 	
@@ -249,7 +248,7 @@ public class HostHTTP extends Host {
 		cur += 1;
 		connIPs.put(ip, cur);
 		Work w = new Work(host, s, in, out, ssl);
-		Logger.log(ip + " connected to " + host.getHostname() + ".");
+		logger.log(ip + " connected to " + host.getHostname() + ".");
 		EventConnected epc = new EventConnected(w);
 		host.eventBus.callEvent(epc);
 		if (epc.isCanceled()) {
@@ -334,7 +333,7 @@ public class HostHTTP extends Host {
 					try {
 						Thread.sleep(0L, 400000); // TODO: longer? smarter?
 					}catch (InterruptedException e) {
-						Logger.logError(e);
+						logger.logError(e);
 					}
 					continue major;
 				}
@@ -415,7 +414,7 @@ public class HostHTTP extends Host {
 						}
 					}
 					if (parent == null) {
-						Logger.log("Invalid inheritjls! Skipping.");
+						logger.log("Invalid inheritjls! Skipping.");
 						continue;
 					}
 					vhost = new VHost(this.getHostname() + "/" + vkey, this, ourvh.getNode("host").getValue(), parent, Integer.parseInt(ourvh.getNode("cacheClock").getValue()), ourvh.getNode("index").getValue(), ourvh.getNode("errorpages"), forward, forward && !AvunaHTTPD.windows && ourvh.getNode("forward-unix").getValue().equals("true"), forward ? ourvh.getNode("forward-ip").getValue() : null, forward ? Integer.parseInt(ourvh.getNode("forward-port").getValue()) : -1, new File(ourvh.getNode("plugins").getValue()));

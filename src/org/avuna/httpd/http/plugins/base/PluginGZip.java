@@ -17,7 +17,6 @@ import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginRegistry;
-import org.avuna.httpd.util.Logger;
 
 public class PluginGZip extends Plugin {
 	
@@ -55,7 +54,7 @@ public class PluginGZip extends Plugin {
 				response.headers.addHeader("Content-Encoding", "gzip");
 				response.headers.addHeader("Vary", "Accept-Encoding");
 			}catch (IOException e) {
-				Logger.logError(e);
+				request.host.logger.logError(e);
 			}
 			response.body.data = data2;
 		}else if (event instanceof EventClearCache) {
