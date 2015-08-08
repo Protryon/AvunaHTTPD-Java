@@ -166,18 +166,18 @@ public class SafeMode {
 			}else {
 				if (uid == 0 && gid == 0) {
 					if (f.getName().endsWith(".sh")) {
-						setPerms(f, 0, 0, 0770);
+						setPerms(f, 0, 0, 0750);
 					}else {
-						setPerms(f, 0, 0, 0660);
+						setPerms(f, 0, 0, 0640);
 					}
 				}else {
 					String rn = f.getName();
 					if (!recursed && (rn.equals("avuna.jar") || rn.equals("main.cfg"))) {
 						setPerms(f, 0, gid, 0640);
 					}else if (!recursed && (rn.equals("kill.sh") || rn.equals("run.sh") || rn.equals("restart.sh") || rn.equals("cmd.sh"))) {
-						setPerms(f, 0, 0, 0770);
+						setPerms(f, 0, 0, 0750);
 					}else {
-						setPerms(f, uid, gid, 0660);
+						setPerms(f, uid, gid, 0640);
 					}
 				}
 			}
