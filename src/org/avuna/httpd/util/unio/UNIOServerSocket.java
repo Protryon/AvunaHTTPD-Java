@@ -31,7 +31,7 @@ public class UNIOServerSocket extends ServerSocket {
 	
 	public void bind() throws IOException {
 		if (bound) throw new IOException("Already bound!");
-		sockfd = CLib.socket(1, 1, 0);
+		sockfd = CLib.socket(2, 1, 0);
 		if (sockfd < 0) throw new CException(CLib.errno(), "socket failed native create");
 		int bind = CLib.bindTCP(sockfd, ip, port);
 		if (bind != 0) throw new CException(CLib.errno(), "socket failed bind");

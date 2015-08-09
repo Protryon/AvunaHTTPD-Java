@@ -4,9 +4,11 @@ public class Buffer {
 	protected byte[] buf;
 	private int read = 0;
 	private int length = 0;
-	private byte[] delim;
 	private PacketReceiver callback;
 	private UNIOSocket socket;
+	private int pt = -1;
+	private int pl = -1;
+	private byte[] pd = null;
 	
 	/** Creates a new NIO Buffer.
 	 * 
@@ -15,6 +17,12 @@ public class Buffer {
 		buf = new byte[size];
 		this.callback = callback;
 		this.socket = socket;
+		pt = callback.nextDelimType(socket);
+		if (pt == 0) {
+			pd = callback.nextDelim(socket);
+		}else if (pt == 1) {
+			pl = callback.nextLength(socket);
+		}
 	}
 	
 	public void append(byte[] buf) {
@@ -36,19 +44,40 @@ public class Buffer {
 		ensureCapacity(this.length + length);
 		synchronized (buf) {
 			System.arraycopy(buf, offset, this.buf, this.read + this.length, length);
-			int ml = 0;
-			for (int i = offset; i < offset + length; i++) {
-				if (buf[i] == delim[ml]) {
-					ml++;
-					if (ml == delim.length) {
-						byte[] packet = new byte[i - offset + this.length];
-						System.arraycopy(this.buf, this.read, packet, 0, packet.length);
-						this.read += packet.length;
-						callback.readPacket(socket, packet);
-						break;
+			if (pt == 0) {
+				int ml = 0;
+				for (int i = offset; i < offset + length; i++) {
+					if (buf[i] == pd[ml]) {
+						ml++;
+						if (ml == pd.length) {
+							byte[] packet = new byte[i - offset + this.length];
+							System.arraycopy(this.buf, this.read, packet, 0, packet.length);
+							this.read += packet.length;
+							callback.readPacket(socket, packet);
+							pt = callback.nextDelimType(socket);
+							if (pt == 0) {
+								pd = callback.nextDelim(socket);
+							}else if (pt == 1) {
+								pl = callback.nextLength(socket);
+							}
+							break;
+						}
+					}else if (ml > 0) {
+						ml = 0;
 					}
-				}else if (ml > 0) {
-					ml = 0;
+				}
+			}else if (pt == 1) {
+				if (this.length + length > pl) {
+					byte[] packet = new byte[pl];
+					System.arraycopy(this.buf, this.read, packet, 0, packet.length);
+					this.read += packet.length;
+					callback.readPacket(socket, packet);
+					pt = callback.nextDelimType(socket);
+					if (pt == 0) {
+						pd = callback.nextDelim(socket);
+					}else if (pt == 1) {
+						pl = callback.nextLength(socket);
+					}
 				}
 			}
 			this.length += length;

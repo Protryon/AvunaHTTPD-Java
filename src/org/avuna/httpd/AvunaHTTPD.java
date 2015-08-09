@@ -374,6 +374,53 @@ public class AvunaHTTPD {
 			if (!CLib.failed && CLib.getuid() == 0) {
 				System.out.println("[NOTIFY] Running as root, will load servers and attempt de-escalate, if configured.");
 			}
+			/*{
+				try {
+					UNIOServerSocket server = new UNIOServerSocket("0.0.0.0", 80, new PacketReceiverFactory() {
+						
+						@Override
+						public PacketReceiver newCallback() {
+							return new PacketReceiver() {
+								
+								@Override
+								public void readPacket(UNIOSocket sock, byte[] buf) {
+									System.out.println("recvd: " + buf.length);
+									System.out.println(new String(buf));
+								}
+								
+								@Override
+								public int nextDelimType(UNIOSocket sock) {
+									return 0;
+								}
+								
+								public byte[] nextDelim(UNIOSocket sock) {
+									return "\r\n\r\n".getBytes();
+								}
+								
+								@Override
+								public void closed(UNIOSocket sock) {
+									System.out.println("closed.");
+								}
+								
+							};
+						}
+						
+					});
+					server.bind();
+					Poller poller = new Poller();
+					while (!server.isClosed()) {
+						UNIOSocket s = server.accept();
+						System.out.println("connected!");
+						poller.addSocket(s);
+						while (!s.isClosed()) {
+							poller.poll();
+						}
+					}
+				}catch (Exception e) {
+					e.printStackTrace();
+				}
+				if (true) return;
+			}*/
 			HostRegistry.addHost(Protocol.HTTP, HostHTTP.class);
 			HostRegistry.addHost(Protocol.COM, HostCom.class);
 			HostRegistry.addHost(Protocol.DNS, HostDNS.class);
