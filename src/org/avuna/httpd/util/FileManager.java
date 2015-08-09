@@ -26,7 +26,6 @@ import org.avuna.httpd.http.plugins.base.PluginChunked;
 import org.avuna.httpd.http.plugins.base.PluginFCGI;
 import org.avuna.httpd.http.plugins.base.PluginOverride;
 import org.avuna.httpd.http.util.OverrideConfig;
-import org.avuna.httpd.util.unixsocket.CException;
 
 /** General utility for File type objects.
  * 

@@ -21,6 +21,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import org.avuna.httpd.util.CException;
 import org.avuna.httpd.util.CLib;
 
 public class UnixSocket extends Socket {

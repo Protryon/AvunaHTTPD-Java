@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
 
-package org.avuna.httpd.util.unixsocket;
+package org.avuna.httpd.util.unio;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -22,10 +22,10 @@ import java.net.SocketException;
 import org.avuna.httpd.util.CException;
 import org.avuna.httpd.util.CLib;
 
-public class UnixOutputStream extends OutputStream {
+public class UNIOOutputStream extends OutputStream {
 	private int sockfd = -1;
 	
-	public UnixOutputStream(int sockfd) {
+	public UNIOOutputStream(int sockfd) {
 		this.sockfd = sockfd;
 	}
 	

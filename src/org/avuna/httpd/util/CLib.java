@@ -65,6 +65,8 @@ public class CLib {
 	
 	public static native int[] poll(int[] sockfds);
 	
+	public static native int noblock(int sockfd);
+	
 	public static boolean failed = false;
 	
 	static {

@@ -13,10 +13,10 @@ import java.util.Random;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostFTP;
 import org.avuna.httpd.mail.util.StringFormatter;
+import org.avuna.httpd.util.CException;
 import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.SafeMode;
 import org.avuna.httpd.util.SafeMode.StatResult;
-import org.avuna.httpd.util.unixsocket.CException;
 
 public class FTPHandler {
 	

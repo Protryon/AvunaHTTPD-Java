@@ -3,7 +3,6 @@
 package org.avuna.httpd.util;
 
 import java.io.File;
-import org.avuna.httpd.util.unixsocket.CException;
 
 public class SafeMode {
 	

@@ -33,11 +33,11 @@ import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.plugins.avunaagent.lib.DatabaseManager;
 import org.avuna.httpd.http.plugins.security.PluginSecurity;
+import org.avuna.httpd.util.CException;
 import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.Config;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.SafeMode;
-import org.avuna.httpd.util.unixsocket.CException;
 
 public class PluginAvunaAgent extends Plugin {
 	

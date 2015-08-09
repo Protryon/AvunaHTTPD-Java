@@ -6,6 +6,7 @@ package org.avuna.httpd.util.unixsocket;
 import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
+import org.avuna.httpd.util.CException;
 import org.avuna.httpd.util.CLib;
 
 public class UnixServerSocket extends ServerSocket {
