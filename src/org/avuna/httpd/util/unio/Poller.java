@@ -32,29 +32,35 @@ public class Poller {
 		if (res == null) {
 			throw new CException(CLib.errno(), "Unix poll() failed!");
 		}
+		boolean[] c = new boolean[res.length];
 		// read data, close sockets, etc.
-		int d = 0;
 		for (int i = 0; i < res.length; i++) {
 			boolean close = false;
-			if ((res[i + d] & 0x001) == 0x001) {// POLLIN
+			if ((res[i] & 0x001) == 0x001) {// POLLIN
 				try {
 					us.get(i).read();
 				}catch (IOException e) {
 					close = true;
 				}
-			}else if ((res[i + d] & 0x008) == 0x008 || (res[i + d] & 0x020) == 0x020 || (res[i + d] & 0x030) == 0x030) { // POLLERR, POLLHUP, POLLNVAL
+			}else if ((res[i] & 0x008) == 0x008 || (res[i] & 0x020) == 0x020 || (res[i] & 0x030) == 0x030) { // POLLERR, POLLHUP, POLLNVAL
 				close = true;
 			}
 			if (close) {
+				c[i] = true;
+			}
+		}
+		int ri = 0;
+		for (int i = 0; i < c.length; i++) {
+			if (c[i]) {
 				try {
 					us.get(i).close();
 				}catch (IOException e) {
-					AvunaHTTPD.logger.logError("Failed to close socket!");
+					AvunaHTTPD.logger.logError("Failed to close socket!"); // TODO: choose better logger
 					AvunaHTTPD.logger.logError(e);
 				}
-				d++;
-				us.remove(i--);
+				us.remove(ri--);
 			}
+			ri++;
 		}
 	}
 	
