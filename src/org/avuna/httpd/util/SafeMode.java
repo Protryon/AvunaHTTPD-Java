@@ -3,7 +3,6 @@
 package org.avuna.httpd.util;
 
 import java.io.File;
-import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.util.unixsocket.CException;
 
 public class SafeMode {
@@ -88,14 +87,14 @@ public class SafeMode {
 	}
 	
 	public static boolean isHardlink(File f) throws CException {
-		if (AvunaHTTPD.windows) return false;
+		if (CLib.failed) return false;
 		if (!f.isFile()) return false; // folders CANNOT be hardlinked, but do return the number of subfolders(+1 or 2)
 		StatResult sr = new StatResult(f.getAbsolutePath());
 		return sr.nlink > 1;
 	}
 	
 	public static boolean isSymlink(File f) throws CException {
-		if (AvunaHTTPD.windows) return false;
+		if (CLib.failed) return false;
 		byte[] buf = new byte[1024];
 		int length = CLib.readlink(f.getAbsolutePath(), buf);
 		boolean hl = isHardlink(f);
@@ -103,7 +102,7 @@ public class SafeMode {
 	}
 	
 	public static File resolveLinks(File f) throws CException {
-		if (AvunaHTTPD.windows) return f;
+		if (CLib.failed) return f;
 		String[] s = f.getAbsolutePath().split("/");
 		File c = new File("/");
 		for (String ss : s) {
@@ -118,7 +117,7 @@ public class SafeMode {
 	}
 	
 	public static String readIfSymlink(File f) throws CException {
-		if (AvunaHTTPD.windows) return null;
+		if (CLib.failed) return null;
 		byte[] buf = new byte[1024];
 		int length = CLib.readlink(f.getAbsolutePath(), buf);
 		return length >= 0 ? new String(buf, 0, length) : null;

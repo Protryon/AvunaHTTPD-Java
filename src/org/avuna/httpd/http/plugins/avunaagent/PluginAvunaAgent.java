@@ -33,6 +33,7 @@ import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.plugins.avunaagent.lib.DatabaseManager;
 import org.avuna.httpd.http.plugins.security.PluginSecurity;
+import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.Config;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.SafeMode;
@@ -157,7 +158,7 @@ public class PluginAvunaAgent extends Plugin {
 	
 	public void recurLoad(AvunaAgentSession session, File dir) {
 		for (File f : dir.listFiles()) {
-			if (!AvunaHTTPD.windows) {
+			if (!CLib.failed) {
 				try {
 					if (SafeMode.isSymlink(f)) {
 						continue;

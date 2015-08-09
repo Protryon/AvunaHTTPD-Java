@@ -25,7 +25,7 @@ public class FTPHandler {
 	private static final SimpleDateFormat mdtm = new SimpleDateFormat("yyyyMMddHHmmss");
 	
 	public static boolean checkPerms(int uid, int gid, File f, boolean fileOnly, boolean dirOnly, boolean read, boolean write, boolean execute, boolean mustExist, boolean allowInheritance) throws CException {
-		if (AvunaHTTPD.windows) return true;
+		if (CLib.failed) return true;
 		if (uid < 0 || gid < 0) return false;
 		if (mustExist && !f.exists()) return false;
 		if (f.exists()) {
@@ -575,8 +575,8 @@ public class FTPHandler {
 					return;
 				}
 				if (args[0].equalsIgnoreCase("CHMOD")) {
-					if (AvunaHTTPD.windows) {
-						focus.writeLine(500, "Underlying system is Windows.");
+					if (CLib.failed) {
+						focus.writeLine(500, "Unable to CHMOD file.");
 						return;
 					}
 					if (args.length != 3) {

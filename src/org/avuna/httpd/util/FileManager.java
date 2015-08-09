@@ -224,7 +224,7 @@ public class FileManager {
 				ep += "/" + st;
 			}else {
 				abs = new File(abs, st);
-				if (!AvunaHTTPD.windows) {
+				if (!CLib.failed) {
 					try {
 						String sm = SafeMode.readIfSymlink(abs);
 						if (sm != null) {

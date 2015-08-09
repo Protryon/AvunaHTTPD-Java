@@ -338,8 +338,8 @@ public class AvunaHTTPD {
 			Logger.init(fileManager.getLogs());
 			logger = new Logger("");
 			unpack();
-			if (!windows) CLib.umask(0007);
-			if (unpack || windows || (!windows && CLib.getuid() == 0)) {
+			if (!CLib.failed) CLib.umask(0007);
+			if (unpack || CLib.failed || (!CLib.failed && CLib.getuid() == 0)) {
 				mainConfig.save();
 			}
 			loadUnpacked();
@@ -371,7 +371,7 @@ public class AvunaHTTPD {
 				}
 				return;
 			}
-			if (!windows && CLib.getuid() == 0) {
+			if (!CLib.failed && CLib.getuid() == 0) {
 				System.out.println("[NOTIFY] Running as root, will load servers and attempt de-escalate, if configured.");
 			}
 			HostRegistry.addHost(Protocol.HTTP, HostHTTP.class);
@@ -439,10 +439,10 @@ public class AvunaHTTPD {
 			for (Host h : hosts.values()) {
 				if (!h.hasStarted()) h.start();
 			}
-			if (!windows && mainConfig.getNode("safeMode").getValue().equals("true")) {
+			if (!CLib.failed && mainConfig.getNode("safeMode").getValue().equals("true")) {
 				SafeMode.recurPerms(cfg.getParentFile(), Integer.parseInt(mainConfig.getNode("uid").getValue()), Integer.parseInt(mainConfig.getNode("gid").getValue()));
 			}
-			if (!windows && CLib.getuid() == 0 && !mainConfig.getNode("uid").getValue().equals("0")) {
+			if (!CLib.failed && CLib.getuid() == 0 && !mainConfig.getNode("uid").getValue().equals("0")) {
 				major: while (true) {
 					for (Host h : hosts.values()) {
 						if (!h.loaded) {
@@ -455,7 +455,7 @@ public class AvunaHTTPD {
 				CLib.setgid(Integer.parseInt(mainConfig.getNode("gid").getValue()));
 				CLib.setuid(Integer.parseInt(mainConfig.getNode("uid").getValue()));
 				logger.log("[NOTIFY] De-escalated to uid " + CLib.getuid());
-			}else if (!windows) {
+			}else if (!CLib.failed) {
 				logger.log("[NOTIFY] We did NOT de-escalate, currently running as uid " + CLib.getuid());
 			}
 			Runtime.getRuntime().addShutdownHook(new Thread() {

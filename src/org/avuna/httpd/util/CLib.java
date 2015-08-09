@@ -64,7 +64,9 @@ public class CLib {
 	public static boolean failed = false;
 	
 	static {
-		if (!AvunaHTTPD.windows) {
+		if (AvunaHTTPD.windows) {
+			failed = true;
+		}else {
 			String jvma = System.getProperty("sun.arch.data.model");
 			String arch = System.getProperty("os.arch");
 			String va = null;
