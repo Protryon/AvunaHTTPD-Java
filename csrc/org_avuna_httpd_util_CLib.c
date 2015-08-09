@@ -10,6 +10,8 @@
 #include <errno.h>
 #include <string.h>
 #include <fcntl.h>
+#include <netinet/in.h>
+#include <poll.h>
 
 /*
  * Class:     org_avuna_httpd_util_CLib
@@ -22,15 +24,31 @@ JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_socket(JNIEnv * this, jcla
 
 /*
  * Class:     org_avuna_httpd_util_CLib
- * Method:    bind
- * Signature: (ILjava/lang/String;I)I
+ * Method:    bindUnix
+ * Signature: (ILjava/lang/String;)I
  */
-JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_bind(JNIEnv * this, jclass cls, jint sockfd, jstring path) {
+JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_bindUnix(JNIEnv * this, jclass cls, jint sockfd, jstring path) {
 	struct sockaddr_un sun;
 	sun.sun_family = 1;
 	const char *npath = (*this)->GetStringUTFChars(this, path, 0);
 	strcpy(sun.sun_path, npath);
 	int i = bind(sockfd, (struct sockaddr *)&sun, sizeof(sun));
+	(*this)->ReleaseStringUTFChars(this, path, 0);
+	return i;
+}
+
+/*
+ * Class:     org_avuna_httpd_util_CLib
+ * Method:    bindTCP
+ * Signature: (ILjava/lang/String;I)I
+ */
+JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_bindTCP(JNIEnv * this, jclass cls, jint sockfd, jstring path) {
+	struct sockaddr_in sin;
+	sin.sin_family = AF_INET;
+	const char *nip = (*this)->GetStringUTFChars(this, path, 0);
+	inet_aton(nip, &sin.sin_addr.s_addr);
+	sin.sin_port = htons(sockfd);
+	int i = bind(sockfd, (struct sockaddr *)&sin, sizeof(sin));
 	(*this)->ReleaseStringUTFChars(this, path, 0);
 	return i;
 }
@@ -44,7 +62,7 @@ JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_listen(JNIEnv * this, jcla
 	return listen(sockfd, backlog);
 }
 
-char* itoa(int val){
+char* itoa(int val) {
 	char *ret = malloc(32);
 	sprintf(ret, "%d", val);
 	return ret;
@@ -71,7 +89,7 @@ JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_accept(JNIEnv * this, j
 		}
 		strcpy(fpath, "-1/null");
 		//*fpath = "-1/null";
-	}else{
+	} else {
 		free(fpath);
 		fpath = itoa(i);
 		char *cr1;
@@ -246,14 +264,14 @@ JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_fflush(JNIEnv * this, jcla
  */
 JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_stat(JNIEnv * this, jclass cls, jstring path) {
 	struct stat s;
-	char ret[128];//more than we could possibly ever need
+	char ret[128]; //more than we could possibly ever need
 	const char *npath = (*this)->GetStringUTFChars(this, path, 0);
 	int i = stat(npath, &s);
 	(*this)->ReleaseStringUTFChars(this, path, 0);
 	if(i == -1) {
 		char *tcpy = "-1";
 		strcpy(ret, tcpy);
-	}else{
+	} else {
 		char *sep = "/";
 		char *tmp = itoa(s.st_nlink);
 		strcpy(ret, tmp);
@@ -320,6 +338,9 @@ JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_lchown(JNIEnv * this, jcla
 JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_available(JNIEnv * this, jclass cls, jint sockfd) {
 	jint z = 0;
 	int i = ioctl(sockfd, FIONREAD, &z);
+	if(i < 0) {
+		return -1;
+	}
 	return z;
 }
 
@@ -330,4 +351,24 @@ JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_available(JNIEnv * this, j
  */
 JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_errno(JNIEnv * this, jclass cls) {
 	return errno;
+}
+
+/*
+ * Class:     org_avuna_httpd_util_CLib
+ * Method:    poll
+ * Signature: ([I)[I
+ */
+JNIEXPORT jintArray JNICALL Java_org_avuna_httpd_util_CLib_poll(JNIEnv * this, jclass cls, jintArray sockfds) {
+	jsize size = (*this)->GetArrayLength(this, sockfds);
+	jint *body = (*this)->GetIntArrayElements(this, sockfds, 0);
+	struct pollfd fds[size];
+	for(int i = 0;i<size;i++) {
+		struct pollfd fd;
+		fd.fd = body[i];
+		fd.events = POLLIN;
+		fd.revents = 0;
+		fds[i] = fd;
+	}
+	poll(&fds[0], (nfds_t)size, -1);
+	return NULL;
 }

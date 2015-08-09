@@ -14,7 +14,9 @@ public class CLib {
 	
 	public static native int socket(int domain, int type, int protocol);
 	
-	public static native int bind(int sockfd, String path);
+	public static native int bindUnix(int sockfd, String path);
+	
+	public static native int bindTCP(int sockfd, String ip, int port);
 	
 	public static native int listen(int sockfd, int backlog);
 	
@@ -60,6 +62,8 @@ public class CLib {
 	public static native int available(int sockfd);
 	
 	public static native int errno();
+	
+	public static native int[] poll(int[] sockfds);
 	
 	public static boolean failed = false;
 	
