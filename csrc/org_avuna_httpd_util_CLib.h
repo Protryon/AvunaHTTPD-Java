@@ -189,6 +189,13 @@ extern "C" {
 	 */
 	JNIEXPORT jintArray JNICALL Java_org_avuna_httpd_util_CLib_poll(JNIEnv *, jclass, jintArray);
 
+	/*
+	 * Class:     org_avuna_httpd_util_CLib
+	 * Method:    noblock
+	 * Signature: (I)I
+	 */
+	JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_noblock(JNIEnv *, jclass, jint);
+
 #ifdef __cplusplus
 }
 #endif

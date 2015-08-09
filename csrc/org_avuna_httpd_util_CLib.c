@@ -12,6 +12,8 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <poll.h>
+#include <fcntl.h>
+#include <arpa/inet.h>
 
 /*
  * Class:     org_avuna_httpd_util_CLib
@@ -42,14 +44,17 @@ JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_bindUnix(JNIEnv * this, jc
  * Method:    bindTCP
  * Signature: (ILjava/lang/String;I)I
  */
-JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_bindTCP(JNIEnv * this, jclass cls, jint sockfd, jstring path) {
+JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_bindTCP(JNIEnv * this, jclass cls, jint sockfd, jstring ip, jint port) {
 	struct sockaddr_in sin;
+	memset(&sin, 0, sizeof(sin));
 	sin.sin_family = AF_INET;
-	const char *nip = (*this)->GetStringUTFChars(this, path, 0);
-	inet_aton(nip, &sin.sin_addr.s_addr);
-	sin.sin_port = htons(sockfd);
+	const char *nip = (*this)->GetStringUTFChars(this, ip, 0);
+	if(inet_pton(AF_INET, nip, (struct in_addr *)&sin.sin_addr) < 1) {
+		return -1;
+	}
+	sin.sin_port = htons(port);
 	int i = bind(sockfd, (struct sockaddr *)&sin, sizeof(sin));
-	(*this)->ReleaseStringUTFChars(this, path, 0);
+	(*this)->ReleaseStringUTFChars(this, ip, 0);
 	return i;
 }
 
@@ -369,6 +374,20 @@ JNIEXPORT jintArray JNICALL Java_org_avuna_httpd_util_CLib_poll(JNIEnv * this, j
 		fd.revents = 0;
 		fds[i] = fd;
 	}
-	poll(&fds[0], (nfds_t)size, -1);
-	return NULL;
+	if(poll(&fds[0], (nfds_t)size, -1) < 0) return NULL;
+	jintArray pr;
+	pr = (*this)->NewIntArray(this, size);
+	if(pr == NULL) return NULL;
+	jint prr[size];
+	for(int i = 0;i<size;i++) {
+		prr[i] = fds[i].revents;
+	}
+	(*this)->SetIntArrayRegion(this, pr, 0, size, &prr[0]);
+	return pr;
+}
+
+JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_noblock(JNIEnv * this, jclass cls, jint sockfd) {
+	int f;
+	if ((f = fcntl(sockfd, F_GETFL, 0)) == -1) f = 0;
+	return fcntl(sockfd, F_SETFL, f | O_NONBLOCK);
 }
