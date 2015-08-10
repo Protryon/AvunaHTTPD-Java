@@ -27,12 +27,17 @@ import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.networking.ThreadAccept;
 import org.avuna.httpd.http.networking.ThreadConnection;
+import org.avuna.httpd.http.networking.ThreadConnectionUNIO;
 import org.avuna.httpd.http.networking.ThreadWorker;
+import org.avuna.httpd.http.networking.UNIOReceiver;
 import org.avuna.httpd.http.networking.Work;
 import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginClassLoader;
 import org.avuna.httpd.http.plugins.base.BaseLoader;
+import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.ConfigNode;
+import org.avuna.httpd.util.unio.PacketReceiver;
+import org.avuna.httpd.util.unio.UNIOSocket;
 
 public class HostHTTP extends Host {
 	
@@ -91,11 +96,7 @@ public class HostHTTP extends Host {
 	public HostHTTP(String name) {
 		super(name, Protocol.HTTP);
 		eventBus.registerEvent(EventID.PREEXIT, this, 0);
-	}
-	
-	protected HostHTTP(String name, Protocol protocol) {
-		super(name, protocol);
-		eventBus.registerEvent(EventID.PREEXIT, this, 0);
+		this.unio = !CLib.failed;
 	}
 	
 	public void loadCustoms() {
@@ -151,6 +152,7 @@ public class HostHTTP extends Host {
 		
 	}
 	
+	public final boolean unio;
 	public List<Work> works = Collections.synchronizedList(new ArrayList<Work>());
 	
 	public int workSize() {
@@ -163,6 +165,7 @@ public class HostHTTP extends Host {
 	}
 	
 	public Work getWork() {
+		if (unio) return null;
 		synchronized (works) {
 			for (int i = 0; i < works.size(); i++) {
 				Work work = works.get(i);
@@ -235,6 +238,7 @@ public class HostHTTP extends Host {
 	public final ArrayList<Thread> subworkers = new ArrayList<Thread>();
 	
 	public ArrayList<ThreadConnection> conns = new ArrayList<ThreadConnection>();
+	private int ci = 0;
 	public ArrayList<ThreadWorker> workers = new ArrayList<ThreadWorker>();
 	public static HashMap<String, Integer> connIPs = new HashMap<String, Integer>();
 	
@@ -257,12 +261,19 @@ public class HostHTTP extends Host {
 			return;
 		}
 		works.add(w);
-		for (ThreadConnection conn : conns) {
-			if (conn.getState() == State.WAITING) {
-				synchronized (conn) {
-					conn.notify();
+		if (unio) {
+			UNIOSocket us = (UNIOSocket) s;
+			((ThreadConnectionUNIO) conns.get(ci)).poller.addSocket(us);
+			ci++;
+			if (ci == conns.size()) ci = 0;
+		}else {
+			for (ThreadConnection conn : conns) {
+				if (conn.getState() == State.WAITING) {
+					synchronized (conn) {
+						conn.notify();
+					}
+					break;
 				}
-				break;
 			}
 		}
 	}
@@ -429,6 +440,14 @@ public class HostHTTP extends Host {
 		}
 	}
 	
+	public boolean enableUNIO() {
+		return true;
+	}
+	
+	public PacketReceiver makeReceiver() {
+		return new UNIOReceiver();
+	}
+	
 	public void setup(ServerSocket s) {
 		// initQueue(mc < 1 ? 10000000 : mc);
 		initQueue();
@@ -439,7 +458,7 @@ public class HostHTTP extends Host {
 			tw.start();
 		}
 		for (int i = 0; i < tcc; i++) {
-			ThreadConnection tc = new ThreadConnection(this);
+			ThreadConnection tc = unio ? new ThreadConnectionUNIO(this) : new ThreadConnection(this);
 			try {
 				Thread.sleep(0L, 500000);
 			}catch (InterruptedException e) {}

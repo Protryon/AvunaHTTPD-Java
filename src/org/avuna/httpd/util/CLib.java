@@ -20,7 +20,9 @@ public class CLib {
 	
 	public static native int listen(int sockfd, int backlog);
 	
-	public static native String accept(int sockfd);
+	public static native String acceptUnix(int sockfd);
+	
+	public static native String acceptTCP(int sockfd);
 	
 	public static native byte[] read(int sockfd, int size);
 	

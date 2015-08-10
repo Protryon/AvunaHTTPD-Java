@@ -31,6 +31,10 @@ public class UNIOSocket extends Socket {
 		this.callback = callback;
 	}
 	
+	public void setTcpNoDelay(boolean b) {
+		
+	}
+	
 	protected void read() throws IOException {
 		byte[] b = new byte[in.available()];
 		int i = 0;
@@ -46,7 +50,8 @@ public class UNIOSocket extends Socket {
 	
 	public InetAddress getInetAddress() {
 		try {
-			return InetAddress.getByName(ip);
+			InetAddress ia = InetAddress.getByName(ip);
+			return ia == null ? InetAddress.getByName("0.0.0.0") : ia;
 		}catch (UnknownHostException e) {
 			return null;
 		}
@@ -73,5 +78,9 @@ public class UNIOSocket extends Socket {
 		int s = CLib.close(sockfd);
 		if (s < 0) throw new CException(CLib.errno(), "socket failed close");
 		callback.closed(this);
+	}
+	
+	public PacketReceiver getCallback() {
+		return callback;
 	}
 }

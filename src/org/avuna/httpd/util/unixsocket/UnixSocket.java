@@ -1,18 +1,5 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.*/
+/*
+ * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.util.unixsocket;
 
@@ -40,6 +27,10 @@ public class UnixSocket extends Socket {
 		servermade = true;
 	}
 	
+	public void setTcpNoDelay(boolean b) {
+		
+	}
+	
 	public UnixSocket(String file) {
 		this.file = file;
 	}
@@ -54,12 +45,12 @@ public class UnixSocket extends Socket {
 		if (sockfd < 0) throw new CException(CLib.errno(), "socket failed native create");
 		int c = CLib.connect(sockfd, file);
 		if (c != 0) switch (CLib.errno()) {
-		case 111:
-			throw new SocketException("Connection Refused");
-		case 110:
-			throw new SocketException("Connection Timed Out");
-		default:
-			throw new CException(CLib.errno(), "socket failed connect");
+			case 111:
+				throw new SocketException("Connection Refused");
+			case 110:
+				throw new SocketException("Connection Timed Out");
+			default:
+				throw new CException(CLib.errno(), "socket failed connect");
 		}
 		out = new UnixOutputStream(sockfd);
 		in = new UnixInputStream(sockfd);

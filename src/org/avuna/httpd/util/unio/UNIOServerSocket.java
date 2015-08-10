@@ -31,19 +31,19 @@ public class UNIOServerSocket extends ServerSocket {
 	
 	public void bind() throws IOException {
 		if (bound) throw new IOException("Already bound!");
+		bound = true;
 		sockfd = CLib.socket(2, 1, 0);
 		if (sockfd < 0) throw new CException(CLib.errno(), "socket failed native create");
 		int bind = CLib.bindTCP(sockfd, ip, port);
 		if (bind != 0) throw new CException(CLib.errno(), "socket failed bind");
 		int listen = CLib.listen(sockfd, this.backlog);
 		if (listen != 0) throw new CException(CLib.errno(), "socket failed listen");
-		bound = true;
 	}
 	
 	public UNIOSocket accept() throws IOException {
 		if (!bound) bind();
 		// Logger.log("accepting");
-		String nsfd = CLib.accept(sockfd);
+		String nsfd = CLib.acceptTCP(sockfd);
 		// Logger.log(nsfd);
 		int i = Integer.parseInt(nsfd.substring(0, nsfd.indexOf("/")));
 		nsfd = nsfd.substring(nsfd.indexOf("/") + 1);

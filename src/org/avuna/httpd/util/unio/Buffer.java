@@ -1,5 +1,7 @@
 package org.avuna.httpd.util.unio;
 
+import org.avuna.httpd.AvunaHTTPD;
+
 public class Buffer {
 	protected byte[] buf;
 	private int read = 0;
@@ -44,15 +46,16 @@ public class Buffer {
 		ensureCapacity(this.length + length);
 		synchronized (buf) {
 			System.arraycopy(buf, offset, this.buf, this.read + this.length, length);
-			if (pt == 0) {
-				int ml = 0;
-				for (int i = offset; i < offset + length; i++) {
-					if (buf[i] == pd[ml]) {
+			int ml = 0;
+			for (int i = this.read + Math.max(0, this.length - pd.length); i < this.read + this.length + length; i++) {
+				if (pt == 0) {
+					if (this.buf[i] == pd[ml]) {
 						ml++;
 						if (ml == pd.length) {
-							byte[] packet = new byte[i - offset + this.length];
+							byte[] packet = new byte[i - offset + this.length + 1];
 							System.arraycopy(this.buf, this.read, packet, 0, packet.length);
 							this.read += packet.length;
+							this.length -= packet.length;
 							callback.readPacket(socket, packet);
 							pt = callback.nextDelimType(socket);
 							if (pt == 0) {
@@ -60,23 +63,27 @@ public class Buffer {
 							}else if (pt == 1) {
 								pl = callback.nextLength(socket);
 							}
-							break;
+							ml = 0;
 						}
 					}else if (ml > 0) {
 						ml = 0;
 					}
-				}
-			}else if (pt == 1) {
-				if (this.length + length > pl) {
-					byte[] packet = new byte[pl];
-					System.arraycopy(this.buf, this.read, packet, 0, packet.length);
-					this.read += packet.length;
-					callback.readPacket(socket, packet);
-					pt = callback.nextDelimType(socket);
-					if (pt == 0) {
-						pd = callback.nextDelim(socket);
-					}else if (pt == 1) {
-						pl = callback.nextLength(socket);
+				}else if (pt == 1) {
+					if (this.length + length >= pl) {
+						byte[] packet = new byte[pl];
+						System.arraycopy(this.buf, this.read, packet, 0, packet.length);
+						this.read += packet.length;
+						this.length -= packet.length;
+						System.out.println(AvunaHTTPD.fileManager.bytesToHex(packet));
+						callback.readPacket(socket, packet);
+						pt = callback.nextDelimType(socket);
+						if (pt == 0) {
+							pd = callback.nextDelim(socket);
+						}else if (pt == 1) {
+							pl = callback.nextLength(socket);
+						}
+					}else {
+						break;
 					}
 				}
 			}

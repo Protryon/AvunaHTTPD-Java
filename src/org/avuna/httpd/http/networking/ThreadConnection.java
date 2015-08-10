@@ -18,6 +18,11 @@ public class ThreadConnection extends Thread implements ITerminatable {
 		host.conns.add(this);
 	}
 	
+	protected ThreadConnection(String tn) {
+		super(tn);
+		this.host = null;
+	}
+	
 	protected boolean keepRunning = true;
 	
 	public void run() {
@@ -109,7 +114,7 @@ public class ThreadConnection extends Thread implements ITerminatable {
 					}
 				}else if (focus.in.available() > 0) {
 					focus.sns = 0L;
-					RequestPacket incomingRequest = RequestPacket.read(focus.sslprep != null ? focus.sslprep.toByteArray() : null, focus.in, host);
+					RequestPacket incomingRequest = RequestPacket.readHead(focus.sslprep != null ? focus.sslprep.toByteArray() : null, focus.in, host);
 					if (focus.sslprep != null) focus.sslprep.reset();
 					if (incomingRequest == null) {
 						focus.close();
@@ -126,10 +131,11 @@ public class ThreadConnection extends Thread implements ITerminatable {
 					incomingRequest.order = focus.nreqid++;
 					incomingRequest.child = new ResponsePacket();
 					incomingRequest.child.request = incomingRequest;
-					focus.outQueue.add(incomingRequest.child);
+					incomingRequest.readBody(null, focus.in, this.host);
 					if (focus.rqst == 0L) {
 						focus.rqst = System.currentTimeMillis();
 					}
+					focus.outQueue.add(incomingRequest.child);
 					focus.rqs++;
 					this.host.addWork(incomingRequest);
 					readd = true;

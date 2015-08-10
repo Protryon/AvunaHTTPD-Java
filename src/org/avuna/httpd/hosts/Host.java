@@ -26,8 +26,12 @@ import org.avuna.httpd.event.EventBus;
 import org.avuna.httpd.event.IEventReceiver;
 import org.avuna.httpd.event.base.EventID;
 import org.avuna.httpd.event.base.EventReload;
+import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.logging.Logger;
+import org.avuna.httpd.util.unio.PacketReceiver;
+import org.avuna.httpd.util.unio.PacketReceiverFactory;
+import org.avuna.httpd.util.unio.UNIOServerSocket;
 import org.avuna.httpd.util.unixsocket.UnixServerSocket;
 
 public abstract class Host extends Thread implements ITerminatable, IEventReceiver {
@@ -109,7 +113,15 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 				return null;
 			}
 		}else {
-			ServerSocket server = new ServerSocket(port, 1000, InetAddress.getByName(ip));
+			ServerSocket server = unio() ? new UNIOServerSocket(ip, port, new PacketReceiverFactory() {
+				
+				@Override
+				public PacketReceiver newCallback() {
+					return makeReceiver();
+				}
+				
+			}) : new ServerSocket(port, 1000, InetAddress.getByName(ip));
+			if (server instanceof UNIOServerSocket) ((UNIOServerSocket) server).bind();
 			servers.add(server);
 			return server;
 		}
@@ -200,6 +212,7 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 		}catch (Exception e) {
 			logger.logError(e);
 			logger.log("Closing " + name + "/" + protocol.name + " Server on " + getConfig().getNode("ip").getValue() + ":" + getConfig().getNode("port").getValue());
+			// TODO: destroy
 		}finally {
 			loaded = true;
 		}
@@ -229,5 +242,17 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 	
 	public void preExit() {
 		
+	}
+	
+	public boolean unio() {
+		return enableUNIO() && !CLib.failed && !getConfig().getValue("unix").equals("true");
+	}
+	
+	public PacketReceiver makeReceiver() {
+		return null;
+	}
+	
+	public boolean enableUNIO() {
+		return false;
 	}
 }

@@ -70,7 +70,7 @@ public class RequestPacket extends Packet {
 		RequestPacket ret = new RequestPacket();
 		ret.headers = headers.clone();
 		ret.drop = drop;
-		ret.body = body.clone();
+		ret.body = body == null ? null : body.clone();
 		ret.httpVersion = httpVersion;
 		ret.target = target;
 		ret.method = method;
@@ -156,7 +156,7 @@ public class RequestPacket extends Packet {
 	}
 	
 	/** Reads the RequestPacket. */
-	public static RequestPacket read(byte[] sslprep, DataInputStream in, HostHTTP host) throws IOException {
+	public static RequestPacket readHead(byte[] sslprep, DataInputStream in, HostHTTP host) throws IOException {
 		RequestPacket incomingRequest = new RequestPacket();
 		String reqLine = "";
 		reqLine = readLine(sslprep, in).trim();
@@ -189,10 +189,15 @@ public class RequestPacket extends Packet {
 				headers.addHeader(headerLine);
 				hdr++;
 			}
-			if (hdr > 100) {
+			if (hdr > 127) {
 				break;
 			}
 		}
+		incomingRequest.body = null;
+		return incomingRequest;
+	}
+	
+	public void readBody(byte[] sslprep, DataInputStream in, HostHTTP host) throws IOException {
 		boolean chunked = false;
 		boolean htc = headers.hasHeader("Transfer-Encoding");
 		boolean hcl = headers.hasHeader("Content-Length");
@@ -210,13 +215,12 @@ public class RequestPacket extends Packet {
 			int cl = Integer.parseInt(headers.getHeader("Content-Length"));
 			if (cl > host.getMaxPostSize() * 1024) {
 				// TODO: perhaps pipe out a 503 internal server error or a post size too big
-				return null;
+				return;
 			}
 			bbody = new byte[cl];
 			in.readFully(bbody);
 		}
-		incomingRequest.body = new Resource(bbody, headers.hasHeader("Content-Type") ? headers.getHeader("Content-Type") : "application/octet-stream");
-		return incomingRequest;
+		this.body = new Resource(bbody, headers.hasHeader("Content-Type") ? headers.getHeader("Content-Type") : "application/octet-stream");
 	}
 	
 	/** Serializes the request packet, mostly used for tunneling. */

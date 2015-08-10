@@ -145,8 +145,32 @@ public class ThreadWorker extends Thread implements ITerminatable {
 					}
 					bm.endSection("prewrite");
 					bm.startSection("post");
-					
 					outgoingResponse.done = true;
+					if (host.unio()) {
+						ResponsePacket peek;
+						Work focus = incomingRequest.work;
+						while ((peek = focus.outQueue.peek()) != null && peek.done) {
+							focus.outQueue.poll();
+							boolean t = peek.reqTransfer;
+							if (peek.reqStream != null) {
+								ThreadJavaLoaderStreamWorker sw = new ThreadJavaLoaderStreamWorker(host, focus, peek.request, peek, peek.reqStream);
+								host.subworkers.add(sw);
+								sw.start();
+							}else if (peek.toStream != null) {
+								ThreadRawStreamWorker sw = new ThreadRawStreamWorker(host, focus, peek, peek.toStream);
+								host.subworkers.add(sw);
+								sw.start();
+							}else if (t && peek.body != null) {
+								ThreadStreamWorker sw = new ThreadStreamWorker(host, focus, peek.request, peek);
+								host.subworkers.add(sw);
+								sw.start();
+							}else {
+								focus.out.write(peek.subwrite);
+								focus.out.flush();
+								// TODO: remove from input?
+							}
+						}
+					}
 					incomingRequest.host.eventBus.callEvent(new EventResponseSent(outgoingResponse));
 					// Logger.log((benchStart - ps) / 1000000D + " ps-start");
 					// Logger.log((set - benchStart) / 1000000D + " start-set");
