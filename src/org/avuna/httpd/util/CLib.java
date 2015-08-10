@@ -9,8 +9,12 @@ import org.avuna.httpd.AvunaHTTPD;
  * 
  * @author Max
  * @see FileManager#getBaseFile(String) */
-public class CLib {
-	private CLib() {}
+public abstract class CLib {
+	
+	/** This literally does nothing. It's purpose is to call the static initializer if for some reason we reference GNUTLS before us. */
+	public static void nothing() {
+		
+	}
 	
 	public static native int socket(int domain, int type, int protocol);
 	
@@ -66,8 +70,6 @@ public class CLib {
 	public static native int errno();
 	
 	public static native int[] poll(int[] sockfds);
-	
-	public static native int noblock(int sockfd);
 	
 	public static boolean failed = false;
 	

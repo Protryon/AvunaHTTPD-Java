@@ -47,7 +47,6 @@ public class UNIOServerSocket extends ServerSocket {
 		// Logger.log(nsfd);
 		int i = Integer.parseInt(nsfd.substring(0, nsfd.indexOf("/")));
 		nsfd = nsfd.substring(nsfd.indexOf("/") + 1);
-		CLib.noblock(i);
 		UNIOSocket us = new UNIOSocket(nsfd, port, i, factory.newCallback());
 		return us;
 	}
