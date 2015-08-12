@@ -10,9 +10,16 @@ import org.avuna.httpd.util.CLib;
 
 public class UNIOInputStream extends InputStream {
 	private int sockfd = -1;
+	private long session = 0L;
 	
 	public UNIOInputStream(int sockfd) {
 		this.sockfd = sockfd;
+	}
+	
+	// ssl
+	public UNIOInputStream(int sockfd, long session) {
+		this(sockfd);
+		this.session = session;
 	}
 	
 	public int available() {
@@ -23,7 +30,7 @@ public class UNIOInputStream extends InputStream {
 	
 	@Override
 	public int read() throws IOException {
-		byte[] sa = CLib.read(sockfd, 1);
+		byte[] sa = session == 0 ? CLib.read(sockfd, 1) : GNUTLS.read(session, 1);
 		if (sa.length == 0) {
 			int i = CLib.errno();
 			if (i == 104) {
@@ -38,7 +45,7 @@ public class UNIOInputStream extends InputStream {
 	}
 	
 	public int read(byte[] array) throws IOException {
-		byte[] buf = CLib.read(sockfd, array.length);
+		byte[] buf = session == 0 ? CLib.read(sockfd, array.length) : GNUTLS.read(session, array.length);
 		if (buf.length == 0) {
 			int i = CLib.errno();
 			if (i == 104) {
@@ -53,7 +60,7 @@ public class UNIOInputStream extends InputStream {
 	
 	public int read(byte[] array, int off, int len) throws IOException {
 		if (off + len > array.length) throw new ArrayIndexOutOfBoundsException("off + len MUST NOT be >= array.length");
-		byte[] buf = CLib.read(sockfd, len);
+		byte[] buf = session == 0 ? CLib.read(sockfd, len) : GNUTLS.read(session, len);
 		if (buf.length == 0) { // not 100% accurate, but what else?
 			int i = CLib.errno();
 			if (i == 104) {

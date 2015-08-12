@@ -6,7 +6,7 @@ public abstract class GNUTLS {
 	
 	public static native int globalinit(); // return 0
 	
-	public static native long loadcert(String ca, String crl, String cert, String key); // returns pointer to cert struct, or 0 if failure.
+	public static native long loadcert(String ca, String cert, String key); // returns pointer to cert struct, or 0 if failure.
 	
 	public static native long preaccept(long cert); // returns pointer to session
 	

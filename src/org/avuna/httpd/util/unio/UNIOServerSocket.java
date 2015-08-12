@@ -13,11 +13,13 @@ public class UNIOServerSocket extends ServerSocket {
 	private String ip;
 	private int port;
 	private PacketReceiverFactory factory;
+	private long cert = 0L;
 	
 	public boolean isClosed() {
 		return closed;
 	}
 	
+	// TODO: throws IO exception because it calls the super constructor(but we don't need/want it to.)
 	public UNIOServerSocket(String ip, int port, PacketReceiverFactory factory, int backlog) throws IOException {
 		this.backlog = backlog;
 		this.ip = ip;
@@ -27,6 +29,14 @@ public class UNIOServerSocket extends ServerSocket {
 	
 	public UNIOServerSocket(String ip, int port, PacketReceiverFactory factory) throws IOException {
 		this(ip, port, factory, 50);
+	}
+	
+	public UNIOServerSocket(String ip, int port, PacketReceiverFactory factory, int backlog, String ca, String cert, String key) throws IOException {
+		this(ip, port, factory, backlog);
+		this.cert = GNUTLS.loadcert(ca, cert, key);
+		if (this.cert == 0L) {
+			throw new CException(CLib.errno(), "Failed to load SSL certificate!");
+		}
 	}
 	
 	public void bind() throws IOException {
@@ -43,6 +53,8 @@ public class UNIOServerSocket extends ServerSocket {
 	public UNIOSocket accept() throws IOException {
 		if (!bound) bind();
 		// Logger.log("accepting");
+		long session = 0L;
+		if (cert > 0L) GNUTLS.preaccept(cert);
 		String nsfd = CLib.acceptTCP(sockfd);
 		// Logger.log(nsfd);
 		int i = Integer.parseInt(nsfd.substring(0, nsfd.indexOf("/")));
@@ -50,8 +62,9 @@ public class UNIOServerSocket extends ServerSocket {
 			this.close();
 			throw new CException(CLib.errno(), "Server closed!");
 		}
+		if (cert > 0L) GNUTLS.postaccept(cert, session, i);
 		nsfd = nsfd.substring(nsfd.indexOf("/") + 1);
-		UNIOSocket us = new UNIOSocket(nsfd, port, i, factory == null ? null : factory.newCallback());
+		UNIOSocket us = new UNIOSocket(nsfd, port, i, factory == null ? null : factory.newCallback(), cert > 0L ? session : 0L);
 		return us;
 	}
 	

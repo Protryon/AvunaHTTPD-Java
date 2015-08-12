@@ -105,7 +105,7 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 		logger.log("Starting " + name + "/" + protocol.name + " " + (ssl ? "TLS-" : "") + "Server on " + ip + ":" + port);
 		if (ssl) {
 			try {
-				ServerSocket server = sc.createServerSocket(port, 50, InetAddress.getByName(ip));
+				ServerSocket server = sc.createServerSocket(port, 1000, InetAddress.getByName(ip));
 				servers.add(server);
 				return server;
 			}catch (Exception e) {
@@ -120,7 +120,7 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 					return makeReceiver();
 				}
 				
-			}) : new ServerSocket(port, 1000, InetAddress.getByName(ip));
+			}, 1000) : new ServerSocket(port, 1000, InetAddress.getByName(ip));
 			if (server instanceof UNIOServerSocket) ((UNIOServerSocket) server).bind();
 			servers.add(server);
 			return server;

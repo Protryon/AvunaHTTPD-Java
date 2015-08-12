@@ -24,15 +24,22 @@ public class UNIOSocket extends Socket {
 	private UNIOInputStream in = null;
 	protected Buffer buf;
 	private PacketReceiver callback;
+	private long session = 0L;
 	
 	protected UNIOSocket(String ip, int port, int sockfd, PacketReceiver callback) {
+		this(ip, port, sockfd, callback, 0L);
+	}
+	
+	// ssl
+	protected UNIOSocket(String ip, int port, int sockfd, PacketReceiver callback, long session) {
 		this.sockfd = sockfd;
 		this.ip = ip;
 		this.port = port;
 		buf = new Buffer(1024, callback, this);
-		out = new UNIOOutputStream(sockfd);
-		in = new UNIOInputStream(sockfd);
+		out = new UNIOOutputStream(sockfd, session);
+		in = new UNIOInputStream(sockfd, session);
 		this.callback = callback;
+		this.session = session;
 	}
 	
 	/** Compatibility function, called automatically in C. */
@@ -93,8 +100,10 @@ public class UNIOSocket extends Socket {
 	}
 	
 	public void close() throws IOException {
+		if (closed) return; // already closed
 		closed = true;
 		int s = CLib.close(sockfd);
+		if (session > 0L) GNUTLS.close(session);
 		if (s < 0) throw new CException(CLib.errno(), "socket failed close");
 		callback.closed(this);
 	}

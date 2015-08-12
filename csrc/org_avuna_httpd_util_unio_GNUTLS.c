@@ -22,16 +22,13 @@ JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_globalinit(JNIEnv *
 	return 0;
 }
 
-JNIEXPORT jlong JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_loadcert(JNIEnv * this, jclass cls, jstring ca, jstring crl, jstring cert, jstring key) {
+JNIEXPORT jlong JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_loadcert(JNIEnv * this, jclass cls, jstring ca, jstring cert, jstring key) {
 	struct cert* oc = malloc(sizeof( struct cert));
 	memset(oc, 0, sizeof(struct cert));
 	gnutls_certificate_allocate_credentials(&oc->cert);
 	const char *caj = (*this)->GetStringUTFChars(this, ca, 0);
 	gnutls_certificate_set_x509_trust_file(oc->cert, caj, GNUTLS_X509_FMT_PEM);
 	(*this)->ReleaseStringUTFChars(this, ca, 0);
-	const char *crlj = (*this)->GetStringUTFChars(this, crl, 0);
-	gnutls_certificate_set_x509_crl_file(oc->cert, crlj, GNUTLS_X509_FMT_PEM);
-	(*this)->ReleaseStringUTFChars(this, crl, 0);
 	const char *certj = (*this)->GetStringUTFChars(this, cert, 0);
 	const char *keyj = (*this)->GetStringUTFChars(this, key, 0);
 	int e1 = gnutls_certificate_set_x509_key_file(oc->cert, certj, keyj, GNUTLS_X509_FMT_PEM);
@@ -96,6 +93,7 @@ JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_write(JNIEnv * this
 
 JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_close(JNIEnv * this, jclass cls, jlong session) {
 	gnutls_deinit(*((gnutls_session_t *)session));
+	free((gnutls_session_t *)session);
 	return 0;
 }
 #endif
