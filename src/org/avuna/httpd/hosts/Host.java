@@ -17,7 +17,6 @@ import java.util.Collections;
 import java.util.List;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 import org.avuna.httpd.AvunaHTTPD;
@@ -101,13 +100,26 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 		}
 	}
 	
-	public final ServerSocket makeServer(String ip, int port, boolean ssl, SSLServerSocketFactory sc) throws IOException {
+	public final ServerSocket makeServer(String ip, int port) throws IOException {
 		logger.log("Starting " + name + "/" + protocol.name + " " + (ssl ? "TLS-" : "") + "Server on " + ip + ":" + port);
 		if (ssl) {
 			try {
-				ServerSocket server = sc.createServerSocket(port, 1000, InetAddress.getByName(ip));
-				servers.add(server);
-				return server;
+				if (nssl) {
+					UNIOServerSocket server = new UNIOServerSocket(ip, port, new PacketReceiverFactory() {
+						
+						@Override
+						public PacketReceiver newCallback() {
+							return makeReceiver();
+						}
+						
+					}, 1000, caFile, certFile, pkFile);
+					servers.add(server);
+					return server;
+				}else {
+					ServerSocket server = sslContext.getServerSocketFactory().createServerSocket(port, 1000, InetAddress.getByName(ip));
+					servers.add(server);
+					return server;
+				}
 			}catch (Exception e) {
 				logger.logError(e);
 				return null;
@@ -182,6 +194,10 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 	}
 	
 	public SSLContext sslContext = null;
+	protected long cert = 0L;
+	protected String certFile, pkFile, caFile;
+	protected boolean nssl = false;
+	protected boolean ssl = false;
 	
 	public boolean hasStarted() {
 		return isStarted;
@@ -198,16 +214,23 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 		try {
 			ConfigNode cfg = getConfig();
 			ConfigNode ssl = cfg.getNode("ssl");
-			boolean isSSL = !(ssl == null || !ssl.getNode("enabled").getValue().equals("true"));
-			if (isSSL) {
-				sslContext = makeSSLContext(new File(ssl.getNode("keyFile").getValue()), ssl.getNode("keyPassword").getValue(), ssl.getNode("keystorePassword").getValue());
+			this.ssl = !(ssl == null || !ssl.getNode("enabled").getValue().equals("true"));
+			nssl = !CLib.failed && CLib.hasGNUTLS() == 1;
+			if (this.ssl) {
+				if (nssl) {
+					this.certFile = new File(ssl.getValue("cert")).getAbsolutePath();
+					this.pkFile = new File(ssl.getValue("privateKey")).getAbsolutePath();
+					this.caFile = new File(ssl.getValue("ca")).getAbsolutePath();
+				}else {
+					sslContext = makeSSLContext(new File(ssl.getNode("keyFile").getValue()), ssl.getNode("keyPassword").getValue(), ssl.getNode("keystorePassword").getValue());
+				}
 			}
 			if (cfg.containsNode("unix") && cfg.getNode("unix").getValue().equals("true")) {
 				iu = true;
 				setup(makeUnixServer(cfg.getNode("ip").getValue()));
 			}else {
 				iu = false;
-				setup(makeServer(cfg.getNode("ip").getValue(), Integer.parseInt(cfg.getNode("port").getValue()), isSSL, !isSSL ? null : sslContext.getServerSocketFactory()));
+				setup(makeServer(cfg.getNode("ip").getValue(), Integer.parseInt(cfg.getNode("port").getValue())));
 			}
 		}catch (Exception e) {
 			logger.logError(e);
@@ -225,9 +248,15 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 		if (!map.containsNode("ssl")) map.insertNode("ssl");
 		ConfigNode ssl = map.getNode("ssl");
 		if (!ssl.containsNode("enabled")) ssl.insertNode("enabled", "false");
-		if (!ssl.containsNode("keyFile")) ssl.insertNode("keyFile", AvunaHTTPD.fileManager.getBaseFile("ssl/keyFile").toString());
-		if (!ssl.containsNode("keystorePassword")) ssl.insertNode("keystorePassword", "password");
-		if (!ssl.containsNode("keyPassword")) ssl.insertNode("keyPassword", "password");
+		if (CLib.failed || CLib.hasGNUTLS() == 0) {
+			if (!ssl.containsNode("keyFile")) ssl.insertNode("keyFile", AvunaHTTPD.fileManager.getBaseFile("ssl/keyFile").toString());
+			if (!ssl.containsNode("keystorePassword")) ssl.insertNode("keystorePassword", "password");
+			if (!ssl.containsNode("keyPassword")) ssl.insertNode("keyPassword", "password");
+		}else {
+			if (!ssl.containsNode("cert")) ssl.insertNode("cert", AvunaHTTPD.fileManager.getBaseFile("ssl/ssl.cert").getAbsolutePath());
+			if (!ssl.containsNode("privateKey")) ssl.insertNode("privateKey", AvunaHTTPD.fileManager.getBaseFile("ssl/ssl.pem").getAbsolutePath());
+			if (!ssl.containsNode("ca")) ssl.insertNode("ca", AvunaHTTPD.fileManager.getBaseFile("ssl/ca.cert").getAbsolutePath());
+		}
 	}
 	
 	public String getHostname() {

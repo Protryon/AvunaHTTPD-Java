@@ -34,8 +34,8 @@ public class UNIOServerSocket extends ServerSocket {
 	public UNIOServerSocket(String ip, int port, PacketReceiverFactory factory, int backlog, String ca, String cert, String key) throws IOException {
 		this(ip, port, factory, backlog);
 		this.cert = GNUTLS.loadcert(ca, cert, key);
-		if (this.cert == 0L) {
-			throw new CException(CLib.errno(), "Failed to load SSL certificate!");
+		if (this.cert <= 0L) {
+			throw new CException((int) this.cert, "Failed to load SSL certificate!");
 		}
 	}
 	
@@ -54,7 +54,7 @@ public class UNIOServerSocket extends ServerSocket {
 		if (!bound) bind();
 		// Logger.log("accepting");
 		long session = 0L;
-		if (cert > 0L) GNUTLS.preaccept(cert);
+		if (cert > 0L) session = GNUTLS.preaccept(cert);
 		String nsfd = CLib.acceptTCP(sockfd);
 		// Logger.log(nsfd);
 		int i = Integer.parseInt(nsfd.substring(0, nsfd.indexOf("/")));

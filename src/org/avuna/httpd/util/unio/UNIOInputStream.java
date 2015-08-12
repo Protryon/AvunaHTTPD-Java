@@ -63,7 +63,9 @@ public class UNIOInputStream extends InputStream {
 		byte[] buf = session == 0 ? CLib.read(sockfd, len) : GNUTLS.read(session, len);
 		if (buf.length == 0) { // not 100% accurate, but what else?
 			int i = CLib.errno();
-			if (i == 104) {
+			if (i == 11) {
+				return 0;
+			}else if (i == 104) {
 				throw new SocketException("Connection reset by peer");
 			}else if (i == 32) {
 				throw new SocketException("Broken Pipe");

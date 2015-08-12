@@ -10,7 +10,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
-import javax.net.ssl.SSLServerSocketFactory;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.mail.imap.IMAPHandler;
 import org.avuna.httpd.mail.imap.IMAPWork;
@@ -23,6 +22,7 @@ import org.avuna.httpd.mail.smtp.ThreadAcceptSMTP;
 import org.avuna.httpd.mail.smtp.ThreadWorkerSMTP;
 import org.avuna.httpd.mail.sync.HardDriveSync;
 import org.avuna.httpd.mail.sync.Sync;
+import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.ConfigNode;
 
 public class HostMail extends Host {
@@ -114,15 +114,25 @@ public class HostMail extends Host {
 			// registerAccount("test@example.com", "test123");
 			ConfigNode ssl = cfg.getNode("ssl");
 			String ip = cfg.getNode("ip").getValue();
-			ServerSocket smtp = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-port").getValue()), false, null);
-			ServerSocket smtpmua = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-mua-port").getValue()), false, null);
-			ServerSocket imap = makeServer(ip, Integer.parseInt(cfg.getNode("imap-port").getValue()), false, null);
+			ServerSocket smtp = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-port").getValue()));
+			ServerSocket smtpmua = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-mua-port").getValue()));
+			ServerSocket imap = makeServer(ip, Integer.parseInt(cfg.getNode("imap-port").getValue()));
 			ServerSocket smtps = null, imaps = null;
+			this.ssl = !(ssl == null || !ssl.getNode("enabled").getValue().equals("true"));
+			nssl = !CLib.failed && CLib.hasGNUTLS() == 1;
+			if (this.ssl) {
+				if (nssl) {
+					this.certFile = new File(ssl.getValue("cert")).getAbsolutePath();
+					this.pkFile = new File(ssl.getValue("privateKey")).getAbsolutePath();
+					this.caFile = new File(ssl.getValue("ca")).getAbsolutePath();
+				}else {
+					sslContext = makeSSLContext(new File(ssl.getNode("keyFile").getValue()), ssl.getNode("keyPassword").getValue(), ssl.getNode("keystorePassword").getValue());
+				}
+			}
 			if (ssl.getNode("enabled").getValue().equals("true")) {
 				sslContext = makeSSLContext(new File(ssl.getNode("keyFile").getValue()), ssl.getNode("keyPassword").getValue(), ssl.getNode("keystorePassword").getValue());
-				SSLServerSocketFactory sssf = sslContext.getServerSocketFactory();
-				smtps = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-tls-port").getValue()), true, sssf);
-				imaps = makeServer(ip, Integer.parseInt(cfg.getNode("imap-tls-port").getValue()), true, sssf);
+				smtps = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-tls-port").getValue()));
+				imaps = makeServer(ip, Integer.parseInt(cfg.getNode("imap-tls-port").getValue()));
 			}
 			workQueueSMTP = new ArrayBlockingQueue<SMTPWork>(mc < 0 ? 1000000 : mc);
 			workQueueIMAP = new ArrayBlockingQueue<IMAPWork>(mc < 0 ? 1000000 : mc);

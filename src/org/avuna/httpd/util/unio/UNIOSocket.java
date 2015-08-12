@@ -52,8 +52,8 @@ public class UNIOSocket extends Socket {
 		int i = 0;
 		do {
 			i += in.read(b, i, b.length - i);
-		}while (i < b.length);
-		buf.append(b);
+		}while (i > 0 && i < b.length);
+		buf.append(b, 0, i);
 	}
 	
 	protected void write() throws IOException {
@@ -68,7 +68,7 @@ public class UNIOSocket extends Socket {
 					outBuf.unsafe_prepend(b, wi, i - wi);
 				}
 			}
-		}while (i > 0 && wi >= i);
+		}while (i > 0 && wi >= i && wi > 0);
 	}
 	
 	/** Compatibility function, this is NIO. */

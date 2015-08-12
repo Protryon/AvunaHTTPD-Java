@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.hosts.Host;
 import org.avuna.httpd.util.CException;
 import org.avuna.httpd.util.CLib;
 
@@ -26,7 +27,7 @@ public class Poller {
 	
 	private Thread pt = null;
 	
-	public void poll() throws CException {
+	public void poll(Host host) throws CException {
 		if (us.size() == 0) {
 			synchronized (this) {
 				try {
@@ -58,6 +59,7 @@ public class Poller {
 				try {
 					us.get(i).read();
 				}catch (IOException e) {
+					host.logger.logError(e);
 					close = true;
 				}
 			}
@@ -65,6 +67,7 @@ public class Poller {
 				try {
 					us.get(i).write();
 				}catch (IOException e) {
+					host.logger.logError(e);
 					close = true;
 				}
 			}

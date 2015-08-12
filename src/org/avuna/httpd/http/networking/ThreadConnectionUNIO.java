@@ -22,7 +22,7 @@ public class ThreadConnectionUNIO extends ThreadConnection implements ITerminata
 	public void run() {
 		while (keepRunning) {
 			try {
-				poller.poll();
+				poller.poll(host);
 			}catch (Exception e) {
 				if (!(e instanceof SocketTimeoutException)) {
 					if (!(e instanceof SocketException || e instanceof StringIndexOutOfBoundsException)) host.logger.logError(e);
