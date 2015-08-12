@@ -1,6 +1,7 @@
 package org.avuna.httpd.util.unio;
 
 import java.io.InputStream;
+import java.lang.Thread.State;
 import org.avuna.httpd.AvunaHTTPD;
 
 public class Buffer extends InputStream {
@@ -12,6 +13,11 @@ public class Buffer extends InputStream {
 	private int pt = -1;
 	private int pl = -1;
 	private byte[] pd = null;
+	private Thread flushInterrupt = null;
+	
+	public void setFlushInterruptThread(Thread t) {
+		flushInterrupt = t;
+	}
 	
 	/** Creates a new NIO Buffer.
 	 * 
@@ -95,12 +101,22 @@ public class Buffer extends InputStream {
 			}
 			this.length += length;
 		}
+		if (flushInterrupt != null && flushInterrupt.getState() == State.TIMED_WAITING) {
+			synchronized (flushInterrupt) {
+				flushInterrupt.notify();
+			}
+		}
 	}
 	
 	/** Only to be used for prepending data that was not successfully written, and was just pulled out. No other use is safe. */
 	protected void unsafe_prepend(byte[] buf, int offset, int length) {
 		synchronized (buf) {
 			System.arraycopy(buf, offset, this.buf, this.read - length, length);
+		}
+		if (flushInterrupt != null && flushInterrupt.getState() == State.TIMED_WAITING) {
+			synchronized (flushInterrupt) {
+				flushInterrupt.notify();
+			}
 		}
 	}
 	

@@ -16,13 +16,51 @@ public class Poller {
 	}
 	
 	private List<UNIOSocket> us = Collections.synchronizedList(new ArrayList<UNIOSocket>());
+	private Thread flushInterrupt = null;
+	
+	public void setFlushInterruptThread(Thread t) {
+		flushInterrupt = t;
+	}
 	
 	public void addSocket(UNIOSocket s) {
 		boolean n = us.size() == 0;
+		s.setFlushInterruptThread(flushInterrupt);
 		us.add(s);
 		if (pt != null) pt.interrupt();
 		if (n) synchronized (this) {
 			this.notify();
+		}
+	}
+	
+	public void flushOut(Host host) throws IOException {
+		if (us.size() == 0) return;
+		int[] pfd;
+		synchronized (us) {
+			pfd = new int[us.size()];
+			for (int i = 0; i < us.size(); i++) {
+				pfd[i] = us.get(i).sockfd;
+			}
+			
+			// other than having new sockets added, nothing SHOULD change our list.
+			// read data, close sockets, etc.
+			long t = System.currentTimeMillis();
+			for (int i = 0; i < us.size(); i++) {
+				UNIOSocket uss = us.get(i);
+				boolean close = false;
+				long to = uss.getTimeout();
+				if (to > 0L && uss.lr + to < t) {
+					close = true;
+				}
+				if (!close) try {
+					uss.write();
+				}catch (IOException e) {
+					if (!(e instanceof SocketException)) host.logger.logError(e);
+					close = true;
+				}
+				if (close) {
+					uss.close();
+				}
+			}
 		}
 	}
 	
@@ -54,43 +92,43 @@ public class Poller {
 		}
 		boolean[] c = new boolean[res.length];
 		// read data, close sockets, etc.
-		for (int i = 0; i < res.length; i++) {
-			boolean close = false;
-			if ((res[i] & 0x001) == 0x001) {// POLLIN
-				try {
-					us.get(i).read();
-				}catch (IOException e) {
-					if (!(e instanceof SocketException)) host.logger.logError(e);
+		synchronized (us) {
+			long t = System.currentTimeMillis();
+			for (int i = 0; i < res.length; i++) {
+				UNIOSocket uss = us.get(i);
+				boolean close = false;
+				long to = uss.getTimeout();
+				if (uss.isClosed() || to > 0L && uss.lr + to < t) {
 					close = true;
 				}
-			}
-			if ((res[i] & 0x004) == 0x004) {// POLLOUT
-				try {
-					us.get(i).write();
-				}catch (IOException e) {
-					if (!(e instanceof SocketException)) host.logger.logError(e);
+				if (!close && (res[i] & 0x001) == 0x001) {// POLLIN
+					try {
+						uss.read();
+					}catch (IOException e) {
+						if (!(e instanceof SocketException)) host.logger.logError(e);
+						close = true;
+					}
+				}
+				if (!close && (res[i] & 0x008) == 0x008 || (res[i] & 0x020) == 0x020 || (res[i] & 0x030) == 0x030) { // POLLERR, POLLHUP, POLLNVAL
 					close = true;
 				}
-			}
-			if ((res[i] & 0x008) == 0x008 || (res[i] & 0x020) == 0x020 || (res[i] & 0x030) == 0x030) { // POLLERR, POLLHUP, POLLNVAL
-				close = true;
-			}
-			if (close) {
-				c[i] = true;
-			}
-		}
-		int ri = 0;
-		for (int i = 0; i < c.length; i++) {
-			if (c[i]) {
-				try {
-					us.get(ri).close();
-				}catch (IOException e) {
-					AvunaHTTPD.logger.logError("Failed to close socket!"); // TODO: choose better logger
-					AvunaHTTPD.logger.logError(e);
+				if (close) {
+					c[i] = true;
 				}
-				us.remove(ri--);
 			}
-			ri++;
+			int ri = 0;
+			for (int i = 0; i < c.length; i++) {
+				if (c[i]) {
+					try {
+						us.get(ri).close();
+					}catch (IOException e) {
+						AvunaHTTPD.logger.logError("Failed to close socket!"); // TODO: choose better logger
+						AvunaHTTPD.logger.logError(e);
+					}
+					us.remove(ri--);
+				}
+				ri++;
+			}
 		}
 	}
 	

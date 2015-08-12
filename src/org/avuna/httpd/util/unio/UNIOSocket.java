@@ -25,6 +25,20 @@ public class UNIOSocket extends Socket {
 	protected Buffer buf;
 	private PacketReceiver callback;
 	private long session = 0L;
+	private long msTimeout = 0L;
+	protected long lr = System.currentTimeMillis();
+	
+	public void setFlushInterruptThread(Thread t) {
+		outBuf.setFlushInterruptThread(t);
+	}
+	
+	public void setTimeout(long t) {
+		msTimeout = t;
+	}
+	
+	public long getTimeout() {
+		return msTimeout;
+	}
 	
 	protected UNIOSocket(String ip, int port, int sockfd, PacketReceiver callback) {
 		this(ip, port, sockfd, callback, 0L);
@@ -59,6 +73,7 @@ public class UNIOSocket extends Socket {
 	}
 	
 	protected void write() throws IOException {
+		if (outBuf.available() < 1) return;
 		byte[] b = new byte[4096];
 		int i = 0;
 		int wi = 0;

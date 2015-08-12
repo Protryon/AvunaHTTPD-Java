@@ -11,6 +11,7 @@ import javax.net.ssl.SSLServerSocket;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.base.EventPreConnect;
 import org.avuna.httpd.hosts.HostHTTP;
+import org.avuna.httpd.util.unio.UNIOSocket;
 
 public class ThreadAccept extends Thread {
 	private final ServerSocket server;
@@ -42,6 +43,9 @@ public class ThreadAccept extends Thread {
 				if (!host.isUnix() && AvunaHTTPD.bannedIPs.contains(s.getInetAddress().getHostAddress())) {
 					s.close();
 					continue;
+				}
+				if (s instanceof UNIOSocket) {
+					((UNIOSocket) s).setTimeout(10000L);
 				}
 				DataOutputStream out = new DataOutputStream(s.getOutputStream());
 				out.flush();

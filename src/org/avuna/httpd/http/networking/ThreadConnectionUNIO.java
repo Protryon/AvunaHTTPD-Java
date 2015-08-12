@@ -11,18 +11,49 @@ import org.avuna.httpd.util.unio.Poller;
 public class ThreadConnectionUNIO extends ThreadConnection implements ITerminatable {
 	private static int nid = 1;
 	protected final HostHTTP host;
-	public final Poller poller = new Poller();
+	public final Poller poller;
+	public final ThreadConnectionUNIO flt;
 	
 	public ThreadConnectionUNIO(HostHTTP host) {
 		super("Avuna HTTPD UNIO Connection Thread #" + nid++);
 		this.host = host;
+		this.poller = new Poller();
 		host.conns.add(this);
+		this.flusher = false;
+		this.flt = new ThreadConnectionUNIO(host, poller);
+		this.poller.setFlushInterruptThread(this.flt);
+	}
+	
+	public void start() {
+		super.start();
+		if (!flusher) {
+			flt.start();
+		}
+	}
+	
+	private boolean flusher;
+	
+	private ThreadConnectionUNIO(HostHTTP host, Poller flusher) {
+		super("Avuna HTTPD UNIO-Flush Connection Thread #" + nid++);
+		this.host = host;
+		this.poller = flusher;
+		this.flusher = true;
+		this.flt = null;
 	}
 	
 	public void run() {
 		while (keepRunning) {
 			try {
-				poller.poll(host);
+				if (flusher) {
+					synchronized (this) {
+						try {
+							this.wait(1000);
+						}catch (InterruptedException e) {
+							
+						}
+					}
+					poller.flushOut(host);
+				}else poller.poll(host);
 			}catch (Exception e) {
 				if (!(e instanceof SocketTimeoutException)) {
 					if (!(e instanceof SocketException || e instanceof StringIndexOutOfBoundsException)) host.logger.logError(e);
