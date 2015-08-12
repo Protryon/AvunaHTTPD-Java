@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <gnutls/gnutls.h>
 #include <string.h>
+#include <errno.h>
 
 static gnutls_dh_params_t dh_params;
 
@@ -35,7 +36,7 @@ JNIEXPORT jlong JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_loadcert(JNIEnv * 
 	(*this)->ReleaseStringUTFChars(this, key, 0);
 	(*this)->ReleaseStringUTFChars(this, cert, 0);
 	if(e1 < 0) {
-		return 0;
+		return e1;
 	}
 	gnutls_certificate_set_ocsp_status_request_file(oc->cert, "ocsp-status.der", 0);
 	gnutls_priority_init(&oc->priority, "PERFORMANCE:%SERVER_PRECEDENCE", NULL);
@@ -70,10 +71,13 @@ JNIEXPORT jbyteArray JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_read(JNIEnv *
 	memset(ra, 0, size);
 	int i = gnutls_record_recv(sessiond, ra, size);
 	if(i < 0) {
-		i = 0;
+		free(ra);
+		errno = i;
+		return NULL;
 	}
 	jbyteArray f = (*this)->NewByteArray(this, i);
 	if (f == NULL) {
+		errno = EINVAL;
 		return NULL;
 	}
 	if(i >= 0) {

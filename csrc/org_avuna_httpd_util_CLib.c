@@ -418,11 +418,11 @@ JNIEXPORT jintArray JNICALL Java_org_avuna_httpd_util_CLib_poll(JNIEnv * this, j
 	for(int i = 0;i<size;i++) {
 		struct pollfd fd;
 		fd.fd = body[i];
-		fd.events = POLLIN | POLLOUT;
+		fd.events = POLLIN;
 		fd.revents = 0;
 		fds[i] = fd;
 	}
-	if(poll(&fds[0], (nfds_t)size, -1) < 0) return NULL;
+	if(poll(&fds[0], (nfds_t)size, 10000) < 0) return NULL;
 	jintArray pr;
 	pr = (*this)->NewIntArray(this, size);
 	if(pr == NULL) return NULL;
