@@ -84,7 +84,17 @@ public abstract class CLib {
 				if (arch.equals("amd64")) va = "amd64";
 			}
 			if (va != null) {
-				System.load(new File(new File(AvunaHTTPD.fileManager.getBaseFile("jni"), va), "libAvunaHTTPD_JNI.so").getAbsolutePath());
+				File af = new File(AvunaHTTPD.fileManager.getBaseFile("jni"), va);
+				if (va.equals("amd64")) {
+					System.load(new File(af, "libffi.so.6").getAbsolutePath());
+					System.load(new File(af, "libtasn1.so.6").getAbsolutePath());
+					System.load(new File(af, "libnettle.so.6").getAbsolutePath());
+					System.load(new File(af, "libgmp.so.10").getAbsolutePath());
+					System.load(new File(af, "libhogweed.so.4").getAbsolutePath());
+					System.load(new File(af, "libp11-kit.so.0").getAbsolutePath());
+					System.load(new File(af, "libgnutls.so.28").getAbsolutePath());
+				}
+				System.load(new File(af, "libAvunaHTTPD_JNI.so").getAbsolutePath());
 			}else {
 				AvunaHTTPD.logger.logError("[ERROR] JNI Loading failed, we could not find a library for your CPU Architecture.");
 				failed = true;
