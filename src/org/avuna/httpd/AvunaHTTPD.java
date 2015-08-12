@@ -156,7 +156,7 @@ public class AvunaHTTPD {
 	public static void unpack() {
 		try {
 			setupScripts();
-			String[] unpacks = new String[] { "mime.txt", "jni/amd64/libAvunaHTTPD_JNI.so", "jni/amd64/libffi.so.6", "jni/amd64/libgmp.so.10", "jni/amd64/libgnutls.so.28", "jni/amd64/libhogweed.so.4", "jni/amd64/libAvunaHTTPD_JNI.so", "jni/amd64/libnettle.so.6", "jni/amd64/libp11-kit.so.0", "jni/i386/libtasn1.so.6" };
+			String[] unpacks = new String[] { "mime.txt", "jni/i386/libAvunaHTTPD_JNI.so", "jni/amd64/libAvunaHTTPD_JNI.so", "jni/amd64/libffi.so.6", "jni/amd64/libgmp.so.10", "jni/amd64/libgnutls.so.28", "jni/amd64/libhogweed.so.4", "jni/amd64/libnettle.so.6", "jni/amd64/libp11-kit.so.0", "jni/amd64/libtasn1.so.6" };
 			for (String up : unpacks) {
 				if (windows && up.endsWith(".so")) continue;
 				if (!windows && up.endsWith(".dll")) continue;
