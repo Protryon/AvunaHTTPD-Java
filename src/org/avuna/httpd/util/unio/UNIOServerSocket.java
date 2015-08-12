@@ -31,13 +31,13 @@ public class UNIOServerSocket extends ServerSocket {
 	
 	public void bind() throws IOException {
 		if (bound) throw new IOException("Already bound!");
-		bound = true;
 		sockfd = CLib.socket(2, 1, 0);
 		if (sockfd < 0) throw new CException(CLib.errno(), "socket failed native create");
 		int bind = CLib.bindTCP(sockfd, ip, port);
 		if (bind != 0) throw new CException(CLib.errno(), "socket failed bind");
 		int listen = CLib.listen(sockfd, this.backlog);
 		if (listen != 0) throw new CException(CLib.errno(), "socket failed listen");
+		bound = true;
 	}
 	
 	public UNIOSocket accept() throws IOException {
@@ -46,8 +46,12 @@ public class UNIOServerSocket extends ServerSocket {
 		String nsfd = CLib.acceptTCP(sockfd);
 		// Logger.log(nsfd);
 		int i = Integer.parseInt(nsfd.substring(0, nsfd.indexOf("/")));
+		if (i == -1) {
+			this.close();
+			throw new CException(CLib.errno(), "Server closed!");
+		}
 		nsfd = nsfd.substring(nsfd.indexOf("/") + 1);
-		UNIOSocket us = new UNIOSocket(nsfd, port, i, factory.newCallback());
+		UNIOSocket us = new UNIOSocket(nsfd, port, i, factory == null ? null : factory.newCallback());
 		return us;
 	}
 	

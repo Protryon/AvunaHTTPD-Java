@@ -3,6 +3,8 @@
 package org.avuna.httpd.util.unio;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -17,6 +19,8 @@ public class UNIOSocket extends Socket {
 	private int port = -1;
 	private boolean closed = false;
 	private UNIOOutputStream out = null;
+	private Buffer outBuf = new Buffer(1024, null, this);
+	private BufferOutputStream ob = new BufferOutputStream(outBuf);
 	private UNIOInputStream in = null;
 	protected Buffer buf;
 	private PacketReceiver callback;
@@ -31,6 +35,7 @@ public class UNIOSocket extends Socket {
 		this.callback = callback;
 	}
 	
+	/** Compatibility function, called automatically in C. */
 	public void setTcpNoDelay(boolean b) {
 		
 	}
@@ -44,9 +49,23 @@ public class UNIOSocket extends Socket {
 		buf.append(b);
 	}
 	
-	public void setSoTimeout(int timeout) {
-		// TODO: impl
+	protected void write() throws IOException {
+		byte[] b = new byte[4096];
+		int i = 0;
+		int wi = 0;
+		do {
+			i = outBuf.read(b);
+			if (i > 0) {
+				wi = out.cwrite(b, 0, i);
+				if (wi < i) {
+					outBuf.unsafe_prepend(b, wi, i - wi);
+				}
+			}
+		}while (i > 0 && wi >= i);
 	}
+	
+	/** Compatibility function, this is NIO. */
+	public void setSoTimeout(int timeout) {}
 	
 	public InetAddress getInetAddress() {
 		try {
@@ -61,12 +80,12 @@ public class UNIOSocket extends Socket {
 		return port;
 	}
 	
-	public UNIOInputStream getInputStream() throws IOException {
-		return in;
+	public InputStream getInputStream() throws IOException {
+		return buf;
 	}
 	
-	public UNIOOutputStream getOutputStream() throws IOException {
-		return out;
+	public OutputStream getOutputStream() throws IOException {
+		return ob;
 	}
 	
 	public boolean isClosed() {

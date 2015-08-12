@@ -60,7 +60,15 @@ public class Poller {
 				}catch (IOException e) {
 					close = true;
 				}
-			}else if ((res[i] & 0x008) == 0x008 || (res[i] & 0x020) == 0x020 || (res[i] & 0x030) == 0x030) { // POLLERR, POLLHUP, POLLNVAL
+			}
+			if ((res[i] & 0x004) == 0x004) {// POLLOUT
+				try {
+					us.get(i).write();
+				}catch (IOException e) {
+					close = true;
+				}
+			}
+			if ((res[i] & 0x008) == 0x008 || (res[i] & 0x020) == 0x020 || (res[i] & 0x030) == 0x030) { // POLLERR, POLLHUP, POLLNVAL
 				close = true;
 			}
 			if (close) {

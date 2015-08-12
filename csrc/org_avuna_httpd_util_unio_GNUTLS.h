@@ -10,9 +10,9 @@
 extern "C" {
 #endif
 
-	JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_global_init(JNIEnv *, jclass);
+	JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_globalinit(JNIEnv *, jclass);
 
-	JNIEXPORT jlong JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_load_cert(JNIEnv *, jclass, jstring, jstring, jstring, jstring);
+	JNIEXPORT jlong JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_loadcert(JNIEnv *, jclass, jstring, jstring, jstring, jstring);
 
 	JNIEXPORT jlong JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_preaccept(JNIEnv *, jclass, jlong);
 

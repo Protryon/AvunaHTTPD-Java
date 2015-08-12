@@ -143,7 +143,7 @@ JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_acceptTCP(JNIEnv * this
 		setsockopt(i, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
 		int f;
 		if ((f = fcntl(sockfd, F_GETFL, 0)) == -1) f = 0;
-		fcntl(sockfd, F_SETFL, f | O_NONBLOCK); // if this fails, it's only a precaution, unnecessary.
+		fcntl(i, F_SETFL, f | O_NONBLOCK); // if this fails, it's only a precaution, unnecessary.
 		char* dp = itoa(i);
 		char* ip = inet_ntoa(sin.sin_addr);
 		ret = malloc(strlen(dp) + 1 + strlen(ip) + 1);
@@ -418,7 +418,7 @@ JNIEXPORT jintArray JNICALL Java_org_avuna_httpd_util_CLib_poll(JNIEnv * this, j
 	for(int i = 0;i<size;i++) {
 		struct pollfd fd;
 		fd.fd = body[i];
-		fd.events = POLLIN;
+		fd.events = POLLIN | POLLOUT;
 		fd.revents = 0;
 		fds[i] = fd;
 	}

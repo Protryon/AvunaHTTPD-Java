@@ -14,7 +14,7 @@ struct cert {
 	gnutls_priority_t priority;
 };
 
-JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_global_init(JNIEnv * this, jclass cls) {
+JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_globalinit(JNIEnv * this, jclass cls) {
 	gnutls_global_init();
 	unsigned int bits = gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH, GNUTLS_SEC_PARAM_LEGACY);
 	gnutls_dh_params_init(&dh_params);
@@ -22,7 +22,7 @@ JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_global_init(JNIEnv 
 	return 0;
 }
 
-JNIEXPORT jlong JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_load_cert(JNIEnv * this, jclass cls, jstring ca, jstring crl, jstring cert, jstring key) {
+JNIEXPORT jlong JNICALL Java_org_avuna_httpd_util_unio_GNUTLS_loadcert(JNIEnv * this, jclass cls, jstring ca, jstring crl, jstring cert, jstring key) {
 	struct cert* oc = malloc(sizeof( struct cert));
 	memset(oc, 0, sizeof(struct cert));
 	gnutls_certificate_allocate_credentials(&oc->cert);

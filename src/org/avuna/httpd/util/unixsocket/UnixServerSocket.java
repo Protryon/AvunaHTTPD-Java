@@ -48,6 +48,10 @@ public class UnixServerSocket extends ServerSocket {
 		String nsfd = CLib.acceptUnix(sockfd);
 		// Logger.log(nsfd);
 		int i = Integer.parseInt(nsfd.substring(0, nsfd.indexOf("/")));
+		if (i == -1) {
+			this.close();
+			throw new IOException("Server closed!");
+		}
 		nsfd = nsfd.substring(nsfd.indexOf("/") + 1);
 		UnixSocket us = new UnixSocket(file, i);
 		return us;
