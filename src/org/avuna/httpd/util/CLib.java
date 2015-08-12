@@ -71,6 +71,8 @@ public abstract class CLib {
 	
 	public static native int[] poll(int[] sockfds);
 	
+	public static native int hasGNUTLS();
+	
 	public static boolean failed = false;
 	
 	static {

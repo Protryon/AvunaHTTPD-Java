@@ -14,6 +14,7 @@
 #include <poll.h>
 #include <fcntl.h>
 #include <arpa/inet.h>
+#include <netinet/tcp.h>
 
 /*
  * Class:     org_avuna_httpd_util_CLib
@@ -21,7 +22,15 @@
  * Signature: (III)I
  */
 JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_socket(JNIEnv * this, jclass cls, jint domain, jint type, jint protocol) {
-	return socket(domain, type, protocol);
+	int i = socket(domain, type, protocol);
+	if(i >= 0) {
+		int on = 1;
+		int e = errno;
+		setsockopt(i, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)); // we don't care if it fails.
+		setsockopt(i, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
+		errno = e;// if the above does fail, we don't want to tell Java about it.
+	}
+	return i;
 }
 
 /*
@@ -75,12 +84,12 @@ char* itoa(int val) {
 
 /*
  * Class:     org_avuna_httpd_util_CLib
- * Method:    accept
+ * Method:    acceptUnix
  * Signature: (ILjava/lang/String;I)I
  */
-JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_accept(JNIEnv * this, jclass cls, jint sockfd) {
+JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_acceptUnix(JNIEnv * this, jclass cls, jint sockfd) {
 	struct sockaddr_un sun;
-	sun.sun_family = 1;
+	sun.sun_family = AF_INET;
 	char *fpath = malloc(32);
 	if(fpath == NULL) {
 		return NULL;
@@ -95,6 +104,8 @@ JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_accept(JNIEnv * this, j
 		strcpy(fpath, "-1/null");
 		//*fpath = "-1/null";
 	} else {
+		int on = 1;
+		setsockopt(i, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
 		free(fpath);
 		fpath = itoa(i);
 		char *cr1;
@@ -110,6 +121,43 @@ JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_accept(JNIEnv * this, j
 	}
 	jstring js = (*this)->NewStringUTF(this, fpath);
 	free(fpath);
+	return js;
+}
+
+/*
+ * Class:     org_avuna_httpd_util_CLib
+ * Method:    acceptUnix
+ * Signature: (ILjava/lang/String;I)I
+ */
+JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_acceptTCP(JNIEnv * this, jclass cls, jint sockfd) {
+	struct sockaddr_in sin;
+	sin.sin_family = AF_INET;
+	socklen_t slt = sizeof(sin);
+	char* ret;
+	int m = 0;
+	int i = accept(sockfd, (struct sockaddr *)&sin, &slt);
+	if(i < 0) {
+		ret = "-1/null";
+	} else {
+		int on = 1;
+		setsockopt(i, IPPROTO_TCP, TCP_NODELAY, &on, sizeof(on));
+		int f;
+		if ((f = fcntl(sockfd, F_GETFL, 0)) == -1) f = 0;
+		fcntl(sockfd, F_SETFL, f | O_NONBLOCK); // if this fails, it's only a precaution, unnecessary.
+		char* dp = itoa(i);
+		char* ip = inet_ntoa(sin.sin_addr);
+		ret = malloc(strlen(dp) + 1 + strlen(ip) + 1);
+		if(ret == NULL) {
+			return NULL;
+		}
+		strcpy(ret, dp);
+		free(dp);
+		strcat(ret, "/");
+		strcat(ret, ip);
+		m = 1;
+	}
+	jstring js = (*this)->NewStringUTF(this, ret);
+	if(m == 1)free(ret);
 	return js;
 }
 
@@ -386,8 +434,15 @@ JNIEXPORT jintArray JNICALL Java_org_avuna_httpd_util_CLib_poll(JNIEnv * this, j
 	return pr;
 }
 
-JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_noblock(JNIEnv * this, jclass cls, jint sockfd) {
-	int f;
-	if ((f = fcntl(sockfd, F_GETFL, 0)) == -1) f = 0;
-	return fcntl(sockfd, F_SETFL, f | O_NONBLOCK);
+/*
+ * Class:     org_avuna_httpd_util_CLib
+ * Method:    hasGNUTLS
+ * Signature: ()I
+ */
+JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_hasGNUTLS(JNIEnv * this, jclass cls) {
+#ifdef BIT64
+	return 1;
+#else
+	return 0;
+#endif
 }

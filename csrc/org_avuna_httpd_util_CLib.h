@@ -37,10 +37,17 @@ extern "C" {
 
 	/*
 	 * Class:     org_avuna_httpd_util_CLib
-	 * Method:    accept
+	 * Method:    acceptUnix
 	 * Signature: (I)Ljava/lang/String;
 	 */
-	JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_accept(JNIEnv *, jclass, jint);
+	JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_acceptUnix(JNIEnv *, jclass, jint);
+
+	/*
+	 * Class:     org_avuna_httpd_util_CLib
+	 * Method:    acceptTCP
+	 * Signature: (I)Ljava/lang/String;
+	 */
+	JNIEXPORT jstring JNICALL Java_org_avuna_httpd_util_CLib_acceptTCP(JNIEnv *, jclass, jint);
 
 	/*
 	 * Class:     org_avuna_httpd_util_CLib
@@ -191,10 +198,10 @@ extern "C" {
 
 	/*
 	 * Class:     org_avuna_httpd_util_CLib
-	 * Method:    noblock
-	 * Signature: (I)I
+	 * Method:    hasGNUTLS
+	 * Signature: ()I
 	 */
-	JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_noblock(JNIEnv *, jclass, jint);
+	JNIEXPORT jint JNICALL Java_org_avuna_httpd_util_CLib_hasGNUTLS(JNIEnv *, jclass);
 
 #ifdef __cplusplus
 }
