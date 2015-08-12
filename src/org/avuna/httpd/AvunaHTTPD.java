@@ -43,6 +43,7 @@ import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.FileManager;
 import org.avuna.httpd.util.SafeMode;
 import org.avuna.httpd.util.logging.Logger;
+import org.avuna.httpd.util.unio.GNUTLS;
 
 public class AvunaHTTPD {
 	public static final String VERSION = "1.3.0";
@@ -421,6 +422,7 @@ public class AvunaHTTPD {
 				}
 				if (true) return;
 			}*/
+			GNUTLS.nothing();
 			HostRegistry.addHost(Protocol.HTTP, HostHTTP.class);
 			HostRegistry.addHost(Protocol.COM, HostCom.class);
 			HostRegistry.addHost(Protocol.DNS, HostDNS.class);

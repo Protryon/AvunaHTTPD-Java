@@ -4,9 +4,9 @@ import org.avuna.httpd.util.CLib;
 
 public abstract class GNUTLS {
 	
-	public static native int global_init(); // return 0
+	public static native int globalinit(); // return 0
 	
-	public static native long load_cert(String ca, String crl, String cert, String key); // returns pointer to cert struct, or 0 if failure.
+	public static native long loadcert(String ca, String crl, String cert, String key); // returns pointer to cert struct, or 0 if failure.
 	
 	public static native long preaccept(long cert); // returns pointer to session
 	
@@ -18,8 +18,15 @@ public abstract class GNUTLS {
 	
 	public static native int close(long session);
 	
+	/** This literally does nothing. It's purpose is to call the static initializer if for some reason we reference GNUTLS before us. */
+	public static void nothing() {
+		
+	}
+	
 	static {
 		// should be loaded by CLib
-		CLib.nothing();
+		if (CLib.hasGNUTLS() == 1) {
+			globalinit();
+		}
 	}
 }
