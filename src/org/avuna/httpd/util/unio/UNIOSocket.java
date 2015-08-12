@@ -50,10 +50,12 @@ public class UNIOSocket extends Socket {
 	protected void read() throws IOException {
 		byte[] b = new byte[in.available()];
 		int i = 0;
+		int li = 0;
 		do {
-			i += in.read(b, i, b.length - i);
-		}while (i > 0 && i < b.length);
-		buf.append(b, 0, i);
+			li = in.read(b, i, b.length - i);
+			i += li;
+		}while (li > 0 && i < b.length);
+		if (i > 0) buf.append(b, 0, i);
 	}
 	
 	protected void write() throws IOException {

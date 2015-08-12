@@ -1,6 +1,7 @@
 package org.avuna.httpd.util.unio;
 
 import java.io.IOException;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -59,7 +60,7 @@ public class Poller {
 				try {
 					us.get(i).read();
 				}catch (IOException e) {
-					host.logger.logError(e);
+					if (!(e instanceof SocketException)) host.logger.logError(e);
 					close = true;
 				}
 			}
@@ -67,7 +68,7 @@ public class Poller {
 				try {
 					us.get(i).write();
 				}catch (IOException e) {
-					host.logger.logError(e);
+					if (!(e instanceof SocketException)) host.logger.logError(e);
 					close = true;
 				}
 			}

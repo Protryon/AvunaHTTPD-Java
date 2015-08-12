@@ -62,7 +62,12 @@ public class UNIOServerSocket extends ServerSocket {
 			this.close();
 			throw new CException(CLib.errno(), "Server closed!");
 		}
-		if (cert > 0L) GNUTLS.postaccept(cert, session, i);
+		if (cert > 0L) {
+			int e = GNUTLS.postaccept(cert, session, i);
+			if (e < 0) {
+				throw new CException(e, "Failed TCP Handshake!");
+			}
+		}
 		nsfd = nsfd.substring(nsfd.indexOf("/") + 1);
 		UNIOSocket us = new UNIOSocket(nsfd, port, i, factory == null ? null : factory.newCallback(), cert > 0L ? session : 0L);
 		return us;

@@ -46,7 +46,8 @@ public class Buffer extends InputStream {
 	}
 	
 	public void append(byte[] buf, int offset, int length) {
-		ensureCapacity(this.length + length);
+		if (length == 0) return;
+		ensureCapacity(this.length + length + this.read);
 		synchronized (buf) {
 			System.arraycopy(buf, offset, this.buf, this.read + this.length, length);
 			if (callback != null) {

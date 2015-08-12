@@ -30,42 +30,23 @@ public class UNIOInputStream extends InputStream {
 	
 	@Override
 	public int read() throws IOException {
-		byte[] sa = session == 0 ? CLib.read(sockfd, 1) : GNUTLS.read(session, 1);
-		if (sa.length == 0) {
-			int i = CLib.errno();
-			if (i == 104) {
-				throw new SocketException("Connection reset by peer");
-			}else if (i == 32) {
-				throw new SocketException("Broken Pipe");
-			}else if (i == 11) {
-				throw new SocketException("Would Block!");
-			}else throw new CException(i, "read failed");
-		}
-		return sa[0] & 0xff;
+		byte[] sa = new byte[1];
+		if (this.read(sa) == 0) return -1; // not EOF, but may be no data since non blocking
+		return sa[0];
 	}
 	
 	public int read(byte[] array) throws IOException {
-		byte[] buf = session == 0 ? CLib.read(sockfd, array.length) : GNUTLS.read(session, array.length);
-		if (buf.length == 0) {
-			int i = CLib.errno();
-			if (i == 104) {
-				throw new SocketException("Connection reset by peer");
-			}else if (i == 32) {
-				throw new SocketException("Broken Pipe");
-			}else throw new CException(i, "read failed");
-		}
-		System.arraycopy(buf, 0, array, 0, buf.length);
-		return buf.length;
+		return this.read(array, 0, array.length);
 	}
 	
 	public int read(byte[] array, int off, int len) throws IOException {
 		if (off + len > array.length) throw new ArrayIndexOutOfBoundsException("off + len MUST NOT be >= array.length");
 		byte[] buf = session == 0 ? CLib.read(sockfd, len) : GNUTLS.read(session, len);
-		if (buf.length == 0) { // not 100% accurate, but what else?
+		if (buf == null) { // not 100% accurate, but what else?
 			int i = CLib.errno();
-			if (i == 11) {
+			if (i == 11 | i == -28) { // EAGAIN/GNUTLS_EAGAIN
 				return 0;
-			}else if (i == 104) {
+			}else if (i == 104 || i == -50) {
 				throw new SocketException("Connection reset by peer");
 			}else if (i == 32) {
 				throw new SocketException("Broken Pipe");
