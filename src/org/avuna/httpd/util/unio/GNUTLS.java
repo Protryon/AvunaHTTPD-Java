@@ -18,7 +18,7 @@ public abstract class GNUTLS {
 	
 	public static native int close(long session);
 	
-	/** This literally does nothing. It's purpose is to call the static initializer if for some reason we reference GNUTLS before us. */
+	/** This literally does nothing. It's purpose is to call the static initializer early to detect if we have issues before loading. */
 	public static void nothing() {
 		
 	}

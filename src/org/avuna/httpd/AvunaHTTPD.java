@@ -422,7 +422,7 @@ public class AvunaHTTPD {
 				}
 				if (true) return;
 			}*/
-			GNUTLS.nothing();
+			GNUTLS.nothing(); // calls the static initializer
 			HostRegistry.addHost(Protocol.HTTP, HostHTTP.class);
 			HostRegistry.addHost(Protocol.COM, HostCom.class);
 			HostRegistry.addHost(Protocol.DNS, HostDNS.class);
