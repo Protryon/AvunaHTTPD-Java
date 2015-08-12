@@ -196,7 +196,7 @@ public class Config extends ConfigNode {
 		if (cfg == null) return;
 		format();
 		try {
-			if (!cfg.getParentFile().exists()) {
+			if (cfg.getParentFile() != null && !cfg.getParentFile().exists()) {
 				cfg.getParentFile().mkdirs();
 			}
 			if (!cfg.exists() || !cfg.isFile()) {
