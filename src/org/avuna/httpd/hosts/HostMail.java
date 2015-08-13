@@ -180,7 +180,8 @@ public class HostMail extends Host {
 		return (server == smtp || server == smtpmua || server == smtps) ? new SMTPPacketReceiver() : new IMAPPacketReceiver();
 	}
 	
-	ServerSocket smtp = null, smtpmua = null, imap = null, smtps = null, imaps = null;
+	ServerSocket smtp = null, smtpmua = null, imap = null, smtps = null;
+	public ServerSocket imaps = null;
 	
 	public void run() {
 		try {
