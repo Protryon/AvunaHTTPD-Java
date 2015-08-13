@@ -9,23 +9,16 @@ import org.avuna.httpd.util.CException;
 import org.avuna.httpd.util.CLib;
 
 public class UNIOOutputStream extends OutputStream {
-	private int sockfd = -1;
-	private long session = 0L;
+	private UNIOSocket socket = null;
 	
-	public UNIOOutputStream(int sockfd) {
-		this.sockfd = sockfd;
-	}
-	
-	// ssl
-	public UNIOOutputStream(int sockfd, long session) {
-		this(sockfd);
-		this.session = session;
+	public UNIOOutputStream(UNIOSocket socket) {
+		this.socket = socket;
 	}
 	
 	@Override
 	public void write(int b) throws IOException {
 		byte[] sa = new byte[] { (byte) b };
-		int i = session == 0L ? CLib.write(sockfd, sa) : GNUTLS.write(session, sa);
+		int i = socket.session == 0L ? CLib.write(socket.sockfd, sa) : GNUTLS.write(socket.session, sa);
 		if (i < 0) {
 			i = CLib.errno();
 			if (i == 104) {
@@ -34,20 +27,11 @@ public class UNIOOutputStream extends OutputStream {
 				throw new SocketException("Broken Pipe");
 			}else throw new CException(i, "End of Stream");
 		}
+		socket.lr = System.currentTimeMillis();
 	}
 	
 	public int cwrite(byte[] buf) throws IOException {
-		if (buf.length == 0) return 0;
-		int i = session == 0L ? CLib.write(sockfd, buf) : GNUTLS.write(session, buf);
-		if (i < 0) {
-			i = CLib.errno();
-			if (i == 104) {
-				throw new SocketException("Connection reset by peer");
-			}else if (i == 32) {
-				throw new SocketException("Broken Pipe");
-			}else throw new CException(i, "End of Stream");
-		}
-		return i;
+		return cwrite(buf, 0, buf.length);
 	}
 	
 	public void write(byte[] buf) throws IOException {
@@ -58,7 +42,7 @@ public class UNIOOutputStream extends OutputStream {
 		if (len == 0) return 0;
 		byte[] buf2 = new byte[len];
 		System.arraycopy(buf, off, buf2, 0, len);
-		int i = session == 0L ? CLib.write(sockfd, buf2) : GNUTLS.write(session, buf2);
+		int i = socket.session == 0L ? CLib.write(socket.sockfd, buf2) : GNUTLS.write(socket.session, buf2);
 		if (i < 0) {
 			i = CLib.errno();
 			if (i == 104) {
@@ -67,6 +51,7 @@ public class UNIOOutputStream extends OutputStream {
 				throw new SocketException("Broken Pipe");
 			}else throw new CException(CLib.errno(), "End of Stream");
 		}
+		socket.lr = System.currentTimeMillis();
 		return i;
 	}
 	
@@ -75,6 +60,6 @@ public class UNIOOutputStream extends OutputStream {
 	}
 	
 	public void flush() {
-		// CLib.INSTANCE.fflush(sockfd);
+		
 	}
 }

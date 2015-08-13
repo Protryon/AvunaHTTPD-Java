@@ -24,7 +24,7 @@ public class UNIOSocket extends Socket {
 	private UNIOInputStream in = null;
 	protected Buffer buf;
 	private PacketReceiver callback;
-	private long session = 0L;// ssl
+	protected long session = 0L;// ssl
 	private long msTimeout = 0L;
 	protected long lr = System.currentTimeMillis();
 	private boolean holdTimeout = false;
@@ -62,8 +62,8 @@ public class UNIOSocket extends Socket {
 		this.ip = ip;
 		this.port = port;
 		buf = new Buffer(1024, callback, this);
-		out = new UNIOOutputStream(sockfd, session);
-		in = new UNIOInputStream(sockfd, session);
+		out = new UNIOOutputStream(this);
+		in = new UNIOInputStream(this);
 		this.callback = callback;
 		this.session = session;
 	}

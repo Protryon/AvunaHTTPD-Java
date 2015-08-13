@@ -9,21 +9,14 @@ import org.avuna.httpd.util.CException;
 import org.avuna.httpd.util.CLib;
 
 public class UNIOInputStream extends InputStream {
-	private int sockfd = -1;
-	private long session = 0L;
+	private UNIOSocket socket = null;
 	
-	public UNIOInputStream(int sockfd) {
-		this.sockfd = sockfd;
-	}
-	
-	// ssl
-	public UNIOInputStream(int sockfd, long session) {
-		this(sockfd);
-		this.session = session;
+	public UNIOInputStream(UNIOSocket socket) {
+		this.socket = socket;
 	}
 	
 	public int available() {
-		int status = CLib.available(sockfd);
+		int status = CLib.available(socket.sockfd);
 		if (status < 0) return 0;
 		return status;
 	}
@@ -41,7 +34,7 @@ public class UNIOInputStream extends InputStream {
 	
 	public int read(byte[] array, int off, int len) throws IOException {
 		if (off + len > array.length) throw new ArrayIndexOutOfBoundsException("off + len MUST NOT be >= array.length");
-		byte[] buf = session == 0 ? CLib.read(sockfd, len) : GNUTLS.read(session, len);
+		byte[] buf = socket.session == 0 ? CLib.read(socket.sockfd, len) : GNUTLS.read(socket.session, len);
 		if (buf == null) { // not 100% accurate, but what else?
 			int i = CLib.errno();
 			if (i == 11 | i == -28) { // EAGAIN/GNUTLS_EAGAIN
@@ -53,6 +46,7 @@ public class UNIOInputStream extends InputStream {
 			}else throw new CException(i, "read failed");
 		}
 		System.arraycopy(buf, 0, array, off, buf.length);
+		socket.lr = System.currentTimeMillis();
 		return buf.length;
 	}
 	
