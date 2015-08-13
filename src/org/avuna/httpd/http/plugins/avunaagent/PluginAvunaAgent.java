@@ -38,6 +38,7 @@ import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.Config;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.SafeMode;
+import org.avuna.httpd.util.unio.UNIOSocket;
 
 public class PluginAvunaAgent extends Plugin {
 	
@@ -340,6 +341,9 @@ public class PluginAvunaAgent extends Plugin {
 				boolean doout = true;
 				try {
 					request.work.blockTimeout = true;
+					if (request.work.s instanceof UNIOSocket) {
+						((UNIOSocket) request.work.s).setHoldTimeout(true);
+					}
 					if (type == 0) {
 						ndata = ((AvunaAgentBasic) loader).generate(response, request);
 					}else if (type == 1) {
@@ -362,6 +366,9 @@ public class PluginAvunaAgent extends Plugin {
 					return;
 				}finally {
 					request.work.blockTimeout = false;
+					if (request.work.s instanceof UNIOSocket) {
+						((UNIOSocket) request.work.s).setHoldTimeout(false);
+					}
 				}
 				// System.out.println((digest - start) / 1000000D + " start-digest");
 				// System.out.println((loaded - digest) / 1000000D + " digest-loaded");

@@ -15,6 +15,7 @@ import java.net.SocketTimeoutException;
 import java.util.Scanner;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostFTP;
+import org.avuna.httpd.util.unio.UNIOSocket;
 
 public class ThreadPassive extends Thread {
 	private Object serv = null;
@@ -75,6 +76,9 @@ public class ThreadPassive extends Thread {
 			DataInputStream in = new DataInputStream(s.getInputStream());
 			try {
 				hold = true;
+				if (work.s instanceof UNIOSocket) {
+					((UNIOSocket) work.s).setHoldTimeout(true);
+				}
 				if (ftt == FTPTransferType.STOR || ftt == FTPTransferType.STOU || ftt == FTPTransferType.APPE) {
 					work.writeLine(150, (ftt == FTPTransferType.STOU ? "FILE: " + FTPHandler.chroot(work.root, f) : "Ok to send data."));
 					FileOutputStream fout = new FileOutputStream(f, ftt == FTPTransferType.APPE);
@@ -150,6 +154,9 @@ public class ThreadPassive extends Thread {
 				s.close();
 			}finally {
 				hold = false;
+				if (work.s instanceof UNIOSocket) {
+					((UNIOSocket) work.s).setHoldTimeout(false);
+				}
 			}
 		}catch (IOException e) {
 			if (!(e instanceof SocketException)) host.logger.logError(e);

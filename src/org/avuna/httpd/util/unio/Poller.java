@@ -48,7 +48,7 @@ public class Poller {
 				UNIOSocket uss = us.get(i);
 				boolean close = false;
 				long to = uss.getTimeout();
-				if (to > 0L && uss.lr + to < t) {
+				if (uss.isClosed() || (to > 0L && uss.lr + to < t && !uss.getHoldTimeout())) {
 					close = true;
 				}
 				if (!close) try {
@@ -98,7 +98,7 @@ public class Poller {
 				UNIOSocket uss = us.get(i);
 				boolean close = false;
 				long to = uss.getTimeout();
-				if (uss.isClosed() || to > 0L && uss.lr + to < t) {
+				if (uss.isClosed() || (to > 0L && uss.lr + to < t && !uss.getHoldTimeout())) {
 					close = true;
 				}
 				if (!close && (res[i] & 0x001) == 0x001) {// POLLIN

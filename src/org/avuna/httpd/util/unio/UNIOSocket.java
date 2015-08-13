@@ -24,9 +24,21 @@ public class UNIOSocket extends Socket {
 	private UNIOInputStream in = null;
 	protected Buffer buf;
 	private PacketReceiver callback;
-	private long session = 0L;
+	private long session = 0L;// ssl
 	private long msTimeout = 0L;
 	protected long lr = System.currentTimeMillis();
+	private boolean holdTimeout = false;
+	
+	public void setHoldTimeout(boolean holdTimeout) {
+		if (!holdTimeout) {
+			this.lr = System.currentTimeMillis(); // reset timeout
+		}
+		this.holdTimeout = holdTimeout;
+	}
+	
+	public boolean getHoldTimeout() {
+		return this.holdTimeout;
+	}
 	
 	public void setFlushInterruptThread(Thread t) {
 		outBuf.setFlushInterruptThread(t);

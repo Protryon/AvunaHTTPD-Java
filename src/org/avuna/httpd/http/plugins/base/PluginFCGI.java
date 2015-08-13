@@ -29,6 +29,7 @@ import org.avuna.httpd.http.plugins.base.fcgi.FCGISession;
 import org.avuna.httpd.http.plugins.base.fcgi.IFCGIManager;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Stream;
+import org.avuna.httpd.util.unio.UNIOSocket;
 
 public class PluginFCGI extends Plugin {
 	
@@ -225,6 +226,9 @@ public class PluginFCGI extends Plugin {
 			}
 			session.finishReq();
 			request.work.blockTimeout = true;
+			if (request.work.s instanceof UNIOSocket) {
+				((UNIOSocket) request.work.s).setHoldTimeout(true);
+			}
 			try {
 				int i = 0;
 				while (!session.isDone()) {
@@ -246,6 +250,9 @@ public class PluginFCGI extends Plugin {
 				}
 			}finally {
 				request.work.blockTimeout = false;
+				if (request.work.s instanceof UNIOSocket) {
+					((UNIOSocket) request.work.s).setHoldTimeout(false);
+				}
 			}
 			DataInputStream in = new DataInputStream(new ByteArrayInputStream(session.getResponse()));
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
