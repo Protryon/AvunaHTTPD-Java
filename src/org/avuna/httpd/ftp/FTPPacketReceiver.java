@@ -1,22 +1,19 @@
-package org.avuna.httpd.http.networking;
+package org.avuna.httpd.ftp;
 
 import java.io.IOException;
 import org.avuna.httpd.util.unio.PacketReceiver;
 import org.avuna.httpd.util.unio.UNIOSocket;
 
-public class UNIOReceiver extends PacketReceiver {
+public class FTPPacketReceiver extends PacketReceiver {
 	
-	private Work work = null;
+	private FTPWork work = null;
 	
-	protected void setWork(Work w) {
+	protected void setWork(FTPWork w) {
 		this.work = w;
 		synchronized (this) {
 			this.notify();
 		}
 	}
-	
-	private boolean expectingBody = false;
-	private int bodyLength = -1;
 	
 	@Override
 	public void readPacket(UNIOSocket sock, byte[] buf) {
@@ -28,11 +25,7 @@ public class UNIOReceiver extends PacketReceiver {
 			}
 		}
 		try {
-			int i = work.flushPacket(buf); // >= 0 if we have a body
-			if (i >= 0) {
-				expectingBody = true;
-				bodyLength = i;
-			}
+			work.flushPacket(buf); // >= 0 if we have a body
 		}catch (IOException e) {
 			work.host.logger.logError(e);
 		}
@@ -40,23 +33,20 @@ public class UNIOReceiver extends PacketReceiver {
 	
 	@Override
 	public int nextDelimType(UNIOSocket sock) {
-		return expectingBody ? 1 : 0;
+		return 0;
 	}
 	
 	public byte[] nextDelim(UNIOSocket sock) {
-		return "\r\n\r\n".getBytes();
-	}
-	
-	public int nextLength(UNIOSocket sock) {
-		int i = bodyLength;
-		bodyLength = -1;
-		expectingBody = false;
-		return i;
+		return "\r\n".getBytes();
 	}
 	
 	@Override
 	public void closed(UNIOSocket sock) {
-		if (work != null) work.close();
+		if (work != null) try {
+			work.close();
+		}catch (IOException e) {
+			work.host.logger.logError(e);
+		}
 	}
 	
 }

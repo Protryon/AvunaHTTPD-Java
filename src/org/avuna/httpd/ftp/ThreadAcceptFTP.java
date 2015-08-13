@@ -11,6 +11,7 @@ import javax.net.ssl.SSLServerSocket;
 import javax.net.ssl.SSLSocket;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostFTP;
+import org.avuna.httpd.util.unio.UNIOSocket;
 
 /** Handles a single connection. */
 public class ThreadAcceptFTP extends Thread {
@@ -32,7 +33,7 @@ public class ThreadAcceptFTP extends Thread {
 			try {
 				Socket s = server.accept();
 				s.setTcpNoDelay(true);
-				if (cl >= 0 && host.getQueueSizeSMTP() >= cl) {
+				if (cl >= 0 && host.workSize() >= cl) {
 					s.close();
 					continue;
 				}
@@ -57,6 +58,9 @@ public class ThreadAcceptFTP extends Thread {
 				// continue;
 				// }
 				// }
+				if (s instanceof UNIOSocket) {
+					((UNIOSocket) s).setTimeout(30000L);
+				}
 				DataOutputStream out = new DataOutputStream(s.getOutputStream());
 				out.flush();
 				DataInputStream in = new DataInputStream(s.getInputStream());

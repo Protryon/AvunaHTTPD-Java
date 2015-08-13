@@ -7,7 +7,10 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.concurrent.ArrayBlockingQueue;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.hosts.HostFTP;
+import org.avuna.httpd.util.unio.UNIOSocket;
 
 public class FTPWork {
 	public Socket s;
@@ -26,11 +29,18 @@ public class FTPWork {
 	public int port = 0;
 	public File rnfr = null;
 	public int skip = 0;
+	public HostFTP host;
+	public boolean inUse = false;
+	public ArrayBlockingQueue<String> outQueue;
 	
-	public FTPWork(Socket s, DataInputStream in, DataOutputStream out) {
+	public FTPWork(Socket s, DataInputStream in, DataOutputStream out, HostFTP host) {
 		this.s = s;
 		this.in = in;
 		this.out = out;
+		this.host = host;
+		if (host.unio()) {
+			((FTPPacketReceiver) ((UNIOSocket) s).getCallback()).setWork(this);
+		}
 	}
 	
 	public void close() throws IOException {
@@ -38,20 +48,47 @@ public class FTPWork {
 		if (psv != null) {
 			psv.cancel();
 		}
+		host.works.remove(this);
 	}
 	
 	public void writeBMLine(int response, String data) throws IOException {
-		// Logger.log(hashCode() + ": " + response + "-" + data);
 		out.write((response + "-" + data + AvunaHTTPD.crlf).getBytes());
 	}
 	
 	public void writeMMLine(String data) throws IOException {
-		// Logger.log(hashCode() + ":  " + data);
 		out.write((" " + data + AvunaHTTPD.crlf).getBytes());
 	}
 	
 	public void writeLine(int response, String data) throws IOException {
-		// Logger.log(hashCode() + ": " + response + " " + data);
 		out.write((response + " " + data + AvunaHTTPD.crlf).getBytes());
+	}
+	
+	public void readLine(String rline) throws IOException {
+		String line = rline.trim();
+		String cmd = "";
+		if (state != 101) {
+			cmd = line.contains(" ") ? line.substring(0, line.indexOf(" ")) : line;
+			cmd = cmd.toLowerCase();
+			line = line.substring(cmd.length()).trim();
+		}
+		boolean r = false;
+		for (FTPCommand comm : host.ftphandler.commands) {
+			if (comm.comm.equals(cmd)) {
+				if (state <= comm.maxState && state >= comm.minState) {
+					comm.run(this, line);
+				}else {
+					writeLine(500, "Command not allowed at this time.");
+				}
+				r = true;
+				break;
+			}
+		}
+		if (!r) {
+			writeLine(500, "Command not recognized");
+		}
+	}
+	
+	public void flushPacket(byte[] buf) throws IOException {
+		readLine(new String(buf));
 	}
 }

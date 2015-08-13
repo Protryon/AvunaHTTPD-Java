@@ -16,7 +16,12 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 		this.host = host;
 	}
 	
-	private boolean keepRunning = true;
+	public ThreadWorkerFTP(String string) {
+		super(string);
+		this.host = null;
+	}
+	
+	protected boolean keepRunning = true;
 	
 	public void terminate() {
 		keepRunning = false;
@@ -30,7 +35,7 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 	
 	public void run() {
 		while (keepRunning) {
-			FTPWork focus = host.workQueue.poll();
+			FTPWork focus = host.getWork();
 			if (focus == null) {
 				try {
 					Thread.sleep(2L, 500000);
@@ -54,7 +59,7 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 					if (focus.sns == 0L) {
 						focus.sns = System.nanoTime() + 30000000000L;
 						readd = true;
-						if (host.workQueue.isEmpty()) {
+						if (host.workSize() == 0) {
 							try {
 								Thread.sleep(2L, 500000);
 							}catch (InterruptedException e) {
@@ -64,7 +69,7 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 						continue;
 					}else {
 						if (focus.sns >= System.nanoTime() || (focus.psv != null && focus.psv.hold)) {
-							boolean sleep = host.workQueue.isEmpty();
+							boolean sleep = host.workSize() == 0;
 							if (AvunaHTTPD.bannedIPs.contains(focus.s.getInetAddress().getHostAddress())) {
 								focus.close();
 							}else {
@@ -96,27 +101,7 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 					focus.sns = 0L;
 					readd = true;
 					// Logger.log(focus.hashCode() + ": " + line);
-					String cmd = "";
-					if (focus.state != 101) {
-						cmd = line.contains(" ") ? line.substring(0, line.indexOf(" ")) : line;
-						cmd = cmd.toLowerCase();
-						line = line.substring(cmd.length()).trim();
-					}
-					boolean r = false;
-					for (FTPCommand comm : host.ftphandler.commands) {
-						if (comm.comm.equals(cmd)) {
-							if (focus.state <= comm.maxState && focus.state >= comm.minState) {
-								comm.run(focus, line);
-							}else {
-								focus.writeLine(500, "Command not allowed at this time.");
-							}
-							r = true;
-							break;
-						}
-					}
-					if (!r) {
-						focus.writeLine(500, "Command not recognized");
-					}
+					focus.readLine(line);
 				}
 			}catch (SocketTimeoutException e) {
 				focus.tos++;
@@ -139,7 +124,15 @@ public class ThreadWorkerFTP extends Thread implements ITerminatable {
 				if (!(e instanceof IOException)) host.logger.logError(e);
 			}finally {
 				if (readd & canAdd) {
-					host.workQueue.add(focus);
+					if (!readd || !canAdd) {
+						try {
+							focus.close();
+						}catch (IOException e) {
+							host.logger.logError(e);
+						}
+					}else {
+						focus.inUse = false;
+					}
 				}
 			}
 		}

@@ -58,14 +58,14 @@ public class Buffer extends InputStream {
 			System.arraycopy(buf, offset, this.buf, this.read + this.length, length);
 			if (callback != null) {
 				int ml = 0;
-				for (int i = this.read + Math.max(0, this.length - pd.length); i < this.read + this.length + length; i++) {
+				for (int i = Math.max(0, this.read + this.length - pd.length); i < this.read + this.length + length; i++) {
 					if (pt == 0) {
 						if (this.buf[i] == pd[ml]) {
 							ml++;
 							if (ml == pd.length) {
-								byte[] packet = new byte[i - offset + this.length + 1];
+								byte[] packet = new byte[(i - offset) + this.length + 1 - this.read];
 								System.arraycopy(this.buf, this.read, packet, 0, packet.length);
-								this.read += packet.length;
+								this.read += packet.length + 1;
 								this.length -= packet.length;
 								callback.readPacket(socket, packet);
 								pt = callback.nextDelimType(socket);
@@ -112,6 +112,8 @@ public class Buffer extends InputStream {
 	protected void unsafe_prepend(byte[] buf, int offset, int length) {
 		synchronized (buf) {
 			System.arraycopy(buf, offset, this.buf, this.read - length, length);
+			this.read -= length;
+			this.length += length;
 		}
 		if (flushInterrupt != null && flushInterrupt.getState() == State.TIMED_WAITING) {
 			synchronized (flushInterrupt) {

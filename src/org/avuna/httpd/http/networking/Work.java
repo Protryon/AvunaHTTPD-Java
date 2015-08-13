@@ -96,7 +96,7 @@ public class Work {
 			sslprep = new ByteArrayOutputStream();
 		}
 		if (host.unio()) {
-			((UNIOReceiver) ((UNIOSocket) s).getCallback()).setWork(this);
+			((HTTPPacketReceiver) ((UNIOSocket) s).getCallback()).setWork(this);
 		}
 	}
 	

@@ -1,21 +1,26 @@
-/*
- * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.hosts;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.Collections;
+import java.util.List;
 import org.avuna.httpd.ftp.FTPAccountProvider;
 import org.avuna.httpd.ftp.FTPConfigAccountProvider;
 import org.avuna.httpd.ftp.FTPHandler;
+import org.avuna.httpd.ftp.FTPPacketReceiver;
 import org.avuna.httpd.ftp.FTPWork;
 import org.avuna.httpd.ftp.ThreadAcceptFTP;
 import org.avuna.httpd.ftp.ThreadWorkerFTP;
+import org.avuna.httpd.ftp.ThreadWorkerUNIO;
 import org.avuna.httpd.util.ConfigNode;
+import org.avuna.httpd.util.unio.PacketReceiver;
+import org.avuna.httpd.util.unio.UNIOSocket;
 
 public class HostFTP extends Host {
 	
@@ -32,19 +37,23 @@ public class HostFTP extends Host {
 		this.provider = provider;
 	}
 	
-	public void clearWork() {
-		workQueue.clear();
-	}
-	
-	public ArrayBlockingQueue<FTPWork> workQueue;
+	public List<FTPWork> works = Collections.synchronizedList(new ArrayList<FTPWork>());
 	public final ArrayList<ThreadWorkerFTP> workers = new ArrayList<ThreadWorkerFTP>();
 	
-	public void addWork(Socket s, DataInputStream in, DataOutputStream out) {
-		workQueue.add(new FTPWork(s, in, out));
+	public int workSize() {
+		return works.size();
 	}
 	
-	public int getQueueSizeSMTP() {
-		return workQueue.size();
+	private volatile int ci = 0;
+	
+	public void addWork(Socket s, DataInputStream in, DataOutputStream out) {
+		if (unio()) {
+			UNIOSocket us = (UNIOSocket) s;
+			((ThreadWorkerUNIO) conns.get(ci)).poller.addSocket(us);
+			ci++;
+			if (ci == conns.size()) ci = 0;
+		}
+		works.add(new FTPWork(s, in, out, this));
 	}
 	
 	public void setupFolders() {}
@@ -67,13 +76,53 @@ public class HostFTP extends Host {
 		mc = Integer.parseInt(map.getNode("maxConnections").getValue());
 	}
 	
+	public ArrayList<ThreadWorkerUNIO> conns = new ArrayList<ThreadWorkerUNIO>();
+	
+	public FTPWork getWork() {
+		if (unio()) return null;
+		synchronized (works) {
+			for (int i = 0; i < works.size(); i++) {
+				FTPWork work = works.get(i);
+				if (work.inUse) continue;
+				try {
+					if (work.s.isClosed()) {
+						work.close();
+						i--;
+						continue;
+					}else {
+						if (work.in.available() > 0) {
+							work.inUse = true;
+							return work;
+						}
+					}
+				}catch (IOException e) {
+					work.inUse = true;
+					return work;
+				}
+			}
+		}
+		return null;
+	}
+	
+	public boolean enableUNIO() {
+		return true;
+	}
+	
+	public PacketReceiver makeReceiver() {
+		return new FTPPacketReceiver();
+	}
+	
 	@Override
 	public void setup(ServerSocket s) {
-		workQueue = new ArrayBlockingQueue<FTPWork>(mc == -1 ? 1000000 : mc);
 		for (int i = 0; i < tac; i++) {
 			new ThreadAcceptFTP(this, s, mc).start();
 		}
-		for (int i = 0; i < twc; i++) {
+		if (unio()) for (int i = 0; i < twc; i++) {
+			ThreadWorkerUNIO twf = new ThreadWorkerUNIO(this);
+			addTerm(twf);
+			twf.start();
+		}
+		else for (int i = 0; i < twc; i++) {
 			ThreadWorkerFTP twf = new ThreadWorkerFTP(this);
 			addTerm(twf);
 			twf.start();

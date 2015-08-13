@@ -23,13 +23,13 @@ import org.avuna.httpd.event.base.EventPostInit;
 import org.avuna.httpd.event.base.EventPreExit;
 import org.avuna.httpd.event.base.EventReload;
 import org.avuna.httpd.event.base.EventSetupFolders;
+import org.avuna.httpd.http.networking.HTTPPacketReceiver;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.networking.ThreadAccept;
 import org.avuna.httpd.http.networking.ThreadConnection;
 import org.avuna.httpd.http.networking.ThreadConnectionUNIO;
 import org.avuna.httpd.http.networking.ThreadWorker;
-import org.avuna.httpd.http.networking.UNIOReceiver;
 import org.avuna.httpd.http.networking.Work;
 import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginClassLoader;
@@ -165,7 +165,7 @@ public class HostHTTP extends Host {
 	}
 	
 	public Work getWork() {
-		if (unio) return null;
+		if (unio()) return null;
 		synchronized (works) {
 			for (int i = 0; i < works.size(); i++) {
 				Work work = works.get(i);
@@ -238,7 +238,7 @@ public class HostHTTP extends Host {
 	public final ArrayList<Thread> subworkers = new ArrayList<Thread>();
 	
 	public ArrayList<ThreadConnection> conns = new ArrayList<ThreadConnection>();
-	private int ci = 0;
+	private volatile int ci = 0;
 	public ArrayList<ThreadWorker> workers = new ArrayList<ThreadWorker>();
 	public static HashMap<String, Integer> connIPs = new HashMap<String, Integer>();
 	
@@ -445,7 +445,7 @@ public class HostHTTP extends Host {
 	}
 	
 	public PacketReceiver makeReceiver() {
-		return new UNIOReceiver();
+		return new HTTPPacketReceiver();
 	}
 	
 	public void setup(ServerSocket s) {
