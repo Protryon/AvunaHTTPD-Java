@@ -44,7 +44,7 @@ public class ThreadWorkerFTPUNIO extends ThreadWorkerFTP implements ITerminatabl
 				if (flusher) {
 					synchronized (this) {
 						try {
-							this.wait(1000);
+							this.wait(100);
 						}catch (InterruptedException e) {
 							
 						}

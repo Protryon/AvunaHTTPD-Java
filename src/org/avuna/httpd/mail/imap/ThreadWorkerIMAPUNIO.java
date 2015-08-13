@@ -44,7 +44,7 @@ public class ThreadWorkerIMAPUNIO extends ThreadWorkerIMAP implements ITerminata
 				if (flusher) {
 					synchronized (this) {
 						try {
-							this.wait(1000);
+							this.wait(100);
 						}catch (InterruptedException e) {
 							
 						}

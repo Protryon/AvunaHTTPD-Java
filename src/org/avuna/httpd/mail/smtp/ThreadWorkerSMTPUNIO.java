@@ -44,7 +44,7 @@ public class ThreadWorkerSMTPUNIO extends ThreadWorkerSMTP implements ITerminata
 				if (flusher) {
 					synchronized (this) {
 						try {
-							this.wait(1000);
+							this.wait(100);
 						}catch (InterruptedException e) {
 							
 						}

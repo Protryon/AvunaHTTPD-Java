@@ -63,7 +63,7 @@ public class Buffer extends InputStream {
 						if (this.buf[i] == pd[ml]) {
 							ml++;
 							if (ml == pd.length) {
-								byte[] packet = new byte[(i - offset) + this.length + 1 - this.read];
+								byte[] packet = new byte[i + 1 - this.read];
 								System.arraycopy(this.buf, this.read, packet, 0, packet.length);
 								this.read += packet.length + 1;
 								this.length -= packet.length;
