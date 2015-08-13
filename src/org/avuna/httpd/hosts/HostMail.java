@@ -148,9 +148,15 @@ public class HostMail extends Host {
 		if (!map.containsNode("ssl")) map.insertNode("ssl", null, "configure to enable imaps/smtps/starttls");
 		ConfigNode ssl = map.getNode("ssl");
 		if (!ssl.containsNode("enabled")) ssl.insertNode("enabled", "false");
-		if (!ssl.containsNode("keyFile")) ssl.insertNode("keyFile", AvunaHTTPD.fileManager.getBaseFile("ssl/keyFile").toString());
-		if (!ssl.containsNode("keystorePassword")) ssl.insertNode("keystorePassword", "password");
-		if (!ssl.containsNode("keyPassword")) ssl.insertNode("keyPassword", "password");
+		if (CLib.failed || CLib.hasGNUTLS() == 0) {
+			if (!ssl.containsNode("keyFile")) ssl.insertNode("keyFile", AvunaHTTPD.fileManager.getBaseFile("ssl/keyFile").toString());
+			if (!ssl.containsNode("keystorePassword")) ssl.insertNode("keystorePassword", "password");
+			if (!ssl.containsNode("keyPassword")) ssl.insertNode("keyPassword", "password");
+		}else {
+			if (!ssl.containsNode("cert")) ssl.insertNode("cert", AvunaHTTPD.fileManager.getBaseFile("ssl/ssl.cert").getAbsolutePath());
+			if (!ssl.containsNode("privateKey")) ssl.insertNode("privateKey", AvunaHTTPD.fileManager.getBaseFile("ssl/ssl.pem").getAbsolutePath());
+			if (!ssl.containsNode("ca")) ssl.insertNode("ca", AvunaHTTPD.fileManager.getBaseFile("ssl/ca.cert").getAbsolutePath());
+		}
 		if (!map.containsNode("domain")) map.insertNode("domain", "example.com,example.org", "domains to accept mail from");
 		if (!map.containsNode("folder")) map.insertNode("folder", AvunaHTTPD.fileManager.getBaseFile("mail").toString(), "mail storage folder");
 		if (!map.containsNode("acceptThreadCount")) map.insertNode("acceptThreadCount", "2", "accept thread count");
@@ -198,8 +204,10 @@ public class HostMail extends Host {
 					sslContext = makeSSLContext(new File(ssl.getNode("keyFile").getValue()), ssl.getNode("keyPassword").getValue(), ssl.getNode("keystorePassword").getValue());
 				}
 			}
-			if (ssl.getNode("enabled").getValue().equals("true")) {
-				sslContext = makeSSLContext(new File(ssl.getNode("keyFile").getValue()), ssl.getNode("keyPassword").getValue(), ssl.getNode("keystorePassword").getValue());
+			if (this.ssl) {
+				if (nssl) {
+					sslContext = makeSSLContext(new File(ssl.getNode("keyFile").getValue()), ssl.getNode("keyPassword").getValue(), ssl.getNode("keystorePassword").getValue());
+				}
 				smtps = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-tls-port").getValue()));
 				imaps = makeServer(ip, Integer.parseInt(cfg.getNode("imap-tls-port").getValue()));
 			}
