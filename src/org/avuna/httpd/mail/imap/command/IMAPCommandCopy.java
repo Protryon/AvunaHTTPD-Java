@@ -19,12 +19,12 @@ public class IMAPCommandCopy extends IMAPCommand {
 	@Override
 	public void run(IMAPWork focus, String letters, String[] args) throws IOException {
 		if (args.length != 2) {
-			focus.writeLine(focus, letters, "BAD Invalid Arguments.");
+			focus.writeLine(letters, "BAD Invalid Arguments.");
 			return;
 		}
 		Mailbox tct = focus.authUser.getMailbox(args[1]);
 		if (tct == null) {
-			focus.writeLine(focus, letters, "NO [TRYCREATE] Mailbox doesn't exist!");
+			focus.writeLine(letters, "NO [TRYCREATE] Mailbox doesn't exist!");
 			return;
 		}
 		ArrayList<Email> tc = focus.selectedMailbox.getByIdentifier(args[0]);
@@ -34,7 +34,7 @@ public class IMAPCommandCopy extends IMAPCommand {
 			System.arraycopy(tc.toArray(new Email[0]), 0, ne, tct.emails.length, tc.size());
 			tct.emails = ne;
 		}
-		focus.writeLine(focus, letters, "OK Copied.");
+		focus.writeLine(letters, "OK Copied.");
 	}
 	
 }

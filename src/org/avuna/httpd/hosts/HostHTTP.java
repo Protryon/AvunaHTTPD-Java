@@ -37,6 +37,7 @@ import org.avuna.httpd.http.plugins.base.BaseLoader;
 import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.unio.PacketReceiver;
+import org.avuna.httpd.util.unio.UNIOServerSocket;
 import org.avuna.httpd.util.unio.UNIOSocket;
 
 public class HostHTTP extends Host {
@@ -444,7 +445,7 @@ public class HostHTTP extends Host {
 		return true;
 	}
 	
-	public PacketReceiver makeReceiver() {
+	public PacketReceiver makeReceiver(UNIOServerSocket server) {
 		return new HTTPPacketReceiver();
 	}
 	

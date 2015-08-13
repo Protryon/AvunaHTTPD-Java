@@ -10,13 +10,18 @@ import org.avuna.httpd.hosts.ITerminatable;
 import org.avuna.httpd.util.Stream;
 
 public class ThreadWorkerSMTP extends Thread implements ITerminatable {
-	private final HostMail host;
+	public final HostMail host;
 	
 	public ThreadWorkerSMTP(HostMail host) {
 		this.host = host;
 	}
 	
-	private boolean keepRunning = true;
+	protected ThreadWorkerSMTP(HostMail host, String string) {
+		super(string);
+		this.host = host;
+	}
+	
+	protected boolean keepRunning = true;
 	
 	public void terminate() {
 		keepRunning = false;
@@ -34,7 +39,7 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 	
 	public void run() {
 		while (keepRunning) {
-			SMTPWork focus = host.workQueueSMTP.poll();
+			SMTPWork focus = host.getSMTPWork();
 			if (focus == null) {
 				try {
 					Thread.sleep(2L, 500000);
@@ -67,7 +72,7 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 					if (focus.sns == 0L) {
 						focus.sns = System.nanoTime() + 10000000000L;
 						readd = true;
-						if (host.workQueueSMTP.isEmpty()) {
+						if (host.SMTPworks.size() == 0) {
 							try {
 								Thread.sleep(2L, 500000);
 							}catch (InterruptedException e) {
@@ -77,7 +82,7 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 						continue;
 					}else {
 						if (focus.sns >= System.nanoTime()) {
-							boolean sleep = host.workQueueSMTP.isEmpty();
+							boolean sleep = host.SMTPworks.size() == 0;
 							if (AvunaHTTPD.bannedIPs.contains(focus.s.getInetAddress().getHostAddress())) {
 								focus.s.close();
 							}else {
@@ -102,24 +107,7 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 					focus.tos = 0;
 					focus.sns = 0L;
 					readd = true;
-					host.logger.log(focus.hashCode() + ": " + line);
-					String cmd = "";
-					if (focus.state != 101) {
-						cmd = line.contains(" ") ? line.substring(0, line.indexOf(" ")) : line;
-						cmd = cmd.toLowerCase();
-						line = line.substring(cmd.length()).trim();
-					}
-					boolean r = false;
-					for (SMTPCommand comm : host.smtphandler.commands) {
-						if ((focus.state == 101 || comm.comm.equals(cmd)) && focus.state <= comm.maxState && focus.state >= comm.minState) {
-							comm.run(focus, line);
-							r = true;
-							break;
-						}
-					}
-					if (!r) {
-						focus.writeLine(500, "Command not recognized");
-					}
+					focus.readLine(line);
 				}
 			}catch (SocketTimeoutException e) {
 				focus.tos++;
@@ -137,7 +125,15 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 				if (!(e instanceof IOException)) host.logger.logError(e);
 			}finally {
 				if (readd & canAdd) {
-					host.workQueueSMTP.add(focus);
+					if (!readd || !canAdd) {
+						try {
+							focus.close();
+						}catch (IOException e) {
+							host.logger.logError(e);
+						}
+					}else {
+						focus.inUse = false;
+					}
 				}
 			}
 		}

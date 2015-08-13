@@ -32,8 +32,8 @@ public class IMAPCommandLsub extends IMAPCommand {
 				mn = mn.substring(0, mn.length() - 1);
 			}
 			if (mn.equals("")) {
-				focus.writeLine(focus, "*", "LSUB (\\Noselect) \"/\" \"/\"");
-				focus.writeLine(focus, letters, "OK Mailbox lsub.");
+				focus.writeLine("*", "LSUB (\\Noselect) \"/\" \"/\"");
+				focus.writeLine(letters, "OK Mailbox lsub.");
 			}else if (mn.equals("%") || mn.equals("*")) {
 				for (Mailbox m : focus.authUser.mailboxes) {
 					if (!m.subscribed) {
@@ -44,25 +44,25 @@ public class IMAPCommandLsub extends IMAPCommand {
 						if (m.name.equals("Trash")) ef = "\\Trash";
 						else if (m.name.equals("Drafts")) ef = "\\Drafts";
 						else if (m.name.equals("Sent")) ef = "\\Sent";
-						focus.writeLine(focus, "*", "LSUB (\\HasNoChildren" + (ef == null ? "" : " " + ef) + ") \"/\" \"" + m.name + "\"");
+						focus.writeLine("*", "LSUB (\\HasNoChildren" + (ef == null ? "" : " " + ef) + ") \"/\" \"" + m.name + "\"");
 					}
 				}
-				focus.writeLine(focus, letters, "OK Mailbox lsub.");
+				focus.writeLine(letters, "OK Mailbox lsub.");
 			}else {
 				Mailbox m = mn.length() == 0 && focus.selectedMailbox != null ? focus.selectedMailbox : focus.authUser.getMailbox(mn);
 				if (m == null) {
-					focus.writeLine(focus, letters, "NO Invalid Mailbox.");
+					focus.writeLine(letters, "NO Invalid Mailbox.");
 				}else {
 					String ef = null;
 					if (m.name.equals("Trash")) ef = "\\Trash";
 					else if (m.name.equals("Drafts")) ef = "\\Drafts";
 					else if (m.name.equals("Sent")) ef = "\\Sent";
-					focus.writeLine(focus, "*", "LSUB (\\HasNoChildren" + (ef == null ? "" : " " + ef) + ") \"/\" \"" + m.name + "\"");
-					focus.writeLine(focus, letters, "OK Mailbox lsub.");
+					focus.writeLine("*", "LSUB (\\HasNoChildren" + (ef == null ? "" : " " + ef) + ") \"/\" \"" + m.name + "\"");
+					focus.writeLine(letters, "OK Mailbox lsub.");
 				}
 			}
 		}else {
-			focus.writeLine(focus, letters, "BAD No mailbox.");
+			focus.writeLine(letters, "BAD No mailbox.");
 		}
 	}
 	

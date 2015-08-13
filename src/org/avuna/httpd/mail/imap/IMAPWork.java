@@ -11,6 +11,8 @@ import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.mail.mailbox.EmailAccount;
 import org.avuna.httpd.mail.mailbox.Mailbox;
+import org.avuna.httpd.mail.util.StringFormatter;
+import org.avuna.httpd.util.unio.UNIOSocket;
 
 public class IMAPWork {
 	public Socket s;
@@ -26,6 +28,47 @@ public class IMAPWork {
 	public int tos = 0;
 	public ByteArrayOutputStream sslprep = null;
 	public HostMail host;
+	public boolean inUse = false;
+	
+	public void readLine(String rline) throws IOException {
+		String line = rline.trim();
+		host.logger.log(hashCode() + ": " + line);
+		String cmd;
+		String letters;
+		String[] args;
+		if (!(state == 1)) {
+			if (!line.contains(" ") || line.length() == 0) return;
+			letters = line.substring(0, line.indexOf(" "));
+			line = line.substring(letters.length() + 1);
+			cmd = line.substring(0, line.contains(" ") ? line.indexOf(" ") : line.length()).toLowerCase();
+			line = line.substring(cmd.length()).trim();
+			args = StringFormatter.congealBySurroundings(line.split(" "), "(", ")");
+		}else {
+			letters = line;
+			cmd = "";
+			args = new String[0];
+		}
+		boolean r = false;
+		for (IMAPCommand comm : host.imaphandler.commands) {
+			if ((state == 1 ? comm.comm.equals("") : comm.comm.equals(cmd)) && comm.minState <= state && comm.maxState >= state) {
+				comm.run(this, letters, args);
+				r = true;
+				break;
+			}
+		}
+		if (!r) {
+			writeLine(letters, "BAD Command not recognized");
+		}
+	}
+	
+	public void close() throws IOException {
+		s.close();
+		host.IMAPworks.remove(this);
+	}
+	
+	public void flushPacket(byte[] buf) throws IOException {
+		readLine(new String(buf));
+	}
 	
 	public IMAPWork(HostMail host, Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
 		this.host = host;
@@ -36,10 +79,13 @@ public class IMAPWork {
 		if (ssl) {
 			sslprep = new ByteArrayOutputStream();
 		}
+		if (host.unio()) {
+			((IMAPPacketReceiver) ((UNIOSocket) s).getCallback()).setWork(this);
+		}
 	}
 	
-	public void writeLine(IMAPWork w, String id, String data) throws IOException {
-		host.logger.log(w.hashCode() + ": " + id + " " + data);
-		w.out.write(((id.length() > 0 ? (id + " ") : "") + data + AvunaHTTPD.crlf).getBytes());
+	public void writeLine(String id, String data) throws IOException {
+		host.logger.log(hashCode() + ": " + id + " " + data);
+		out.write(((id.length() > 0 ? (id + " ") : "") + data + AvunaHTTPD.crlf).getBytes());
 	}
 }

@@ -18,14 +18,14 @@ public class IMAPCommandClose extends IMAPCommand {
 			for (int i = 0; i < focus.selectedMailbox.emails.length; i++) {
 				if (focus.selectedMailbox.emails[i] != null && focus.selectedMailbox.emails[i].flags.contains("\\Deleted")) {
 					focus.selectedMailbox.emails[i] = null;
-					focus.writeLine(focus, "*", (i + 1) + " EXPUNGE");
+					focus.writeLine("*", (i + 1) + " EXPUNGE");
 					i--;
 				}
 			}
 		}
 		focus.state = 2;
 		focus.selectedMailbox = null;
-		focus.writeLine(focus, letters, "OK close.");
+		focus.writeLine(letters, "OK close.");
 	}
 	
 }

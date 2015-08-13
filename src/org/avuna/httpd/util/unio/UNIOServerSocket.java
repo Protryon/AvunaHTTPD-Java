@@ -69,7 +69,7 @@ public class UNIOServerSocket extends ServerSocket {
 			}
 		}
 		nsfd = nsfd.substring(nsfd.indexOf("/") + 1);
-		UNIOSocket us = new UNIOSocket(nsfd, port, i, factory == null ? null : factory.newCallback(), cert > 0L ? session : 0L);
+		UNIOSocket us = new UNIOSocket(nsfd, port, i, factory == null ? null : factory.newCallback(this), cert > 0L ? session : 0L);
 		return us;
 	}
 	

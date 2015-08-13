@@ -299,11 +299,11 @@ public class IMAPCommandFetch extends IMAPCommand {
 				}
 				if (!notrim) trim(ret);
 				ret.append(")");
-				focus.writeLine(focus, "*", ret.toString());
+				focus.writeLine("*", ret.toString());
 			}
-			focus.writeLine(focus, letters, "OK");
+			focus.writeLine(letters, "OK");
 		}else {
-			focus.writeLine(focus, letters, "BAD Missing Arguments.");
+			focus.writeLine(letters, "BAD Missing Arguments.");
 		}
 	}
 }

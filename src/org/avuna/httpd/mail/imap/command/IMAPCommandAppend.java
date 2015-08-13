@@ -24,10 +24,10 @@ public class IMAPCommandAppend extends IMAPCommand {
 			String mailbox = args[0];
 			Mailbox mb = focus.authUser.getMailbox(mailbox);
 			if (mb == null) {
-				focus.writeLine(focus, letters, "NO Mailbox doesn't exist.");
+				focus.writeLine(letters, "NO Mailbox doesn't exist.");
 				return;
 			}
-			focus.writeLine(focus, "+", "Ready for literal data");
+			focus.writeLine("+", "Ready for literal data");
 			String flags = "";
 			if (args.length >= 3) {
 				flags = args[1].substring(1, args[1].length() - 1);
@@ -53,9 +53,9 @@ public class IMAPCommandAppend extends IMAPCommand {
 				ne[ne.length - 1] = eml;
 				mb.emails = ne;
 			}
-			focus.writeLine(focus, letters, "OK");
+			focus.writeLine(letters, "OK");
 		}else {
-			focus.writeLine(focus, letters, "BAD No mailbox.");
+			focus.writeLine(letters, "BAD No mailbox.");
 		}
 	}
 	

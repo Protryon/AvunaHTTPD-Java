@@ -10,15 +10,15 @@ import org.avuna.httpd.hosts.ITerminatable;
 import org.avuna.httpd.util.Stream;
 
 public class ThreadWorkerFTP extends Thread implements ITerminatable {
-	private final HostFTP host;
+	public final HostFTP host;
 	
 	public ThreadWorkerFTP(HostFTP host) {
 		this.host = host;
 	}
 	
-	public ThreadWorkerFTP(String string) {
+	protected ThreadWorkerFTP(String string, HostFTP host) {
 		super(string);
-		this.host = null;
+		this.host = host;
 	}
 	
 	protected boolean keepRunning = true;

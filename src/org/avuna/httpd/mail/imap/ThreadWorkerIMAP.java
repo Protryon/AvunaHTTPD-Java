@@ -7,17 +7,23 @@ import java.net.SocketTimeoutException;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.hosts.ITerminatable;
-import org.avuna.httpd.mail.util.StringFormatter;
 import org.avuna.httpd.util.Stream;
 
 public class ThreadWorkerIMAP extends Thread implements ITerminatable {
 	public final HostMail host;
+	private static int nid = 1;
 	
 	public ThreadWorkerIMAP(HostMail host) {
+		super("Avuna HTTPD IMAP Worker Thread #" + nid++);
 		this.host = host;
 	}
 	
-	private boolean keepRunning = true;
+	protected ThreadWorkerIMAP(HostMail host, String string) {
+		super(string);
+		this.host = host;
+	}
+	
+	protected boolean keepRunning = true;
 	
 	public void terminate() {
 		keepRunning = false;
@@ -35,7 +41,7 @@ public class ThreadWorkerIMAP extends Thread implements ITerminatable {
 	
 	public void run() {
 		while (keepRunning) {
-			IMAPWork focus = host.workQueueIMAP.poll();
+			IMAPWork focus = host.getIMAPWork();
 			if (focus == null) {
 				try {
 					Thread.sleep(2L, 500000);
@@ -70,7 +76,7 @@ public class ThreadWorkerIMAP extends Thread implements ITerminatable {
 					if (focus.sns == 0L) {
 						focus.sns = System.nanoTime() + 10000000000L;
 						readd = true;
-						if (host.workQueueIMAP.isEmpty()) {
+						if (host.IMAPworks.isEmpty()) {
 							try {
 								Thread.sleep(2L, 500000);
 							}catch (InterruptedException e) {
@@ -80,7 +86,7 @@ public class ThreadWorkerIMAP extends Thread implements ITerminatable {
 						continue;
 					}else {
 						if (focus.sns >= System.nanoTime()) {
-							boolean sleep = host.workQueueIMAP.isEmpty();
+							boolean sleep = host.IMAPworks.isEmpty();
 							if (AvunaHTTPD.bannedIPs.contains(focus.s.getInetAddress().getHostAddress())) {
 								focus.s.close();
 							}else {
@@ -105,33 +111,7 @@ public class ThreadWorkerIMAP extends Thread implements ITerminatable {
 					focus.tos = 0;
 					focus.sns = 0L;
 					readd = true;
-					host.logger.log(focus.hashCode() + ": " + line);
-					String cmd;
-					String letters;
-					String[] args;
-					if (!(focus.state == 1)) {
-						if (!line.contains(" ") || line.length() == 0) continue;
-						letters = line.substring(0, line.indexOf(" "));
-						line = line.substring(letters.length() + 1);
-						cmd = line.substring(0, line.contains(" ") ? line.indexOf(" ") : line.length()).toLowerCase();
-						line = line.substring(cmd.length()).trim();
-						args = StringFormatter.congealBySurroundings(line.split(" "), "(", ")");
-					}else {
-						letters = line;
-						cmd = "";
-						args = new String[0];
-					}
-					boolean r = false;
-					for (IMAPCommand comm : host.imaphandler.commands) {
-						if ((focus.state == 1 ? comm.comm.equals("") : comm.comm.equals(cmd)) && comm.minState <= focus.state && comm.maxState >= focus.state) {
-							comm.run(focus, letters, args);
-							r = true;
-							break;
-						}
-					}
-					if (!r) {
-						focus.writeLine(focus, letters, "BAD Command not recognized");
-					}
+					focus.readLine(line);
 				}
 			}catch (SocketTimeoutException e) {
 				focus.tos++;
@@ -149,7 +129,15 @@ public class ThreadWorkerIMAP extends Thread implements ITerminatable {
 				if (!(e instanceof IOException)) host.logger.logError(e);
 			}finally {
 				if (readd & canAdd) {
-					host.workQueueIMAP.add(focus);
+					if (!readd || !canAdd) {
+						try {
+							focus.close();
+						}catch (IOException e) {
+							host.logger.logError(e);
+						}
+					}else {
+						focus.inUse = false;
+					}
 				}
 			}
 		}

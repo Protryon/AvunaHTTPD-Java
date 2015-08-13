@@ -17,9 +17,10 @@ import org.avuna.httpd.ftp.FTPPacketReceiver;
 import org.avuna.httpd.ftp.FTPWork;
 import org.avuna.httpd.ftp.ThreadAcceptFTP;
 import org.avuna.httpd.ftp.ThreadWorkerFTP;
-import org.avuna.httpd.ftp.ThreadWorkerUNIO;
+import org.avuna.httpd.ftp.ThreadWorkerFTPUNIO;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.unio.PacketReceiver;
+import org.avuna.httpd.util.unio.UNIOServerSocket;
 import org.avuna.httpd.util.unio.UNIOSocket;
 
 public class HostFTP extends Host {
@@ -49,7 +50,7 @@ public class HostFTP extends Host {
 	public void addWork(Socket s, DataInputStream in, DataOutputStream out) {
 		if (unio()) {
 			UNIOSocket us = (UNIOSocket) s;
-			((ThreadWorkerUNIO) conns.get(ci)).poller.addSocket(us);
+			((ThreadWorkerFTPUNIO) conns.get(ci)).poller.addSocket(us);
 			ci++;
 			if (ci == conns.size()) ci = 0;
 		}
@@ -76,7 +77,7 @@ public class HostFTP extends Host {
 		mc = Integer.parseInt(map.getNode("maxConnections").getValue());
 	}
 	
-	public ArrayList<ThreadWorkerUNIO> conns = new ArrayList<ThreadWorkerUNIO>();
+	public ArrayList<ThreadWorkerFTPUNIO> conns = new ArrayList<ThreadWorkerFTPUNIO>();
 	
 	public FTPWork getWork() {
 		if (unio()) return null;
@@ -108,7 +109,7 @@ public class HostFTP extends Host {
 		return true;
 	}
 	
-	public PacketReceiver makeReceiver() {
+	public PacketReceiver makeReceiver(UNIOServerSocket server) {
 		return new FTPPacketReceiver();
 	}
 	
@@ -118,7 +119,7 @@ public class HostFTP extends Host {
 			new ThreadAcceptFTP(this, s, mc).start();
 		}
 		if (unio()) for (int i = 0; i < twc; i++) {
-			ThreadWorkerUNIO twf = new ThreadWorkerUNIO(this);
+			ThreadWorkerFTPUNIO twf = new ThreadWorkerFTPUNIO(this);
 			addTerm(twf);
 			twf.start();
 		}

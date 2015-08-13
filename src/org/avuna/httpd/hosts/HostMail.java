@@ -9,21 +9,29 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.Collections;
+import java.util.List;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.mail.imap.IMAPHandler;
+import org.avuna.httpd.mail.imap.IMAPPacketReceiver;
 import org.avuna.httpd.mail.imap.IMAPWork;
 import org.avuna.httpd.mail.imap.ThreadAcceptIMAP;
 import org.avuna.httpd.mail.imap.ThreadWorkerIMAP;
+import org.avuna.httpd.mail.imap.ThreadWorkerIMAPUNIO;
 import org.avuna.httpd.mail.mailbox.EmailAccount;
 import org.avuna.httpd.mail.smtp.SMTPHandler;
+import org.avuna.httpd.mail.smtp.SMTPPacketReceiver;
 import org.avuna.httpd.mail.smtp.SMTPWork;
 import org.avuna.httpd.mail.smtp.ThreadAcceptSMTP;
 import org.avuna.httpd.mail.smtp.ThreadWorkerSMTP;
+import org.avuna.httpd.mail.smtp.ThreadWorkerSMTPUNIO;
 import org.avuna.httpd.mail.sync.HardDriveSync;
 import org.avuna.httpd.mail.sync.Sync;
 import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.ConfigNode;
+import org.avuna.httpd.util.unio.PacketReceiver;
+import org.avuna.httpd.util.unio.UNIOServerSocket;
+import org.avuna.httpd.util.unio.UNIOSocket;
 
 public class HostMail extends Host {
 	
@@ -37,34 +45,86 @@ public class HostMail extends Host {
 	
 	public Sync sync;
 	
-	public void clearWorkSMTP() {
-		workQueueSMTP.clear();
-	}
-	
-	public ArrayBlockingQueue<SMTPWork> workQueueSMTP;
 	public final ArrayList<ThreadWorkerSMTP> workersSMTP = new ArrayList<ThreadWorkerSMTP>();
 	
 	public void addWorkSMTP(Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
-		workQueueSMTP.add(new SMTPWork(this, s, in, out, ssl));
+		if (unio()) {
+			UNIOSocket us = (UNIOSocket) s;
+			((ThreadWorkerSMTPUNIO) SMTPconns.get(ci)).poller.addSocket(us);
+			ci++;
+			if (ci == IMAPconns.size()) ci = 0;
+		}
+		SMTPworks.add(new SMTPWork(this, s, in, out, ssl));
 	}
 	
-	public int getQueueSizeSMTP() {
-		return workQueueSMTP.size();
-	}
-	
-	public void clearWorkIMAP() {
-		workQueueIMAP.clear();
-	}
-	
-	public ArrayBlockingQueue<IMAPWork> workQueueIMAP;
+	public List<IMAPWork> IMAPworks = Collections.synchronizedList(new ArrayList<IMAPWork>());
+	public ArrayList<ThreadWorkerIMAPUNIO> IMAPconns = new ArrayList<ThreadWorkerIMAPUNIO>();
+	private volatile int ci = 0;
 	public final ArrayList<ThreadWorkerIMAP> workersIMAP = new ArrayList<ThreadWorkerIMAP>();
 	
 	public void addWorkIMAP(Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
-		workQueueIMAP.add(new IMAPWork(this, s, in, out, ssl));
+		if (unio()) {
+			UNIOSocket us = (UNIOSocket) s;
+			((ThreadWorkerIMAPUNIO) IMAPconns.get(ci)).poller.addSocket(us);
+			ci++;
+			if (ci == IMAPconns.size()) ci = 0;
+		}
+		IMAPworks.add(new IMAPWork(this, s, in, out, ssl));
 	}
 	
-	public int getQueueSizeIMAP() {
-		return workQueueIMAP.size();
+	public IMAPWork getIMAPWork() {
+		if (unio()) return null;
+		synchronized (IMAPworks) {
+			for (int i = 0; i < IMAPworks.size(); i++) {
+				IMAPWork work = IMAPworks.get(i);
+				if (work.inUse) continue;
+				try {
+					if (work.s.isClosed()) {
+						work.close();
+						i--;
+						continue;
+					}else {
+						if (work.in.available() > 0) {
+							work.inUse = true;
+							return work;
+						}
+					}
+				}catch (IOException e) {
+					work.inUse = true;
+					return work;
+				}
+			}
+		}
+		return null;
+	}
+	
+	public List<SMTPWork> SMTPworks = Collections.synchronizedList(new ArrayList<SMTPWork>());
+	public ArrayList<ThreadWorkerSMTPUNIO> SMTPconns = new ArrayList<ThreadWorkerSMTPUNIO>();
+	
+	public SMTPWork getSMTPWork() {
+		if (unio()) return null;
+		synchronized (SMTPworks) {
+			for (int i = 0; i < SMTPworks.size(); i++) {
+				SMTPWork work = SMTPworks.get(i);
+				if (work.inUse) continue;
+				try {
+					if (work.s.isClosed()) {
+						work.close();
+						i--;
+						continue;
+					}else {
+						if (work.in.available() > 0) {
+							work.inUse = true;
+							return work;
+						}
+					}
+				}catch (IOException e) {
+					work.inUse = true;
+					return work;
+				}
+			}
+		}
+		return null;
 	}
 	
 	public void setupFolders() {
@@ -106,6 +166,16 @@ public class HostMail extends Host {
 		accounts.add(new EmailAccount(email, password));
 	}
 	
+	public boolean enableUNIO() {
+		return true;
+	}
+	
+	public PacketReceiver makeReceiver(UNIOServerSocket server) {
+		return (server == smtp || server == smtpmua || server == smtps) ? new SMTPPacketReceiver() : new IMAPPacketReceiver();
+	}
+	
+	ServerSocket smtp = null, smtpmua = null, imap = null, smtps = null, imaps = null;
+	
 	public void run() {
 		try {
 			ConfigNode cfg = getConfig();
@@ -114,10 +184,9 @@ public class HostMail extends Host {
 			// registerAccount("test@example.com", "test123");
 			ConfigNode ssl = cfg.getNode("ssl");
 			String ip = cfg.getNode("ip").getValue();
-			ServerSocket smtp = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-port").getValue()));
-			ServerSocket smtpmua = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-mua-port").getValue()));
-			ServerSocket imap = makeServer(ip, Integer.parseInt(cfg.getNode("imap-port").getValue()));
-			ServerSocket smtps = null, imaps = null;
+			smtp = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-port").getValue()));
+			smtpmua = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-mua-port").getValue()));
+			imap = makeServer(ip, Integer.parseInt(cfg.getNode("imap-port").getValue()));
 			this.ssl = !(ssl == null || !ssl.getNode("enabled").getValue().equals("true"));
 			nssl = !CLib.failed && CLib.hasGNUTLS() == 1;
 			if (this.ssl) {
@@ -134,9 +203,13 @@ public class HostMail extends Host {
 				smtps = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-tls-port").getValue()));
 				imaps = makeServer(ip, Integer.parseInt(cfg.getNode("imap-tls-port").getValue()));
 			}
-			workQueueSMTP = new ArrayBlockingQueue<SMTPWork>(mc < 0 ? 1000000 : mc);
-			workQueueIMAP = new ArrayBlockingQueue<IMAPWork>(mc < 0 ? 1000000 : mc);
-			for (int i = 0; i < twc; i++) {
+			if (unio()) for (int i = 0; i < twc; i++) {
+				ThreadWorkerSMTPUNIO tws = new ThreadWorkerSMTPUNIO(this);
+				addTerm(tws);
+				workersSMTP.add(tws);
+				tws.start();
+			}
+			else for (int i = 0; i < twc; i++) {
 				ThreadWorkerSMTP tws = new ThreadWorkerSMTP(this);
 				addTerm(tws);
 				workersSMTP.add(tws);
@@ -152,7 +225,13 @@ public class HostMail extends Host {
 					tas3.start();
 				}
 			}
-			for (int i = 0; i < twc; i++) {
+			if (unio()) for (int i = 0; i < twc; i++) {
+				ThreadWorkerIMAPUNIO tws = new ThreadWorkerIMAPUNIO(this);
+				addTerm(tws);
+				workersIMAP.add(tws);
+				tws.start();
+			}
+			else for (int i = 0; i < twc; i++) {
 				ThreadWorkerIMAP tws = new ThreadWorkerIMAP(this);
 				addTerm(tws);
 				workersIMAP.add(tws);

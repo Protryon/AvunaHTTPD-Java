@@ -10,6 +10,7 @@ import java.net.Socket;
 import javax.net.ssl.SSLServerSocket;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostMail;
+import org.avuna.httpd.util.unio.UNIOSocket;
 
 /** Handles a single connection. */
 public class ThreadAcceptIMAP extends Thread {
@@ -30,7 +31,7 @@ public class ThreadAcceptIMAP extends Thread {
 		while (!server.isClosed()) {
 			try {
 				Socket s = server.accept();
-				if (cl >= 0 && host.getQueueSizeSMTP() >= cl) {
+				if (cl >= 0 && host.IMAPworks.size() >= cl) {
 					s.close();
 					continue;
 				}
@@ -43,6 +44,9 @@ public class ThreadAcceptIMAP extends Thread {
 					continue;
 				}
 				s.setSoTimeout(1000);
+				if (s instanceof UNIOSocket) {
+					((UNIOSocket) s).setTimeout(30000L);
+				}
 				// if (PatchRegistry.getPatchForClass(PatchSecurity.class).pcfg.get("enabled").equals("true")) {
 				// int minDrop = Integer.parseInt((String)PatchRegistry.getPatchForClass(PatchSecurity.class).pcfg.get("minDrop"));
 				// int chance = 0;

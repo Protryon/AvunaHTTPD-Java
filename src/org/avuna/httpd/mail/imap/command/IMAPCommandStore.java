@@ -54,12 +54,12 @@ public class IMAPCommandStore extends IMAPCommand {
 					}
 					ret = ret.trim();
 					ret += "))";
-					focus.writeLine(focus, "*", ret);
+					focus.writeLine("*", ret);
 				}
 			}
-			focus.writeLine(focus, letters, "OK");
+			focus.writeLine(letters, "OK");
 		}else {
-			focus.writeLine(focus, letters, "BAD Missing Arguments.");
+			focus.writeLine(letters, "BAD Missing Arguments.");
 		}
 	}
 	

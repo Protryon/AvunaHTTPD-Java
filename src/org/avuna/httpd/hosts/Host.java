@@ -108,8 +108,8 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 					UNIOServerSocket server = new UNIOServerSocket(ip, port, new PacketReceiverFactory() {
 						
 						@Override
-						public PacketReceiver newCallback() {
-							return makeReceiver();
+						public PacketReceiver newCallback(UNIOServerSocket server) {
+							return makeReceiver(server);
 						}
 						
 					}, 1000, caFile, certFile, pkFile);
@@ -128,8 +128,8 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 			ServerSocket server = unio() ? new UNIOServerSocket(ip, port, new PacketReceiverFactory() {
 				
 				@Override
-				public PacketReceiver newCallback() {
-					return makeReceiver();
+				public PacketReceiver newCallback(UNIOServerSocket server) {
+					return makeReceiver(server);
 				}
 				
 			}, 1000) : new ServerSocket(port, 1000, InetAddress.getByName(ip));
@@ -274,10 +274,11 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 	}
 	
 	public boolean unio() {
-		return enableUNIO() && !CLib.failed && !getConfig().getValue("unix").equals("true");
+		ConfigNode node = getConfig();
+		return enableUNIO() && !CLib.failed && (!node.containsNode("unix") || !node.getValue("unix").equals("true"));
 	}
 	
-	public PacketReceiver makeReceiver() {
+	public PacketReceiver makeReceiver(UNIOServerSocket server) {
 		return null;
 	}
 	

@@ -8,19 +8,17 @@ import org.avuna.httpd.hosts.HostFTP;
 import org.avuna.httpd.hosts.ITerminatable;
 import org.avuna.httpd.util.unio.Poller;
 
-public class ThreadWorkerUNIO extends ThreadWorkerFTP implements ITerminatable {
+public class ThreadWorkerFTPUNIO extends ThreadWorkerFTP implements ITerminatable {
 	private static int nid = 1;
-	protected final HostFTP host;
 	public final Poller poller;
-	public final ThreadWorkerUNIO flt;
+	public final ThreadWorkerFTPUNIO flt;
 	
-	public ThreadWorkerUNIO(HostFTP host) {
-		super("Avuna HTTPD FTP UNIO Worker Thread #" + nid++);
-		this.host = host;
+	public ThreadWorkerFTPUNIO(HostFTP host) {
+		super("Avuna HTTPD FTP UNIO Worker Thread #" + nid++, host);
 		this.poller = new Poller();
 		host.conns.add(this);
 		this.flusher = false;
-		this.flt = new ThreadWorkerUNIO(host, poller);
+		this.flt = new ThreadWorkerFTPUNIO(host, poller);
 		this.poller.setFlushInterruptThread(this.flt);
 	}
 	
@@ -33,9 +31,8 @@ public class ThreadWorkerUNIO extends ThreadWorkerFTP implements ITerminatable {
 	
 	private boolean flusher;
 	
-	private ThreadWorkerUNIO(HostFTP host, Poller flusher) {
-		super("Avuna HTTPD FTP UNIO-Flush Connection Thread #" + nid++);
-		this.host = host;
+	private ThreadWorkerFTPUNIO(HostFTP host, Poller flusher) {
+		super("Avuna HTTPD FTP UNIO-Flush Connection Thread #" + nid++, host);
 		this.poller = flusher;
 		this.flusher = true;
 		this.flt = null;

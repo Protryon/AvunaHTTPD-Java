@@ -262,7 +262,7 @@ public class IMAPCommandSearch extends IMAPCommand {
 			}
 			host.logger.log(targ);
 			if (!processList(focus, targ, emails)) {
-				focus.writeLine(focus, letters, "NO Invalid search.");
+				focus.writeLine(letters, "NO Invalid search.");
 				return;
 			}
 		}
@@ -270,7 +270,7 @@ public class IMAPCommandSearch extends IMAPCommand {
 		for (Email email : emails) {
 			resp += " " + email.uid;
 		}
-		focus.writeLine(focus, "*", resp);
-		focus.writeLine(focus, letters, "OK Search completed.");
+		focus.writeLine("*", resp);
+		focus.writeLine(letters, "OK Search completed.");
 	}
 }
