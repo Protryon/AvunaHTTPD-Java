@@ -46,11 +46,20 @@ public class UNIOServerSocket extends ServerSocket {
 	public void bind() throws IOException {
 		if (bound) throw new IOException("Already bound!");
 		sockfd = CLib.socket(2, 1, 0);
-		if (sockfd < 0) throw new CException(CLib.errno(), "socket failed native create");
+		if (sockfd < 0) {
+			this.close();
+			throw new CException(CLib.errno(), "socket failed native create");
+		}
 		int bind = CLib.bindTCP(sockfd, ip, port);
-		if (bind != 0) throw new CException(CLib.errno(), "socket failed bind");
+		if (bind != 0) {
+			this.close();
+			throw new CException(CLib.errno(), "socket failed bind");
+		}
 		int listen = CLib.listen(sockfd, this.backlog);
-		if (listen != 0) throw new CException(CLib.errno(), "socket failed listen");
+		if (listen != 0) {
+			this.close();
+			throw new CException(CLib.errno(), "socket failed listen");
+		}
 		bound = true;
 	}
 	

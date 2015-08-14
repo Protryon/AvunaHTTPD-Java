@@ -67,7 +67,7 @@ public class SMTPHandler {
 			public void run(SMTPWork focus, String line) throws IOException {
 				focus.writeMLine(250, host.getConfig().getNode("domain").getValue().split(",")[0]);
 				focus.writeMLine(250, "AUTH PLAIN LOGIN");
-				if (host.sslContext != null) focus.writeMLine(250, "STARTTLS");
+				if (host.smtps != null) focus.writeMLine(250, "STARTTLS");
 				focus.writeLine(250, "AUTH=PLAIN LOGIN");
 				focus.state = 1;
 				focus.isExtended = true;
