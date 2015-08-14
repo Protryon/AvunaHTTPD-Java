@@ -16,7 +16,6 @@ import org.avuna.httpd.mail.mailbox.EmailAccount;
 import org.avuna.httpd.mail.mailbox.EmailRouter;
 import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.ConfigNode;
-import org.avuna.httpd.util.Stream;
 import org.avuna.httpd.util.unio.UNIOServerSocket;
 import org.avuna.httpd.util.unio.UNIOSocket;
 
@@ -102,28 +101,41 @@ public class SMTPHandler {
 					}
 				}else if (line.toUpperCase().startsWith("LOGIN")) {
 					focus.writeLine(334, "VXNlcm5hbWU6");
-					String u64 = Stream.readLine(focus.in).trim();
-					String username = new String(DatatypeConverter.parseBase64Binary(u64));
-					focus.writeLine(334, "UGFzc3dvcmQ6");
-					String p64 = Stream.readLine(focus.in).trim();
-					String password = new String(DatatypeConverter.parseBase64Binary(p64));
-					EmailAccount us = null;
-					for (EmailAccount e : host.accounts) {
-						if (e.email.equals(username) && e.password.equals(password)) {
-							us = e;
-							break;
-						}
-					}
-					if (us != null) {
-						focus.writeLine(235, "OK");
-						focus.authUser = us;
-						focus.state = 2;
-					}else {
-						focus.writeLine(535, "authentication failed");
-					}
+					focus.state = 102;
 				}else {
 					focus.writeLine(501, "Syntax error in parameters or arguments");
 				}
+			}
+		});
+		
+		commands.add(new SMTPCommand("", 102, 102) {
+			public void run(SMTPWork focus, String lp) throws IOException {
+				focus.lu = new String(DatatypeConverter.parseBase64Binary(lp));
+				focus.writeLine(334, "UGFzc3dvcmQ6");
+				focus.state = 103;
+			}
+		});
+		
+		commands.add(new SMTPCommand("", 103, 103) {
+			public void run(SMTPWork focus, String lp) throws IOException {
+				String username = new String(DatatypeConverter.parseBase64Binary(focus.lu));
+				String password = new String(DatatypeConverter.parseBase64Binary(lp));
+				EmailAccount us = null;
+				for (EmailAccount e : host.accounts) {
+					if (e.email.equals(username) && e.password.equals(password)) {
+						us = e;
+						break;
+					}
+				}
+				if (us != null) {
+					focus.writeLine(235, "OK");
+					focus.authUser = us;
+					focus.state = 2;
+				}else {
+					focus.writeLine(535, "authentication failed");
+					focus.state = 1;
+				}
+				
 			}
 		});
 		

@@ -56,7 +56,7 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 	}
 	
 	public void setupFolders() {
-		
+	
 	}
 	
 	private ConfigNode virtualConfig = null;
@@ -83,7 +83,7 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 	private ArrayList<ServerSocket> servers = new ArrayList<ServerSocket>();
 	
 	public void postload() throws IOException {
-		
+	
 	}
 	
 	@Override
@@ -101,6 +101,10 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 	}
 	
 	public final ServerSocket makeServer(String ip, int port) throws IOException {
+		return makeServer(ip, port, ssl);
+	}
+	
+	public final ServerSocket makeServer(String ip, int port, boolean ssl) throws IOException {
 		logger.log("Starting " + name + "/" + protocol.name + " " + (ssl ? "TLS-" : "") + "Server on " + ip + ":" + port);
 		if (ssl) {
 			try {
@@ -270,7 +274,7 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 	public abstract void setup(ServerSocket s);
 	
 	public void preExit() {
-		
+	
 	}
 	
 	public boolean unio() {

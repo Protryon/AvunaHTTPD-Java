@@ -12,7 +12,7 @@ import org.avuna.httpd.util.CLib;
 
 public class Poller {
 	public Poller() {
-		
+	
 	}
 	
 	private List<UNIOSocket> us = Collections.synchronizedList(new ArrayList<UNIOSocket>());
@@ -98,22 +98,28 @@ public class Poller {
 				UNIOSocket uss = us.get(i);
 				boolean close = false;
 				long to = uss.getTimeout();
-				if (uss.isClosed() || (to > 0L && uss.lr + to < t && !uss.getHoldTimeout())) {
-					close = true;
-				}
-				if (!close && (res[i] & 0x001) == 0x001) {// POLLIN
-					try {
-						uss.read();
-					}catch (IOException e) {
-						if (!(e instanceof SocketException)) host.logger.logError(e);
+				try {
+					if (uss.isClosed() || (to > 0L && uss.lr + to < t && !uss.getHoldTimeout())) {
 						close = true;
 					}
-				}
-				if (!close && (res[i] & 0x008) == 0x008 || (res[i] & 0x020) == 0x020 || (res[i] & 0x030) == 0x030) { // POLLERR, POLLHUP, POLLNVAL
-					close = true;
-				}
-				if (close) {
-					c[i] = true;
+					if (uss.stlsi) {
+						continue;
+					}
+					if (!close && (res[i] & 0x001) == 0x001) {// POLLIN
+						try {
+							uss.read();
+						}catch (IOException e) {
+							if (!(e instanceof SocketException)) host.logger.logError(e);
+							close = true;
+						}
+					}
+					if (!close && (res[i] & 0x008) == 0x008 || (res[i] & 0x020) == 0x020 || (res[i] & 0x030) == 0x030) { // POLLERR, POLLHUP, POLLNVAL
+						close = true;
+					}
+				}finally {
+					if (close) {
+						c[i] = true;
+					}
 				}
 			}
 			int ri = 0;

@@ -65,11 +65,9 @@ public class UNIOServerSocket extends ServerSocket {
 	
 	public UNIOSocket accept() throws IOException {
 		if (!bound) bind();
-		// Logger.log("accepting");
 		long session = 0L;
 		if (cert > 0L) session = GNUTLS.preaccept(cert);
 		String nsfd = CLib.acceptTCP(sockfd);
-		// Logger.log(nsfd);
 		int i = Integer.parseInt(nsfd.substring(0, nsfd.indexOf("/")));
 		if (i == -1) {
 			this.close();

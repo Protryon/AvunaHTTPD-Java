@@ -192,9 +192,9 @@ public class HostMail extends Host {
 			// registerAccount("test@example.com", "test123");
 			ConfigNode ssl = cfg.getNode("ssl");
 			String ip = cfg.getNode("ip").getValue();
-			smtp = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-port").getValue()));
-			smtpmua = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-mua-port").getValue()));
-			imap = makeServer(ip, Integer.parseInt(cfg.getNode("imap-port").getValue()));
+			smtp = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-port").getValue()), false);
+			smtpmua = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-mua-port").getValue()), false);
+			imap = makeServer(ip, Integer.parseInt(cfg.getNode("imap-port").getValue()), false);
 			this.ssl = !(ssl == null || !ssl.getNode("enabled").getValue().equals("true"));
 			nssl = !CLib.failed && CLib.hasGNUTLS() == 1;
 			if (this.ssl) {
@@ -210,8 +210,8 @@ public class HostMail extends Host {
 				if (!nssl) {
 					sslContext = makeSSLContext(new File(ssl.getNode("keyFile").getValue()), ssl.getNode("keyPassword").getValue(), ssl.getNode("keystorePassword").getValue());
 				}
-				smtps = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-tls-port").getValue()));
-				imaps = makeServer(ip, Integer.parseInt(cfg.getNode("imap-tls-port").getValue()));
+				smtps = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-tls-port").getValue()), true);
+				imaps = makeServer(ip, Integer.parseInt(cfg.getNode("imap-tls-port").getValue()), true);
 			}
 			if (unio()) for (int i = 0; i < twc; i++) {
 				ThreadWorkerSMTPUNIO tws = new ThreadWorkerSMTPUNIO(this);

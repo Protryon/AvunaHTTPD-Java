@@ -29,6 +29,7 @@ public class SMTPWork {
 	public ByteArrayOutputStream sslprep = null;
 	public HostMail host;
 	public boolean inUse = false;
+	public String lu = null;
 	
 	public SMTPWork(HostMail host, Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
 		this.host = host;
@@ -64,7 +65,7 @@ public class SMTPWork {
 		}
 		boolean r = false;
 		for (SMTPCommand comm : host.smtphandler.commands) {
-			if ((state == 101 || comm.comm.equals(cmd)) && state <= comm.maxState && state >= comm.minState) {
+			if ((state > 100 || comm.comm.equals(cmd)) && state <= comm.maxState && state >= comm.minState) {
 				comm.run(this, line);
 				r = true;
 				break;

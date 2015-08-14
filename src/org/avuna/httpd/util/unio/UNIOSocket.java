@@ -28,17 +28,23 @@ public class UNIOSocket extends Socket {
 	private long msTimeout = 0L;
 	protected long lr = System.currentTimeMillis();
 	private boolean holdTimeout = false;
+	protected boolean stlsi = false;
 	
 	public void starttls(long cert) throws IOException {
 		if (cert == 0L || CLib.hasGNUTLS() != 1) return;
+		stlsi = true;
 		this.session = GNUTLS.preaccept(cert);
 		if (this.session <= 0L) {
+			stlsi = false;
 			throw new IOException("Failed TCP Session create!");
 		}
 		int e = GNUTLS.postaccept(cert, this.session, sockfd);
 		if (e < 0) {
+			stlsi = false;
 			throw new CException(e, "Failed TCP Handshake!");
 		}
+		stlsi = false;
+		lr = System.currentTimeMillis();
 	}
 	
 	public void setHoldTimeout(boolean holdTimeout) {
@@ -90,6 +96,7 @@ public class UNIOSocket extends Socket {
 			i += li;
 		}while (li > 0 && i < b.length);
 		if (i > 0) buf.append(b, 0, i);
+		lr = System.currentTimeMillis();
 	}
 	
 	protected void write() throws IOException {
@@ -106,6 +113,7 @@ public class UNIOSocket extends Socket {
 				}
 			}
 		}while (i > 0 && wi >= i && wi > 0);
+		lr = System.currentTimeMillis();
 	}
 	
 	/** Compatibility function, this is NIO. */
