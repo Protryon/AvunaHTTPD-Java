@@ -14,8 +14,11 @@ import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.mail.mailbox.Email;
 import org.avuna.httpd.mail.mailbox.EmailAccount;
 import org.avuna.httpd.mail.mailbox.EmailRouter;
+import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Stream;
+import org.avuna.httpd.util.unio.UNIOServerSocket;
+import org.avuna.httpd.util.unio.UNIOSocket;
 
 public class SMTPHandler {
 	
@@ -33,21 +36,30 @@ public class SMTPHandler {
 		commands.add(new SMTPCommand("starttls", 0, 100) {
 			public void run(SMTPWork focus, String line) throws IOException {
 				focus.writeLine(220, "Go ahead");
-				if (host.sslContext == null) {
-					focus.writeLine(520, "TLS not enabled!");
-					return;
+				if (host.unio() && CLib.hasGNUTLS() == 1) {
+					long cert = ((UNIOServerSocket) host.imaps).getCertificate();
+					if (cert == 0L) {
+						focus.writeLine(520, "TLS not enabled!");
+						return;
+					}
+					((UNIOSocket) focus.s).starttls(cert);
+					focus.ssl = true;
+				}else {
+					if (host.sslContext == null) {
+						focus.writeLine(520, "TLS not enabled!");
+						return;
+					}
+					focus.s = host.sslContext.getSocketFactory().createSocket(focus.s, focus.s.getInetAddress().getHostAddress(), focus.s.getPort(), true);
+					((SSLSocket) focus.s).setUseClientMode(false);
+					((SSLSocket) focus.s).setNeedClientAuth(false);
+					((SSLSocket) focus.s).startHandshake();
+					focus.out = new DataOutputStream(focus.s.getOutputStream());
+					focus.out.flush();
+					focus.in = new DataInputStream(focus.s.getInputStream());
+					focus.sslprep = new ByteArrayOutputStream();
+					focus.ssl = true;
+					focus.state = 1;
 				}
-				focus.s = host.sslContext.getSocketFactory().createSocket(focus.s, focus.s.getInetAddress().getHostAddress(), focus.s.getPort(), true);
-				((SSLSocket) focus.s).setUseClientMode(false);
-				((SSLSocket) focus.s).setNeedClientAuth(false);
-				((SSLSocket) focus.s).startHandshake();
-				focus.out = new DataOutputStream(focus.s.getOutputStream());
-				focus.out.flush();
-				focus.in = new DataInputStream(focus.s.getInputStream());
-				focus.sslprep = new ByteArrayOutputStream();
-				focus.ssl = true;
-				focus.state = 1;
-				focus.isExtended = true;
 			}
 		});
 		

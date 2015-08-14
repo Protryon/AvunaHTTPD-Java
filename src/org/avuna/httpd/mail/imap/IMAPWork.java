@@ -29,6 +29,7 @@ public class IMAPWork {
 	public ByteArrayOutputStream sslprep = null;
 	public HostMail host;
 	public boolean inUse = false;
+	private ICommandCallback cc = null;
 	
 	public void readLine(String rline) throws IOException {
 		String line = rline.trim();
@@ -61,13 +62,28 @@ public class IMAPWork {
 		}
 	}
 	
+	public void readBlock(byte[] data) throws IOException {
+		if (cc == null) return;
+		cc.receiveBlock(this, data, status);
+	}
+	
+	protected int nb = -1;
+	protected IMAPBlockStatus status;
+	
+	public void requestBlock(ICommandCallback callback, int length, IMAPBlockStatus status) {
+		nb = length;
+		cc = callback;
+		this.status = status;
+	}
+	
 	public void close() throws IOException {
 		s.close();
 		host.IMAPworks.remove(this);
 	}
 	
 	public void flushPacket(byte[] buf) throws IOException {
-		readLine(new String(buf));
+		if (nb >= 0) readBlock(buf);
+		else readLine(new String(buf));
 	}
 	
 	public IMAPWork(HostMail host, Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {

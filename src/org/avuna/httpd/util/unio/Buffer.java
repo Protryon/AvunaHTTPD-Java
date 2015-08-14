@@ -64,7 +64,7 @@ public class Buffer extends InputStream {
 							ml++;
 							if (ml == pd.length) {
 								byte[] packet = new byte[i + 1 - this.read];
-								System.arraycopy(this.buf, this.read, packet, 0, packet.length);
+								System.arraycopy(this.buf, Math.max(0, this.read - 1), packet, 0, packet.length);
 								this.read += packet.length + 1;
 								this.length -= packet.length;
 								callback.readPacket(socket, packet);

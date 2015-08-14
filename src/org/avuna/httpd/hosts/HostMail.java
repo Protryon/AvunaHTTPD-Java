@@ -206,7 +206,7 @@ public class HostMail extends Host {
 				}
 			}
 			if (this.ssl) {
-				if (nssl) {
+				if (!nssl) {
 					sslContext = makeSSLContext(new File(ssl.getNode("keyFile").getValue()), ssl.getNode("keyPassword").getValue(), ssl.getNode("keystorePassword").getValue());
 				}
 				smtps = makeServer(ip, Integer.parseInt(cfg.getNode("smtp-tls-port").getValue()));
@@ -280,6 +280,6 @@ public class HostMail extends Host {
 	
 	@Override
 	public void setup(ServerSocket s) {
-		
+	
 	}
 }

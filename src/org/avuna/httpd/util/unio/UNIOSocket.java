@@ -29,6 +29,18 @@ public class UNIOSocket extends Socket {
 	protected long lr = System.currentTimeMillis();
 	private boolean holdTimeout = false;
 	
+	public void starttls(long cert) throws IOException {
+		if (cert == 0L || CLib.hasGNUTLS() != 1) return;
+		this.session = GNUTLS.preaccept(cert);
+		if (this.session <= 0L) {
+			throw new IOException("Failed TCP Session create!");
+		}
+		int e = GNUTLS.postaccept(cert, this.session, sockfd);
+		if (e < 0) {
+			throw new CException(e, "Failed TCP Handshake!");
+		}
+	}
+	
 	public void setHoldTimeout(boolean holdTimeout) {
 		if (!holdTimeout) {
 			this.lr = System.currentTimeMillis(); // reset timeout
@@ -52,11 +64,7 @@ public class UNIOSocket extends Socket {
 		return msTimeout;
 	}
 	
-	protected UNIOSocket(String ip, int port, int sockfd, PacketReceiver callback) {
-		this(ip, port, sockfd, callback, 0L);
-	}
-	
-	// ssl
+	// ssl = session > 0
 	protected UNIOSocket(String ip, int port, int sockfd, PacketReceiver callback, long session) {
 		this.sockfd = sockfd;
 		this.ip = ip;
@@ -70,7 +78,7 @@ public class UNIOSocket extends Socket {
 	
 	/** Compatibility function, called automatically in C. */
 	public void setTcpNoDelay(boolean b) {
-		
+	
 	}
 	
 	protected void read() throws IOException {

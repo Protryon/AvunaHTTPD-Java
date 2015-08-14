@@ -4,16 +4,29 @@ package org.avuna.httpd.mail.imap.command;
 
 import java.io.IOException;
 import org.avuna.httpd.hosts.HostMail;
+import org.avuna.httpd.mail.imap.ICommandCallback;
+import org.avuna.httpd.mail.imap.IMAPBlockStatus;
 import org.avuna.httpd.mail.imap.IMAPCommand;
 import org.avuna.httpd.mail.imap.IMAPWork;
 import org.avuna.httpd.mail.mailbox.Email;
 import org.avuna.httpd.mail.mailbox.Mailbox;
 import org.avuna.httpd.mail.util.StringFormatter;
 
-public class IMAPCommandAppend extends IMAPCommand {
+public class IMAPCommandAppend extends IMAPCommand implements ICommandCallback {
 	
 	public IMAPCommandAppend(String comm, int minState, int maxState, HostMail host) {
 		super(comm, minState, maxState, host);
+	}
+	
+	private static final class IMAPBlockStatusAppend extends IMAPBlockStatus {
+		public String flags, letters;
+		public Mailbox mb;
+		
+		public IMAPBlockStatusAppend(String flags, String letters, Mailbox mb) {
+			this.flags = flags;
+			this.mb = mb;
+			this.letters = letters;
+		}
 	}
 	
 	@Override
@@ -39,24 +52,34 @@ public class IMAPCommandAppend extends IMAPCommand {
 			}
 			String length = args[args.length - 1].substring(1, args[args.length - 1].length() - 1);
 			int l = Integer.parseInt(length);
-			byte[] data = new byte[l];
-			focus.in.readFully(data);
-			String ed = new String(data);
-			synchronized (mb.emails) {
-				Email eml = new Email(host, ed, mb.emails.length + 1, focus.authUser.email);
-				for (String flag : flags.split(" ")) {
-					eml.flags.add(flag);
-				}
-				host.logger.log(ed);
-				Email[] ne = new Email[mb.emails.length + 1];
-				System.arraycopy(mb.emails, 0, ne, 0, mb.emails.length);
-				ne[ne.length - 1] = eml;
-				mb.emails = ne;
+			if (host.unio()) {
+				focus.requestBlock(this, l, new IMAPBlockStatusAppend(flags, letters, mb));
+			}else {
+				byte[] data = new byte[l];
+				focus.in.readFully(data);
+				receiveBlock(focus, data, new IMAPBlockStatusAppend(flags, letters, mb));
 			}
-			focus.writeLine(letters, "OK");
 		}else {
 			focus.writeLine(letters, "BAD No mailbox.");
 		}
+	}
+	
+	@Override
+	public void receiveBlock(IMAPWork focus, byte[] block, IMAPBlockStatus status) throws IOException {
+		IMAPBlockStatusAppend sa = (IMAPBlockStatusAppend) status;
+		String ed = new String(block);
+		synchronized (sa.mb.emails) {
+			Email eml = new Email(host, ed, sa.mb.emails.length + 1, focus.authUser.email);
+			for (String flag : sa.flags.split(" ")) {
+				eml.flags.add(flag);
+			}
+			host.logger.log(ed);
+			Email[] ne = new Email[sa.mb.emails.length + 1];
+			System.arraycopy(sa.mb.emails, 0, ne, 0, sa.mb.emails.length);
+			ne[ne.length - 1] = eml;
+			sa.mb.emails = ne;
+		}
+		focus.writeLine(sa.letters, "OK");
 	}
 	
 }

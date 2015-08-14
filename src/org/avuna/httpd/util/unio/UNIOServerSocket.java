@@ -15,6 +15,10 @@ public class UNIOServerSocket extends ServerSocket {
 	private PacketReceiverFactory factory;
 	private long cert = 0L;
 	
+	public long getCertificate() {
+		return cert;
+	}
+	
 	public boolean isClosed() {
 		return closed;
 	}

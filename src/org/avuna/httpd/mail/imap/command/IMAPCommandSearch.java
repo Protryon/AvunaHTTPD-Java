@@ -101,7 +101,7 @@ public class IMAPCommandSearch extends IMAPCommand {
 			emails = new ArrayList<Email>();
 		}
 		if (com.equals("all")) {
-			
+		
 		}else if (com.equals("answered")) {
 			for (int i = 0; i < emails.size(); i++) {
 				if (!emails.get(i).flags.contains("\\Answered")) {
@@ -263,7 +263,6 @@ public class IMAPCommandSearch extends IMAPCommand {
 			host.logger.log(targ);
 			if (!processList(focus, targ, emails)) {
 				focus.writeLine(letters, "NO Invalid search.");
-				return;
 			}
 		}
 		String resp = "SEARCH";

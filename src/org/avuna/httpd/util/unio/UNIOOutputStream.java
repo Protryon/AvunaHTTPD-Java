@@ -60,6 +60,6 @@ public class UNIOOutputStream extends OutputStream {
 	}
 	
 	public void flush() {
-		
+	
 	}
 }

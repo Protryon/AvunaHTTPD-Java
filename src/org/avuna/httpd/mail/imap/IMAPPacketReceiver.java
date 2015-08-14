@@ -15,6 +15,8 @@ public class IMAPPacketReceiver extends PacketReceiver {
 		}
 	}
 	
+	private int nb = -1;
+	
 	@Override
 	public void readPacket(UNIOSocket sock, byte[] buf) {
 		if (work == null) {
@@ -26,6 +28,9 @@ public class IMAPPacketReceiver extends PacketReceiver {
 		}
 		try {
 			work.flushPacket(buf);
+			if (work.nb >= 0) {
+				nb = work.nb;
+			}
 		}catch (IOException e) {
 			work.host.logger.logError(e);
 		}
@@ -33,11 +38,17 @@ public class IMAPPacketReceiver extends PacketReceiver {
 	
 	@Override
 	public int nextDelimType(UNIOSocket sock) {
-		return 0;
+		return nb < 0 ? 0 : 1;
 	}
 	
 	public byte[] nextDelim(UNIOSocket sock) {
 		return "\r\n".getBytes();
+	}
+	
+	public int nextLength(UNIOSocket sock) {
+		int n = nb;
+		nb = -1;
+		return n;
 	}
 	
 	@Override

@@ -229,7 +229,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 											}
 										}
 									}catch (NumberFormatException e2) {
-										
+									
 									}
 								}else if (value.equals("1")) {
 									mhd.append(e.body);
@@ -265,7 +265,7 @@ public class IMAPCommandFetch extends IMAPCommand {
 						// ret.append(AvunaHTTPD.crlf);
 						if (i3 == tps.length - 1) notrim = true;
 					}else if (s.equals("envelope")) {
-						
+					
 					}else if (s.equals("flags")) {
 						ret.append("FLAGS (");
 						for (String flag : e.flags) {
