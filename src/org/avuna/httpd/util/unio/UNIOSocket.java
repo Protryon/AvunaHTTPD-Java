@@ -30,9 +30,20 @@ public class UNIOSocket extends Socket {
 	private boolean holdTimeout = false;
 	protected boolean stlsi = false;
 	
+	private void flush() throws IOException {
+		while (outBuf.available() > 0) { // could block, we should do something more like gnutls_handshake
+			if (write() == 0) {
+				try {
+					Thread.sleep(1L); // prevent a full speed loop while waiting for kernel buffers to clear. 1 MS = more than enough
+				}catch (InterruptedException e) {}
+			}
+		}
+	}
+	
 	public void starttls(long cert) throws IOException {
 		if (cert == 0L || CLib.hasGNUTLS() != 1) return;
 		stlsi = true;
+		flush();
 		this.session = GNUTLS.preaccept(cert);
 		if (this.session <= 0L) {
 			stlsi = false;
@@ -96,14 +107,14 @@ public class UNIOSocket extends Socket {
 			i += li;
 		}while (li > 0 && i < b.length);
 		if (i > 0) buf.append(b, 0, i);
-		lr = System.currentTimeMillis();
 	}
 	
-	protected void write() throws IOException {
-		if (outBuf.available() < 1) return;
+	protected int write() throws IOException {
+		if (outBuf.available() < 1) return 0;
 		byte[] b = new byte[4096];
 		int i = 0;
 		int wi = 0;
+		int ti = 0;
 		do {
 			i = outBuf.read(b);
 			if (i > 0) {
@@ -111,9 +122,10 @@ public class UNIOSocket extends Socket {
 				if (wi < i) {
 					outBuf.unsafe_prepend(b, wi, i - wi);
 				}
+				ti += wi;
 			}
 		}while (i > 0 && wi >= i && wi > 0);
-		lr = System.currentTimeMillis();
+		return ti;
 	}
 	
 	/** Compatibility function, this is NIO. */

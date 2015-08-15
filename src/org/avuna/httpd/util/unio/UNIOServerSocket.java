@@ -76,7 +76,7 @@ public class UNIOServerSocket extends ServerSocket {
 		if (cert > 0L) {
 			int e = GNUTLS.postaccept(cert, session, i);
 			if (e < 0) {
-				throw new CException(e, "Failed TCP Handshake!");
+				throw new CException(e, "Failed TLS Handshake!");
 			}
 		}
 		nsfd = nsfd.substring(nsfd.indexOf("/") + 1);

@@ -36,7 +36,7 @@ public class SMTPHandler {
 			public void run(SMTPWork focus, String line) throws IOException {
 				focus.writeLine(220, "Go ahead");
 				if (host.unio() && CLib.hasGNUTLS() == 1) {
-					long cert = ((UNIOServerSocket) host.imaps).getCertificate();
+					long cert = ((UNIOServerSocket) host.smtps).getCertificate();
 					if (cert == 0L) {
 						focus.writeLine(520, "TLS not enabled!");
 						return;
