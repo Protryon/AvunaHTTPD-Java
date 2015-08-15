@@ -107,6 +107,7 @@ public class UNIOSocket extends Socket {
 			i += li;
 		}while (li > 0 && i < b.length);
 		if (i > 0) buf.append(b, 0, i);
+		lr = System.currentTimeMillis();
 	}
 	
 	protected int write() throws IOException {
@@ -125,6 +126,7 @@ public class UNIOSocket extends Socket {
 				ti += wi;
 			}
 		}while (i > 0 && wi >= i && wi > 0);
+		lr = System.currentTimeMillis();
 		return ti;
 	}
 	

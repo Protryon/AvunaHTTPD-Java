@@ -28,4 +28,6 @@ public abstract class PacketReceiver {
 	}
 	
 	public abstract void closed(UNIOSocket sock);
+	
+	public abstract void fail(Exception e);
 }

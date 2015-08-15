@@ -1,6 +1,7 @@
 package org.avuna.httpd.http.networking;
 
 import java.io.IOException;
+import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.util.unio.PacketReceiver;
 import org.avuna.httpd.util.unio.UNIOSocket;
 
@@ -57,6 +58,12 @@ public class HTTPPacketReceiver extends PacketReceiver {
 	@Override
 	public void closed(UNIOSocket sock) {
 		if (work != null) work.close();
+	}
+	
+	@Override
+	public void fail(Exception e) {
+		if (work != null) work.host.logger.logError(e);
+		else AvunaHTTPD.logger.logError(e);
 	}
 	
 }

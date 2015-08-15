@@ -32,7 +32,7 @@ import org.avuna.httpd.http.util.OverrideConfig;
  * @author Max */
 public class FileManager {
 	public FileManager() {
-		
+	
 	}
 	
 	/** Character array of valid hex values. */
@@ -401,44 +401,50 @@ public class FileManager {
 				}
 				boolean tc = cc > 0 && t - cc < cacheClock;
 				if (tc || cc == -1 || extCache.get(nrt).equals("application/x-java")) {
-					resource = cache.get(nrt);
-					if (resource == null) {
-						return null;
-					}
-					ext = extCache.get(nrt);
-					lwi = lwiCache.get(nrt);
-					tooBig = tbCache.get(nrt);
-					oabs = absCache.get(nrt);
-					directive = cConfigCache.get(superdir);
-				}else if (!tc && cc >= 0) {
-					cacheClock = t;
-					String[] delKeys = new String[cache.size()];
-					int delSize = 0;
-					for (String file : cache.keySet()) {
-						if (!extCache.get(file).equals("application/x-java")) {
-							delKeys[delSize++] = file;
+					synchronized (cache) {
+						resource = cache.get(nrt);
+						if (resource == null) {
+							return null;
 						}
+						ext = extCache.get(nrt);
+						lwi = lwiCache.get(nrt);
+						tooBig = tbCache.get(nrt);
+						oabs = absCache.get(nrt);
+						directive = cConfigCache.get(superdir);
 					}
-					for (int i = 0; i < delSize; i++) {
-						cache.remove(delKeys[i]);
-						extCache.remove(delKeys[i]);
-						lwiCache.remove(delKeys[i]);
-						absCache.remove(delKeys[i]);
-						tbCache.remove(delKeys[i]);
+				}else if (!tc && cc >= 0) {
+					synchronized (cache) {
+						cacheClock = t;
+						String[] delKeys = new String[cache.size()];
+						int delSize = 0;
+						for (String file : cache.keySet()) {
+							if (!extCache.get(file).equals("application/x-java")) {
+								delKeys[delSize++] = file;
+							}
+						}
+						for (int i = 0; i < delSize; i++) {
+							cache.remove(delKeys[i]);
+							extCache.remove(delKeys[i]);
+							lwiCache.remove(delKeys[i]);
+							absCache.remove(delKeys[i]);
+							tbCache.remove(delKeys[i]);
+						}
+						cConfigCache.clear();
 					}
-					cConfigCache.clear();
 					request.host.getHost().eventBus.callEvent(new EventClearCache());
 				}
 			}
 			if (resource == null) {
 				File abs = getAbsolutePath(rt, request);
 				if (abs == null) {
-					cache.put(nrt, null);
-					extCache.put(nrt, "text/html");
-					lwi = this.lwi;
-					lwiCache.put(nrt, lwi);
-					absCache.put(nrt, oabs);
-					tbCache.put(nrt, false);
+					synchronized (cache) {
+						cache.put(nrt, null);
+						extCache.put(nrt, "text/html");
+						lwi = this.lwi;
+						lwiCache.put(nrt, lwi);
+						absCache.put(nrt, oabs);
+						tbCache.put(nrt, false);
+					}
 					return null;
 				}
 				if (!cConfigCache.containsKey(superdir) && abs != null) {
@@ -490,20 +496,24 @@ public class FileManager {
 					fin.close();
 					resource = bout.toByteArray();
 				}else {
-					cache.put(nrt, null);
-					extCache.put(nrt, "text/html");
+					synchronized (cache) {
+						cache.put(nrt, null);
+						extCache.put(nrt, "text/html");
+						lwi = this.lwi;
+						lwiCache.put(nrt, lwi);
+						absCache.put(nrt, oabs);
+						tbCache.put(nrt, false);
+					}
+					return null;
+				}
+				synchronized (cache) {
+					cache.put(nrt, resource);
+					extCache.put(nrt, ext);
 					lwi = this.lwi;
 					lwiCache.put(nrt, lwi);
 					absCache.put(nrt, oabs);
-					tbCache.put(nrt, false);
-					return null;
+					tbCache.put(nrt, tooBig);
 				}
-				cache.put(nrt, resource);
-				extCache.put(nrt, ext);
-				lwi = this.lwi;
-				lwiCache.put(nrt, lwi);
-				absCache.put(nrt, oabs);
-				tbCache.put(nrt, tooBig);
 			}
 			Resource r = new Resource(resource, ext, rt, directive, oabs);
 			r.wasDir = lwi;

@@ -1,6 +1,7 @@
 package org.avuna.httpd.mail.imap;
 
 import java.io.IOException;
+import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.util.unio.PacketReceiver;
 import org.avuna.httpd.util.unio.UNIOSocket;
 
@@ -58,6 +59,12 @@ public class IMAPPacketReceiver extends PacketReceiver {
 		}catch (IOException e) {
 			work.host.logger.logError(e);
 		}
+	}
+	
+	@Override
+	public void fail(Exception e) {
+		if (work != null) work.host.logger.logError(e);
+		else AvunaHTTPD.logger.logError(e);
 	}
 	
 }

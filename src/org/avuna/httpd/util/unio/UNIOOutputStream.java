@@ -44,12 +44,14 @@ public class UNIOOutputStream extends OutputStream {
 		System.arraycopy(buf, off, buf2, 0, len);
 		int i = socket.session == 0L ? CLib.write(socket.sockfd, buf2) : GNUTLS.write(socket.session, buf2);
 		if (i < 0) {
-			i = CLib.errno();
-			if (i == 104) {
+			i = socket.session == 0L ? CLib.errno() : i;
+			if (i == 11 | i == -28) { // EAGAIN/GNUTLS_EAGAIN
+				return 0;
+			}else if (i == 104) {
 				throw new SocketException("Connection reset by peer");
 			}else if (i == 32) {
 				throw new SocketException("Broken Pipe");
-			}else throw new CException(CLib.errno(), "End of Stream");
+			}else throw new CException(i, "End of Stream");
 		}
 		socket.lr = System.currentTimeMillis();
 		return i;

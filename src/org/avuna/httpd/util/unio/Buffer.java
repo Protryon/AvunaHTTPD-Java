@@ -2,7 +2,6 @@ package org.avuna.httpd.util.unio;
 
 import java.io.InputStream;
 import java.lang.Thread.State;
-import org.avuna.httpd.AvunaHTTPD;
 
 public class Buffer extends InputStream {
 	protected byte[] buf;
@@ -27,11 +26,15 @@ public class Buffer extends InputStream {
 		this.callback = callback;
 		this.socket = socket;
 		if (callback != null) {
-			pt = callback.nextDelimType(socket);
-			if (pt == 0) {
-				pd = callback.nextDelim(socket);
-			}else if (pt == 1) {
-				pl = callback.nextLength(socket);
+			try {
+				pt = callback.nextDelimType(socket);
+				if (pt == 0) {
+					pd = callback.nextDelim(socket);
+				}else if (pt == 1) {
+					pl = callback.nextLength(socket);
+				}
+			}catch (Exception e) {
+				callback.fail(e);
 			}
 		}
 	}
@@ -67,12 +70,16 @@ public class Buffer extends InputStream {
 								System.arraycopy(this.buf, Math.max(0, this.read - 1), packet, 0, packet.length);
 								this.read += packet.length + 1;
 								this.length -= packet.length;
-								callback.readPacket(socket, packet);
-								pt = callback.nextDelimType(socket);
-								if (pt == 0) {
-									pd = callback.nextDelim(socket);
-								}else if (pt == 1) {
-									pl = callback.nextLength(socket);
+								try {
+									callback.readPacket(socket, packet);
+									pt = callback.nextDelimType(socket);
+									if (pt == 0) {
+										pd = callback.nextDelim(socket);
+									}else if (pt == 1) {
+										pl = callback.nextLength(socket);
+									}
+								}catch (Exception e) {
+									callback.fail(e);
 								}
 								ml = 0;
 							}
@@ -82,16 +89,19 @@ public class Buffer extends InputStream {
 					}else if (pt == 1) {
 						if (this.length + length >= pl) {
 							byte[] packet = new byte[pl];
-							System.arraycopy(this.buf, this.read, packet, 0, packet.length);
-							this.read += packet.length;
+							System.arraycopy(this.buf, Math.max(0, this.read - 1), packet, 0, packet.length);
+							this.read += packet.length + 1;
 							this.length -= packet.length;
-							System.out.println(AvunaHTTPD.fileManager.bytesToHex(packet));
-							callback.readPacket(socket, packet);
-							pt = callback.nextDelimType(socket);
-							if (pt == 0) {
-								pd = callback.nextDelim(socket);
-							}else if (pt == 1) {
-								pl = callback.nextLength(socket);
+							try {
+								callback.readPacket(socket, packet);
+								pt = callback.nextDelimType(socket);
+								if (pt == 0) {
+									pd = callback.nextDelim(socket);
+								}else if (pt == 1) {
+									pl = callback.nextLength(socket);
+								}
+							}catch (Exception e) {
+								callback.fail(e);
 							}
 						}else {
 							break;
