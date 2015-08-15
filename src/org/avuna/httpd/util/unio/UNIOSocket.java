@@ -29,21 +29,24 @@ public class UNIOSocket extends Socket {
 	protected long lr = System.currentTimeMillis();
 	private boolean holdTimeout = false;
 	protected boolean stlsi = false;
+	protected boolean to = false;
 	
-	private void flush() throws IOException {
+	private void flush(long timeout) throws IOException {
+		long start = System.currentTimeMillis() + timeout;
 		while (outBuf.available() > 0) { // could block, we should do something more like gnutls_handshake
 			if (write() == 0) {
 				try {
 					Thread.sleep(1L); // prevent a full speed loop while waiting for kernel buffers to clear. 1 MS = more than enough
 				}catch (InterruptedException e) {}
 			}
+			if (System.currentTimeMillis() >= start) return;
 		}
 	}
 	
 	public void starttls(long cert) throws IOException {
 		if (cert == 0L || CLib.hasGNUTLS() != 1) return;
 		stlsi = true;
-		flush();
+		flush(100L); // wait for up to 100 ms
 		this.session = GNUTLS.preaccept(cert);
 		if (this.session <= 0L) {
 			stlsi = false;
@@ -160,6 +163,7 @@ public class UNIOSocket extends Socket {
 	
 	public void close() throws IOException {
 		if (closed) return; // already closed
+		if (!to) flush(100L); // wait for up to 100 ms
 		closed = true;
 		int s = CLib.close(sockfd);
 		if (session > 0L) GNUTLS.close(session);

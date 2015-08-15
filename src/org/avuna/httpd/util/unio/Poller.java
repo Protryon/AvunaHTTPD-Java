@@ -58,6 +58,7 @@ public class Poller {
 					close = true;
 				}
 				if (close) {
+					uss.to = true;
 					uss.close();
 				}
 			}
@@ -126,7 +127,9 @@ public class Poller {
 			for (int i = 0; i < c.length; i++) {
 				if (c[i]) {
 					try {
-						us.get(ri).close();
+						UNIOSocket uss = us.get(ri);
+						uss.to = true;
+						uss.close();
 					}catch (IOException e) {
 						AvunaHTTPD.logger.logError("Failed to close socket!"); // TODO: choose better logger
 						AvunaHTTPD.logger.logError(e);
