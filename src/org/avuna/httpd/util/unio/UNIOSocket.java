@@ -50,11 +50,13 @@ public class UNIOSocket extends Socket {
 		this.session = GNUTLS.preaccept(cert);
 		if (this.session <= 0L) {
 			stlsi = false;
+			this.close();
 			throw new IOException("Failed TCP Session create!");
 		}
 		int e = GNUTLS.postaccept(cert, this.session, sockfd);
 		if (e < 0) {
 			stlsi = false;
+			this.close();
 			throw new CException(e, "Failed TCP Handshake!");
 		}
 		stlsi = false;

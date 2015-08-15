@@ -1,6 +1,7 @@
 package org.avuna.httpd.util.unio;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.ServerSocket;
 import org.avuna.httpd.util.CException;
 import org.avuna.httpd.util.CLib;
@@ -53,7 +54,12 @@ public class UNIOServerSocket extends ServerSocket {
 		int bind = CLib.bindTCP(sockfd, ip, port);
 		if (bind != 0) {
 			this.close();
-			throw new CException(CLib.errno(), "socket failed bind");
+			int e = CLib.errno();
+			if (e == 98) {
+				throw new BindException();
+			}else {
+				throw new CException(e, "socket failed bind");
+			}
 		}
 		int listen = CLib.listen(sockfd, this.backlog);
 		if (listen != 0) {
