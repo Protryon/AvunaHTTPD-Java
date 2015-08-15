@@ -2,6 +2,7 @@ package org.avuna.httpd.util.unio;
 
 import java.io.InputStream;
 import java.lang.Thread.State;
+import org.avuna.httpd.AvunaHTTPD;
 
 public class Buffer extends InputStream {
 	protected byte[] buf;
@@ -43,32 +44,28 @@ public class Buffer extends InputStream {
 		append(buf, 0, buf.length);
 	}
 	
-	private void ensureCapacity(int size) {
+	public void append(byte[] buf, int offset, int length) {
+		if (length == 0) return;
 		synchronized (buf) {
-			if (buf.length - read < size) {
-				byte[] nb = new byte[size];
-				System.arraycopy(buf, read, nb, 0, Math.min(length, size));
+			int size = this.length + length + this.read;
+			if (this.buf.length - read < size) {
+				byte[] nb = new byte[size + 1024];
+				System.arraycopy(this.buf, read, nb, 0, Math.min(this.length, size + 1024));
 				this.buf = nb;
 				this.read = 0;
 			}
-		}
-	}
-	
-	public void append(byte[] buf, int offset, int length) {
-		if (length == 0) return;
-		ensureCapacity(this.length + length + this.read);
-		synchronized (buf) {
+			System.out.println(AvunaHTTPD.fileManager.bytesToHex(buf));
 			System.arraycopy(buf, offset, this.buf, this.read + this.length, length);
 			if (callback != null) {
 				int ml = 0;
-				for (int i = Math.max(0, this.read + this.length - pd.length); i < this.read + this.length + length; i++) {
+				for (int i = Math.max(0, this.read + this.length - pd.length + 1); i < this.read + this.length + length; i++) {
 					if (pt == 0) {
 						if (this.buf[i] == pd[ml]) {
 							ml++;
 							if (ml == pd.length) {
 								byte[] packet = new byte[i + 1 - this.read];
-								System.arraycopy(this.buf, Math.max(0, this.read - 1), packet, 0, packet.length);
-								this.read += packet.length + 1;
+								System.arraycopy(this.buf, this.read, packet, 0, packet.length);
+								this.read += packet.length;
 								this.length -= packet.length;
 								try {
 									callback.readPacket(socket, packet);
@@ -89,8 +86,8 @@ public class Buffer extends InputStream {
 					}else if (pt == 1) {
 						if (this.length + length >= pl) {
 							byte[] packet = new byte[pl];
-							System.arraycopy(this.buf, Math.max(0, this.read - 1), packet, 0, packet.length);
-							this.read += packet.length + 1;
+							System.arraycopy(this.buf, this.read, packet, 0, packet.length);
+							this.read += packet.length;
 							this.length -= packet.length;
 							try {
 								callback.readPacket(socket, packet);
