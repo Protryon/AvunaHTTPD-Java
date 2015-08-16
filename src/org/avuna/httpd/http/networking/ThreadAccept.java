@@ -30,6 +30,9 @@ public class ThreadAccept extends Thread {
 		while (!server.isClosed()) {
 			try {
 				Socket s = server.accept();
+				if (!host.loaded) {
+					s.close();
+				}
 				s.setTcpNoDelay(true);
 				s.setSoTimeout(1000);
 				if (cl >= 0 && host.works.size() >= cl) {

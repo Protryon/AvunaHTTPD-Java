@@ -72,12 +72,14 @@ public class HostHTTP extends Host {
 	
 	public void receive(EventBus bus, Event event) {
 		if (event instanceof EventPreExit) {
+			this.loaded = false;
 			for (VHost vh : vhosts) {
 				vh.destroy();
 			}
 			vhosts.clear();
 		}else if (event instanceof EventReload) {
 			if (hasVirtualConfig()) return;
+			this.loaded = false;
 			for (VHost vh : vhosts) {
 				vh.destroy();
 			}
@@ -88,6 +90,7 @@ public class HostHTTP extends Host {
 			}catch (IOException e) {
 				logger.logError(e);
 			}
+			this.loaded = true;
 		}else {
 			super.receive(bus, event);
 		}

@@ -31,6 +31,9 @@ public class ThreadAcceptIMAP extends Thread {
 		while (!server.isClosed()) {
 			try {
 				Socket s = server.accept();
+				if (!host.loaded) {
+					s.close();
+				}
 				if (cl >= 0 && host.IMAPworks.size() >= cl) {
 					s.close();
 					continue;

@@ -33,6 +33,9 @@ public class ThreadAcceptSMTP extends Thread {
 		while (!server.isClosed()) {
 			try {
 				Socket s = server.accept();
+				if (!host.loaded) {
+					s.close();
+				}
 				if (cl >= 0 && host.SMTPworks.size() >= cl) {
 					s.close();
 					continue;

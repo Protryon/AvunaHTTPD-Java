@@ -32,6 +32,9 @@ public class ThreadAcceptFTP extends Thread {
 		while (!server.isClosed()) {
 			try {
 				Socket s = server.accept();
+				if (!host.loaded) {
+					s.close();
+				}
 				s.setTcpNoDelay(true);
 				if (cl >= 0 && host.workSize() >= cl) {
 					s.close();
