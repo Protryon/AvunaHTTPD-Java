@@ -13,6 +13,7 @@ import org.avuna.httpd.http.plugins.avunaagent.PluginAvunaAgent;
 import org.avuna.httpd.http.plugins.base.BaseLoader;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.logging.Logger;
+import org.avuna.httpd.util.unio.Certificate;
 
 public class VHost {
 	private final HostHTTP host;
@@ -31,6 +32,7 @@ public class VHost {
 	public final PluginRegistry registry;
 	public final Logger logger;
 	public final EventBus eventBus = new EventBus();
+	public Certificate sniCert;
 	
 	public boolean isForwarding() {
 		return forward;
@@ -187,5 +189,9 @@ public class VHost {
 	
 	public String getHostPath() {
 		return name;
+	}
+	
+	public void setSNI(Certificate certificate) {
+		this.sniCert = certificate;
 	}
 }

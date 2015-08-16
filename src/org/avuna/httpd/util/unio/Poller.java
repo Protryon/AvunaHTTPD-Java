@@ -108,7 +108,9 @@ public class Poller {
 					}
 					if (!close && (res[i] & 0x001) == 0x001) {// POLLIN
 						try {
-							uss.read();
+							if (uss.read() == 0) {
+								close = true; // EOF
+							}
 						}catch (IOException e) {
 							if (!(e instanceof SocketException)) host.logger.logError(e);
 							close = true;

@@ -34,9 +34,12 @@ import org.avuna.httpd.http.networking.Work;
 import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginClassLoader;
 import org.avuna.httpd.http.plugins.base.BaseLoader;
+import org.avuna.httpd.util.CException;
 import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.ConfigNode;
+import org.avuna.httpd.util.unio.Certificate;
 import org.avuna.httpd.util.unio.PacketReceiver;
+import org.avuna.httpd.util.unio.SNICallback;
 import org.avuna.httpd.util.unio.UNIOServerSocket;
 import org.avuna.httpd.util.unio.UNIOSocket;
 
@@ -150,7 +153,7 @@ public class HostHTTP extends Host {
 	}
 	
 	public static void unpack() {
-		
+	
 	}
 	
 	public final boolean unio;
@@ -194,7 +197,7 @@ public class HostHTTP extends Host {
 									}
 									work.sslprep.write(sp);
 								}catch (SocketTimeoutException e) {
-									
+								
 								}finally {
 									work.s.setSoTimeout(1000);
 								}
@@ -363,6 +366,18 @@ public class HostHTTP extends Host {
 		formatConfig(map, true);
 	}
 	
+	public SNICallback makeSNICallback() {
+		return new SNICallback() {
+			
+			@Override
+			public Certificate getCertificate(String domain) {
+				VHost vh = HostHTTP.this.getVHost(domain.trim());
+				return vh.sniCert;
+			}
+			
+		};
+	}
+	
 	public void formatConfig(ConfigNode map, boolean loadVHosts) {
 		super.formatConfig(map);
 		if (!map.containsNode("maxPostSize")) map.insertNode("maxPostSize", "65535", "max post size in KB");
@@ -381,6 +396,8 @@ public class HostHTTP extends Host {
 		if (!map.containsNode("vhosts")) map.insertNode("vhosts", null, "host values are checked in the order of this file");
 		ConfigNode vhosts = map.getNode("vhosts");
 		if (!vhosts.containsNode("main")) vhosts.insertNode("main", "main node must exist, since it is a catch all, I reccomend you keep it at the bottom for the above reason");
+		ConfigNode ssl = map.getNode("ssl");
+		boolean snip = ssl != null && ssl.containsNode("enabled") && ssl.getValue("enabled").equals("true") && unio();
 		for (String vkey : vhosts.getSubnodes()) {
 			ConfigNode vhost = vhosts.getNode(vkey);
 			if (!vhost.containsNode("enabled")) vhost.insertNode("enabled", "true");
@@ -411,6 +428,16 @@ public class HostHTTP extends Host {
 				if (!vhost.containsNode("index")) vhost.insertNode("index", "index.class,index.php,index.html", "format is filename,filename,etc");
 				if (!vhost.containsNode("cacheClock")) vhost.insertNode("cacheClock", "-1", "-1=forever, 0=never >0=MS per cache clear");
 			}
+			if (snip) {
+				if (!vhost.containsNode("sni")) vhost.insertNode("sni", null, "used for HTTPS cerificates & vhosts");
+				ConfigNode sni = vhost.getNode("sni");
+				if (!sni.containsNode("enabled")) sni.insertNode("enabled", "false");
+				if (sni.getValue("enabled").equals("true")) {
+					if (!sni.containsNode("cert")) sni.insertNode("cert", AvunaHTTPD.fileManager.getBaseFile("ssl/ssl.cert").getAbsolutePath());
+					if (!sni.containsNode("privateKey")) sni.insertNode("privateKey", AvunaHTTPD.fileManager.getBaseFile("ssl/ssl.pem").getAbsolutePath());
+					if (!sni.containsNode("ca")) sni.insertNode("ca", AvunaHTTPD.fileManager.getBaseFile("ssl/ca.cert").getAbsolutePath());
+				}
+			}
 			if (!vhost.containsNode("plugins")) vhost.insertNode("plugins", AvunaHTTPD.fileManager.getBaseFile("plugins").toString(), "plugin config files");
 		}
 		if (loadVHosts) {
@@ -419,6 +446,8 @@ public class HostHTTP extends Host {
 				if (!ourvh.getNode("enabled").getValue().equals("true")) continue;
 				VHost vhost = null;
 				boolean forward = ourvh.getNode("forward").getValue().equals("true");
+				ConfigNode sni = ourvh.getNode("sni");
+				boolean snie = snip && sni != null && sni.containsNode("enabled") && sni.getValue("enabled").equals("true");
 				if (ourvh.containsNode("inheritjls") && ourvh.getNode("inheritjls").getValue().length() > 0) {
 					VHost parent = null;
 					String ij = ourvh.getNode("inheritjls").getValue();
@@ -434,6 +463,13 @@ public class HostHTTP extends Host {
 					vhost = new VHost(this.getHostname() + "/" + vkey, this, ourvh.getNode("host").getValue(), parent, Integer.parseInt(ourvh.getNode("cacheClock").getValue()), ourvh.getNode("index").getValue(), ourvh.getNode("errorpages"), forward, forward && !AvunaHTTPD.windows && ourvh.getNode("forward-unix").getValue().equals("true"), forward ? ourvh.getNode("forward-ip").getValue() : null, forward ? Integer.parseInt(ourvh.getNode("forward-port").getValue()) : -1, new File(ourvh.getNode("plugins").getValue()));
 				}else {
 					vhost = new VHost(this.getHostname() + "/" + vkey, this, forward ? null : new File(ourvh.getNode("htdocs").getValue()), forward ? null : new File(ourvh.getNode("htsrc").getValue()), forward ? null : new File(ourvh.getNode("htcfg").getValue()), ourvh.getNode("host").getValue(), forward ? 0 : Integer.parseInt(ourvh.getNode("cacheClock").getValue()), forward ? null : ourvh.getNode("index").getValue(), forward ? null : ourvh.getNode("errorpages"), forward, forward && !AvunaHTTPD.windows && ourvh.getNode("forward-unix").getValue().equals("true"), forward ? ourvh.getNode("forward-ip").getValue() : null, forward ? Integer.parseInt(ourvh.getNode("forward-port").getValue()) : -1, new File(ourvh.getNode("plugins").getValue()));
+				}
+				if (snie) {
+					try {
+						vhost.setSNI(new Certificate(new File(sni.getValue("ca")).getAbsolutePath(), new File(sni.getValue("cert")).getAbsolutePath(), new File(sni.getValue("privateKey")).getAbsolutePath()));
+					}catch (CException e) {
+						vhost.logger.logError(e);
+					}
 				}
 				vhost.setDebug(ourvh.getNode("debug").getValue().equals("true"));
 				this.addVHost(vhost);

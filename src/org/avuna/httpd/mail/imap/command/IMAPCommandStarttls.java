@@ -11,6 +11,7 @@ import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.mail.imap.IMAPCommand;
 import org.avuna.httpd.mail.imap.IMAPWork;
 import org.avuna.httpd.util.CLib;
+import org.avuna.httpd.util.unio.Certificate;
 import org.avuna.httpd.util.unio.UNIOServerSocket;
 import org.avuna.httpd.util.unio.UNIOSocket;
 
@@ -28,12 +29,12 @@ public class IMAPCommandStarttls extends IMAPCommand {
 				focus.writeLine(letters, "TLS not enabled!");
 				return;
 			}
-			long cert = ((UNIOServerSocket) host.imaps).getCertificate();
-			if (cert == 0L) {
+			Certificate cert = ((UNIOServerSocket) host.imaps).getCertificate();
+			if (cert == null) {
 				focus.writeLine(letters, "TLS not enabled!");
 				return;
 			}
-			((UNIOSocket) focus.s).starttls(cert);
+			((UNIOSocket) focus.s).starttls(cert, ((UNIOServerSocket) host.imaps).getSNICallback());
 			focus.ssl = true;
 		}else {
 			if (host.sslContext == null) {

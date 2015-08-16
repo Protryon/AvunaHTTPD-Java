@@ -400,7 +400,8 @@ public class FileManager {
 					cc = request.overrideCache;
 				}
 				boolean tc = cc > 0 && t - cc < cacheClock;
-				if (tc || cc == -1 || extCache.get(nrt).equals("application/x-java")) {
+				String fext = extCache.get(nrt);
+				if (tc || cc == -1 || (fext != null && fext.equals("application/x-java"))) {
 					synchronized (cache) {
 						resource = cache.get(nrt);
 						if (resource == null) {

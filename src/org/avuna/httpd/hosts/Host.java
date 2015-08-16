@@ -28,8 +28,10 @@ import org.avuna.httpd.event.base.EventReload;
 import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.logging.Logger;
+import org.avuna.httpd.util.unio.Certificate;
 import org.avuna.httpd.util.unio.PacketReceiver;
 import org.avuna.httpd.util.unio.PacketReceiverFactory;
+import org.avuna.httpd.util.unio.SNICallback;
 import org.avuna.httpd.util.unio.UNIOServerSocket;
 import org.avuna.httpd.util.unixsocket.UnixServerSocket;
 
@@ -104,6 +106,10 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 		return makeServer(ip, port, ssl);
 	}
 	
+	public SNICallback makeSNICallback() {
+		return null;
+	}
+	
 	public final ServerSocket makeServer(String ip, int port, boolean ssl) throws IOException {
 		logger.log("Starting " + name + "/" + protocol.name + " " + (ssl ? "TLS-" : "") + "Server on " + ip + ":" + port);
 		if (ssl) {
@@ -116,7 +122,7 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 							return makeReceiver(server);
 						}
 						
-					}, 1000, caFile, certFile, pkFile);
+					}, 1000, new Certificate(caFile, certFile, pkFile), makeSNICallback());
 					servers.add(server);
 					return server;
 				}else {

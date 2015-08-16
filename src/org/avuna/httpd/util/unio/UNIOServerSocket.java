@@ -14,10 +14,15 @@ public class UNIOServerSocket extends ServerSocket {
 	private String ip;
 	private int port;
 	private PacketReceiverFactory factory;
-	private long cert = 0L;
+	private Certificate cert = null;
+	private SNICallback sni = null;
 	
-	public long getCertificate() {
+	public Certificate getCertificate() {
 		return cert;
+	}
+	
+	public SNICallback getSNICallback() {
+		return sni;
 	}
 	
 	public boolean isClosed() {
@@ -36,12 +41,10 @@ public class UNIOServerSocket extends ServerSocket {
 		this(ip, port, factory, 50);
 	}
 	
-	public UNIOServerSocket(String ip, int port, PacketReceiverFactory factory, int backlog, String ca, String cert, String key) throws IOException {
+	public UNIOServerSocket(String ip, int port, PacketReceiverFactory factory, int backlog, Certificate cert, SNICallback sni) throws IOException {
 		this(ip, port, factory, backlog);
-		this.cert = GNUTLS.loadcert(ca, cert, key);
-		if (this.cert <= 0L) {
-			throw new CException((int) this.cert, "Failed to load SSL certificate!");
-		}
+		this.cert = cert;
+		this.sni = sni;
 	}
 	
 	public void bind() throws IOException {
@@ -72,6 +75,7 @@ public class UNIOServerSocket extends ServerSocket {
 	public UNIOSocket accept() throws IOException {
 		if (!bound) bind();
 		long session = 0L;
+		long cert = this.cert == null ? 0L : this.cert.getRawCertificate();
 		if (cert > 0L) session = GNUTLS.preaccept(cert);
 		String nsfd = CLib.acceptTCP(sockfd);
 		int i = Integer.parseInt(nsfd.substring(0, nsfd.indexOf("/")));
@@ -80,7 +84,7 @@ public class UNIOServerSocket extends ServerSocket {
 			throw new CException(CLib.errno(), "Server closed!");
 		}
 		if (cert > 0L) {
-			int e = GNUTLS.postaccept(cert, session, i);
+			int e = GNUTLS.postaccept(cert, session, i, sni);
 			if (e < 0) {
 				throw new CException(e, "Failed TLS Handshake!");
 			}

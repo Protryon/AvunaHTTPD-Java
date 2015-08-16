@@ -16,6 +16,7 @@ import org.avuna.httpd.mail.mailbox.EmailAccount;
 import org.avuna.httpd.mail.mailbox.EmailRouter;
 import org.avuna.httpd.util.CLib;
 import org.avuna.httpd.util.ConfigNode;
+import org.avuna.httpd.util.unio.Certificate;
 import org.avuna.httpd.util.unio.UNIOServerSocket;
 import org.avuna.httpd.util.unio.UNIOSocket;
 
@@ -36,12 +37,16 @@ public class SMTPHandler {
 			public void run(SMTPWork focus, String line) throws IOException {
 				focus.writeLine(220, "Go ahead");
 				if (host.unio() && CLib.hasGNUTLS() == 1) {
-					long cert = ((UNIOServerSocket) host.smtps).getCertificate();
-					if (cert == 0L) {
+					if (host.smtps == null) {
 						focus.writeLine(520, "TLS not enabled!");
 						return;
 					}
-					((UNIOSocket) focus.s).starttls(cert);
+					Certificate cert = ((UNIOServerSocket) host.smtps).getCertificate();
+					if (cert == null) {
+						focus.writeLine(520, "TLS not enabled!");
+						return;
+					}
+					((UNIOSocket) focus.s).starttls(cert, ((UNIOServerSocket) host.smtps).getSNICallback());
 					focus.ssl = true;
 				}else {
 					if (host.sslContext == null) {
