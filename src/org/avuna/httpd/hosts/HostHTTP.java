@@ -270,9 +270,8 @@ public class HostHTTP extends Host {
 		works.add(w);
 		if (unio) {
 			UNIOSocket us = (UNIOSocket) s;
-			((ThreadConnectionUNIO) conns.get(ci)).poller.addSocket(us);
-			ci++;
-			if (ci == conns.size()) ci = 0;
+			((ThreadConnectionUNIO) conns.get(ci++ % conns.size())).poller.addSocket(us);
+			if (ci++ > conns.size()) ci = 0;
 		}else {
 			for (ThreadConnection conn : conns) {
 				if (conn.getState() == State.WAITING) {
