@@ -73,6 +73,7 @@ public class UNIOServerSocket extends ServerSocket {
 	}
 	
 	public UNIOSocket accept() throws IOException {
+		if (closed) throw new IOException("Server closed!");
 		if (!bound) bind();
 		long session = 0L;
 		long cert = this.cert == null ? 0L : this.cert.getRawCertificate();
@@ -80,8 +81,10 @@ public class UNIOServerSocket extends ServerSocket {
 		String nsfd = CLib.acceptTCP(sockfd);
 		int i = Integer.parseInt(nsfd.substring(0, nsfd.indexOf("/")));
 		if (i == -1) {
+			int e = CLib.errno();
 			this.close();
-			throw new CException(CLib.errno(), "Server closed!");
+			if (e == 24) throw new IOException("Too many open files!");
+			else throw new CException(e, "Server closed!");
 		}
 		if (cert > 0L) {
 			int e = GNUTLS.postaccept(cert, session, i, sni);
