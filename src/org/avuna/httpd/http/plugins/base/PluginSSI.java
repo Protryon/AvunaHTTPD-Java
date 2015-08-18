@@ -4,8 +4,10 @@ package org.avuna.httpd.http.plugins.base;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.zip.CRC32;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
 import org.avuna.httpd.hosts.VHost;
@@ -60,6 +62,15 @@ public class PluginSSI extends Plugin {
 	
 	private final Pattern ssiDirective = Pattern.compile("<!--\\s*#([a-zA-Z]*)\\s+(.*?)-->");
 	
+	private static final class ParsedDirective {
+		public String directive;
+		public String[] args;
+		public int start = 0;
+		public int end = 0;
+	}
+	
+	private final HashMap<Long, ParsedDirective[]> dirCache = new HashMap<Long, ParsedDirective[]>();
+	
 	@Override
 	public void receive(EventBus bus, Event event) {
 		if (event instanceof EventGenerateResponse) {
@@ -71,80 +82,94 @@ public class PluginSSI extends Plugin {
 			if (ct == null || !ct.startsWith("application/x-ssi")) return;
 			response.headers.updateHeader("Content-Type", "text/html; charset=utf-8");
 			String body = new String(response.body.data);
-			Matcher m = ssiDirective.matcher(body);
+			CRC32 crc32 = new CRC32();
+			crc32.update(response.body.data);
+			ParsedDirective[] dirs = null;
+			long crc = crc32.getValue();
+			if (dirCache.containsKey(crc)) {
+				dirs = dirCache.get(crc);
+			}else {
+				Matcher m = ssiDirective.matcher(body);
+				ArrayList<ParsedDirective> ldirs = new ArrayList<ParsedDirective>();
+				while (m.find()) {
+					String directive = m.group(1);
+					String dargs = m.group(2);
+					ArrayList<String> args = new ArrayList<String>();
+					int sl = 0;
+					int stage = 0;
+					String cur = "";
+					while (sl < dargs.length()) {
+						if (stage == 0) {
+							int t = dargs.indexOf("=", sl);
+							if (t < sl) break;
+							cur = dargs.substring(sl, t + 1); // inc =
+							sl += cur.length();
+							cur = cur.trim();
+							stage++;
+						}else if (stage == 1) {
+							boolean esc = false;
+							sl = dargs.indexOf('"', sl) + 1; // skip ahead past next "
+							int s = sl;
+							while (sl < dargs.length()) {
+								char c = dargs.charAt(sl);
+								if (c == '\\') {
+									esc = !esc;
+								}else if (!esc) {
+									if (c == '"') { // found unescaped terminator
+										break;
+									}
+								}else {
+									esc = false;
+								}
+								sl++;
+							}
+							cur += dargs.substring(s, sl); // name=value , no quotes
+							args.add(cur);
+							stage = 0;
+						}
+					}
+					ParsedDirective pd = new ParsedDirective();
+					pd.directive = directive;
+					pd.args = args.toArray(new String[0]);
+					pd.start = m.start();
+					pd.end = m.end();
+					ldirs.add(pd);
+				}
+				dirs = ldirs.toArray(new ParsedDirective[0]);
+				dirCache.put(crc, dirs);
+			}
 			StringBuilder res = new StringBuilder();
 			int le = 0;
-			int off = 0;
-			while (m.find()) {
-				int gs = m.start();
-				int ge = m.end();
-				res.append(body.substring(le, m.start()));
-				le = m.end();
-				String directive = m.group(1);
-				String dargs = m.group(2);
-				ArrayList<String> args = new ArrayList<String>();
-				int sl = 0;
-				int stage = 0;
-				String cur = "";
-				while (sl < dargs.length()) {
-					if (stage == 0) {
-						int t = dargs.indexOf("=", sl);
-						if (t < sl) break;
-						cur = dargs.substring(sl, t + 1); // inc =
-						sl += cur.length();
-						cur = cur.trim();
-						stage++;
-					}else if (stage == 1) {
-						boolean esc = false;
-						sl = dargs.indexOf('"', sl) + 1; // skip ahead past next "
-						int s = sl;
-						while (sl < dargs.length()) {
-							char c = dargs.charAt(sl);
-							if (c == '\\') {
-								esc = !esc;
-							}else if (!esc) {
-								if (c == '"') { // found unescaped terminator
-									break;
-								}
-							}else {
-								esc = false;
+			if (dirs != null) {
+				for (ParsedDirective pd : dirs) {
+					res.append(body.substring(le, pd.start));
+					if (pd.directive.equals("include")) {
+						if (pd.args.length == 1) {
+							String f = pd.args[0];
+							if (f.startsWith("file=")) {
+								f = processHREF(request.host, request.target, f.substring(5));
+							}else if (f.startsWith("virtual=")) {
+								f = f.substring(8);
+								if (!f.startsWith("/")) f = "/" + f;
 							}
-							sl++;
-						}
-						cur += dargs.substring(s, sl); // name=value , no quotes
-						args.add(cur);
-						stage = 0;
-					}
-				}
-				if (directive.equals("include")) {
-					if (args.size() == 1) {
-						String f = args.get(0);
-						if (f.startsWith("file=")) {
-							f = processHREF(request.host, request.target, f.substring(5));
-						}else if (f.startsWith("virtual=")) {
-							f = f.substring(8);
-							if (!f.startsWith("/")) f = "/" + f;
-						}
-						RequestPacket subreq = request.clone();
-						subreq.parent = request;
-						subreq.target = f;
-						subreq.method = Method.GET;
-						subreq.body.data = null;
-						subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
-						subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
-						ResponsePacket subresp = request.host.getHost().processSubRequests(subreq)[0];
-						if (subresp != null && subresp.body != null && subresp.body.data != null) {
-							res.append(new String(subresp.body.data));
+							RequestPacket subreq = request.clone();
+							subreq.parent = request;
+							subreq.target = f;
+							subreq.method = Method.GET;
+							subreq.body.data = null;
+							subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
+							subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
+							ResponsePacket subresp = request.host.getHost().processSubRequests(subreq)[0];
+							if (subresp != null && subresp.body != null && subresp.body.data != null) {
+								res.append(new String(subresp.body.data));
+							}
 						}
 					}
+					
 				}
-				System.out.println("directive = " + directive);
-				for (String arg : args) {
-					System.out.println(arg);
-				}
+				res.append(body.substring(le, body.length()));
+				response.body.data = res.toString().getBytes();
 			}
-			res.append(body.substring(le, body.length()));
-			response.body.data = res.toString().getBytes();
 		}
 	}
 	
