@@ -2,11 +2,12 @@
 
 package org.avuna.httpd.http.plugins.base;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.util.HashMap;
@@ -23,52 +24,25 @@ import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.networking.Work;
 import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginRegistry;
-import org.avuna.httpd.http.plugins.base.fcgi.FCGIConnection;
-import org.avuna.httpd.http.plugins.base.fcgi.FCGIConnectionManagerNMPX;
-import org.avuna.httpd.http.plugins.base.fcgi.FCGISession;
-import org.avuna.httpd.http.plugins.base.fcgi.IFCGIManager;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Stream;
 import org.avuna.httpd.util.unio.UNIOSocket;
 
-public class PluginFCGI extends Plugin {
+public class PluginCGI extends Plugin {
 	
-	public PluginFCGI(String name, PluginRegistry registry, File config) {
+	public PluginCGI(String name, PluginRegistry registry, File config) {
 		super(name, registry, config);
 		if (!pcfg.getNode("enabled").getValue().equals("true")) return;
 		for (String subs : pcfg.getSubnodes()) {
 			ConfigNode sub = pcfg.getNode(subs);
 			if (!sub.branching()) continue;
-			boolean unix = sub.getNode("unix").getValue().equals("true");
 			try {
-				String ip = sub.getNode("ip").getValue();
-				int port = Integer.parseInt(sub.getNode("port").getValue());
-				FCGIConnection sett = unix ? new FCGIConnection(registry.host, ip) : new FCGIConnection(registry.host, ip, port);
-				sett.start();
-				boolean cmpx = false;
-				sett.getSettings();
-				int i = 0;
-				while (!sett.gotSettings) {
-					i++;
-					if (i > 10000) {
-						break;
-					}
-					Thread.sleep(0L, 100000);
-				}
-				cmpx = sett.canMultiplex;
-				sett.close();
-				IFCGIManager mgr = null;
-				if (cmpx) {
-					mgr = unix ? new FCGIConnection(registry.host, ip) : new FCGIConnection(registry.host, ip, port);
-				}else {
-					mgr = unix ? new FCGIConnectionManagerNMPX(ip) : new FCGIConnectionManagerNMPX(ip, port);
-				}
-				fcgis.put(sub.getNode("mime-types").getValue(), mgr);
-				mgr.start();
+				if (!sub.containsNode("program")) sub.insertNode("program", "php-cgi");
+				String program = sub.getNode("program").getValue();
+				cgis.put(sub.getNode("mime-types").getValue(), program);
 			}catch (Exception e) {
-				fcgis.put(sub.getNode("mime-types").getValue(), null);
+				cgis.put(sub.getNode("mime-types").getValue(), null);
 				registry.host.logger.logError(e);
-				registry.host.logger.log("FCGI server(" + sub.getNode("ip").getValue() + (unix ? "" : ":" + sub.getNode("port").getValue()) + ") NOT accepting connections, disabling FCGI.");
 			}
 		}
 	}
@@ -89,17 +63,10 @@ public class PluginFCGI extends Plugin {
 	}
 	
 	public void destroy() {
-		for (IFCGIManager fcgi : fcgis.values()) {
-			try {
-				fcgi.close();
-			}catch (IOException e) {
-				registry.host.logger.logError(e);
-			}
-		}
-		fcgis.clear();
+		cgis.clear();
 	}
 	
-	public HashMap<String, IFCGIManager> fcgis = new HashMap<String, IFCGIManager>();
+	public HashMap<String, String> cgis = new HashMap<String, String>();
 	
 	@Override
 	public void formatConfig(ConfigNode json) {
@@ -113,9 +80,7 @@ public class PluginFCGI extends Plugin {
 		for (String subb : json.getSubnodes()) {
 			ConfigNode sub = json.getNode(subb);
 			if (!sub.branching()) continue;
-			if (!sub.containsNode("unix")) sub.insertNode("unix", "false", "set ip to the unix socket file, and port is ignored <to use unix sockets>");
-			if (!sub.containsNode("ip")) sub.insertNode("ip", "127.0.0.1");
-			if (!sub.containsNode("port")) sub.insertNode("port", "9000");
+			if (!sub.containsNode("program")) sub.insertNode("program", "php-cgi", "cgi program to execute, must be in PATH or a absolute path.");
 			if (!sub.containsNode("mime-types")) sub.insertNode("mime-types", "application/x-php");
 		}
 	}
@@ -123,10 +88,8 @@ public class PluginFCGI extends Plugin {
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request) {
 		if (!response.headers.hasHeader("Content-Type") || response.body == null) return false;
 		String ct = response.headers.getHeader("Content-Type");
-		if (ct.contains(";")) ct = ct.substring(0, ct.indexOf(";"));
-		ct = ct.trim();
 		boolean gct = false;
-		major: for (String key : fcgis.keySet()) {
+		major: for (String key : cgis.keySet()) {
 			String[] pcts = key.split(",");
 			for (String pct : pcts) {
 				if (pct.trim().equals(ct)) {
@@ -151,103 +114,92 @@ public class PluginFCGI extends Plugin {
 			}else {
 				get = "";
 			}
-			// ProcessBuilder pb = new ProcessBuilder((String)pcfg.get("cmd"));
-			FCGIConnection conn = null;
 			String ct = response.headers.getHeader("Content-Type");
-			major: for (String key : fcgis.keySet()) {
+			if (ct.contains(";")) ct = ct.substring(0, ct.indexOf(";"));
+			ct = ct.trim();
+			ProcessBuilder builder = null;
+			major: for (String key : cgis.keySet()) {
 				String[] pcts = key.split(",");
 				for (String pct : pcts) {
 					if (pct.trim().equals(ct)) {
-						IFCGIManager fcgi = fcgis.get(key);
-						if (fcgi instanceof FCGIConnection) {
-							conn = (FCGIConnection) fcgi;
-						}else {
-							FCGIConnectionManagerNMPX fcmx = (FCGIConnectionManagerNMPX) fcgi;
-							if (fcmx == null) continue;
-							conn = fcmx.getNMPX(request.host);
-						}
+						String program = cgis.get(key);
+						builder = new ProcessBuilder(program);
 						break major;
 					}
 				}
 			}
-			if (conn == null) {
+			if (builder == null) {
 				ResponseGenerator.generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
-				Resource er = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "Avuna encountered a critical error attempting to contact the FCGI Server! Please contact your system administrator and notify them to check their logs.");
+				Resource er = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "Avuna encountered a critical error attempting to contact the CGI Program! Please contact your system administrator and notify them to check their logs.");
 				response.headers.updateHeader("Content-Type", er.type);
 				response.body = er;
 			}
-			FCGISession session = new FCGISession(conn);
-			session.start();
-			session.param("SERVER_ADDR", pcfg.getNode("server_addr").getValue() + "");
-			session.param("REQUEST_URI", rq + (get.length() > 0 ? "?" + get : ""));
+			builder.environment().put("SERVER_ADDR", pcfg.getNode("server_addr").getValue() + "");
+			builder.environment().put("REQUEST_URI", rq + (get.length() > 0 ? "?" + get : ""));
 			
 			rq = AvunaHTTPD.fileManager.correctForIndex(rq, request);
 			
-			session.param("CONTENT_LENGTH", (request.body == null || request.body.data == null) ? "0" : request.body.data.length + "");
-			if (request.body != null && request.body.type != null) session.param("CONTENT_TYPE", request.body.type);
-			session.param("GATEWAY_INTERFACE", "CGI/1.1");
+			builder.environment().put("CONTENT_LENGTH", (request.body == null || request.body.data == null) ? "0" : request.body.data.length + "");
+			if (request.body != null && request.body.type != null) builder.environment().put("CONTENT_TYPE", request.body.type);
+			builder.environment().put("GATEWAY_INTERFACE", "CGI/1.1");
 			// session.param("PATH_INFO", request.extraPath);
 			// session.param("PATH_TRANSLATED", new File(request.host.getHTDocs(), URLDecoder.decode(request.extraPath)).getAbsolutePath());
-			session.param("QUERY_STRING", get);
-			session.param("REMOTE_ADDR", request.userIP);
-			session.param("REMOTE_HOST", request.userIP);
-			session.param("REMOTE_PORT", request.userPort + "");
-			session.param("REQUEST_METHOD", request.method.name);
-			session.param("REDIRECT_STATUS", response.statusCode + "");
+			builder.environment().put("QUERY_STRING", get);
+			builder.environment().put("REMOTE_ADDR", request.userIP);
+			builder.environment().put("REMOTE_HOST", request.userIP);
+			builder.environment().put("REMOTE_PORT", request.userPort + "");
+			builder.environment().put("REQUEST_METHOD", request.method.name);
+			builder.environment().put("REDIRECT_STATUS", response.statusCode + "");
 			String oabs = response.body.oabs.replace("\\", "/");
 			String htds = request.host.getHTDocs().getAbsolutePath().replace("\\", "/");
-			session.param("SCRIPT_NAME", oabs.substring(htds.length()));
-			if (request.headers.hasHeader("Host")) session.param("SERVER_NAME", request.headers.getHeader("Host"));
+			builder.environment().put("SCRIPT_NAME", oabs.substring(htds.length()));
+			if (request.headers.hasHeader("Host")) builder.environment().put("SERVER_NAME", request.headers.getHeader("Host"));
 			int port = request.host.getHost().getPort();
-			session.param("SERVER_PORT", port + "");
-			session.param("SERVER_PROTOCOL", request.httpVersion);
-			session.param("SERVER_SOFTWARE", "Avuna/" + AvunaHTTPD.VERSION);
-			session.param("DOCUMENT_ROOT", htds);
-			session.param("SCRIPT_FILENAME", oabs);
+			builder.environment().put("SERVER_PORT", port + "");
+			builder.environment().put("SERVER_PROTOCOL", request.httpVersion);
+			builder.environment().put("SERVER_SOFTWARE", "Avuna/" + AvunaHTTPD.VERSION);
+			builder.environment().put("DOCUMENT_ROOT", htds);
+			builder.environment().put("SCRIPT_FILENAME", oabs);
 			HashMap<String, String[]> hdrs = request.headers.getHeaders();
 			for (String key : hdrs.keySet()) {
 				if (key.equalsIgnoreCase("Accept-Encoding")) continue;
 				for (String val : hdrs.get(key)) {
-					session.param("HTTP_" + key.toUpperCase().replace("-", "_"), val); // TODO: will break if multiple same-nameed headers are received
+					builder.environment().put("HTTP_" + key.toUpperCase().replace("-", "_"), val); // TODO: will break if multiple same-nameed headers are received
 				}
 			}
-			session.finishParams();
-			// Process pbr = pb.start();
-			// while (!session.isDone()) {
-			// try {
-			// Thread.sleep(1L);
-			// }catch (InterruptedException e) {
-			// Logger.logError(e);
-			// }
-			// }
-			// OutputStream pbout = ;
+			Process proc = builder.start();
+			OutputStream pout = proc.getOutputStream();
+			InputStream pin = proc.getInputStream();
 			if (request.body != null) {
-				session.data(request.body.data);
-				// pbout.write(request.body.data);
-				// pbout.flush();
+				pout.write(request.body.data);
+				pout.flush();
 			}
-			session.finishReq();
 			request.work.blockTimeout = true;
 			if (request.work.s instanceof UNIOSocket) {
 				((UNIOSocket) request.work.s).setHoldTimeout(true);
 			}
 			try {
 				int i = 0;
-				while (!session.isDone()) {
+				while (true) {
 					try {
-						Work work = request.work;
-						if (work == null && request.parent != null) {
-							work = request.parent.work;
+						proc.exitValue();
+						break;
+					}catch (IllegalThreadStateException e2) {
+						try {
+							Work work = request.work;
+							if (work == null && request.parent != null) {
+								work = request.parent.work;
+							}
+							if (work != null && work.s.isClosed()) {
+								proc.destroy();
+								break;
+							}
+							i++;
+							if (i > 600000) break;
+							Thread.sleep(0L, 100000);
+						}catch (InterruptedException e) {
+							request.host.logger.logError(e);
 						}
-						if (work != null && work.s.isClosed()) {
-							session.abort();
-							break;
-						}
-						i++;
-						if (i > 600000) break;
-						Thread.sleep(0L, 100000);
-					}catch (InterruptedException e) {
-						request.host.logger.logError(e);
 					}
 				}
 			}finally {
@@ -256,7 +208,7 @@ public class PluginFCGI extends Plugin {
 					((UNIOSocket) request.work.s).setHoldTimeout(false);
 				}
 			}
-			DataInputStream in = new DataInputStream(new ByteArrayInputStream(session.getResponse()));
+			DataInputStream in = new DataInputStream(pin);
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();
 			String line;
 			while ((line = Stream.readLine(in)) != null) {

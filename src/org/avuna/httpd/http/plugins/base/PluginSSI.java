@@ -66,7 +66,6 @@ public class PluginSSI extends Plugin {
 		public String directive;
 		public String[] args;
 		public int start = 0;
-		public int end = 0;
 	}
 	
 	private final HashMap<Long, ParsedDirective[]> dirCache = new HashMap<Long, ParsedDirective[]>();
@@ -132,7 +131,6 @@ public class PluginSSI extends Plugin {
 					pd.directive = directive;
 					pd.args = args.toArray(new String[0]);
 					pd.start = m.start();
-					pd.end = m.end();
 					ldirs.add(pd);
 				}
 				dirs = ldirs.toArray(new ParsedDirective[0]);
