@@ -405,11 +405,9 @@ public class HostHTTP extends Host {
 			if (!vhost.containsNode("enabled")) vhost.insertNode("enabled", "true");
 			if (!vhost.containsNode("debug")) vhost.insertNode("debug", "false", "if true, request headers will be logged");
 			if (!vhost.containsNode("host")) vhost.insertNode("host", ".*", "regex to match host header, determines which vhost to load.");
-			// if (!vhost.containsNode("inheritjls")) {
 			if (!vhost.containsNode("htdocs")) vhost.insertNode("htdocs", AvunaHTTPD.fileManager.getBaseFile("htdocs").toString());
 			if (!vhost.containsNode("htsrc")) vhost.insertNode("htsrc", AvunaHTTPD.fileManager.getBaseFile("htsrc").toString());
 			if (!vhost.containsNode("htcfg")) vhost.insertNode("htcfg", AvunaHTTPD.fileManager.getBaseFile("htcfg").toString());
-			// }
 			if (!vhost.containsNode("forward")) vhost.insertNode("forward", "false");
 			boolean forward = vhost.getNode("forward").getValue().equals("true");
 			if (forward) {
@@ -427,7 +425,7 @@ public class HostHTTP extends Host {
 			}else {
 				if (!vhost.containsNode("inheritjls")) vhost.insertNode("inheritjls", "", "set to host/vhost to inherit another hosts javaloaders; used for HTTPS, you would want to inherit JLS to sync them in memory.");
 				if (!vhost.containsNode("errorpages")) vhost.insertNode("errorpages", null, "subvalues are errorcode=errorpage, ie \"404=/404.html\", does not support PHP/AvunaAgent pages.");
-				if (!vhost.containsNode("index")) vhost.insertNode("index", "index.class,index.php,index.html", "format is filename,filename,etc");
+				if (!vhost.containsNode("index")) vhost.insertNode("index", "index.class,index.php,index.shtml,index.html", "format is filename,filename,etc");
 				if (!vhost.containsNode("cacheClock")) vhost.insertNode("cacheClock", "-1", "-1=forever, 0=never >0=MS per cache clear");
 			}
 			if (snip) {

@@ -35,6 +35,8 @@ public class BaseLoader {
 		// PatchRegistry.registerPatch(new PatchJWSL("JWSL")); deprecated
 		registry.registerPatch(new PluginFCGI("FCGI", registry, new File(registry.getPlugins(), "FCGI")));
 		
+		registry.registerPatch(new PluginSSI("SSI", registry, new File(registry.getPlugins(), "SSI")));
+		
 		registry.registerPatch(new PluginInline("Inline", registry, new File(registry.getPlugins(), "Inline")));
 		// caching
 		registry.registerPatch(new PluginETag("ETag", registry, new File(registry.getPlugins(), "ETag")));
