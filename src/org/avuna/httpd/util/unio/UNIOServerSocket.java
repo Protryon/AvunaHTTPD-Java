@@ -59,7 +59,7 @@ public class UNIOServerSocket extends ServerSocket {
 			this.close();
 			int e = CLib.errno();
 			if (e == 98) {
-				throw new BindException();
+				throw new BindException("Address is in use!");
 			}else {
 				throw new CException(e, "socket failed bind");
 			}
