@@ -84,8 +84,6 @@ public class Work {
 		return -1;
 	}
 	
-	// public ResponsePacket[] pipeline = new ResponsePacket[32];
-	
 	public Work(HostHTTP host, Socket s, DataInputStream in, DataOutputStream out, boolean ssl) {
 		this.host = host;
 		this.s = s;
@@ -100,7 +98,18 @@ public class Work {
 		}
 	}
 	
+	private boolean closed = false;
+	
+	public boolean isClosed() {
+		if (!closed && s.isClosed()) {
+			close();
+		}
+		return closed;
+	}
+	
 	public void close() {
+		if (closed) return;
+		closed = true;
 		host.removeWork(this);
 		String ip = s.getInetAddress().getHostAddress();
 		Integer cur = HostHTTP.connIPs.get(ip);
