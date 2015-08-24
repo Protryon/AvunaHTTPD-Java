@@ -8,7 +8,9 @@ import org.avuna.httpd.http.plugins.Plugin;
 import org.avuna.httpd.http.plugins.PluginClassLoader;
 import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.plugins.avunaagent.PluginAvunaAgent;
+import org.avuna.httpd.http.plugins.base.fcgi.PluginFCGI;
 import org.avuna.httpd.http.plugins.security.PluginSecurity;
+import org.avuna.httpd.http.plugins.ssi.PluginSSI;
 
 public class BaseLoader {
 	public static void loadSecBase(PluginRegistry registry) {

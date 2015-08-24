@@ -23,8 +23,8 @@ import org.avuna.httpd.http.plugins.avunaagent.PluginAvunaAgent;
 import org.avuna.httpd.http.plugins.avunaagent.lib.AvunaAgentUtil;
 import org.avuna.httpd.http.plugins.avunaagent.lib.HTMLCache;
 import org.avuna.httpd.http.plugins.base.PluginChunked;
-import org.avuna.httpd.http.plugins.base.PluginFCGI;
 import org.avuna.httpd.http.plugins.base.PluginOverride;
+import org.avuna.httpd.http.plugins.base.fcgi.PluginFCGI;
 import org.avuna.httpd.http.util.OverrideConfig;
 
 /** General utility for File type objects.
