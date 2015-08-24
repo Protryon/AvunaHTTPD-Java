@@ -142,14 +142,30 @@ public class PluginSSI extends Plugin {
 				for (ParsedDirective pd : dirs) {
 					res.append(body.substring(le, pd.start));
 					if (pd.directive.equals("include")) {
-						if (pd.args.length == 1) {
-							String f = pd.args[0];
-							if (f.startsWith("file=")) {
-								f = processHREF(request.host, request.target, f.substring(5));
-							}else if (f.startsWith("virtual=")) {
-								f = f.substring(8);
-								if (!f.startsWith("/")) f = "/" + f;
-							}
+						if (pd.args.length != 1) continue;
+						String f = pd.args[0];
+						if (f.startsWith("file=")) {
+							f = processHREF(request.host, request.target, f.substring(5));
+						}else if (f.startsWith("virtual=")) {
+							f = f.substring(8);
+							if (!f.startsWith("/")) f = "/" + f;
+						}
+						RequestPacket subreq = request.clone();
+						subreq.parent = request;
+						subreq.target = f;
+						subreq.method = Method.GET;
+						subreq.body.data = null;
+						subreq.headers.removeHeaders("If-None-Matches"); // just in case of collision + why bother ETag?
+						subreq.headers.removeHeaders("Accept-Encoding"); // gzip = problem
+						ResponsePacket subresp = request.host.getHost().processSubRequests(subreq)[0];
+						if (subresp != null && subresp.body != null && subresp.body.data != null) {
+							res.append(new String(subresp.body.data));
+						}
+					}else if (pd.directive.equals("exec")) {
+						if (pd.args.length != 1) continue;
+						if (pd.args[0].startsWith("cgi=")) {
+							String f = pd.args[0].substring(4);
+							if (!f.startsWith("/")) f = "/" + f;
 							RequestPacket subreq = request.clone();
 							subreq.parent = request;
 							subreq.target = f;
@@ -161,7 +177,7 @@ public class PluginSSI extends Plugin {
 							if (subresp != null && subresp.body != null && subresp.body.data != null) {
 								res.append(new String(subresp.body.data));
 							}
-						}
+						}else request.host.logger.logError("Attempted SSI Exec, potential security breach: " + pd.args[0]);
 					}
 					
 				}
@@ -173,7 +189,7 @@ public class PluginSSI extends Plugin {
 	
 	@Override
 	public void register(EventBus bus) {
-		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, -500);
+		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, -700);
 		bus.registerEvent(HTTPEventID.CLEARCACHE, this, 0);
 	}
 	
