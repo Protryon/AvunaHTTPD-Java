@@ -13,7 +13,7 @@ public class SSIParser {
 		this.engine = engine;
 	}
 	
-	private final Pattern ssiDirective = Pattern.compile("<!--\\s*#([a-zA-Z]*)\\s+(.*?)-->");
+	private final Pattern ssiDirective = Pattern.compile("<!--\\s*#([a-zA-Z]*)\\s*(.*?)-->");
 	
 	private final HashMap<Long, ParsedSSIDirective[]> dirCache = new HashMap<Long, ParsedSSIDirective[]>();
 	

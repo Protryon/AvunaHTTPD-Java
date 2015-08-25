@@ -61,13 +61,17 @@ public class PluginSSI extends Plugin {
 			if (sp != null && sp.directives != null) {
 				sp.data = request;
 				for (ParsedSSIDirective pd : sp.directives) {
-					res.append(body.substring(le, pd.start));
-					le = pd.end;
 					String lr = engine.callDirective(sp, pd);
+					if (sp.shouldOutputNextBlock()) {
+						res.append(body.substring(le, pd.start));
+					}
+					le = pd.end;
 					if (lr == null) {
 						response.body.data = sp.variables.get("error").getBytes();
 						return;
-					}else if (lr.length() > 0) res.append(lr);
+					}else if (lr.length() > 0) {
+						res.append(lr);
+					}
 				}
 				sp.data = null;
 				res.append(body.substring(le, body.length()));

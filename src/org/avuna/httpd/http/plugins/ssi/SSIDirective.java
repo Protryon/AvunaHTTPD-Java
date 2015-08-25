@@ -15,4 +15,14 @@ public abstract class SSIDirective {
 	public abstract String call(Page page, ParsedSSIDirective dir);
 	
 	public abstract String getDirective();
+	
+	/** If true, will be treated as a scope opener/closer. */
+	public boolean isScope() {
+		return false;
+	}
+	
+	/** If true, opens scope, if false, closes scope. */
+	public boolean scopeType() {
+		return false;
+	}
 }

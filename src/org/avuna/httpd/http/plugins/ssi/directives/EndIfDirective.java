@@ -13,12 +13,20 @@ public class EndIfDirective extends SSIDirective {
 	
 	@Override
 	public String call(Page page, ParsedSSIDirective dir) {
-		return null;
+		return "";
 	}
 	
 	@Override
 	public String getDirective() {
 		return "endif";
+	}
+	
+	public boolean isScope() {
+		return true;
+	}
+	
+	public boolean scopeType() {
+		return false;
 	}
 	
 }
