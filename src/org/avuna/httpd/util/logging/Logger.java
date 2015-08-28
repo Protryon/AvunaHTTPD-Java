@@ -76,7 +76,7 @@ public class Logger {
 		loggers.add(this);
 	}
 	
-	private final static SimpleDateFormat daystamp = new SimpleDateFormat("MM-dd-yyyy HH:mm:ss");
+	private final static SimpleDateFormat daystamp = new SimpleDateFormat("MM-dd-yyyy HH-mm-ss");
 	
 	private final static SimpleDateFormat timestamp = new SimpleDateFormat("HH:mm:ss");
 	
