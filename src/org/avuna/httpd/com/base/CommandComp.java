@@ -56,7 +56,7 @@ public class CommandComp extends Command {
 		String sep = AvunaHTTPD.windows ? ";" : ":";
 		String ocp = "";
 		for (URL url : ((URLClassLoader) ClassLoader.getSystemClassLoader()).getURLs()) {
-			ocp += url.toString() + sep;
+			ocp += url.getFile() + sep;
 		}
 		String cp = ocp + host.getHTDocs().toString() + sep + host.getHTSrc().toString() + sep + PluginAvunaAgent.lib.toString() + sep;
 		for (File f : PluginAvunaAgent.lib.listFiles()) {
