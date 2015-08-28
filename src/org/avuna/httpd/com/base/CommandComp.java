@@ -65,7 +65,6 @@ public class CommandComp extends Command {
 			}
 		}
 		cp = cp.substring(0, cp.length() - 1);
-		System.out.println(cp);
 		ArrayList<String> cfs = new ArrayList<String>();
 		cfs.add(AvunaHTTPD.mainConfig.getNode("javac").getValue());
 		cfs.add("-cp");
