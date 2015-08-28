@@ -65,6 +65,7 @@ public class CommandComp extends Command {
 			}
 		}
 		cp = cp.substring(0, cp.length() - 1);
+		System.out.println(cp);
 		ArrayList<String> cfs = new ArrayList<String>();
 		cfs.add(AvunaHTTPD.mainConfig.getNode("javac").getValue());
 		cfs.add("-cp");
@@ -314,7 +315,7 @@ public class CommandComp extends Command {
 				while (is >= 0) {
 					char c = gen.charAt(is);
 					if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
-						
+					
 					}else if (c == ')') {
 						b1 = true;
 						break;
