@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import org.avuna.httpd.util.CException;
 import org.avuna.httpd.util.CLib;
@@ -32,6 +33,7 @@ public class UNIOSocket extends Socket {
 	protected boolean to = false;
 	
 	private void flush(long timeout) throws IOException {
+		if (closed) throw new SocketException("Socket Closed!");
 		long start = System.currentTimeMillis() + timeout;
 		while (outBuf.available() > 0) { // could block, we should do something more like gnutls_handshake
 			if (write() == 0) {
@@ -44,6 +46,7 @@ public class UNIOSocket extends Socket {
 	}
 	
 	public void starttls(Certificate cert, SNICallback sni) throws IOException {
+		if (closed) throw new SocketException("Socket Closed!");
 		if (cert == null || CLib.hasGNUTLS() != 1) return;
 		long rcert = cert.getRawCertificate();
 		stlsi = true;
@@ -105,6 +108,7 @@ public class UNIOSocket extends Socket {
 	}
 	
 	protected int read() throws IOException {
+		if (closed) throw new SocketException("Socket Closed!");
 		byte[] b = new byte[in.available()];
 		int i = 0;
 		int li = 0;
@@ -118,6 +122,7 @@ public class UNIOSocket extends Socket {
 	}
 	
 	protected int write() throws IOException {
+		if (closed) throw new SocketException("Socket Closed!");
 		if (outBuf.available() < 1) return 0;
 		byte[] b = new byte[4096];
 		int i = 0;

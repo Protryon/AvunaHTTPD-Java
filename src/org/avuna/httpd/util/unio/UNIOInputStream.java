@@ -43,6 +43,8 @@ public class UNIOInputStream extends InputStream {
 				throw new SocketException("Connection reset by peer");
 			}else if (i == 32) {
 				throw new SocketException("Broken Pipe");
+			}else if (i == 9) {
+				throw new SocketException("Bad Connection! Possible cross client network corruption.");
 			}else throw new CException(i, "read failed");
 		}
 		System.arraycopy(buf, 0, array, off, buf.length);

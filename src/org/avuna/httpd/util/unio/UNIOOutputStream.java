@@ -51,6 +51,8 @@ public class UNIOOutputStream extends OutputStream {
 				throw new SocketException("Connection reset by peer");
 			}else if (i == 32) {
 				throw new SocketException("Broken Pipe");
+			}else if (i == 9) {
+				throw new SocketException("Bad Connection! Possible cross client network corruption.");
 			}else throw new CException(i, "End of Stream");
 		}
 		socket.lr = System.currentTimeMillis();
@@ -61,6 +63,7 @@ public class UNIOOutputStream extends OutputStream {
 		this.cwrite(buf, off, len);
 	}
 	
+	/** Does nothing. NIO should not be flushed from here, but rather by calling the Poller. */
 	public void flush() {
 	
 	}
