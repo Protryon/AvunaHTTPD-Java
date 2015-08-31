@@ -43,22 +43,28 @@ public class ThreadStreamWorker extends Thread {
 			@SuppressWarnings("resource")
 			ChunkedOutputStream cos = new ChunkedOutputStream(work.out, resp, resp.headers.hasHeader("Content-Encoding") && resp.headers.getHeader("Content-Encoding").contains("gzip"));
 			cos.writeHeaders();
+			System.out.println("headers wrote");
 			int i = 1;
 			byte[] buf = new byte[10485760];
 			while (!work.s.isClosed() && i > 0) {
 				i = fin.read(buf);
 				if (i < 1) {
-					work.s.close();
+					System.out.println("closed");
 					break;
 				}else {
+					System.out.println("writing " + i);
 					cos.write(buf, 0, i);
+					System.out.println("wrote " + i);
 					cos.flush();
+					System.out.println("flushed");
 				}
 			}
+			System.out.println("finished");
 			cos.finish();
 			// cos.close();
 			host.readdWork(work);
 		}catch (IOException e) {
+			System.out.println("exception");
 			if (!(e instanceof SocketException)) req.host.logger.logError(e);
 		}finally {
 			String ip = work.s.getInetAddress().getHostAddress();

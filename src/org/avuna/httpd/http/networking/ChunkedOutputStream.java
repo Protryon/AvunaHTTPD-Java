@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.zip.GZIPOutputStream;
 import org.avuna.httpd.AvunaHTTPD;
-import org.avuna.httpd.util.unio.UNIOOutputStream;
+import org.avuna.httpd.util.unio.BufferOutputStream;
 
 public class ChunkedOutputStream extends DataOutputStream {
 	private boolean gzip = false, flushed = false;
@@ -80,7 +80,7 @@ public class ChunkedOutputStream extends DataOutputStream {
 		super.write((hex + AvunaHTTPD.crlf).getBytes());
 		super.write(cache);
 		super.write(AvunaHTTPD.crlf.getBytes());
-		if (super.out instanceof UNIOOutputStream) ((UNIOOutputStream) super.out).flush(0L);
+		if (super.out instanceof BufferOutputStream) ((BufferOutputStream) super.out).getBuffer().getSocket().flush(-1L);
 		else super.flush();
 		writing = false;
 	}
@@ -104,7 +104,7 @@ public class ChunkedOutputStream extends DataOutputStream {
 			super.write((AvunaHTTPD.fileManager.bytesToHex(bas) + AvunaHTTPD.crlf).getBytes());
 			super.write(cache);
 			super.write((AvunaHTTPD.crlf + "0" + AvunaHTTPD.crlf).getBytes());
-			if (super.out instanceof UNIOOutputStream) ((UNIOOutputStream) super.out).flush(0L);
+			if (super.out instanceof BufferOutputStream) ((BufferOutputStream) super.out).getBuffer().getSocket().flush(-1L);
 			else super.flush();
 			writing = false;
 		}else {

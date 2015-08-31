@@ -63,13 +63,8 @@ public class UNIOOutputStream extends OutputStream {
 		this.cwrite(buf, off, len);
 	}
 	
-	/** Does nothing, use flush(long) to actually flush. For compatibility */
+	/** Does nothing. For compatibility */
 	public void flush() {
 	
-	}
-	
-	/** If timeout is -1, infinite wait, 0, no wait, >0 MS wait */
-	public void flush(long timeout) throws IOException {
-		socket.flush(timeout);
 	}
 }

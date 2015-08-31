@@ -32,7 +32,8 @@ public class UNIOSocket extends Socket {
 	protected boolean stlsi = false;
 	protected boolean to = false;
 	
-	protected void flush(long timeout) throws IOException {
+	/** Performs a blocking flush, with a timeout, returns true if fully flushed, false if not. */
+	public boolean flush(long timeout) throws IOException {
 		if (closed) throw new SocketException("Socket Closed!");
 		long start = System.currentTimeMillis() + timeout;
 		if (timeout < 0) {
@@ -46,8 +47,9 @@ public class UNIOSocket extends Socket {
 					Thread.sleep(1L); // prevent a full speed loop while waiting for kernel buffers to clear. 1 MS = more than enough
 				}catch (InterruptedException e) {}
 			}
-			if ((start > 0 && System.currentTimeMillis() >= start) || start == 0) return;
+			if ((start > 0 && System.currentTimeMillis() >= start) || start == 0) return outBuf.available() == 0;
 		}
+		return true;
 	}
 	
 	public void starttls(Certificate cert, SNICallback sni) throws IOException {
