@@ -1,5 +1,4 @@
-/*
- * Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 
 package org.avuna.httpd.http.networking;
 
@@ -11,6 +10,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.zip.GZIPOutputStream;
 import org.avuna.httpd.AvunaHTTPD;
+import org.avuna.httpd.util.unio.UNIOOutputStream;
 
 public class ChunkedOutputStream extends DataOutputStream {
 	private boolean gzip = false, flushed = false;
@@ -80,7 +80,8 @@ public class ChunkedOutputStream extends DataOutputStream {
 		super.write((hex + AvunaHTTPD.crlf).getBytes());
 		super.write(cache);
 		super.write(AvunaHTTPD.crlf.getBytes());
-		super.flush();
+		if (super.out instanceof UNIOOutputStream) ((UNIOOutputStream) super.out).flush(0L);
+		else super.flush();
 		writing = false;
 	}
 	
@@ -103,7 +104,8 @@ public class ChunkedOutputStream extends DataOutputStream {
 			super.write((AvunaHTTPD.fileManager.bytesToHex(bas) + AvunaHTTPD.crlf).getBytes());
 			super.write(cache);
 			super.write((AvunaHTTPD.crlf + "0" + AvunaHTTPD.crlf).getBytes());
-			super.flush();
+			if (super.out instanceof UNIOOutputStream) ((UNIOOutputStream) super.out).flush(0L);
+			else super.flush();
 			writing = false;
 		}else {
 			writing = true;

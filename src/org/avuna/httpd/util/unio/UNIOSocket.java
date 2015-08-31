@@ -32,16 +32,21 @@ public class UNIOSocket extends Socket {
 	protected boolean stlsi = false;
 	protected boolean to = false;
 	
-	private void flush(long timeout) throws IOException {
+	protected void flush(long timeout) throws IOException {
 		if (closed) throw new SocketException("Socket Closed!");
 		long start = System.currentTimeMillis() + timeout;
+		if (timeout < 0) {
+			start = -1;
+		}else if (timeout == 0) {
+			start = 0;
+		}
 		while (outBuf.available() > 0) { // could block, we should do something more like gnutls_handshake
 			if (write() == 0) {
 				try {
 					Thread.sleep(1L); // prevent a full speed loop while waiting for kernel buffers to clear. 1 MS = more than enough
 				}catch (InterruptedException e) {}
 			}
-			if (System.currentTimeMillis() >= start) return;
+			if ((start > 0 && System.currentTimeMillis() >= start) || start == 0) return;
 		}
 	}
 	

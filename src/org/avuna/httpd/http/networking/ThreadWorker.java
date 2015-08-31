@@ -166,7 +166,6 @@ public class ThreadWorker extends Thread implements ITerminatable {
 								sw.start();
 							}else {
 								focus.out.write(peek.subwrite);
-								focus.out.flush();
 								// TODO: remove from input?
 							}
 						}
