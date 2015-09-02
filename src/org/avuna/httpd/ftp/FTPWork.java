@@ -39,7 +39,9 @@ public class FTPWork {
 		this.out = out;
 		this.host = host;
 		if (host.unio()) {
-			((FTPPacketReceiver) ((UNIOSocket) s).getCallback()).setWork(this);
+			UNIOSocket us = (UNIOSocket) s;
+			((FTPPacketReceiver) us.getCallback()).setWork(this);
+			us.setPreclose(("421 Timeout" + AvunaHTTPD.crlf).getBytes());
 		}
 	}
 	

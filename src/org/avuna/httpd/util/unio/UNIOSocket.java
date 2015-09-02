@@ -177,9 +177,23 @@ public class UNIOSocket extends Socket {
 		return closed;
 	}
 	
+	private byte[] preclose = null;
+	
+	public byte[] getPreclose() {
+		return preclose;
+	}
+	
+	/** Before a close, this will attempt to be sent, if not null. */
+	public void setPreclose(byte[] pc) {
+		preclose = pc;
+	}
+	
 	public void close() throws IOException {
 		if (closed) return; // already closed
-		if (!to) flush(100L); // wait for up to 100 ms
+		if (preclose != null) {
+			outBuf.append(preclose);
+			flush(100L);
+		}else if (!to) flush(100L); // wait for up to 100 ms
 		closed = true;
 		int s = CLib.close(sockfd);
 		if (session > 0L) GNUTLS.close(session);
