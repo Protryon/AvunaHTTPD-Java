@@ -355,6 +355,8 @@ public abstract class CLib {
 			if (va != null) {
 				File af = new File(AvunaHTTPD.fileManager.getBaseFile("jni"), va);
 				if (va.equals("amd64")) {
+					System.load(new File(af, "libc.so.6").getAbsolutePath());
+					System.load(new File(af, "libpthread.so.0").getAbsolutePath());
 					System.load(new File(af, "libffi.so.6").getAbsolutePath());
 					System.load(new File(af, "libtasn1.so.6").getAbsolutePath());
 					System.load(new File(af, "libnettle.so.6").getAbsolutePath());

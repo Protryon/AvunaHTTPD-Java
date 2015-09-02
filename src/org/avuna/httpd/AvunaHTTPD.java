@@ -8,11 +8,16 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 import org.avuna.httpd.com.ComClient;
@@ -157,7 +162,7 @@ public class AvunaHTTPD {
 	public static void unpack() {
 		try {
 			setupScripts();
-			String[] unpacks = new String[] { "mime.txt", "jni/i386/libAvunaHTTPD_JNI.so", "jni/amd64/libAvunaHTTPD_JNI.so", "jni/amd64/libffi.so.6", "jni/amd64/libgmp.so.10", "jni/amd64/libgnutls.so.28", "jni/amd64/libhogweed.so.4", "jni/amd64/libnettle.so.6", "jni/amd64/libp11-kit.so.0", "jni/amd64/libtasn1.so.6" };
+			String[] unpacks = new String[] {};
 			for (String up : unpacks) {
 				if (windows && up.endsWith(".so")) continue;
 				if (!windows && up.endsWith(".dll")) continue;
@@ -180,6 +185,82 @@ public class AvunaHTTPD {
 					fout.write(bout.toByteArray());
 					fout.flush();
 					fout.close();
+				}
+			}
+		}catch (IOException e) {
+			logger.logError(e);
+		}
+	}
+	
+	public static final String[] dlMirrors = new String[] { "http://mirror.avuna.org/" };
+	private static final Random rand = new Random();
+	private static MessageDigest sha1;
+	
+	static {
+		try {
+			sha1 = MessageDigest.getInstance("sha-1");
+		}catch (NoSuchAlgorithmException e) {
+			logger.logError(e);
+		}
+	}
+	
+	public static void download() {
+		try {
+			String[] dls = new String[] { "mime.txt", "jni/i386/libAvunaHTTPD_JNI.so", "jni/amd64/libAvunaHTTPD_JNI.so", "jni/amd64/libffi.so.6", "jni/amd64/libgmp.so.10", "jni/amd64/libgnutls.so.28", "jni/amd64/libhogweed.so.4", "jni/amd64/libnettle.so.6", "jni/amd64/libp11-kit.so.0", "jni/amd64/libtasn1.so.6", "jni/amd64/libc.so.6", "jni/amd64/libpthread.so.0" };
+			String[] hashes = new String[] { "cf6a1d74d9c106e038d481bbc0903f9b80b5bf0c", "72774362efc9b3ef0fc9b717863562160e795465", "8334ffdde4dbf97d1dc90170d3f486c75163f5e9", "9afb3ce7abdc9d47a276c0bd853a21b5b6d87a18", "9fac7d2951d486ced7de08631bbb76970f3f6552", "473b28781bdf15e19e446c8ab69b0105952eb0db", "afaee3cacd95931008f8e50442e2c1f7e44ce691", "8410b3f7a8287f3578bbd4b390af6482aced7adc", "f46c6679517df3380cf3a16b922ee1edcf98a097", "8f4986aa1fa8fe96c383b1d8adb2d6b243577471", "1f18479f19ee690de8aab335fafd244c8aa6f17c", "2ddda8d8ea269e2744757f1ea19f7c7009255591" };
+			if (dls.length != hashes.length) {
+				logger.logError("dls to hashes length mismatch!");
+				return;
+			}
+			for (int ui = 0; ui < dls.length; ui++) {
+				String up = dls[ui];
+				if (windows && up.endsWith(".so")) continue;
+				if (!windows && up.endsWith(".dll")) continue;
+				File mime = fileManager.getBaseFile(up);
+				mime.getParentFile().mkdirs();
+				if (!mime.exists()) {
+					logger.log("Downloading " + up + "...");
+					int si = rand.nextInt(dlMirrors.length);
+					int ei = si == 0 ? (dlMirrors.length) : -1;
+					for (int i = si;; i++) {
+						if (i == ei) break;
+						if (i == dlMirrors.length) i = 0;
+						byte[] md;
+						try {
+							URL url = new URL(dlMirrors[i] + up);
+							HttpURLConnection huc = (HttpURLConnection) url.openConnection();
+							huc.setRequestProperty("User-Agent", "Avuna " + VERSION);
+							InputStream in = huc.getInputStream();
+							int bi = 1;
+							byte[] buf = new byte[4096];
+							ByteArrayOutputStream bout = new ByteArrayOutputStream();
+							while (bi > 0) {
+								bi = in.read(buf);
+								if (bi > 0) {
+									bout.write(buf, 0, bi);
+								}
+							}
+							in.close();
+							md = bout.toByteArray();
+						}catch (Exception e) {
+							logger.logError("Mirror " + dlMirrors[i] + " failed to send file. Continuing to next mirror.");
+							continue;
+						}
+						sha1.update(md);
+						String cs = fileManager.bytesToHex(sha1.digest()).toLowerCase();
+						if (!cs.equals(hashes[ui])) {
+							logger.logError("Mirror " + dlMirrors[i] + " sent corrupted/out of date/too new file. Continuing to next mirror.");
+							continue;
+						}
+						FileOutputStream fout = new FileOutputStream(mime);
+						fout.write(md);
+						fout.flush();
+						fout.close();
+						break;
+					}
+				}
+				if (!mime.exists()) {
+					logger.logError("Failed to download file: " + up + " from all mirrors, or there were no mirrors.");
 				}
 			}
 		}catch (IOException e) {
@@ -340,6 +421,7 @@ public class AvunaHTTPD {
 			Logger.init(fileManager.getLogs());
 			logger = new Logger("");
 			unpack();
+			download();
 			if (!CLib.failed) CLib.umask(0007);
 			if (unpack || CLib.failed || (!CLib.failed && CLib.getuid() == 0)) {
 				mainConfig.save();
