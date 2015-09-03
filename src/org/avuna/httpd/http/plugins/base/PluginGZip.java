@@ -34,7 +34,7 @@ public class PluginGZip extends Plugin {
 			RequestPacket request = egr.getRequest();
 			String ae = request.headers.getHeader("Accept-Encoding");
 			if (ae == null || !ae.contains("gzip")) return;
-			if (request.parent != null || response.headers.hasHeader("Content-Encoding") || response.body == null || response.body.tooBig) return;
+			if (request.parent != null || response.headers.hasHeader("Content-Encoding") || !response.hasContent() || response.body.tooBig) return;
 			byte[] data2 = response.body.data;
 			try {
 				CRC32 crc = new CRC32();

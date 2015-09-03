@@ -51,7 +51,7 @@ public class PluginInline extends Plugin {
 		if (!StringUtil.containsAny(ua, uas)) return false;
 		String ct = response.headers.getHeader("Content-Type");
 		if (ct == null) return false;
-		return response.statusCode == 200 && response.body != null && response.body.data != null && response.body.data.length != 0 && (ct.startsWith("text/html") || ct.startsWith("text/css"));
+		return response.statusCode == 200 && response.hasContent() && (ct.startsWith("text/html") || ct.startsWith("text/css"));
 	}
 	
 	// html

@@ -17,6 +17,10 @@ public class ResponsePacket extends Packet {
 	public boolean done = false;
 	public DataInputStream toStream = null;
 	
+	public boolean hasContent() {
+		return body != null && body.data != null && body.data.length > 0;
+	}
+	
 	/** Only to be called by the Worker thread, used to generate the final packet. */
 	public byte[] serialize() {
 		return serialize(true, true);
