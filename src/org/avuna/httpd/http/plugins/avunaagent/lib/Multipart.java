@@ -15,13 +15,16 @@ import org.avuna.httpd.util.logging.Logger;
 public class Multipart {
 	public final ArrayList<MultiPartData> mpds = new ArrayList<MultiPartData>();
 	public String boundary;
+	public String mct = "";
 	
-	public Multipart(Logger logger, byte[] content) {
-		this(logger, new ByteArrayInputStream(content));
+	/** @param sct Only used for mail, can be null or ignored. */
+	public Multipart(Logger logger, String sct, byte[] content) {
+		this(logger, sct, new ByteArrayInputStream(content));
 	}
 	
-	public Multipart(Logger logger, InputStream bin) {
-		this(logger, null, bin);
+	/** @param sct Only used for mail, can be null or ignored. */
+	public Multipart(Logger logger, String sct, InputStream bin) {
+		this(logger, sct, null, bin);
 	}
 	
 	public byte[] serialize(Logger logger) {
@@ -46,7 +49,9 @@ public class Multipart {
 		return bout.toByteArray();
 	}
 	
-	public Multipart(Logger logger, String boundary, InputStream bin) {
+	/** @param sct Only used for mail, can be null or ignored. */
+	public Multipart(Logger logger, String sct, String boundary, InputStream bin) {
+		this.mct = sct;
 		try {
 			if (boundary == null) {
 				do {
