@@ -50,7 +50,7 @@ public class Buffer extends InputStream {
 	
 	public void append(byte[] buf, int offset, int length) {
 		if (length == 0 || this.length < 0) return;
-		synchronized (buf) {
+		synchronized (this.buf) {
 			int size = this.length + length + this.read;
 			if (this.buf.length - read < size) {
 				byte[] nb = new byte[size + 1024];
@@ -120,7 +120,7 @@ public class Buffer extends InputStream {
 	
 	/** Only to be used for prepending data that was not successfully written, and was just pulled out. No other use is safe. */
 	protected void unsafe_prepend(byte[] buf, int offset, int length) {
-		synchronized (buf) {
+		synchronized (this.buf) {
 			System.arraycopy(buf, offset, this.buf, this.read - length, length);
 			this.read -= length;
 			this.length += length;
@@ -147,7 +147,7 @@ public class Buffer extends InputStream {
 	}
 	
 	public int read(byte[] buf, int offset, int length) {
-		synchronized (buf) {
+		synchronized (this.buf) {
 			int rs = Math.min(length, buf.length - offset);
 			rs = Math.min(rs, this.length);
 			if (rs < 1) return 0;
