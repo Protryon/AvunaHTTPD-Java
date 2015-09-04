@@ -130,26 +130,28 @@ public class RequestPacket extends Packet {
 	}
 	
 	/** Reads a line from a DataInputStream. */
-	private static String readLine(DataInputStream in) throws IOException {
+	private static String readLine(DataInputStream in, int maxLength) throws IOException {
 		ByteArrayOutputStream writer = new ByteArrayOutputStream();
 		int i = in.read();
 		while (i != AvunaHTTPD.crlfb[0] && i != -1) {
 			writer.write(i);
 			i = in.read();
+			if (maxLength >= 0 && writer.size() >= maxLength) return null;
 		}
 		if (AvunaHTTPD.crlfb.length == 2) in.read();
 		return writer.toString();
 	}
 	
 	/** Reads a line from a DataInputStream, with some prepared bytes from doing an SSL poll. */
-	private static String readLine(byte[] sslprep, DataInputStream in) throws IOException {
-		if (sslprep == null) return readLine(in);
+	private static String readLine(byte[] sslprep, DataInputStream in, int maxLength) throws IOException {
+		if (sslprep == null) return readLine(in, maxLength);
 		ByteArrayOutputStream writer = new ByteArrayOutputStream();
 		writer.write(sslprep);
 		int i = in.read();
 		while (i != AvunaHTTPD.crlfb[0] && i != -1) {
 			writer.write(i);
 			i = in.read();
+			if (maxLength >= 0 && writer.size() >= maxLength) return null;
 		}
 		if (AvunaHTTPD.crlfb.length == 2) in.read();
 		return writer.toString();
@@ -159,7 +161,7 @@ public class RequestPacket extends Packet {
 	public static RequestPacket readHead(byte[] sslprep, DataInputStream in, HostHTTP host) throws IOException {
 		RequestPacket incomingRequest = new RequestPacket();
 		String reqLine = "";
-		reqLine = readLine(sslprep, in).trim();
+		reqLine = readLine(sslprep, in, 8190).trim();
 		int b = reqLine.indexOf(" ");
 		if (b == -1) {
 			return null;
@@ -182,14 +184,14 @@ public class RequestPacket extends Packet {
 		Headers headers = incomingRequest.headers;
 		int hdr = 0;
 		while (true) {
-			String headerLine = readLine(in);
+			String headerLine = readLine(in, 8190);
 			if (headerLine.length() == 0) {
 				break;
 			}else {
 				headers.addHeader(headerLine);
 				hdr++;
 			}
-			if (hdr > 127) {
+			if (hdr > 100) {
 				break;
 			}
 		}
