@@ -45,8 +45,8 @@ public class CompiledDirective {
 				}
 				break;
 			case redirect:
-				if (cargs.length != 2) {
-					vhost.logger.log("[WARNING] REDIRECT directive has invalid arguments: " + args + " expecting two arguments.");
+				if (cargs.length != 1) {
+					vhost.logger.log("[WARNING] REDIRECT directive has invalid arguments: " + args + " expecting one arguments.");
 					throw new IllegalArgumentException();
 				}
 				break;

@@ -77,7 +77,7 @@ public class PluginOverride extends Plugin {
 						}
 						break;
 					case redirect:// TODO: what is this?
-						request.oredir = rt.replaceAll(d.args[0], d.args[1]);
+						request.oredir = d.args[0];
 						break;
 					case index:
 						request.overrideIndex = d.args;
