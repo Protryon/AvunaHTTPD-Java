@@ -10,27 +10,31 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.zip.GZIPOutputStream;
 import org.avuna.httpd.AvunaHTTPD;
-import org.avuna.httpd.util.unio.BufferOutputStream;
+import org.avuna.httpd.util.unio.UNIOSocket;
 
 public class ChunkedOutputStream extends DataOutputStream {
-	private boolean gzip = false, flushed = false;
+	private boolean gzip = false;
 	private ResponsePacket toSend = null;
 	private GZIPOutputStream gzips = null;
+	private final UNIOSocket s;
 	
-	public ChunkedOutputStream(OutputStream out, ResponsePacket toSend, boolean gzip) throws IOException {
+	public ChunkedOutputStream(OutputStream out, ResponsePacket toSend, boolean gzip, UNIOSocket s) throws IOException {
 		super(out);
 		this.toSend = toSend;
 		this.gzip = gzip;
 		if (gzip) {
 			gzips = new GZIPOutputStream(gzipb);
 		}
+		this.s = s;
 	}
 	
 	private ByteArrayOutputStream cache = new ByteArrayOutputStream(), gzipb = new ByteArrayOutputStream();
 	private boolean writing = false;
+	private boolean wh = false;
 	
 	public void writeHeaders() throws IOException {
-		if (!flushed && !writing) {
+		if (!wh) {
+			wh = true;
 			StringBuilder ser = new StringBuilder();
 			ser.append((toSend.httpVersion + " " + toSend.statusCode + " " + toSend.reasonPhrase + AvunaHTTPD.crlf));
 			HashMap<String, String[]> hdrs = toSend.headers.getHeaders();
@@ -44,7 +48,7 @@ public class ChunkedOutputStream extends DataOutputStream {
 			super.write(ser.toString().getBytes());
 			super.flush();
 			writing = false;
-			flushed = true;
+			wh = true;
 		}
 	}
 	
@@ -52,11 +56,10 @@ public class ChunkedOutputStream extends DataOutputStream {
 		if (writing) {
 			super.write(b, off, len);
 		}else {
-			if (!flushed) {
+			if (!wh) {
 				writeHeaders();
-			}else {
-				cache.write(b, off, len);
 			}
+			cache.write(b, off, len);
 		}
 	}
 	
@@ -80,17 +83,21 @@ public class ChunkedOutputStream extends DataOutputStream {
 		super.write((hex + AvunaHTTPD.crlf).getBytes());
 		super.write(cache);
 		super.write(AvunaHTTPD.crlf.getBytes());
-		if (super.out instanceof BufferOutputStream) ((BufferOutputStream) super.out).getBuffer().getSocket().flush(-1L);
+		if (s != null) s.flush(-1L);
 		else super.flush();
 		writing = false;
 	}
+	
+	private boolean finished = false;
 	
 	public void finish() throws IOException {
 		writeHeaders();
 		if (cache.size() > 0) {
 			flush();
 		}
-		if (gzip) {
+		if (finished) return;
+		finished = true;
+		/*if (gzip) {
 			gzips.flush();
 			gzips.close();
 			byte[] cache = gzipb.toByteArray();
@@ -104,15 +111,16 @@ public class ChunkedOutputStream extends DataOutputStream {
 			super.write((AvunaHTTPD.fileManager.bytesToHex(bas) + AvunaHTTPD.crlf).getBytes());
 			super.write(cache);
 			super.write((AvunaHTTPD.crlf + "0" + AvunaHTTPD.crlf).getBytes());
-			if (super.out instanceof BufferOutputStream) ((BufferOutputStream) super.out).getBuffer().getSocket().flush(-1L);
+			if (s != null) s.flush(-1L);
 			else super.flush();
 			writing = false;
-		}else {
-			writing = true;
-			super.write(("0" + AvunaHTTPD.crlf).getBytes());
-			super.flush();
-			writing = false;
-		}
+		}else {*/
+		writing = true;
+		super.write(("0" + AvunaHTTPD.crlf + AvunaHTTPD.crlf).getBytes());
+		if (s != null) s.flush(-1L);
+		else super.flush();
+		writing = false;
+		// }
 	}
 	
 	public void close() throws IOException {

@@ -6,6 +6,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.SocketException;
 import org.avuna.httpd.hosts.HostHTTP;
+import org.avuna.httpd.util.unio.UNIOSocket;
 
 public class ThreadRawStreamWorker extends Thread {
 	private final Work work;
@@ -25,7 +26,7 @@ public class ThreadRawStreamWorker extends Thread {
 		// resp.headers.removeHeaders("Content-Encoding");
 		try {
 			@SuppressWarnings("resource")
-			ChunkedOutputStream cos = new ChunkedOutputStream(work.out, resp, false);
+			ChunkedOutputStream cos = new ChunkedOutputStream(work.out, resp, false, work.s instanceof UNIOSocket ? (UNIOSocket) work.s : null);
 			@SuppressWarnings("resource")
 			ChunkedInputStream cis = new ChunkedInputStream(raw, false);
 			cos.writeHeaders();

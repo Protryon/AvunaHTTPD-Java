@@ -9,6 +9,7 @@ import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.hosts.HostHTTP;
 import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.http.StatusCode;
+import org.avuna.httpd.util.unio.UNIOSocket;
 
 public class ThreadStreamWorker extends Thread {
 	private final Work work;
@@ -41,41 +42,28 @@ public class ThreadStreamWorker extends Thread {
 				}
 			}
 			@SuppressWarnings("resource")
-			ChunkedOutputStream cos = new ChunkedOutputStream(work.out, resp, resp.headers.hasHeader("Content-Encoding") && resp.headers.getHeader("Content-Encoding").contains("gzip"));
+			ChunkedOutputStream cos = new ChunkedOutputStream(work.out, resp, resp.headers.hasHeader("Content-Encoding") && resp.headers.getHeader("Content-Encoding").contains("gzip"), work.s instanceof UNIOSocket ? (UNIOSocket) work.s : null);
 			cos.writeHeaders();
-			System.out.println("headers wrote");
 			int i = 1;
 			byte[] buf = new byte[10485760];
 			while (!work.s.isClosed() && i > 0) {
 				i = fin.read(buf);
 				if (i < 1) {
-					System.out.println("closed");
 					break;
 				}else {
-					System.out.println("writing " + i);
 					cos.write(buf, 0, i);
-					System.out.println("wrote " + i);
 					cos.flush();
-					System.out.println("flushed");
 				}
 			}
-			System.out.println("finished");
 			cos.finish();
 			// cos.close();
 			host.readdWork(work);
 		}catch (IOException e) {
-			System.out.println("exception");
 			if (!(e instanceof SocketException)) req.host.logger.logError(e);
 		}finally {
-			String ip = work.s.getInetAddress().getHostAddress();
-			Integer cur = HostHTTP.connIPs.get(ip);
-			if (cur == null) cur = 1;
-			cur -= 1;
-			HostHTTP.connIPs.put(ip, cur);
-			req.host.logger.log(ip + " closed.");
 			try {
 				if (fin != null) fin.close();
-				if (work.s != null) work.s.close();
+				if (work.s != null) work.close();
 			}catch (IOException e) {
 				req.host.logger.logError(e);
 			}

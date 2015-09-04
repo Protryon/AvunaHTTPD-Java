@@ -34,6 +34,7 @@ public class UNIOInputStream extends InputStream {
 	
 	public int read(byte[] array, int off, int len) throws IOException {
 		if (off + len > array.length) throw new ArrayIndexOutOfBoundsException("off + len MUST NOT be >= array.length");
+		if (socket.isClosed()) throw new SocketException("Socket Closed!");
 		byte[] buf = socket.session == 0 ? CLib.read(socket.sockfd, len) : GNUTLS.read(socket.session, len);
 		if (buf == null) { // not 100% accurate, but what else?
 			int i = CLib.errno();

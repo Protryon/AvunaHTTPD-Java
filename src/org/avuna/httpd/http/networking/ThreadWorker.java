@@ -146,7 +146,7 @@ public class ThreadWorker extends Thread implements ITerminatable {
 					bm.endSection("prewrite");
 					bm.startSection("post");
 					outgoingResponse.done = true;
-					if (host.unio()) {
+					if (host.unio() && main) {
 						ResponsePacket peek;
 						Work focus = incomingRequest.work;
 						while ((peek = focus.outQueue.peek()) != null && peek.done) {

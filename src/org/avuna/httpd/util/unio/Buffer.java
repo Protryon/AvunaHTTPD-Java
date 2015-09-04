@@ -49,7 +49,7 @@ public class Buffer extends InputStream {
 	}
 	
 	public void append(byte[] buf, int offset, int length) {
-		if (length == 0) return;
+		if (length == 0 || this.length < 0) return;
 		synchronized (buf) {
 			int size = this.length + length + this.read;
 			if (this.buf.length - read < size) {
@@ -150,6 +150,7 @@ public class Buffer extends InputStream {
 		synchronized (buf) {
 			int rs = Math.min(length, buf.length - offset);
 			rs = Math.min(rs, this.length);
+			if (rs < 1) return 0;
 			System.arraycopy(this.buf, read, buf, offset, rs);
 			read += rs;
 			this.length -= rs;
@@ -165,6 +166,9 @@ public class Buffer extends InputStream {
 	
 	public long skip(long n) {
 		synchronized (buf) {
+			if (this.length < n) {
+				throw new ArrayIndexOutOfBoundsException("n must be <= length");
+			}
 			int ts = (int) Math.min(length, n);
 			this.read += ts;
 			this.length -= ts;

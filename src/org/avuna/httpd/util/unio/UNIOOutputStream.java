@@ -40,6 +40,7 @@ public class UNIOOutputStream extends OutputStream {
 	
 	public int cwrite(byte[] buf, int off, int len) throws IOException {
 		if (len == 0) return 0;
+		if (socket.isClosed()) throw new SocketException("Socket Closed!");
 		byte[] buf2 = new byte[len];
 		System.arraycopy(buf, off, buf2, 0, len);
 		int i = socket.session == 0L ? CLib.write(socket.sockfd, buf2) : GNUTLS.write(socket.session, buf2);

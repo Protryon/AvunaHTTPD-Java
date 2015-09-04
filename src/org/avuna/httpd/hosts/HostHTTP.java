@@ -168,7 +168,7 @@ public class HostHTTP extends Host {
 	
 	public void readdWork(Work w) {
 		w.inUse = false;
-		works.add(w);
+		if (!works.contains(w)) works.add(w);
 	}
 	
 	public Work getWork() {

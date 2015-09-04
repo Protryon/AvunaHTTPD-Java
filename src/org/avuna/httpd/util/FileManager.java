@@ -465,7 +465,7 @@ public class FileManager {
 					PluginChunked chunked = (PluginChunked) request.host.registry.getPatchForClass(PluginChunked.class);
 					PluginFCGI fcgi = (PluginFCGI) request.host.registry.getPatchForClass(PluginFCGI.class);
 					PluginAvunaAgent jl = (PluginAvunaAgent) request.host.registry.getPatchForClass(PluginAvunaAgent.class);
-					boolean dc = chunked != null && chunked.pcfg.getNode("enabled").getValue().equals("true");
+					boolean dc = chunked != null && chunked.pcfg.getNode("enabled").getValue().equals("true") && request.parent == null;
 					if (dc && fcgi != null && fcgi.pcfg.getNode("enabled").getValue().equals("true")) {
 						major: for (String key : fcgi.fcgis.keySet()) {
 							String[] pcts = key.split(",");
