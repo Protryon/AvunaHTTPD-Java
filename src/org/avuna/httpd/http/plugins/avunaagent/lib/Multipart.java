@@ -15,14 +15,13 @@ import org.avuna.httpd.util.logging.Logger;
 public class Multipart {
 	public final ArrayList<MultiPartData> mpds = new ArrayList<MultiPartData>();
 	public String boundary;
-	public String mct = "";
 	
-	public Multipart(Logger logger, String sct, byte[] content) {
-		this(logger, sct, new ByteArrayInputStream(content));
+	public Multipart(Logger logger, byte[] content) {
+		this(logger, new ByteArrayInputStream(content));
 	}
 	
-	public Multipart(Logger logger, String sct, InputStream bin) {
-		this(logger, sct, null, bin);
+	public Multipart(Logger logger, InputStream bin) {
+		this(logger, null, bin);
 	}
 	
 	public byte[] serialize(Logger logger) {
@@ -47,8 +46,7 @@ public class Multipart {
 		return bout.toByteArray();
 	}
 	
-	public Multipart(Logger logger, String sct, String boundary, InputStream bin) {
-		this.mct = sct;
+	public Multipart(Logger logger, String boundary, InputStream bin) {
 		try {
 			if (boundary == null) {
 				do {
@@ -61,7 +59,7 @@ public class Multipart {
 			boolean hc = true;
 			int mi = 0;
 			while (Stream.readLine(bin).equals("")) {
-				
+			
 			}
 			while (hc && mi++ < 50) {
 				String ct = "";
