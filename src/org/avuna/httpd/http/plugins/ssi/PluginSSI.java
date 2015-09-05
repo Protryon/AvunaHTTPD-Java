@@ -49,7 +49,7 @@ public class PluginSSI extends Plugin {
 			EventGenerateResponse egr = (EventGenerateResponse) event;
 			ResponsePacket response = egr.getResponse();
 			RequestPacket request = egr.getRequest();
-			if (!response.headers.hasHeader("Content-Type") || response.body == null || response.body.data == null) return;
+			if (!response.headers.hasHeader("Content-Type") || !response.hasContent()) return;
 			String ct = response.headers.getHeader("Content-Type");
 			if (ct == null || !ct.startsWith("application/x-ssi")) return;
 			response.headers.updateHeader("Content-Type", "text/html; charset=utf-8");

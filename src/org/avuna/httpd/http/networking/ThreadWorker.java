@@ -187,7 +187,7 @@ public class ThreadWorker extends Thread implements ITerminatable {
 					bm.log();
 				}
 			}catch (Exception e) {
-				if (!(e instanceof SocketException || e instanceof StringIndexOutOfBoundsException)) {
+				if (!(e instanceof SocketException)) {
 					incomingRequest.host.logger.logError(e);
 				}else {
 					try {
