@@ -5,94 +5,12 @@ import org.avuna.httpd.http.plugins.ssi.Page;
 import org.avuna.httpd.http.plugins.ssi.ParsedSSIDirective;
 import org.avuna.httpd.http.plugins.ssi.PluginSSI;
 import org.avuna.httpd.http.plugins.ssi.SSIDirective;
+import org.avuna.httpd.http.plugins.ssi.Word;
 
 public class IfDirective extends SSIDirective {
 	
 	public IfDirective(PluginSSI ssi) {
 		super(ssi);
-	}
-	
-	private static class Word {
-		public String value = null;
-		public int startIndex = 0, endIndex = 0;
-		
-		public Word(String expr, Page page, ParsedSSIDirective dir) {
-			if (value == null) try { // digits
-				String sv = expr.substring(0, expr.contains(" ") ? expr.indexOf(" ") : expr.length());
-				value = Integer.parseInt(sv) + "";
-				startIndex = 0;
-				endIndex = sv.length();
-				readForConcat(expr, page, dir);
-				return;
-			}catch (NumberFormatException e) {
-				value = null;
-			}
-			if (value == null && expr.startsWith("'")) {
-				boolean inv = false;
-				for (int i = 1; i < expr.length(); i++) {
-					char c = expr.charAt(i);
-					if (c == '\\') {
-						inv = !inv;
-					}else {
-						if (!inv && c == '\'') {
-							value = expr.substring(1, i);
-							startIndex = 0;
-							endIndex = i + 1;
-							readForConcat(expr, page, dir);
-							return;
-						}
-						inv = false;
-					}
-				}
-			}
-			if (value == null && expr.startsWith("\"")) {
-				boolean inv = false;
-				for (int i = 1; i < expr.length(); i++) {
-					char c = expr.charAt(i);
-					if (c == '\\') {
-						inv = !inv;
-					}else {
-						if (!inv && c == '"') {
-							value = expr.substring(1, i);
-							startIndex = 0;
-							endIndex = i + 1;
-							readForConcat(expr, page, dir);
-							return;
-						}
-						inv = false;
-					}
-				}
-			}
-			if (value == null && expr.startsWith("%{")) {
-				int e = expr.indexOf("}");
-				if (e > 2) {
-					value = page.variables.get(expr.substring(2, e));
-					startIndex = 0;
-					endIndex = e + 1;
-					readForConcat(expr, page, dir);
-					return;
-				}else {
-					value = null;
-				}
-			}
-			if (value == null) {
-				throw new IllegalArgumentException("Bad or unsupported IF word!");
-			}
-			// TODO: rebackref
-			// TODO: function
-		}
-		
-		private void readForConcat(String expr, Page page, ParsedSSIDirective dir) {
-			if (expr.length() > endIndex) {
-				String af = expr.substring(endIndex).trim();
-				if (af.startsWith(".")) {
-					af = af.substring(1);
-					Word w = new Word(af, page, dir);
-					value += w.value;
-					endIndex = w.endIndex + (expr.length() - af.length());
-				}
-			}
-		}
 	}
 	
 	protected static boolean processSBNF(String pexpr, Page page, ParsedSSIDirective dir) {
@@ -248,8 +166,10 @@ public class IfDirective extends SSIDirective {
 		if (!dir.args[0].startsWith("expr=")) return null;
 		if (processBNF(dir.args[0].substring(5), page, dir)) {
 			// do nothing
+			page.lifc = true;
 		}else {
 			page.returnScope = page.scope;
+			page.lifc = false;
 		}
 		return "";
 	}
@@ -257,10 +177,6 @@ public class IfDirective extends SSIDirective {
 	@Override
 	public String getDirective() {
 		return "if";
-	}
-	
-	public boolean isScope() {
-		return true;
 	}
 	
 	public int scopeType() {

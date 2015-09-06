@@ -14,16 +14,13 @@ public class EndIfDirective extends SSIDirective {
 	
 	@Override
 	public String call(Page page, ParsedSSIDirective dir) {
+		page.returnScope = -1;
 		return "";
 	}
 	
 	@Override
 	public String getDirective() {
 		return "endif";
-	}
-	
-	public boolean isScope() {
-		return true;
 	}
 	
 	public int scopeType() {

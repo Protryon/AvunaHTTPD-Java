@@ -14,16 +14,17 @@ public class ElseDirective extends SSIDirective {
 	
 	@Override
 	public String call(Page page, ParsedSSIDirective dir) {
+		if (!page.lifc && page.returnScope >= 0) {
+			page.nonbrss = -1;
+		}else {
+			page.nonbrss = page.scope - 1;
+		}
 		return "";
 	}
 	
 	@Override
 	public String getDirective() {
 		return "else";
-	}
-	
-	public boolean isScope() {
-		return true;
 	}
 	
 	public int scopeType() {

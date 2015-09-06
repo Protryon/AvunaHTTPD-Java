@@ -26,16 +26,17 @@ public final class SSIEngine {
 	public String callDirective(Page page, ParsedSSIDirective dir) {
 		for (SSIDirective sd : directives) {
 			if (sd.getDirective().equals(dir.directive)) {
-				String cr = sd.call(page, dir);
-				if (sd.isScope()) {
-					int st = sd.scopeType();
+				int st = sd.scopeType();
+				int sdd = page.scopeDepth();
+				if (sdd == 0 || (sdd == 1 && st == 3)) {
+					String cr = sd.call(page, dir);
 					if (st == 1) {
 						page.scope++;
 					}else if (st == 2) {
 						page.scope--;
 					}
+					return cr;
 				}
-				return cr;
 			}
 		}
 		return null;

@@ -17,11 +17,6 @@ public abstract class SSIDirective {
 	
 	public abstract String getDirective();
 	
-	/** If true, will be treated as a scope opener/closer. */
-	public boolean isScope() {
-		return false;
-	}
-	
 	/** If 0, means nothing. If 1, increases scope, if 2, decreases scope, if 3, calls in parent scope, but does not affect. */
 	public int scopeType() {
 		return 0;
