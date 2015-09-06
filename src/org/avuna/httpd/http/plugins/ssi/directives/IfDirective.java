@@ -166,10 +166,9 @@ public class IfDirective extends SSIDirective {
 		if (!dir.args[0].startsWith("expr=")) return null;
 		if (processBNF(dir.args[0].substring(5), page, dir)) {
 			// do nothing
-			page.lifc = true;
+			page.lifc.add(page.scope + 1);
 		}else {
 			page.nonbrss = page.scope;
-			page.lifc = false;
 		}
 		return "";
 	}

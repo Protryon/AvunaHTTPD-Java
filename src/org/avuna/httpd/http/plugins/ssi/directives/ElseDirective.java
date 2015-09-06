@@ -14,9 +14,9 @@ public class ElseDirective extends SSIDirective {
 	
 	@Override
 	public String call(Page page, ParsedSSIDirective dir) {
-		if (!page.lifc && page.returnScope >= 0) {
+		if (!page.lifc.contains(page.scope) && page.returnScope >= 0) {
 			page.nonbrss = -1;
-			page.lifc = true;
+			page.lifc.add(page.scope);
 		}else {
 			page.nonbrss = page.scope - 1;
 		}
