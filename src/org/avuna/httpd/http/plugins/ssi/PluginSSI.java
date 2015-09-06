@@ -65,6 +65,7 @@ public class PluginSSI extends Plugin {
 					if (sp.shouldOutputNextBlock()) {
 						res.append(body.substring(le, pd.start));
 					}
+					sp.postOutputNextBlock();
 					le = pd.end;
 					if (lr == null) {
 						response.body.data = sp.variables.get("error").getBytes();

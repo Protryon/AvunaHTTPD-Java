@@ -1,19 +1,4 @@
-/*	Avuna HTTPD - General Server Applications
-    Copyright (C) 2015 Maxwell Bruce
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/* Avuna HTTPD - General Server Applications Copyright (C) 2015 Maxwell Bruce This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details. You should have received a copy of the GNU General Public License along with this program. If not, see <http://www.gnu.org/licenses/>. */
 package org.avuna.httpd.http.plugins.ssi.directives;
 
 import org.avuna.httpd.http.plugins.ssi.Page;
@@ -29,12 +14,26 @@ public class ElifDirective extends SSIDirective {
 	
 	@Override
 	public String call(Page page, ParsedSSIDirective dir) {
-		return null;
+		if (dir.args.length != 1) return null;
+		if (!dir.args[0].startsWith("expr=")) return null;
+		if (!page.lifc && page.returnScope >= 0) {
+			if (IfDirective.processBNF(dir.args[0].substring(5), page, dir)) {
+				page.nonbrss = -1;
+				page.lifc = true;
+			}
+		}else {
+			page.nonbrss = page.scope - 1;
+		}
+		return "";
 	}
 	
 	@Override
 	public String getDirective() {
 		return "elif";
+	}
+	
+	public int scopeType() {
+		return 3;
 	}
 	
 }

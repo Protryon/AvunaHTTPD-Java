@@ -36,6 +36,15 @@ public final class SSIEngine {
 						page.scope--;
 					}
 					return cr;
+				}else if (st == 1 || st == 2) { // out of scope, but edits scope
+					if (st == 1) {
+						page.scope++;
+					}else if (st == 2) {
+						page.scope--;
+					}
+					return "";
+				}else { // out of scope
+					return "";
 				}
 			}
 		}

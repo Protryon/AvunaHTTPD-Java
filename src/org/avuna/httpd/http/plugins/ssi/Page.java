@@ -20,13 +20,22 @@ public class Page {
 		variables.put("error", "[an error occurred while processing this directive]");
 	}
 	
+	public void postOutputNextBlock() {
+		if (nonbrss >= -1) {
+			returnScope = nonbrss;
+			nonbrss = -2;
+		}
+	}
+	
 	/** Tells whether we are inside a returned scope, ie a failed IF statement. This does change state, so multiple calls are BAD. */
 	public boolean shouldOutputNextBlock() {
 		if (returnScope < 0) return true;
-		if (returnScope < scope) {
+		if (returnScope <= scope) {
 			if (nonbrss >= -1) {
 				returnScope = nonbrss;
 				nonbrss = -2;
+			}else {
+				returnScope = -1;
 			}
 			return false;
 		}else {
