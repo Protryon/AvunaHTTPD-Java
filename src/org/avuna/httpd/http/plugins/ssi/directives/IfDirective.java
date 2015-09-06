@@ -168,7 +168,7 @@ public class IfDirective extends SSIDirective {
 			// do nothing
 			page.lifc = true;
 		}else {
-			page.returnScope = page.scope;
+			page.nonbrss = page.scope;
 			page.lifc = false;
 		}
 		return "";
