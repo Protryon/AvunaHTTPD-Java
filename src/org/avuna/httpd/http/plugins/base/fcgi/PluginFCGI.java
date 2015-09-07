@@ -217,7 +217,7 @@ public class PluginFCGI extends Plugin {
 			// }
 			// }
 			// OutputStream pbout = ;
-			if (request.body != null) {
+			if (request.body != null && request.body.data != null) {
 				session.data(request.body.data);
 				// pbout.write(request.body.data);
 				// pbout.flush();

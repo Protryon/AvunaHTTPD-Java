@@ -204,4 +204,8 @@ public class UNIOSocket extends Socket {
 	public PacketReceiver getCallback() {
 		return callback;
 	}
+	
+	public String toString() {
+		return "UNIOSocket SOCKFD = " + sockfd;
+	}
 }

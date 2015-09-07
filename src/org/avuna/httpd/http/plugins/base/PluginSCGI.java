@@ -9,8 +9,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Inet4Address;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
@@ -27,21 +29,38 @@ import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.util.ConfigNode;
 import org.avuna.httpd.util.Stream;
 import org.avuna.httpd.util.unio.UNIOSocket;
+import org.avuna.httpd.util.unixsocket.UnixSocket;
 
-public class PluginCGI extends Plugin {
+public class PluginSCGI extends Plugin {
 	
-	public PluginCGI(String name, PluginRegistry registry, File config) {
+	private static final class SCGIServer {
+		public boolean unix;
+		public String ip, directory;
+		public int port;
+		
+		public SCGIServer(boolean unix, String ip, String directory, int port) {
+			this.unix = unix;
+			this.ip = ip;
+			this.directory = directory;
+			this.port = port;
+		}
+	}
+	
+	public PluginSCGI(String name, PluginRegistry registry, File config) {
 		super(name, registry, config);
 		if (!pcfg.getNode("enabled").getValue().equals("true")) return;
 		for (String subs : pcfg.getSubnodes()) {
 			ConfigNode sub = pcfg.getNode(subs);
 			if (!sub.branching()) continue;
 			try {
-				if (!sub.containsNode("program")) sub.insertNode("program", "php-cgi");
-				String program = sub.getNode("program").getValue();
-				cgis.put(sub.getNode("mime-types").getValue(), program);
+				boolean unix = sub.getNode("unix").getValue().equals("true");
+				String ip = sub.getNode("ip").getValue();
+				int port = Integer.parseInt(sub.getNode("port").getValue());
+				String dir = sub.getNode("directory").getValue();
+				scgis.put(dir, new SCGIServer(unix, ip, dir, port));
 			}catch (Exception e) {
-				cgis.put(sub.getNode("mime-types").getValue(), null);
+				String dir = sub.getNode("directory").getValue();
+				scgis.put(dir, null);
 				registry.host.logger.logError(e);
 			}
 		}
@@ -63,10 +82,10 @@ public class PluginCGI extends Plugin {
 	}
 	
 	public void destroy() {
-		cgis.clear();
+		scgis.clear();
 	}
 	
-	public HashMap<String, String> cgis = new HashMap<String, String>();
+	public HashMap<String, SCGIServer> scgis = new HashMap<String, SCGIServer>();
 	
 	@Override
 	public void formatConfig(ConfigNode json) {
@@ -80,25 +99,20 @@ public class PluginCGI extends Plugin {
 		for (String subb : json.getSubnodes()) {
 			ConfigNode sub = json.getNode(subb);
 			if (!sub.branching()) continue;
-			if (!sub.containsNode("program")) sub.insertNode("program", "php-cgi", "cgi program to execute, must be in PATH or a absolute path.");
-			if (!sub.containsNode("mime-types")) sub.insertNode("mime-types", "application/x-php");
+			if (!sub.containsNode("unix")) sub.insertNode("unix", "false", "set ip to the unix socket file, and port is ignored <to use unix sockets>");
+			if (!sub.containsNode("ip")) sub.insertNode("ip", "127.0.0.1");
+			if (!sub.containsNode("port")) sub.insertNode("port", "4000");
+			if (!sub.containsNode("directory")) sub.insertNode("directory", "/");
 		}
 	}
 	
 	public boolean shouldProcessResponse(ResponsePacket response, RequestPacket request) {
-		if (!response.headers.hasHeader("Content-Type") || response.body == null) return false;
-		String ct = response.headers.getHeader("Content-Type");
-		boolean gct = false;
-		major: for (String key : cgis.keySet()) {
-			String[] pcts = key.split(",");
-			for (String pct : pcts) {
-				if (pct.trim().equals(ct)) {
-					gct = true;
-					break major;
-				}
+		for (String pct : scgis.keySet()) {
+			if (request.target.startsWith(pct)) {
+				return true;
 			}
 		}
-		return gct;
+		return false;
 	}
 	
 	public void processResponse(ResponsePacket response, RequestPacket request) {
@@ -117,59 +131,71 @@ public class PluginCGI extends Plugin {
 			String ct = response.headers.getHeader("Content-Type");
 			if (ct.contains(";")) ct = ct.substring(0, ct.indexOf(";"));
 			ct = ct.trim();
-			ProcessBuilder builder = null;
-			major: for (String key : cgis.keySet()) {
-				String[] pcts = key.split(",");
-				for (String pct : pcts) {
-					if (pct.trim().equals(ct)) {
-						String program = cgis.get(key);
-						builder = new ProcessBuilder(program);
-						break major;
-					}
+			SCGIServer serv = null;
+			major: for (String pct : scgis.keySet()) {
+				if (request.target.startsWith(pct)) {
+					serv = scgis.get(pct);
+					break major;
 				}
 			}
-			if (builder == null) {
+			if (serv == null) {
 				ResponseGenerator.generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
 				Resource er = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "Avuna encountered a critical error attempting to contact the CGI Program! Please contact your system administrator and notify them to check their logs.");
 				response.headers.updateHeader("Content-Type", er.type);
 				response.body = er;
 			}
-			builder.environment().put("SERVER_ADDR", pcfg.getNode("server_addr").getValue() + "");
-			builder.environment().put("REQUEST_URI", rq + (get.length() > 0 ? "?" + get : ""));
+			Socket s = serv.unix ? new UnixSocket(serv.ip) : new Socket(serv.ip, serv.port);
+			OutputStream pout = s.getOutputStream();
+			pout.flush();
+			InputStream pin = s.getInputStream();
+			LinkedHashMap<String, String> vars = new LinkedHashMap<String, String>();
+			vars.put("CONTENT_LENGTH", (request.body == null || request.body.data == null) ? "0" : request.body.data.length + "");
+			vars.put("SCGI", "1");
+			
+			vars.put("SERVER_ADDR", pcfg.getNode("server_addr").getValue() + "");
+			vars.put("REQUEST_URI", rq + (get.length() > 0 ? "?" + get : ""));
 			
 			rq = AvunaHTTPD.fileManager.correctForIndex(rq, request);
 			
-			builder.environment().put("CONTENT_LENGTH", (request.body == null || request.body.data == null) ? "0" : request.body.data.length + "");
-			if (request.body != null && request.body.type != null) builder.environment().put("CONTENT_TYPE", request.body.type);
-			builder.environment().put("GATEWAY_INTERFACE", "CGI/1.1");
+			if (request.body != null && request.body.type != null) vars.put("CONTENT_TYPE", request.body.type);
+			vars.put("GATEWAY_INTERFACE", "CGI/1.1");
 			// session.param("PATH_INFO", request.extraPath);
 			// session.param("PATH_TRANSLATED", new File(request.host.getHTDocs(), URLDecoder.decode(request.extraPath)).getAbsolutePath());
-			builder.environment().put("QUERY_STRING", get);
-			builder.environment().put("REMOTE_ADDR", request.userIP);
-			builder.environment().put("REMOTE_HOST", request.userIP);
-			builder.environment().put("REMOTE_PORT", request.userPort + "");
-			builder.environment().put("REQUEST_METHOD", request.method.name);
-			builder.environment().put("REDIRECT_STATUS", response.statusCode + "");
+			vars.put("QUERY_STRING", get);
+			vars.put("REMOTE_ADDR", request.userIP);
+			vars.put("REMOTE_HOST", request.userIP);
+			vars.put("REMOTE_PORT", request.userPort + "");
+			vars.put("REQUEST_METHOD", request.method.name);
+			vars.put("REDIRECT_STATUS", response.statusCode + "");
 			String oabs = response.body.oabs.replace("\\", "/");
 			String htds = request.host.getHTDocs().getAbsolutePath().replace("\\", "/");
-			builder.environment().put("SCRIPT_NAME", oabs.substring(htds.length()));
-			if (request.headers.hasHeader("Host")) builder.environment().put("SERVER_NAME", request.headers.getHeader("Host"));
+			vars.put("SCRIPT_NAME", oabs.substring(htds.length()));
+			if (request.headers.hasHeader("Host")) vars.put("SERVER_NAME", request.headers.getHeader("Host"));
 			int port = request.host.getHost().getPort();
-			builder.environment().put("SERVER_PORT", port + "");
-			builder.environment().put("SERVER_PROTOCOL", request.httpVersion);
-			builder.environment().put("SERVER_SOFTWARE", "Avuna/" + AvunaHTTPD.VERSION);
-			builder.environment().put("DOCUMENT_ROOT", htds);
-			builder.environment().put("SCRIPT_FILENAME", oabs);
+			vars.put("SERVER_PORT", port + "");
+			vars.put("SERVER_PROTOCOL", request.httpVersion);
+			vars.put("SERVER_SOFTWARE", "Avuna/" + AvunaHTTPD.VERSION);
+			vars.put("DOCUMENT_ROOT", htds);
+			vars.put("SCRIPT_FILENAME", oabs);
 			HashMap<String, String[]> hdrs = request.headers.getHeaders();
 			for (String key : hdrs.keySet()) {
 				if (key.equalsIgnoreCase("Accept-Encoding")) continue;
 				for (String val : hdrs.get(key)) {
-					builder.environment().put("HTTP_" + key.toUpperCase().replace("-", "_"), val); // TODO: will break if multiple same-nameed headers are received
+					vars.put("HTTP_" + key.toUpperCase().replace("-", "_"), val); // TODO: will break if multiple same-nameed headers are received
 				}
 			}
-			Process proc = builder.start();
-			OutputStream pout = proc.getOutputStream();
-			InputStream pin = proc.getInputStream();
+			ByteArrayOutputStream bout = new ByteArrayOutputStream();
+			for (String key : vars.keySet()) {
+				String val = vars.get(key);
+				bout.write(key.toUpperCase().getBytes());
+				bout.write(0);
+				bout.write(val.getBytes());
+				bout.write(0);
+			}
+			pout.write((bout.size() + ":").getBytes());
+			pout.write(bout.toByteArray());
+			bout = null;
+			pout.write(",".getBytes());
 			if (request.body != null && request.body.data != null) {
 				pout.write(request.body.data);
 				pout.flush();
@@ -181,17 +207,16 @@ public class PluginCGI extends Plugin {
 			try {
 				int i = 0;
 				while (true) {
-					try {
-						proc.exitValue();
+					if (pin.available() > 1) {
 						break;
-					}catch (IllegalThreadStateException e2) {
+					}else {
 						try {
 							Work work = request.work;
 							if (work == null && request.parent != null) {
 								work = request.parent.work;
 							}
 							if (work != null && work.s.isClosed()) {
-								proc.destroy();
+								s.close();
 								break;
 							}
 							i++;
@@ -209,7 +234,7 @@ public class PluginCGI extends Plugin {
 				}
 			}
 			DataInputStream in = new DataInputStream(pin);
-			ByteArrayOutputStream bout = new ByteArrayOutputStream();
+			bout = new ByteArrayOutputStream();
 			String line;
 			while ((line = Stream.readLine(in)) != null) {
 				if (line.length() == 0) break;
