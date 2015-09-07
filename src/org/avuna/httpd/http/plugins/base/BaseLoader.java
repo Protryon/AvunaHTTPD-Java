@@ -34,7 +34,7 @@ public class BaseLoader {
 		
 		// server side languages
 		registry.registerPatch(new PluginAvunaAgent("AvunaAgent", registry, new File(registry.getPlugins(), "AvunaAgent")));
-		// PatchRegistry.registerPatch(new PatchJWSL("JWSL")); deprecated
+		
 		registry.registerPatch(new PluginFCGI("FCGI", registry, new File(registry.getPlugins(), "FCGI")));
 		registry.registerPatch(new PluginCGI("CGI", registry, new File(registry.getPlugins(), "CGI")));
 		registry.registerPatch(new PluginSCGI("SCGI", registry, new File(registry.getPlugins(), "SCGI")));
