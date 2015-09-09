@@ -40,6 +40,17 @@ import org.avuna.httpd.http.plugins.ssi.functions.ToLowerFunction;
 import org.avuna.httpd.http.plugins.ssi.functions.ToUpperFunction;
 import org.avuna.httpd.http.plugins.ssi.functions.Unbase64Function;
 import org.avuna.httpd.http.plugins.ssi.functions.UnescapeFunction;
+import org.avuna.httpd.http.plugins.ssi.unaryop.UnaryOPAnyExists;
+import org.avuna.httpd.http.plugins.ssi.unaryop.UnaryOPDirExists;
+import org.avuna.httpd.http.plugins.ssi.unaryop.UnaryOPFileExists;
+import org.avuna.httpd.http.plugins.ssi.unaryop.UnaryOPFileIsSymlink;
+import org.avuna.httpd.http.plugins.ssi.unaryop.UnaryOPFileNotEmpty;
+import org.avuna.httpd.http.plugins.ssi.unaryop.UnaryOPIPMatch;
+import org.avuna.httpd.http.plugins.ssi.unaryop.UnaryOPStringEmpty;
+import org.avuna.httpd.http.plugins.ssi.unaryop.UnaryOPStringNotEmpty;
+import org.avuna.httpd.http.plugins.ssi.unaryop.UnaryOPStringTrue;
+import org.avuna.httpd.http.plugins.ssi.unaryop.UnaryOPValidatePath;
+import org.avuna.httpd.http.plugins.ssi.unaryop.UnaryOPValidateURL;
 
 public class PluginSSI extends Plugin {
 	public final SSIEngine engine = new SSIEngine();
@@ -48,13 +59,14 @@ public class PluginSSI extends Plugin {
 		super(name, registry, config);
 		engine.addDirective(new ConfigDirective(this));
 		engine.addDirective(new EchoDirective(this));
-		engine.addDirective(new ElifDirective(this));
+		IfDirective id;
+		engine.addDirective(id = new IfDirective(this));
+		engine.addDirective(new ElifDirective(id, this));
 		engine.addDirective(new ElseDirective(this));
 		engine.addDirective(new EndIfDirective(this));
 		engine.addDirective(new ExecDirective(this));
 		engine.addDirective(new FlastmodDirective(this));
 		engine.addDirective(new FsizeDirective(this));
-		engine.addDirective(new IfDirective(this));
 		engine.addDirective(new IncludeDirective(this));
 		engine.addDirective(new PrintEnvDirective(this));
 		engine.addDirective(new SetDirective(this));
@@ -77,6 +89,21 @@ public class PluginSSI extends Plugin {
 		engine.addFunction("sha1", new SHA1Function());
 		engine.addFunction("file", new FileFunction());
 		engine.addFunction("filesize", new FileSizeFunction());
+		engine.addUnaryOP('d', new UnaryOPDirExists()); // not impl for security
+		engine.addUnaryOP('e', new UnaryOPAnyExists()); // not impl for security
+		engine.addUnaryOP('f', new UnaryOPFileExists()); // not impl for security
+		engine.addUnaryOP('s', new UnaryOPFileNotEmpty()); // not impl for security
+		UnaryOPFileIsSymlink uopfis = new UnaryOPFileIsSymlink(); // not impl for security
+		engine.addUnaryOP('L', uopfis); // not impl for security
+		engine.addUnaryOP('h', uopfis); // not impl for security
+		engine.addUnaryOP('F', new UnaryOPValidatePath());
+		UnaryOPValidateURL uopvu = new UnaryOPValidateURL();
+		engine.addUnaryOP('U', uopvu);
+		engine.addUnaryOP('A', uopvu);
+		engine.addUnaryOP('n', new UnaryOPStringNotEmpty());
+		engine.addUnaryOP('z', new UnaryOPStringEmpty());
+		engine.addUnaryOP('T', new UnaryOPStringTrue());
+		engine.addUnaryOP('R', new UnaryOPIPMatch());
 	}
 	
 	@Override

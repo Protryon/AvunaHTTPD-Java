@@ -7,9 +7,11 @@ import org.avuna.httpd.http.plugins.ssi.PluginSSI;
 import org.avuna.httpd.http.plugins.ssi.SSIDirective;
 
 public class ElifDirective extends SSIDirective {
+	private final IfDirective ifdir;
 	
-	public ElifDirective(PluginSSI ssi) {
+	public ElifDirective(IfDirective ifdir, PluginSSI ssi) {
 		super(ssi);
+		this.ifdir = ifdir;
 	}
 	
 	@Override
@@ -17,7 +19,7 @@ public class ElifDirective extends SSIDirective {
 		if (dir.args.length != 1) return null;
 		if (!dir.args[0].startsWith("expr=")) return null;
 		if (!page.lifc.contains(page.scope) && page.returnScope >= 0) {
-			if (IfDirective.processBNF(dir.args[0].substring(5), page, dir)) {
+			if (ifdir.processBNF(dir.args[0].substring(5), page, dir)) {
 				page.nonbrss = -1;
 				page.lifc.add(page.scope);
 			}

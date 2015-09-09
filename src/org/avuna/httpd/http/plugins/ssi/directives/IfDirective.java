@@ -15,7 +15,7 @@ public class IfDirective extends SSIDirective {
 		super(ssi);
 	}
 	
-	protected static boolean processSBNF(String pexpr, Page page, ParsedSSIDirective dir) {
+	protected boolean processSBNF(String pexpr, Page page, ParsedSSIDirective dir) {
 		String expr = pexpr.trim();
 		if (expr.equals("true")) return true;
 		if (expr.equals("false")) return false;
@@ -29,32 +29,8 @@ public class IfDirective extends SSIDirective {
 			expr = expr.substring(si + 1).trim();
 			Word w1 = new Word(expr, page, dir);
 			expr = pexpr.substring(w1.endIndex).trim();
-			if (op.equals("d")) {
-			
-			}else if (op.equals("e")) {
-			
-			}else if (op.equals("f")) {
-			
-			}else if (op.equals("s")) {
-			
-			}else if (op.equals("L")) {
-			
-			}else if (op.equals("h")) {
-			
-			}else if (op.equals("F")) {
-			
-			}else if (op.equals("U")) {
-			
-			}else if (op.equals("A")) {
-			
-			}else if (op.equals("n")) {
-			
-			}else if (op.equals("z")) {
-			
-			}else if (op.equals("T")) {
-			
-			}else if (op.equals("R")) {
-			
+			if (op.length() > 0) {
+				return ssi.engine.callUnaryOP(op.charAt(0), page, dir, w1.value);
 			}
 		}else {
 			Word w1 = new Word(expr, page, dir);
@@ -113,7 +89,7 @@ public class IfDirective extends SSIDirective {
 		return false;
 	}
 	
-	protected static boolean processBNF(String pexpr, Page page, ParsedSSIDirective dir) {
+	protected boolean processBNF(String pexpr, Page page, ParsedSSIDirective dir) {
 		String expr = pexpr;
 		int scope = 0;
 		boolean inq = false;

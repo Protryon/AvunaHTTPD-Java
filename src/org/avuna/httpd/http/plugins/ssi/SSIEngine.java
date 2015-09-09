@@ -3,6 +3,7 @@ package org.avuna.httpd.http.plugins.ssi;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import org.avuna.httpd.http.plugins.UnaryOP;
 
 /** The purpose of abstracting the SSI Engine is to allow things like template systems to extend SSI, very useful in Avuna Agents. */
 public final class SSIEngine {
@@ -12,9 +13,10 @@ public final class SSIEngine {
 	
 	private final ArrayList<SSIDirective> directives = new ArrayList<SSIDirective>();
 	private final HashMap<String, SSIFunction> functions = new HashMap<String, SSIFunction>();
+	private final HashMap<Character, UnaryOP> unaryops = new HashMap<Character, UnaryOP>();
 	private final SSIParser parser = new SSIParser(this);
 	
-	protected String callFunction(String name, Page page, String arg) {
+	public String callFunction(String name, Page page, String arg) {
 		String nt = name.trim();
 		for (String funct : functions.keySet()) {
 			if (funct.equalsIgnoreCase(nt)) {
@@ -22,6 +24,15 @@ public final class SSIEngine {
 			}
 		}
 		return null;
+	}
+	
+	public boolean callUnaryOP(char op, Page page, ParsedSSIDirective dir, String arg) {
+		for (Character uop : unaryops.keySet()) {
+			if (uop == op) {
+				return unaryops.get(uop).call(arg.trim(), page, dir);
+			}
+		}
+		return false;
 	}
 	
 	public SSIParser getParser() {
@@ -37,6 +48,10 @@ public final class SSIEngine {
 	
 	public void addFunction(String name, SSIFunction function) {
 		functions.put(name, function);
+	}
+	
+	public void addUnaryOP(char name, UnaryOP uop) {
+		unaryops.put(name, uop);
 	}
 	
 	public String callDirective(Page page, ParsedSSIDirective dir) {
