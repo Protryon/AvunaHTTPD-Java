@@ -23,6 +23,7 @@ public class Page {
 		this.directives = directives;
 		this.engine = engine;
 		variables.put("error", "[an error occurred while processing this directive]");
+		
 	}
 	
 	public void postOutputNextBlock() {

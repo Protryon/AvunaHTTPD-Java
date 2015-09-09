@@ -3,8 +3,12 @@
 package org.avuna.httpd.http.plugins.ssi;
 
 import java.io.File;
+import java.util.Date;
+import java.util.HashMap;
+import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
+import org.avuna.httpd.http.ResponseGenerator;
 import org.avuna.httpd.http.event.EventGenerateResponse;
 import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
@@ -119,6 +123,53 @@ public class PluginSSI extends Plugin {
 			if (response.body.data.length == 0) return;
 			String body = new String(response.body.data);
 			Page sp = engine.getParser().parsePage(body);
+			String get = request.target;
+			if (get.contains("#")) {
+				get = get.substring(0, get.indexOf("#"));
+			}
+			String rq = get;
+			if (get.contains("?")) {
+				rq = get.substring(0, get.indexOf("?"));
+				get = get.substring(get.indexOf("?") + 1);
+			}else {
+				get = "";
+			}
+			sp.variables.put("SERVER_ADDR", "");
+			sp.variables.put("REQUEST_URI", rq + (get.length() > 0 ? "?" + get : ""));
+			
+			rq = AvunaHTTPD.fileManager.correctForIndex(rq, request);
+			
+			sp.variables.put("CONTENT_LENGTH", (request.body == null || request.body.data == null) ? "0" : request.body.data.length + "");
+			if (request.body != null && request.body.type != null) sp.variables.put("CONTENT_TYPE", request.body.type);
+			sp.variables.put("QUERY_STRING", get);
+			sp.variables.put("REMOTE_ADDR", request.userIP);
+			sp.variables.put("REMOTE_HOST", request.userIP);
+			sp.variables.put("REMOTE_PORT", request.userPort + "");
+			sp.variables.put("REQUEST_METHOD", request.method.name);
+			sp.variables.put("REDIRECT_STATUS", response.statusCode + "");
+			String oabs = response.body.oabs.replace("\\", "/");
+			String htds = request.host.getHTDocs().getAbsolutePath().replace("\\", "/");
+			sp.variables.put("SCRIPT_NAME", oabs.substring(htds.length()));
+			if (request.headers.hasHeader("Host")) sp.variables.put("SERVER_NAME", request.headers.getHeader("Host"));
+			int port = request.host.getHost().getPort();
+			sp.variables.put("SERVER_PORT", port + "");
+			sp.variables.put("SERVER_PROTOCOL", request.httpVersion);
+			sp.variables.put("SERVER_SOFTWARE", "Avuna/" + AvunaHTTPD.VERSION);
+			sp.variables.put("DOCUMENT_ROOT", htds);
+			sp.variables.put("SCRIPT_FILENAME", oabs);
+			HashMap<String, String[]> hdrs = request.headers.getHeaders();
+			for (String key : hdrs.keySet()) {
+				if (key.equalsIgnoreCase("Accept-Encoding")) continue;
+				for (String val : hdrs.get(key)) {
+					sp.variables.put("HTTP_" + key.toUpperCase().replace("-", "_"), val); // TODO: will break if multiple same-nameed headers are received
+				}
+			}
+			sp.variables.put("DATE_GMT", ResponseGenerator.sdf.format(new Date())); // local time
+			sp.variables.put("DATE_LOCAL", sp.variables.get("DATE_GMT"));
+			sp.variables.put("DOCUMENT_NAME", rq.contains("/") ? rq.substring(rq.lastIndexOf("/") + 1) : "");
+			sp.variables.put("DOCUMENT_URI", rq);
+			sp.variables.put("LAST_MODIFIED", "");
+			sp.variables.put("QUERY_STRING_UNESCAPED", get.replace("\\", "\\\\").replace("&", "\\&"));
 			StringBuilder res = new StringBuilder();
 			int le = 0;
 			if (sp != null && sp.directives != null) {
