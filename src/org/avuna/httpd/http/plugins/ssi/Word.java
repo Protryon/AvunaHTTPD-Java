@@ -24,6 +24,7 @@ public class Word {
 					if (!inv && c == '\'') {
 						value = expr.substring(1, i);
 						endIndex = i + 1;
+						value = new SSIString(value, page, dir).value;
 						readForConcat(expr, page, dir);
 						return;
 					}
@@ -41,6 +42,7 @@ public class Word {
 					if (!inv && c == '"') {
 						value = expr.substring(1, i);
 						endIndex = i + 1;
+						value = new SSIString(value, page, dir).value;
 						readForConcat(expr, page, dir);
 						return;
 					}
@@ -66,11 +68,30 @@ public class Word {
 				value = null;
 			}
 		}
+		if (value == null && expr.startsWith("$")) {
+			if (page.lastMatch == null) {
+				value = "";
+				readForConcat(expr, page, dir);
+				return;
+			}else {
+				try {
+					int val = Integer.parseInt(expr.substring(1, 2));
+					if (page.lastMatch.groupCount() > val || val < 0) {
+						value = "";
+					}else {
+						value = page.lastMatch.group(val);
+					}
+					readForConcat(expr, page, dir);
+					return;
+					
+				}catch (NumberFormatException e) {
+					value = null;
+				}
+			}
+		}
 		if (value == null) {
 			throw new IllegalArgumentException("Bad or unsupported IF word!");
 		}
-		// TODO: rebackref
-		// TODO: function
 	}
 	
 	private void readForConcat(String expr, Page page, ParsedSSIDirective dir) {

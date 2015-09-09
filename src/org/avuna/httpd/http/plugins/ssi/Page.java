@@ -3,6 +3,7 @@ package org.avuna.httpd.http.plugins.ssi;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.regex.Matcher;
 
 public class Page {
 	public final ParsedSSIDirective[] directives;
@@ -16,6 +17,7 @@ public class Page {
 	public int nonbrss = -2;
 	public final ArrayList<Integer> lifc = new ArrayList<Integer>();
 	public final SSIEngine engine;
+	public Matcher lastMatch = null;
 	
 	public Page(SSIEngine engine, ParsedSSIDirective[] directives) {
 		this.directives = directives;
