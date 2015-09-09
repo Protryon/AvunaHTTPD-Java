@@ -52,7 +52,9 @@ public class PluginGZip extends Plugin {
 					pregzip.put(l, data2);
 				}
 				response.headers.addHeader("Content-Encoding", "gzip");
-				response.headers.addHeader("Vary", "Accept-Encoding");
+				String cv = response.headers.getHeader("Vary");
+				cv = cv == null ? "Accept-Encoding" : (cv + ", " + "Accept-Encoding");
+				response.headers.updateHeader("Vary", cv);
 			}catch (IOException e) {
 				request.host.logger.logError(e);
 			}

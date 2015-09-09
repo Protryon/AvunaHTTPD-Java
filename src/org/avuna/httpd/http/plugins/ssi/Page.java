@@ -15,9 +15,11 @@ public class Page {
 	/** Next output next block return scope set. Purpose is to allow setting the returnScope after the previous block before our call is output. */
 	public int nonbrss = -2;
 	public final ArrayList<Integer> lifc = new ArrayList<Integer>();
+	public final SSIEngine engine;
 	
-	public Page(ParsedSSIDirective[] directives) {
+	public Page(SSIEngine engine, ParsedSSIDirective[] directives) {
 		this.directives = directives;
+		this.engine = engine;
 		variables.put("error", "[an error occurred while processing this directive]");
 	}
 	

@@ -35,6 +35,7 @@ public class PluginSCGI extends Plugin {
 	
 	private static final class SCGIServer {
 		public boolean unix;
+		@SuppressWarnings("unused")
 		public String ip, directory;
 		public int port;
 		

@@ -23,6 +23,23 @@ import org.avuna.httpd.http.plugins.ssi.directives.IfDirective;
 import org.avuna.httpd.http.plugins.ssi.directives.IncludeDirective;
 import org.avuna.httpd.http.plugins.ssi.directives.PrintEnvDirective;
 import org.avuna.httpd.http.plugins.ssi.directives.SetDirective;
+import org.avuna.httpd.http.plugins.ssi.functions.Base64Function;
+import org.avuna.httpd.http.plugins.ssi.functions.EnvFunction;
+import org.avuna.httpd.http.plugins.ssi.functions.EscapeFunction;
+import org.avuna.httpd.http.plugins.ssi.functions.FileFunction;
+import org.avuna.httpd.http.plugins.ssi.functions.FileSizeFunction;
+import org.avuna.httpd.http.plugins.ssi.functions.HTTPFunction;
+import org.avuna.httpd.http.plugins.ssi.functions.HTTP_NoVaryFunction;
+import org.avuna.httpd.http.plugins.ssi.functions.MD5Function;
+import org.avuna.httpd.http.plugins.ssi.functions.NoteFunction;
+import org.avuna.httpd.http.plugins.ssi.functions.OSENVFunction;
+import org.avuna.httpd.http.plugins.ssi.functions.ReqEnvFunction;
+import org.avuna.httpd.http.plugins.ssi.functions.RespFunction;
+import org.avuna.httpd.http.plugins.ssi.functions.SHA1Function;
+import org.avuna.httpd.http.plugins.ssi.functions.ToLowerFunction;
+import org.avuna.httpd.http.plugins.ssi.functions.ToUpperFunction;
+import org.avuna.httpd.http.plugins.ssi.functions.Unbase64Function;
+import org.avuna.httpd.http.plugins.ssi.functions.UnescapeFunction;
 
 public class PluginSSI extends Plugin {
 	public final SSIEngine engine = new SSIEngine();
@@ -41,6 +58,25 @@ public class PluginSSI extends Plugin {
 		engine.addDirective(new IncludeDirective(this));
 		engine.addDirective(new PrintEnvDirective(this));
 		engine.addDirective(new SetDirective(this));
+		HTTPFunction hf = new HTTPFunction();
+		engine.addFunction("req", hf);
+		engine.addFunction("http", hf);
+		engine.addFunction("req_novary", new HTTP_NoVaryFunction());
+		engine.addFunction("resp", new RespFunction());
+		engine.addFunction("reqenv", new ReqEnvFunction());
+		engine.addFunction("osenv", new OSENVFunction());
+		engine.addFunction("note", new NoteFunction());
+		engine.addFunction("env", new EnvFunction());
+		engine.addFunction("tolower", new ToLowerFunction());
+		engine.addFunction("toupper", new ToUpperFunction());
+		engine.addFunction("escape", new EscapeFunction());
+		engine.addFunction("unescape", new UnescapeFunction());
+		engine.addFunction("base64", new Base64Function());
+		engine.addFunction("unbase64", new Unbase64Function());
+		engine.addFunction("md5", new MD5Function());
+		engine.addFunction("sha1", new SHA1Function());
+		engine.addFunction("file", new FileFunction());
+		engine.addFunction("filesize", new FileSizeFunction());
 	}
 	
 	@Override

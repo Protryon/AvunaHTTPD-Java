@@ -2,6 +2,7 @@
 package org.avuna.httpd.http.plugins.ssi;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /** The purpose of abstracting the SSI Engine is to allow things like template systems to extend SSI, very useful in Avuna Agents. */
 public final class SSIEngine {
@@ -10,7 +11,18 @@ public final class SSIEngine {
 	}
 	
 	private final ArrayList<SSIDirective> directives = new ArrayList<SSIDirective>();
+	private final HashMap<String, SSIFunction> functions = new HashMap<String, SSIFunction>();
 	private final SSIParser parser = new SSIParser(this);
+	
+	protected String callFunction(String name, Page page, String arg) {
+		String nt = name.trim();
+		for (String funct : functions.keySet()) {
+			if (funct.equalsIgnoreCase(nt)) {
+				return functions.get(funct).call(page, arg.trim());
+			}
+		}
+		return null;
+	}
 	
 	public SSIParser getParser() {
 		return parser;
@@ -21,6 +33,10 @@ public final class SSIEngine {
 	 * @param directive The directive to add. */
 	public void addDirective(SSIDirective directive) {
 		directives.add(directive);
+	}
+	
+	public void addFunction(String name, SSIFunction function) {
+		functions.put(name, function);
 	}
 	
 	public String callDirective(Page page, ParsedSSIDirective dir) {

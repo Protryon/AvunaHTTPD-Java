@@ -51,8 +51,15 @@ public class Word {
 		if (value == null && expr.startsWith("%{")) {
 			int e = expr.indexOf("}");
 			if (e > 2) {
-				value = page.variables.get(expr.substring(2, e));
+				String name = expr.substring(2, e);
 				endIndex = e + 1;
+				if (name.contains(":")) {
+					String fn = name.substring(0, name.indexOf(":"));
+					String fv = name.substring(fn.length() + 1);
+					value = page.engine.callFunction(fn, page, fv);
+				}else {
+					value = page.variables.get(name);
+				}
 				readForConcat(expr, page, dir);
 				return;
 			}else {
