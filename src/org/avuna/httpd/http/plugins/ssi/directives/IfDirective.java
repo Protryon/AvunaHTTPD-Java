@@ -5,14 +5,14 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.avuna.httpd.http.plugins.ssi.Page;
 import org.avuna.httpd.http.plugins.ssi.ParsedSSIDirective;
-import org.avuna.httpd.http.plugins.ssi.PluginSSI;
 import org.avuna.httpd.http.plugins.ssi.SSIDirective;
+import org.avuna.httpd.http.plugins.ssi.SSIEngine;
 import org.avuna.httpd.http.plugins.ssi.Word;
 
 public class IfDirective extends SSIDirective {
 	
-	public IfDirective(PluginSSI ssi) {
-		super(ssi);
+	public IfDirective(SSIEngine engine) {
+		super(engine);
 	}
 	
 	protected boolean processSBNF(String pexpr, Page page, ParsedSSIDirective dir) {
@@ -30,7 +30,7 @@ public class IfDirective extends SSIDirective {
 			Word w1 = new Word(expr, page, dir);
 			expr = pexpr.substring(w1.endIndex).trim();
 			if (op.length() > 0) {
-				return ssi.engine.callUnaryOP(op.charAt(0), page, dir, w1.value);
+				return engine.callUnaryOP(op.charAt(0), page, dir, w1.value);
 			}
 		}else {
 			Word w1 = new Word(expr, page, dir);

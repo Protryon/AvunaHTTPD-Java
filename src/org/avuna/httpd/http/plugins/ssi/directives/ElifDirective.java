@@ -3,14 +3,14 @@ package org.avuna.httpd.http.plugins.ssi.directives;
 
 import org.avuna.httpd.http.plugins.ssi.Page;
 import org.avuna.httpd.http.plugins.ssi.ParsedSSIDirective;
-import org.avuna.httpd.http.plugins.ssi.PluginSSI;
 import org.avuna.httpd.http.plugins.ssi.SSIDirective;
+import org.avuna.httpd.http.plugins.ssi.SSIEngine;
 
 public class ElifDirective extends SSIDirective {
 	private final IfDirective ifdir;
 	
-	public ElifDirective(IfDirective ifdir, PluginSSI ssi) {
-		super(ssi);
+	public ElifDirective(IfDirective ifdir, SSIEngine engine) {
+		super(engine);
 		this.ifdir = ifdir;
 	}
 	

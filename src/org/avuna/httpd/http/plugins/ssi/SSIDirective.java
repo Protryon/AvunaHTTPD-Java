@@ -3,10 +3,10 @@ package org.avuna.httpd.http.plugins.ssi;
 
 public abstract class SSIDirective {
 	
-	public final PluginSSI ssi;
+	public final SSIEngine engine;
 	
-	public SSIDirective(PluginSSI ssi) {
-		this.ssi = ssi;
+	public SSIDirective(SSIEngine engine) {
+		this.engine = engine;
 	}
 	
 	/** Calls a SSI Directive.

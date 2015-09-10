@@ -57,23 +57,23 @@ import org.avuna.httpd.http.plugins.ssi.unaryop.UnaryOPValidatePath;
 import org.avuna.httpd.http.plugins.ssi.unaryop.UnaryOPValidateURL;
 
 public class PluginSSI extends Plugin {
-	public final SSIEngine engine = new SSIEngine();
+	public final SSIEngine engine = new SSIEngine(new SSIParser());
 	
 	public PluginSSI(String name, PluginRegistry registry, File config) {
 		super(name, registry, config);
-		engine.addDirective(new ConfigDirective(this));
-		engine.addDirective(new EchoDirective(this));
+		engine.addDirective(new ConfigDirective(engine));
+		engine.addDirective(new EchoDirective(engine));
 		IfDirective id;
-		engine.addDirective(id = new IfDirective(this));
-		engine.addDirective(new ElifDirective(id, this));
-		engine.addDirective(new ElseDirective(this));
-		engine.addDirective(new EndIfDirective(this));
-		engine.addDirective(new ExecDirective(this));
-		engine.addDirective(new FlastmodDirective(this));
-		engine.addDirective(new FsizeDirective(this));
-		engine.addDirective(new IncludeDirective(this));
-		engine.addDirective(new PrintEnvDirective(this));
-		engine.addDirective(new SetDirective(this));
+		engine.addDirective(id = new IfDirective(engine));
+		engine.addDirective(new ElifDirective(id, engine));
+		engine.addDirective(new ElseDirective(engine));
+		engine.addDirective(new EndIfDirective(engine));
+		engine.addDirective(new ExecDirective(engine));
+		engine.addDirective(new FlastmodDirective(engine));
+		engine.addDirective(new FsizeDirective(engine));
+		engine.addDirective(new IncludeDirective(engine));
+		engine.addDirective(new PrintEnvDirective(engine));
+		engine.addDirective(new SetDirective(engine));
 		HTTPFunction hf = new HTTPFunction();
 		engine.addFunction("req", hf);
 		engine.addFunction("http", hf);

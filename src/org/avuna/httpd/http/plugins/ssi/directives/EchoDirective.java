@@ -3,14 +3,14 @@ package org.avuna.httpd.http.plugins.ssi.directives;
 
 import org.avuna.httpd.http.plugins.ssi.Page;
 import org.avuna.httpd.http.plugins.ssi.ParsedSSIDirective;
-import org.avuna.httpd.http.plugins.ssi.PluginSSI;
 import org.avuna.httpd.http.plugins.ssi.SSIDirective;
+import org.avuna.httpd.http.plugins.ssi.SSIEngine;
 import org.avuna.httpd.http.plugins.ssi.Word;
 
 public class EchoDirective extends SSIDirective {
 	
-	public EchoDirective(PluginSSI ssi) {
-		super(ssi);
+	public EchoDirective(SSIEngine engine) {
+		super(engine);
 	}
 	
 	@Override

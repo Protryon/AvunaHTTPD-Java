@@ -6,14 +6,14 @@ import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.networking.ResponsePacket;
 import org.avuna.httpd.http.plugins.ssi.Page;
 import org.avuna.httpd.http.plugins.ssi.ParsedSSIDirective;
-import org.avuna.httpd.http.plugins.ssi.PluginSSI;
 import org.avuna.httpd.http.plugins.ssi.SSIDirective;
+import org.avuna.httpd.http.plugins.ssi.SSIEngine;
 import org.avuna.httpd.http.plugins.ssi.SSIString;
 
 public class ExecDirective extends SSIDirective {
 	
-	public ExecDirective(PluginSSI ssi) {
-		super(ssi);
+	public ExecDirective(SSIEngine engine) {
+		super(engine);
 	}
 	
 	@Override

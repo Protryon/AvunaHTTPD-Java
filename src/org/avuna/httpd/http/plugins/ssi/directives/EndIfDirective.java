@@ -3,13 +3,13 @@ package org.avuna.httpd.http.plugins.ssi.directives;
 
 import org.avuna.httpd.http.plugins.ssi.Page;
 import org.avuna.httpd.http.plugins.ssi.ParsedSSIDirective;
-import org.avuna.httpd.http.plugins.ssi.PluginSSI;
 import org.avuna.httpd.http.plugins.ssi.SSIDirective;
+import org.avuna.httpd.http.plugins.ssi.SSIEngine;
 
 public class EndIfDirective extends SSIDirective {
 	
-	public EndIfDirective(PluginSSI ssi) {
-		super(ssi);
+	public EndIfDirective(SSIEngine engine) {
+		super(engine);
 	}
 	
 	@Override

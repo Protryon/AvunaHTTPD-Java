@@ -3,13 +3,13 @@ package org.avuna.httpd.http.plugins.ssi.directives;
 
 import org.avuna.httpd.http.plugins.ssi.Page;
 import org.avuna.httpd.http.plugins.ssi.ParsedSSIDirective;
-import org.avuna.httpd.http.plugins.ssi.PluginSSI;
 import org.avuna.httpd.http.plugins.ssi.SSIDirective;
+import org.avuna.httpd.http.plugins.ssi.SSIEngine;
 
 public class FlastmodDirective extends SSIDirective {
 	
-	public FlastmodDirective(PluginSSI ssi) {
-		super(ssi);
+	public FlastmodDirective(SSIEngine engine) {
+		super(engine);
 	}
 	
 	@Override

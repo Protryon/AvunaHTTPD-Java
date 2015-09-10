@@ -7,14 +7,14 @@ import org.avuna.httpd.http.plugins.UnaryOP;
 
 /** The purpose of abstracting the SSI Engine is to allow things like template systems to extend SSI, very useful in Avuna Agents. */
 public final class SSIEngine {
-	public SSIEngine() {
-	
+	public SSIEngine(SSIParser parser) {
+		this.parser = parser;
 	}
 	
 	private final ArrayList<SSIDirective> directives = new ArrayList<SSIDirective>();
 	private final HashMap<String, SSIFunction> functions = new HashMap<String, SSIFunction>();
 	private final HashMap<Character, UnaryOP> unaryops = new HashMap<Character, UnaryOP>();
-	private final SSIParser parser = new SSIParser(this);
+	private final SSIParser parser;
 	
 	public String callFunction(String name, Page page, String arg) {
 		String nt = name.trim();

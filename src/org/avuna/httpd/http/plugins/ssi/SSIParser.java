@@ -8,9 +8,9 @@ import java.util.regex.Pattern;
 import java.util.zip.CRC32;
 
 public class SSIParser {
-	private final SSIEngine engine;
+	private SSIEngine engine;
 	
-	protected SSIParser(SSIEngine engine) {
+	protected void setEngine(SSIEngine engine) {
 		this.engine = engine;
 	}
 	
@@ -41,6 +41,7 @@ public class SSIParser {
 				int sl = 0;
 				int stage = 0;
 				String cur = "";
+				char quot = 0;
 				while (sl < dargs.length()) {
 					if (stage == 0) {
 						int t = dargs.indexOf("=", sl);
@@ -52,13 +53,20 @@ public class SSIParser {
 					}else if (stage == 1) {
 						boolean esc = false;
 						sl = dargs.indexOf('"', sl) + 1; // skip ahead past next "
+						int osl = sl;
+						sl = Math.min(sl, dargs.indexOf('\'', sl) + 1);
+						if (osl != sl) { // single quote
+							quot = '\'';
+						}else {
+							quot = '"';
+						}
 						int s = sl;
 						while (sl < dargs.length()) {
 							char c = dargs.charAt(sl);
 							if (c == '\\') {
 								esc = !esc;
 							}else if (!esc) {
-								if (c == '"') { // found unescaped terminator
+								if (c == quot) { // found unescaped terminator
 									break;
 								}
 							}else {
@@ -77,6 +85,11 @@ public class SSIParser {
 			dirs = ldirs.toArray(new ParsedSSIDirective[0]);
 			dirCache.put(crc, dirs);
 		}
+		return newPage(engine, dirs);
+	}
+	
+	/** To be overridden for classes extending Page. */
+	public Page newPage(SSIEngine engine, ParsedSSIDirective[] dirs) {
 		return new Page(engine, dirs);
 	}
 }
