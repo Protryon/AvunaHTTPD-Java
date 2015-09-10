@@ -10,6 +10,7 @@ import org.avuna.httpd.http.plugins.PluginRegistry;
 import org.avuna.httpd.http.plugins.avunaagent.PluginAvunaAgent;
 import org.avuna.httpd.http.plugins.base.fcgi.PluginFCGI;
 import org.avuna.httpd.http.plugins.security.PluginSecurity;
+import org.avuna.httpd.http.plugins.servlet.PluginServlet;
 import org.avuna.httpd.http.plugins.ssi.PluginSSI;
 
 public class BaseLoader {
@@ -34,6 +35,7 @@ public class BaseLoader {
 		
 		// server side languages
 		registry.registerPatch(new PluginAvunaAgent("AvunaAgent", registry, new File(registry.getPlugins(), "AvunaAgent")));
+		registry.registerPatch(new PluginServlet("Servlet", registry, new File(registry.getPlugins(), "Servlet")));
 		
 		registry.registerPatch(new PluginFCGI("FCGI", registry, new File(registry.getPlugins(), "FCGI")));
 		registry.registerPatch(new PluginCGI("CGI", registry, new File(registry.getPlugins(), "CGI")));
