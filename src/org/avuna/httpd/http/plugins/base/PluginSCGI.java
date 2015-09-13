@@ -82,11 +82,7 @@ public class PluginSCGI extends Plugin {
 		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, -600);
 	}
 	
-	public void destroy() {
-		scgis.clear();
-	}
-	
-	public HashMap<String, SCGIServer> scgis = new HashMap<String, SCGIServer>();
+	private HashMap<String, SCGIServer> scgis = new HashMap<String, SCGIServer>();
 	
 	@Override
 	public void formatConfig(ConfigNode json) {
@@ -103,7 +99,7 @@ public class PluginSCGI extends Plugin {
 			if (!sub.containsNode("unix")) sub.insertNode("unix", "false", "set ip to the unix socket file, and port is ignored <to use unix sockets>");
 			if (!sub.containsNode("ip")) sub.insertNode("ip", "127.0.0.1");
 			if (!sub.containsNode("port")) sub.insertNode("port", "4000");
-			if (!sub.containsNode("directory")) sub.insertNode("directory", "/");
+			if (!sub.containsNode("directory")) sub.insertNode("directory", "/", "directory in which to mount the scgi server");
 		}
 	}
 	
@@ -182,7 +178,7 @@ public class PluginSCGI extends Plugin {
 			for (String key : hdrs.keySet()) {
 				if (key.equalsIgnoreCase("Accept-Encoding")) continue;
 				for (String val : hdrs.get(key)) {
-					vars.put("HTTP_" + key.toUpperCase().replace("-", "_"), val); // TODO: will break if multiple same-nameed headers are received
+					vars.put("HTTP_" + key.toUpperCase().replace("-", "_"), val); // TODO: will break if multiple same-named headers are received
 				}
 			}
 			ByteArrayOutputStream bout = new ByteArrayOutputStream();

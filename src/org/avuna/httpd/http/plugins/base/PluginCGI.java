@@ -62,11 +62,7 @@ public class PluginCGI extends Plugin {
 		bus.registerEvent(HTTPEventID.GENERATERESPONSE, this, -600);
 	}
 	
-	public void destroy() {
-		cgis.clear();
-	}
-	
-	public HashMap<String, String> cgis = new HashMap<String, String>();
+	private HashMap<String, String> cgis = new HashMap<String, String>();
 	
 	@Override
 	public void formatConfig(ConfigNode json) {
