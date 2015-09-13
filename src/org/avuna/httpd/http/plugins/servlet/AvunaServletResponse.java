@@ -13,9 +13,11 @@ import org.avuna.httpd.http.plugins.avunaagent.HTMLBuilder;
 
 public class AvunaServletResponse implements HttpServletResponse {
 	private final ResponsePacket response;
+	private final AvunaServletContext context;
 	
-	public AvunaServletResponse(ResponsePacket response) {
+	public AvunaServletResponse(ResponsePacket response, AvunaServletContext context) {
 		this.response = response;
+		this.context = context;
 	}
 	
 	@Override

@@ -91,8 +91,12 @@ public class RequestPacket extends Packet {
 		return ret;
 	}
 	
+	private boolean pjl = false;
+	
 	/** Gets the get/post/cookie variables and puts them in the HashMaps for Avuna Agents. */
 	public void procJL() throws UnsupportedEncodingException {
+		if (pjl) return;
+		pjl = true;
 		String get = target.contains("?") ? target.substring(target.indexOf("?") + 1) : "";
 		for (String kd : get.split("&")) {
 			if (kd.contains("=")) {

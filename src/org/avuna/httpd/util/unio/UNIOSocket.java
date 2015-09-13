@@ -161,7 +161,19 @@ public class UNIOSocket extends Socket {
 		}
 	}
 	
+	public InetAddress getLocalAddress() {
+		try {
+			return InetAddress.getByName(ip);
+		}catch (UnknownHostException e) {
+			return null;
+		}
+	}
+	
 	public int getPort() {
+		return -1;
+	}
+	
+	public int getLocalPort() {
 		return port;
 	}
 	

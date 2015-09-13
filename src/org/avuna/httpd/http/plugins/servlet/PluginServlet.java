@@ -100,8 +100,9 @@ public class PluginServlet extends Plugin {
 					if (s == null) {
 						return;
 					}
-					AvunaServletResponse resp = new AvunaServletResponse(response);
-					s.service(new AvunaServletRequest(request), resp);
+					request.procJL();
+					AvunaServletResponse resp = new AvunaServletResponse(response, war.cl.context);
+					s.service(new AvunaServletRequest(request, war.cl.context), resp);
 					if (response.body == null) response.body = new Resource(resp.getOutput().getBytes(), response.headers.getHeader("Content-Type"));
 					else response.body.data = resp.getOutput().getBytes();
 				}catch (Exception e) {

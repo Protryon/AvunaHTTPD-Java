@@ -29,7 +29,7 @@ public class ServletClassLoader extends URLClassLoader {
 	private ArrayList<InitParam> contextParams = new ArrayList<InitParam>();
 	private HashMap<String, String> path2name = new HashMap<String, String>();
 	private HashMap<Class<? extends Servlet>, Servlet> lservs = new HashMap<Class<? extends Servlet>, Servlet>();
-	private final AvunaServletContext context = new AvunaServletContext(this);
+	protected final AvunaServletContext context = new AvunaServletContext(this);
 	
 	@SuppressWarnings("unchecked")
 	public Servlet getServlet(String path) throws ClassNotFoundException, ServletException, InstantiationException, IllegalAccessException {

@@ -1,15 +1,21 @@
 package org.avuna.httpd.http.plugins.servlet;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;
+import javax.servlet.ReadListener;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -27,9 +33,11 @@ import org.avuna.httpd.http.networking.RequestPacket;
 public class AvunaServletRequest implements HttpServletRequest {
 	
 	private final RequestPacket request;
+	private final AvunaServletContext context;
 	
-	public AvunaServletRequest(RequestPacket request) {
+	public AvunaServletRequest(RequestPacket request, AvunaServletContext context) {
 		this.request = request;
+		this.context = context;
 	}
 	
 	@Override
@@ -39,142 +47,217 @@ public class AvunaServletRequest implements HttpServletRequest {
 	
 	@Override
 	public Object getAttribute(String arg0) {
-		return null;
+		return attributes.get(arg0);
 	}
 	
 	@Override
 	public Enumeration<String> getAttributeNames() {
-		return null;
+		return Collections.emptyEnumeration();
 	}
 	
 	@Override
 	public String getCharacterEncoding() {
-		return null;
+		if (encoding != null) return encoding;
+		String ct = request.headers.getHeader("Content-Type");
+		String[] spl = ct.split("\\:");
+		for (String sp : spl) {
+			sp = sp.trim();
+			if (sp.startsWith("charset=")) {
+				sp = sp.substring(8);
+				return sp;
+			}
+		}
+		return "utf-8";
 	}
 	
 	@Override
 	public int getContentLength() {
-		return 0;
+		return request.body == null ? 0 : (request.body.data == null ? 0 : request.body.data.length);
 	}
 	
 	@Override
 	public long getContentLengthLong() {
-		return 0;
+		return request.body == null ? 0 : (request.body.data == null ? 0 : request.body.data.length);
 	}
 	
 	@Override
 	public String getContentType() {
-		return null;
+		return request.headers.getHeader("Content-Type");
 	}
 	
 	@Override
 	public DispatcherType getDispatcherType() {
-		return null;
+		return DispatcherType.ASYNC;
 	}
 	
 	@Override
 	public ServletInputStream getInputStream() throws IOException {
-		return null;
+		if (request.body == null || request.body.data == null) return null;
+		return new ServletInputStream() {
+			private int i = 0;
+			private ByteArrayInputStream bin = new ByteArrayInputStream(request.body.data);
+			
+			@Override
+			public boolean isFinished() {
+				return request.body.data.length >= i;
+			}
+			
+			@Override
+			public boolean isReady() {
+				return !isFinished();
+			}
+			
+			private ReadListener listener = null;
+			
+			@Override
+			public void setReadListener(ReadListener arg0) {
+				try {
+					arg0.onDataAvailable();
+				}catch (IOException e) {
+					request.host.logger.logError(e);
+				}
+				listener = arg0;
+			}
+			
+			@Override
+			public int read() throws IOException {
+				int b = bin.read();
+				if (listener != null && isFinished()) {
+					listener.onAllDataRead();
+				}
+				return b;
+			}
+			
+			public int read(byte[] buf) throws IOException {
+				int b = bin.read(buf);
+				if (listener != null && isFinished()) {
+					listener.onAllDataRead();
+				}
+				return b;
+			}
+			
+			public int read(byte[] buf, int off, int len) throws IOException {
+				int b = bin.read(buf, off, len);
+				if (listener != null && isFinished()) {
+					listener.onAllDataRead();
+				}
+				return b;
+			}
+			
+		};
 	}
 	
 	@Override
 	public String getLocalAddr() {
-		return null;
+		return request.work.s.getLocalAddress().getHostAddress();
 	}
 	
 	@Override
 	public String getLocalName() {
-		return null;
+		return getLocalAddr();
 	}
 	
 	@Override
 	public int getLocalPort() {
-		return 0;
+		return request.work.s.getLocalPort();
 	}
 	
 	@Override
 	public Locale getLocale() {
-		return null;
+		return Locale.ENGLISH; // TODO: ?
 	}
 	
 	@Override
 	public Enumeration<Locale> getLocales() {
-		return null;
+		return Collections.emptyEnumeration();
 	}
 	
 	@Override
 	public String getParameter(String arg0) {
-		return null;
+		String param = request.get.get(arg0);
+		return param == null ? request.post.get(arg0) : param;
 	}
 	
 	@Override
 	public Map<String, String[]> getParameterMap() {
-		return null;
+		HashMap<String, String[]> paramMap = new HashMap<String, String[]>();
+		for (String value : request.get.keySet())
+			paramMap.put(value, new String[] { request.get.get(value) });
+		for (String value : request.post.keySet())
+			paramMap.put(value, new String[] { request.post.get(value) });
+		return paramMap;
 	}
 	
 	@Override
 	public Enumeration<String> getParameterNames() {
-		return null;
+		ArrayList<String> paramMap = new ArrayList<String>();
+		for (String value : request.get.keySet())
+			paramMap.add(value);
+		for (String value : request.post.keySet())
+			paramMap.add(value);
+		return Collections.enumeration(paramMap);
 	}
 	
 	@Override
 	public String[] getParameterValues(String arg0) {
-		return null;
+		String param = request.get.get(arg0);
+		return new String[] { param == null ? request.post.get(arg0) : param };
 	}
 	
 	@Override
 	public String getProtocol() {
-		return null;
+		return request.work.ssl ? "HTTPS" : "HTTP";
 	}
 	
 	@Override
 	public BufferedReader getReader() throws IOException {
-		return null;
+		if (request.body == null || request.body.data == null) return null;
+		return new BufferedReader(new InputStreamReader(new ByteArrayInputStream(request.body.data), getCharacterEncoding()));
 	}
 	
 	@Override
 	public String getRealPath(String arg0) {
-		return null;
+		return context.getRealPath(arg0);
 	}
 	
 	@Override
 	public String getRemoteAddr() {
-		return null;
+		return request.work.s.getInetAddress().getHostAddress();
 	}
 	
 	@Override
 	public String getRemoteHost() {
-		return null;
+		return request.work.s.getInetAddress().getHostName();
 	}
 	
 	@Override
 	public int getRemotePort() {
-		return 0;
+		return request.work.s.getPort();
 	}
 	
 	@Override
 	public RequestDispatcher getRequestDispatcher(String arg0) {
-		return null;
+		return context.getRequestDispatcher(arg0);
 	}
 	
 	@Override
 	public String getScheme() {
-		return null;
+		return request.work.ssl ? "HTTPS" : "HTTP";
 	}
 	
 	@Override
 	public String getServerName() {
-		return null;
+		return request.headers.getHeader("Host");
 	}
 	
 	@Override
 	public int getServerPort() {
-		return 0;
+		return request.work.host.getPort();
 	}
 	
 	@Override
 	public ServletContext getServletContext() {
-		return null;
+		return context;
 	}
 	
 	@Override
@@ -189,22 +272,26 @@ public class AvunaServletRequest implements HttpServletRequest {
 	
 	@Override
 	public boolean isSecure() {
-		return false;
+		return request.work.ssl;
 	}
+	
+	private HashMap<String, Object> attributes = new HashMap<String, Object>();
 	
 	@Override
 	public void removeAttribute(String arg0) {
-	
+		attributes.remove(arg0);
 	}
 	
 	@Override
 	public void setAttribute(String arg0, Object arg1) {
-	
+		attributes.put(arg0, arg1);
 	}
+	
+	private String encoding = null;
 	
 	@Override
 	public void setCharacterEncoding(String arg0) throws UnsupportedEncodingException {
-	
+		this.encoding = arg0;
 	}
 	
 	@Override
@@ -219,8 +306,7 @@ public class AvunaServletRequest implements HttpServletRequest {
 	
 	@Override
 	public boolean authenticate(HttpServletResponse arg0) throws IOException, ServletException {
-		
-		return false;
+		return false; // TODO: impl
 	}
 	
 	@Override
