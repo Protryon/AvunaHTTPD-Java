@@ -10,6 +10,9 @@ import javax.servlet.Servlet;
 import org.avuna.httpd.AvunaHTTPD;
 import org.avuna.httpd.event.Event;
 import org.avuna.httpd.event.EventBus;
+import org.avuna.httpd.http.Resource;
+import org.avuna.httpd.http.ResponseGenerator;
+import org.avuna.httpd.http.StatusCode;
 import org.avuna.httpd.http.event.EventGenerateResponse;
 import org.avuna.httpd.http.event.HTTPEventID;
 import org.avuna.httpd.http.networking.RequestPacket;
@@ -37,11 +40,15 @@ public class PluginServlet extends Plugin {
 			if (!sub.branching()) continue;
 			String dir = sub.getNode("mount-dir").getValue();
 			String war = sub.getNode("war").getValue();
-			servs.put(dir, new ServletData(war, loadWar(war)));
+			try {
+				servs.put(dir, new ServletData(war, loadWar(war)));
+			}catch (IOException e) {
+				registry.host.logger.logError(e);
+			}
 		}
 	}
 	
-	private ServletClassLoader loadWar(String war) {
+	private ServletClassLoader loadWar(String war) throws IOException {
 		File absJar = null;
 		if (AvunaHTTPD.windows && war.length() > 2 && war.charAt(1) == ':') {
 			absJar = new File(war);
@@ -49,12 +56,7 @@ public class PluginServlet extends Plugin {
 			absJar = new File(war);
 		}
 		if (absJar == null) absJar = new File(AvunaHTTPD.fileManager.getMainDir(), war);
-		try {
-			return new ServletClassLoader(registry.host, new URL[] { absJar.toURI().toURL() }, this.getClass().getClassLoader(), absJar);
-		}catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
+		return new ServletClassLoader(registry.host, new URL[] { absJar.toURI().toURL() }, this.getClass().getClassLoader(), absJar);
 	}
 	
 	private HashMap<String, ServletData> servs = new HashMap<String, ServletData>();
@@ -93,7 +95,23 @@ public class PluginServlet extends Plugin {
 				}
 			}
 			if (war != null) {
-				Servlet s = war.cl.getServlet(rp);
+				try {
+					Servlet s = war.cl.getServlet(rp);
+					if (s == null) {
+						return;
+					}
+					AvunaServletResponse resp = new AvunaServletResponse(response);
+					s.service(new AvunaServletRequest(request), resp);
+					if (response.body == null) response.body = new Resource(resp.getOutput().getBytes(), response.headers.getHeader("Content-Type"));
+					else response.body.data = resp.getOutput().getBytes();
+				}catch (Exception e) {
+					request.host.logger.logError(e);
+					ResponseGenerator.generateDefaultResponse(response, StatusCode.INTERNAL_SERVER_ERROR);
+					Resource rsc = AvunaHTTPD.fileManager.getErrorPage(request, request.target, StatusCode.INTERNAL_SERVER_ERROR, "Avuna had a critical error attempting to serve your page. Please contact your server administrator and try again. This error has been recorded in the Avuna log file.");
+					response.headers.updateHeader("Content-Type", rsc.type);
+					response.body = rsc;
+					return;
+				}
 			}
 		}
 	}

@@ -21,6 +21,12 @@ import javax.servlet.descriptor.JspConfigDescriptor;
 
 public class AvunaServletContext implements ServletContext {
 	
+	private final ServletClassLoader parent;
+	
+	protected AvunaServletContext(ServletClassLoader parent) {
+		this.parent = parent;
+	}
+	
 	@Override
 	public Dynamic addFilter(String arg0, String arg1) {
 		return null;
@@ -98,7 +104,7 @@ public class AvunaServletContext implements ServletContext {
 	
 	@Override
 	public ClassLoader getClassLoader() {
-		return null;
+		return parent;
 	}
 	
 	@Override
@@ -143,12 +149,12 @@ public class AvunaServletContext implements ServletContext {
 	
 	@Override
 	public String getInitParameter(String arg0) {
-		return null;
+		return parent.getContextInitParameter(arg0);
 	}
 	
 	@Override
 	public Enumeration<String> getInitParameterNames() {
-		return null;
+		return parent.getContextInitParameters();
 	}
 	
 	@Override
@@ -193,7 +199,7 @@ public class AvunaServletContext implements ServletContext {
 	
 	@Override
 	public InputStream getResourceAsStream(String arg0) {
-		return null;
+		return parent.getResourceAsStream(arg0);
 	}
 	
 	@Override

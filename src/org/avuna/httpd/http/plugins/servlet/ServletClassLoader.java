@@ -19,27 +19,42 @@ import java.util.HashSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import javax.servlet.Servlet;
+import javax.servlet.ServletException;
 import org.avuna.httpd.hosts.VHost;
 
 public class ServletClassLoader extends URLClassLoader {
 	private final VHost vhost;
 	private HashMap<String, String> name2class = new HashMap<String, String>();
 	private HashMap<String, InitParam[]> name2init = new HashMap<String, InitParam[]>();
+	private ArrayList<InitParam> contextParams = new ArrayList<InitParam>();
 	private HashMap<String, String> path2name = new HashMap<String, String>();
 	private HashMap<Class<? extends Servlet>, Servlet> lservs = new HashMap<Class<? extends Servlet>, Servlet>();
+	private final AvunaServletContext context = new AvunaServletContext(this);
 	
-	public Servlet getServlet(String path) {
-		Class<? extends Servlet> sc = getServletForPath(path);
+	@SuppressWarnings("unchecked")
+	public Servlet getServlet(String path) throws ClassNotFoundException, ServletException, InstantiationException, IllegalAccessException {
+		Class<? extends Servlet> sc = null;
+		String n = null;
+		for (String p : path2name.keySet()) {
+			if (path.startsWith(p)) {
+				String name = path2name.get(p);
+				if (name == null) continue;
+				n = name;
+				String clss = name2class.get(name);
+				if (clss == null) continue;
+				Class<?> cls;
+				cls = loadClass(clss);
+				if (cls != null && Servlet.class.isAssignableFrom(cls)) {
+					sc = (Class<? extends Servlet>) cls;
+					break;
+				}
+			}
+		}
 		if (sc == null) return null;
 		Servlet s = lservs.get(sc);
 		if (s == null) {
-			try {
-				s = sc.newInstance();
-				// s.init
-			}catch (Exception e) {
-				e.printStackTrace();
-				return null;
-			}
+			s = sc.newInstance();
+			s.init(new AvunaServletConfig(n, this, context));
 			lservs.put(sc, s);
 		}
 		return s;
@@ -57,6 +72,23 @@ public class ServletClassLoader extends URLClassLoader {
 		return null;
 	}
 	
+	protected String getContextInitParameter(String param) {
+		for (InitParam ip : contextParams) {
+			if (ip.name.equalsIgnoreCase(param)) {
+				return ip.value;
+			}
+		}
+		return null;
+	}
+	
+	protected Enumeration<String> getContextInitParameters() {
+		String[] names = new String[contextParams.size()];
+		for (int i = 0; i < contextParams.size(); i++) {
+			names[i] = contextParams.get(i).name;
+		}
+		return Collections.enumeration(new HashSet<String>(Arrays.asList(names)));
+	}
+	
 	protected Enumeration<String> getInitParameters(String sname) {
 		InitParam[] ip = name2init.get(sname);
 		if (ip == null) return Collections.emptyEnumeration();
@@ -66,27 +98,6 @@ public class ServletClassLoader extends URLClassLoader {
 			name[i] = ip[i].name;
 		}
 		return Collections.enumeration(new HashSet<String>(Arrays.asList(name)));
-	}
-	
-	@SuppressWarnings("unchecked")
-	private Class<? extends Servlet> getServletForPath(String path) {
-		for (String p : path2name.keySet()) {
-			if (path.startsWith(p)) {
-				String name = path2name.get(p);
-				if (name == null) continue;
-				String clss = name2class.get(name);
-				if (clss == null) continue;
-				Class<?> cls;
-				try {
-					cls = loadClass(clss);
-				}catch (ClassNotFoundException e) {
-					e.printStackTrace();
-					return null;
-				}
-				if (cls != null && cls.isAssignableFrom(Servlet.class)) return (Class<? extends Servlet>) cls;
-			}
-		}
-		return null;
 	}
 	
 	// TODO: resource-ref
@@ -99,6 +110,22 @@ public class ServletClassLoader extends URLClassLoader {
 	private final void loadXML(String xml) {
 		String webxml = xml.substring(xml.indexOf("<web-app>") + "<web-app>".length(), xml.lastIndexOf("</web-app>")).trim();
 		int i = -1;
+		while ((i = webxml.indexOf("<context-param>", i)) >= 0) {
+			int end2 = webxml.indexOf("</context-param>", i);
+			i += "<context-param>".length();
+			String param = webxml.substring(i, end2).trim();
+			int pns = param.indexOf("<param-name>");
+			int pne = param.indexOf("</param-name>");
+			int pvs = param.indexOf("<param-value>");
+			int pve = param.indexOf("</param-value>");
+			if (pns < 0 || pne < 0 || pvs < 0 || pve < 0) continue;
+			int descs = param.indexOf("<description>");
+			int desce = param.indexOf("</description>");
+			if ((descs == -1 && desce != -1) || (descs != 1 && desce == -1)) continue;
+			InitParam ipp = new InitParam(param.substring(pns + "<param-name>".length(), pne).trim(), param.substring(pvs + "<param-value>".length(), pve).trim(), descs > 0 ? param.substring(descs + "<description>".length(), desce).trim() : "");
+			contextParams.add(ipp);
+		}
+		i = -1;
 		do {
 			i = webxml.indexOf("<servlet>", i);
 			if (i >= 0) {
@@ -154,37 +181,37 @@ public class ServletClassLoader extends URLClassLoader {
 			String ap = null, re = null;
 			if (war && name.startsWith("WEB-INF/classes/") && !ze.isDirectory()) {
 				String p = name.substring("WEB-INF/classes/".length()).replace('/', '.');
-				if (name.endsWith(".class")) ap = p;
+				if (name.endsWith(".class")) ap = p.substring(0, p.length() - 6);
 				else re = p;
 			}else if (war && name.startsWith("WEB-INF/lib/") && !ze.isDirectory()) {
 				do {
-					i = f.read(buf);
+					i = zin.read(buf);
 					if (i > 0) bout.write(buf, 0, i);
 				}while (i > 0);
 				loadZIP(new ByteArrayInputStream(bout.toByteArray()), false);
 				bout.reset();
 			}else if (war && name.equals("WEB-INF/web.xml")) {
 				do {
-					i = f.read(buf);
+					i = zin.read(buf);
 					if (i > 0) bout.write(buf, 0, i);
 				}while (i > 0);
 				loadXML(bout.toString());
 				bout.reset();
 			}else if (name.endsWith(".class")) {
-				ap = name.replace('/', '.');
+				ap = name.replace('/', '.').substring(0, name.length() - 6);
 			}else if (!ze.isDirectory()) {
 				re = name.replace('/', '.');
 			}
 			if (ap != null) {
 				do {
-					i = f.read(buf);
+					i = zin.read(buf);
 					if (i > 0) bout.write(buf, 0, i);
 				}while (i > 0);
 				addClass(ap, bout.toByteArray());
 				bout.reset();
 			}else if (re != null) {
 				do {
-					i = f.read(buf);
+					i = zin.read(buf);
 					if (i > 0) bout.write(buf, 0, i);
 				}while (i > 0);
 				servletResources.put(ap, bout.toByteArray());
@@ -195,6 +222,14 @@ public class ServletClassLoader extends URLClassLoader {
 	
 	private HashMap<String, Class<?>> servletClasses = new HashMap<String, Class<?>>();
 	private HashMap<String, byte[]> servletResources = new HashMap<String, byte[]>();
+	
+	public InputStream getResourceAsStream(String name) {
+		byte[] b = servletResources.get(name);
+		if (b != null) {
+			return new ByteArrayInputStream(b);
+		}
+		return super.getResourceAsStream(name);
+	}
 	
 	public String addClass(byte[] data) throws LinkageError {
 		return addClass(null, data);
@@ -235,5 +270,6 @@ public class ServletClassLoader extends URLClassLoader {
 		path2name = null;
 		lservs = null;
 		name2init = null;
+		contextParams = null;
 	}
 }
