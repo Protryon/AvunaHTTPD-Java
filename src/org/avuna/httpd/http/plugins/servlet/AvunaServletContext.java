@@ -255,17 +255,19 @@ public class AvunaServletContext implements ServletContext {
 	
 	@Override
 	public void log(String arg0) {
-	
+		parent.vhost.logger.log(arg0);
 	}
 	
 	@Override
 	public void log(Exception arg0, String arg1) {
-	
+		parent.vhost.logger.logError(arg0);
+		parent.vhost.logger.logError(arg1);
 	}
 	
 	@Override
 	public void log(String arg0, Throwable arg1) {
-	
+		parent.vhost.logger.logError(arg1);
+		parent.vhost.logger.logError(arg0);
 	}
 	
 	@Override

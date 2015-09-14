@@ -23,7 +23,7 @@ import javax.servlet.ServletException;
 import org.avuna.httpd.hosts.VHost;
 
 public class ServletClassLoader extends URLClassLoader {
-	private final VHost vhost;
+	protected final VHost vhost;
 	private HashMap<String, String> name2class = new HashMap<String, String>();
 	private HashMap<String, InitParam[]> name2init = new HashMap<String, InitParam[]>();
 	private ArrayList<InitParam> contextParams = new ArrayList<InitParam>();
