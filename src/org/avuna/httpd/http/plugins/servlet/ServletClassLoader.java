@@ -31,6 +31,20 @@ public class ServletClassLoader extends URLClassLoader {
 	private HashMap<Class<? extends Servlet>, Servlet> lservs = new HashMap<Class<? extends Servlet>, Servlet>();
 	protected final AvunaServletContext context = new AvunaServletContext(this);
 	
+	protected String getMountDir(String cls) {
+		for (String key : name2class.keySet()) {
+			if (name2class.get(key).equals(cls)) {
+				for (String key2 : path2name.keySet()) {
+					if (path2name.get(key2).equals(key)) {
+						return key2;
+					}
+				}
+				return null;
+			}
+		}
+		return null;
+	}
+	
 	@SuppressWarnings("unchecked")
 	public Servlet getServlet(String path) throws ClassNotFoundException, ServletException, InstantiationException, IllegalAccessException {
 		Class<? extends Servlet> sc = null;

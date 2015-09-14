@@ -18,6 +18,7 @@ import javax.servlet.ServletRegistration;
 import javax.servlet.SessionCookieConfig;
 import javax.servlet.SessionTrackingMode;
 import javax.servlet.descriptor.JspConfigDescriptor;
+import org.avuna.httpd.AvunaHTTPD;
 
 public class AvunaServletContext implements ServletContext {
 	
@@ -103,7 +104,7 @@ public class AvunaServletContext implements ServletContext {
 	}
 	
 	@Override
-	public ClassLoader getClassLoader() {
+	public ServletClassLoader getClassLoader() {
 		return parent;
 	}
 	
@@ -169,7 +170,7 @@ public class AvunaServletContext implements ServletContext {
 	
 	@Override
 	public String getMimeType(String arg0) {
-		return null;
+		return AvunaHTTPD.extensionToMime.get(arg0);
 	}
 	
 	@Override

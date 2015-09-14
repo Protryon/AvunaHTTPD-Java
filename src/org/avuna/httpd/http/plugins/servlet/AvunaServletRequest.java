@@ -2,11 +2,14 @@ package org.avuna.httpd.http.plugins.servlet;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -15,8 +18,8 @@ import java.util.Locale;
 import java.util.Map;
 import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;
-import javax.servlet.ReadListener;
 import javax.servlet.RequestDispatcher;
+import javax.servlet.Servlet;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
@@ -29,15 +32,19 @@ import javax.servlet.http.HttpSession;
 import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
 import org.avuna.httpd.http.networking.RequestPacket;
+import org.avuna.httpd.http.plugins.avunaagent.lib.Multipart;
+import org.avuna.httpd.http.plugins.avunaagent.lib.Multipart.MultiPartData;
 
 public class AvunaServletRequest implements HttpServletRequest {
 	
 	private final RequestPacket request;
 	private final AvunaServletContext context;
+	private final Servlet servlet;
 	
-	public AvunaServletRequest(RequestPacket request, AvunaServletContext context) {
+	protected AvunaServletRequest(RequestPacket request, AvunaServletContext context, Servlet servlet) {
 		this.request = request;
 		this.context = context;
+		this.servlet = servlet;
 	}
 	
 	@Override
@@ -93,58 +100,7 @@ public class AvunaServletRequest implements HttpServletRequest {
 	@Override
 	public ServletInputStream getInputStream() throws IOException {
 		if (request.body == null || request.body.data == null) return null;
-		return new ServletInputStream() {
-			private int i = 0;
-			private ByteArrayInputStream bin = new ByteArrayInputStream(request.body.data);
-			
-			@Override
-			public boolean isFinished() {
-				return request.body.data.length >= i;
-			}
-			
-			@Override
-			public boolean isReady() {
-				return !isFinished();
-			}
-			
-			private ReadListener listener = null;
-			
-			@Override
-			public void setReadListener(ReadListener arg0) {
-				try {
-					arg0.onDataAvailable();
-				}catch (IOException e) {
-					request.host.logger.logError(e);
-				}
-				listener = arg0;
-			}
-			
-			@Override
-			public int read() throws IOException {
-				int b = bin.read();
-				if (listener != null && isFinished()) {
-					listener.onAllDataRead();
-				}
-				return b;
-			}
-			
-			public int read(byte[] buf) throws IOException {
-				int b = bin.read(buf);
-				if (listener != null && isFinished()) {
-					listener.onAllDataRead();
-				}
-				return b;
-			}
-			
-			public int read(byte[] buf, int off, int len) throws IOException {
-				int b = bin.read(buf, off, len);
-				if (listener != null && isFinished()) {
-					listener.onAllDataRead();
-				}
-				return b;
-			}
-			
-		};
+		return new ServletInputStreamWrapper(request);
 	}
 	
 	@Override
@@ -311,13 +267,11 @@ public class AvunaServletRequest implements HttpServletRequest {
 	
 	@Override
 	public String changeSessionId() {
-		
 		return null;
 	}
 	
 	@Override
 	public String getAuthType() {
-		
 		return null;
 	}
 	
@@ -329,8 +283,12 @@ public class AvunaServletRequest implements HttpServletRequest {
 	
 	@Override
 	public Cookie[] getCookies() {
-		
-		return null;
+		Cookie[] cs = new Cookie[request.cookie.size()];
+		int i = 0;
+		for (String key : request.cookie.keySet()) {
+			cs[i++] = new Cookie(key, request.cookie.get(key));
+		}
+		return cs;
 	}
 	
 	@Override
@@ -345,20 +303,17 @@ public class AvunaServletRequest implements HttpServletRequest {
 	
 	@Override
 	public Enumeration<String> getHeaderNames() {
-		
-		return null;
+		return Collections.enumeration(request.headers.getHeaders().keySet());
 	}
 	
 	@Override
 	public Enumeration<String> getHeaders(String arg0) {
-		
-		return null;
+		return Collections.enumeration(Arrays.asList(request.headers.getHeaders(arg0)));
 	}
 	
 	@Override
 	public int getIntHeader(String arg0) {
-		
-		return 0;
+		return Integer.parseInt(request.headers.getHeader(arg0));
 	}
 	
 	@Override
@@ -366,76 +321,108 @@ public class AvunaServletRequest implements HttpServletRequest {
 		return request.method.name;
 	}
 	
+	private Multipart mp = null;
+	
 	@Override
 	public Part getPart(String arg0) throws IOException, ServletException {
-		
+		String ct = request.headers.getHeader("Content-Type");
+		if (ct == null || !ct.startsWith("multipart/") || request.body == null || request.body.data == null) throw new ServletException("Not a multipart request!");
+		if (mp == null) {
+			mp = new Multipart(request.host.logger, null, request.body.data);
+		}
+		for (MultiPartData mpd : mp.mpds) {
+			String mpdn = mpd.vars.get("name");
+			if (mpdn != null && mpdn.equalsIgnoreCase(arg0)) {
+				return new PartWrapper(mpd);
+			}
+		}
 		return null;
 	}
 	
 	@Override
 	public Collection<Part> getParts() throws IOException, ServletException {
-		
-		return null;
+		String ct = request.headers.getHeader("Content-Type");
+		if (ct == null || !ct.startsWith("multipart/") || request.body == null || request.body.data == null) throw new ServletException("Not a multipart request!");
+		if (mp == null) {
+			mp = new Multipart(request.host.logger, null, request.body.data);
+		}
+		ArrayList<Part> parts = new ArrayList<Part>();
+		for (MultiPartData mpd : mp.mpds) {
+			parts.add(new PartWrapper(mpd));
+		}
+		return parts;
 	}
 	
 	@Override
 	public String getPathInfo() {
-		
-		return null;
+		return request.extraPath; // TODO: probably broken due to VFI-like system for servlets
 	}
 	
 	@Override
 	public String getPathTranslated() {
-		
-		return null;
+		try {
+			return new File(request.host.getHTDocs(), URLDecoder.decode(request.extraPath, "UTF-8")).getAbsolutePath();
+		}catch (UnsupportedEncodingException e) {
+			request.host.logger.logError(e);
+			return null;
+		}
 	}
 	
 	@Override
 	public String getQueryString() {
-		
-		return null;
+		String get = request.target;
+		if (get.contains("#")) {
+			get = get.substring(0, get.indexOf("#"));
+		}
+		if (get.contains("?")) {
+			get = get.substring(get.indexOf("?") + 1);
+		}else {
+			get = "";
+		}
+		return get;
 	}
 	
 	@Override
 	public String getRemoteUser() {
-		
 		return null;
 	}
 	
 	@Override
 	public String getRequestURI() {
-		
-		return null;
+		String get = request.target;
+		if (get.contains("#")) {
+			get = get.substring(0, get.indexOf("#"));
+		}
+		String rq = get;
+		if (get.contains("?")) {
+			rq = get.substring(0, get.indexOf("?"));
+		}
+		return rq;
 	}
 	
 	@Override
 	public StringBuffer getRequestURL() {
-		
-		return null;
+		return new StringBuffer((request.work.ssl ? "https" : "http") + "://" + request.headers.getHeader("Host") + request.target);
 	}
 	
 	@Override
 	public String getRequestedSessionId() {
-		
-		return null;
+		return null;// TODO
 	}
 	
 	@Override
 	public String getServletPath() {
-		
-		return null;
+		return context.getClassLoader().getMountDir(servlet.getClass().getName());
 	}
 	
 	@Override
 	public HttpSession getSession() {
-		
-		return null;
+		return null;// TODO
 	}
 	
 	@Override
 	public HttpSession getSession(boolean arg0) {
-		
-		return null;
+		return null;// TODO
 	}
 	
 	@Override
@@ -446,7 +433,6 @@ public class AvunaServletRequest implements HttpServletRequest {
 	
 	@Override
 	public boolean isRequestedSessionIdFromCookie() {
-		
 		return false;
 	}
 	
