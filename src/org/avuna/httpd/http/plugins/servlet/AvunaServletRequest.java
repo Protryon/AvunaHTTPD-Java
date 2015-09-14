@@ -34,6 +34,7 @@ import javax.servlet.http.Part;
 import org.avuna.httpd.http.networking.RequestPacket;
 import org.avuna.httpd.http.plugins.avunaagent.lib.Multipart;
 import org.avuna.httpd.http.plugins.avunaagent.lib.Multipart.MultiPartData;
+import org.avuna.httpd.http.plugins.avunaagent.lib.Session;
 
 public class AvunaServletRequest implements HttpServletRequest {
 	
@@ -61,6 +62,8 @@ public class AvunaServletRequest implements HttpServletRequest {
 	public Enumeration<String> getAttributeNames() {
 		return Collections.emptyEnumeration();
 	}
+	
+	private Session session = null;
 	
 	@Override
 	public String getCharacterEncoding() {
@@ -267,7 +270,8 @@ public class AvunaServletRequest implements HttpServletRequest {
 	
 	@Override
 	public String changeSessionId() {
-		return null;
+		this.session = Session.restartSession(request.child);
+		return this.session.getSessionID();
 	}
 	
 	@Override
@@ -277,8 +281,7 @@ public class AvunaServletRequest implements HttpServletRequest {
 	
 	@Override
 	public String getContextPath() {
-		
-		return null;
+		return context.getContextPath();
 	}
 	
 	@Override
@@ -407,7 +410,8 @@ public class AvunaServletRequest implements HttpServletRequest {
 	
 	@Override
 	public String getRequestedSessionId() {
-		return null;// TODO
+		if (this.session == null) this.session = Session.getSession(request.child);
+		return this.session.getSessionID();
 	}
 	
 	@Override
@@ -417,46 +421,51 @@ public class AvunaServletRequest implements HttpServletRequest {
 	
 	@Override
 	public HttpSession getSession() {
-		return null;// TODO
+		if (this.session == null) this.session = Session.getSession(request.child);
+		return new HttpSessionWrapper(this.session, this.context);// TODO
 	}
 	
 	@Override
 	public HttpSession getSession(boolean arg0) {
-		return null;// TODO
+		if (arg0 || this.session != null) {
+			return getSession();
+		}else {
+			this.session = Session.existingSession(request.child);
+			if (this.session == null) {
+				return null;
+			}else {
+				return new HttpSessionWrapper(this.session, this.context);// TODO
+			}
+		}
 	}
 	
 	@Override
 	public Principal getUserPrincipal() {
-		
 		return null;
 	}
 	
 	@Override
 	public boolean isRequestedSessionIdFromCookie() {
-		return false;
+		return true;
 	}
 	
 	@Override
 	public boolean isRequestedSessionIdFromURL() {
-		
 		return false;
 	}
 	
 	@Override
 	public boolean isRequestedSessionIdFromUrl() {
-		
 		return false;
 	}
 	
 	@Override
 	public boolean isRequestedSessionIdValid() {
-		
-		return false;
+		return true; // we dont return a session if its not valid
 	}
 	
 	@Override
 	public boolean isUserInRole(String arg0) {
-		
 		return false;
 	}
 	

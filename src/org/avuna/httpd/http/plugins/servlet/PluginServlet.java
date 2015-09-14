@@ -101,6 +101,7 @@ public class PluginServlet extends Plugin {
 						return;
 					}
 					request.procJL();
+					ResponseGenerator.generateDefaultResponse(response, StatusCode.OK);
 					AvunaServletResponse resp = new AvunaServletResponse(response, war.cl.context, s);
 					s.service(new AvunaServletRequest(request, war.cl.context, s), resp);
 					if (response.body == null) response.body = new Resource(resp.getOutput().getBytes(), response.headers.getHeader("Content-Type"));
