@@ -9,6 +9,7 @@ import org.avuna.httpd.http.plugins.UnaryOP;
 public final class SSIEngine {
 	public SSIEngine(SSIParser parser) {
 		this.parser = parser;
+		parser.setEngine(this);
 	}
 	
 	private final ArrayList<SSIDirective> directives = new ArrayList<SSIDirective>();
@@ -59,7 +60,7 @@ public final class SSIEngine {
 			if (sd.getDirective().equals(dir.directive)) {
 				int st = sd.scopeType();
 				int sdd = page.scopeDepth();
-				if (sdd == 0 || (sdd == 1 && st == 3) || st == 2) {
+				if (sdd == 0 || (sdd == 1 && st == 3)) {
 					String cr = sd.call(page, dir);
 					if (st == 1) {
 						page.scope++;
@@ -69,6 +70,9 @@ public final class SSIEngine {
 					return cr;
 				}else if (st == 1) { // out of scope, but increases scope
 					page.scope++;
+					return "";
+				}else if (st == 2) {
+					page.scope--;
 					return "";
 				}else { // out of scope
 					return "";

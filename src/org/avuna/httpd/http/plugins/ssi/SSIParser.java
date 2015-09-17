@@ -54,7 +54,8 @@ public class SSIParser {
 						boolean esc = false;
 						sl = dargs.indexOf('"', sl) + 1; // skip ahead past next "
 						int osl = sl;
-						sl = Math.min(sl, dargs.indexOf('\'', sl) + 1);
+						int tl = dargs.indexOf('\'', sl);
+						if (tl >= 0) sl = Math.min(sl, tl + 1);
 						if (osl != sl) { // single quote
 							quot = '\'';
 						}else {

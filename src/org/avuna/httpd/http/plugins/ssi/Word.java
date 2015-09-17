@@ -62,6 +62,7 @@ public class Word {
 				}else {
 					value = page.variables.get(name);
 				}
+				if (value == null) value = "null";
 				readForConcat(expr, page, dir);
 				return;
 			}else {

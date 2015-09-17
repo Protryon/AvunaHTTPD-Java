@@ -33,6 +33,7 @@ public class SSIString {
 					}else {
 						d = page.variables.get(v);
 					}
+					if (d == null) d = "null";
 				}
 			}
 			if (d == null) {

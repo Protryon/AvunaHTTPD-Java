@@ -41,9 +41,9 @@ public class AssetLibrary {
 					if (i > 0) bout.write(buf, 0, i);
 				}while (i > 0);
 				fin.close();
-				String name = f.getAbsolutePath().substring(this.f.getAbsolutePath().length());
+				String name = sf.getAbsolutePath().substring(this.f.getAbsolutePath().length());
 				name = name.replace("\\", "/");
-				if (name.startsWith("/")) name = name.substring(0);
+				if (name.startsWith("/")) name = name.substring(1);
 				data.put(name, bout.toByteArray());
 			}
 		}
