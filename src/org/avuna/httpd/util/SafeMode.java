@@ -145,11 +145,11 @@ public class SafeMode {
 	 * @param uid
 	 * @param gid */
 	public static void recurPerms(File root, int uid, int gid) {
-		recurPerms(root, uid, gid, false);
+		recurPerms(root, uid, gid, 0, false);
 	}
 	
 	// should run as root
-	private static void recurPerms(File root, int uid, int gid, boolean recursed) {
+	private static void recurPerms(File root, int uid, int gid, int rlvl, boolean pd) {
 		try {
 			if (isSymlink(root)) {
 				return;
@@ -157,10 +157,14 @@ public class SafeMode {
 		}catch (CException e) {
 			return;
 		}
-		setPerms(root, uid, gid, 0770);
+		setPerms(root, pd ? 0 : uid, pd ? 0 : gid, 0750);
 		for (File f : root.listFiles()) {
 			if (f.isDirectory()) {
-				recurPerms(f, uid, gid, true);
+				boolean wpd = (rlvl == 1 && root.getName().equals("jni")) || pd;
+				if (wpd) {
+					setPerms(root, 0, 0, 0750);
+				}
+				recurPerms(f, uid, gid, rlvl + 1, wpd);
 			}else {
 				if (uid == 0 && gid == 0) {
 					if (f.getName().endsWith(".sh")) {
@@ -170,10 +174,16 @@ public class SafeMode {
 					}
 				}else {
 					String rn = f.getName();
-					if (!recursed && (rn.equals("avuna.jar") || rn.equals("main.cfg"))) {
+					if (rlvl == 0 && (rn.equals("avuna.jar") || rn.equals("main.cfg"))) {
 						setPerms(f, 0, gid, 0640);
-					}else if (!recursed && (rn.equals("kill.sh") || rn.equals("run.sh") || rn.equals("restart.sh") || rn.equals("cmd.sh"))) {
+					}else if (rlvl == 0 && (rn.equals("kill.sh") || rn.equals("run.sh") || rn.equals("restart.sh") || rn.equals("cmd.sh"))) {
 						setPerms(f, 0, 0, 0750);
+					}else if (pd) {
+						if (f.getName().endsWith(".sh")) {
+							setPerms(f, 0, 0, 0750);
+						}else {
+							setPerms(f, 0, 0, 0640);
+						}
 					}else {
 						setPerms(f, uid, gid, 0640);
 					}

@@ -219,6 +219,8 @@ public class AvunaHTTPD {
 				File mime = fileManager.getBaseFile(up);
 				mime.getParentFile().mkdirs();
 				if (!mime.exists()) {
+					mime.createNewFile();
+					if (!CLib.failed && up.startsWith("jni")) SafeMode.setPerms(mime, 0, 0, 750);
 					logger.log("Downloading " + up + "...");
 					int si = rand.nextInt(dlMirrors.length);
 					int ei = si == 0 ? (dlMirrors.length) : -1;
