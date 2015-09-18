@@ -12,9 +12,9 @@ public class Page {
 	public Object data = null;
 	public int scope = 0;
 	/** If set >= 0, output MUST NOT continue until scope meets this, and then it MUST reset to -1. */
-	public int returnScope = -1;
+	// public int returnScope = -1;
+	public ArrayList<Integer> returnScopes = new ArrayList<Integer>();
 	/** Next output next block return scope set. Purpose is to allow setting the returnScope after the previous block before our call is output. */
-	public int nonbrss = -2;
 	public final ArrayList<Integer> lifc = new ArrayList<Integer>();
 	public final SSIEngine engine;
 	public Matcher lastMatch = null;
@@ -25,35 +25,22 @@ public class Page {
 		variables.put("error", "[an error occurred while processing this directive]");
 	}
 	
-	public void postOutputNextBlock() {
-		if (nonbrss >= -1) {
-			returnScope = nonbrss;
-			nonbrss = -2;
-		}
-	}
-	
 	/** Tells whether we are inside a returned scope, ie a failed IF statement. This does change state, so multiple calls are BAD. */
 	public boolean shouldOutputNextBlock() {
-		if (returnScope < 0) return true;
-		if (returnScope <= scope) {
-			if (nonbrss >= -1) {
-				returnScope = nonbrss;
-				nonbrss = -2;
-			}else {
-				returnScope = -1;
+		for (Integer rs : returnScopes) {
+			if (rs <= scope) {
+				return false;
 			}
-			return false;
-		}else {
-			return true;
 		}
+		return true;
 	}
 	
 	protected int scopeDepth() {
-		if (returnScope < 0) return 0;
-		if (returnScope <= scope) {
-			return scope - returnScope;
-		}else {
-			return 0;
+		for (Integer rs : returnScopes) {
+			if (rs <= scope) {
+				return scope - rs;
+			}
 		}
+		return 0;
 	}
 }

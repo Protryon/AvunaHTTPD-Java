@@ -18,13 +18,14 @@ public class ElifDirective extends SSIDirective {
 	public String call(Page page, ParsedSSIDirective dir) {
 		if (dir.args.length != 1) return null;
 		if (!dir.args[0].startsWith("expr=")) return null;
-		if (!page.lifc.contains(page.scope) && page.returnScope >= 0) {
+		if (!page.lifc.contains(page.scope - 1)) {
 			if (ifdir.processBNF(dir.args[0].substring(5), page, dir)) {
-				page.nonbrss = -1;
-				page.lifc.add(page.scope);
+				page.returnScopes.remove((Integer) (page.scope - 1));
+				page.lifc.add(page.scope - 1);
 			}
 		}else {
-			page.nonbrss = page.scope - 1;
+			if (!page.returnScopes.contains(page.scope - 1)) page.returnScopes.add((Integer) (page.scope - 1));
+			// do nothing
 		}
 		return "";
 	}

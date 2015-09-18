@@ -60,7 +60,7 @@ public final class SSIEngine {
 			if (sd.getDirective().equals(dir.directive)) {
 				int st = sd.scopeType();
 				int sdd = page.scopeDepth();
-				if (sdd == 0 || (sdd == 1 && st == 3)) {
+				if (sdd == 0 || (sdd == 1 && (st == 3 || st == 2))) {
 					String cr = sd.call(page, dir);
 					if (st == 1) {
 						page.scope++;

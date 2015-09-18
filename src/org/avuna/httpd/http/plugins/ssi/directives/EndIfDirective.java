@@ -14,8 +14,8 @@ public class EndIfDirective extends SSIDirective {
 	
 	@Override
 	public String call(Page page, ParsedSSIDirective dir) {
-		page.lifc.remove((Integer) page.scope);
-		page.nonbrss = -1;
+		page.lifc.remove((Integer) (page.scope - 1));
+		page.returnScopes.remove((Integer) (page.scope - 1));
 		return "";
 	}
 	
