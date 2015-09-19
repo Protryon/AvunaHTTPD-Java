@@ -136,6 +136,12 @@ public class VHost {
 			for (VHost child : children) {
 				child.jls = this.jls;
 			}
+		}else while (this.jls == null) {
+			try {
+				Thread.sleep(1L); // wait
+			}catch (InterruptedException e) {
+				host.logger.logError(e);
+			}
 		}
 	}
 	

@@ -15,11 +15,12 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.concurrent.ConcurrentHashMap;
 import org.avuna.httpd.com.ComClient;
 import org.avuna.httpd.com.CommandContext;
 import org.avuna.httpd.com.CommandRegistry;
@@ -294,7 +295,7 @@ public class AvunaHTTPD {
 		}
 	}
 	
-	public static final ConcurrentHashMap<String, Host> hosts = new ConcurrentHashMap<String, Host>();
+	public static final Map<String, Host> hosts = Collections.synchronizedMap(new LinkedHashMap<String, Host>());
 	
 	public static final List<String> bannedIPs = Collections.synchronizedList(new ArrayList<String>());
 	
