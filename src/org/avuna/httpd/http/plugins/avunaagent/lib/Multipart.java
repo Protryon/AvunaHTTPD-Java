@@ -73,10 +73,35 @@ public class Multipart {
 				String rawdisp = "";
 				String str;
 				ArrayList<String> extraHeaders = new ArrayList<String>();
+				String ln = null;
 				while (true) {
 					str = Stream.readLine(bin);
 					if (str == null || str.length() == 0) break;
+					if (str.startsWith(" ")) {
+						if (ln.equals("content-type")) {
+							ct += str;
+						}else if (ln.equals("content-disposition")) {
+							rawdisp += str;
+							String[] spl = str.split(";"); // TODO: wont allow midline breaking
+							// assume [0] is form-data;
+							for (int i = 1; i < spl.length; i++) {
+								String sn = spl[i].substring(0, spl[i].indexOf("="));
+								String sv = spl[i].substring(sn.length() + 1).trim();
+								sn = sn.trim();
+								if (sv.startsWith("\"") && sv.endsWith("\"")) {
+									sv = sv.substring(1, sv.length() - 1);
+								}
+								vars.put(sn, sv);
+							}
+						}else if (ln.equals("content-transfer-encoding")) {
+							contentTransferEncoding += str;
+						}else if (str.trim().length() > 0 && extraHeaders.size() > 0) {
+							extraHeaders.set(extraHeaders.size() - 1, extraHeaders.get(extraHeaders.size() - 1) + str);
+						}
+						continue;
+					}
 					String name = str.substring(0, str.indexOf(":"));
+					ln = name;
 					String value = str.substring(name.length() + 1).trim();
 					name = name.trim().toLowerCase();
 					if (name.equals("content-type")) {
