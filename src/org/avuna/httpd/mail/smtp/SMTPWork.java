@@ -55,7 +55,7 @@ public class SMTPWork {
 	}
 	
 	public void readLine(String rline) throws IOException {
-		String line = rline.trim();
+		String line = rline;
 		host.logger.log(hashCode() + ": " + line);
 		String cmd = "";
 		if (state != 101) {

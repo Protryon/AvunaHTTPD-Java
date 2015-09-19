@@ -343,7 +343,7 @@ public class PluginInline extends Plugin {
 			boolean fre = sr.failed;
 			String rep = null;
 			if (fre) {
-				rep = "http" + (request.ssl ? "s" : "") + "://\\h" + (sr.copy == null ? sr.req : sr.copy.req);
+				rep = "http" + (request.work.ssl ? "s" : "") + "://\\h" + (sr.copy == null ? sr.req : sr.copy.req);
 			}else {
 				if (resps[i] == null) {
 					for (int i2 = 0; i2 < i; i2++) {

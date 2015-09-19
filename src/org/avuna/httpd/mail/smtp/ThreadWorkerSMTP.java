@@ -34,7 +34,7 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 			line = focus.sslprep.toString() + line;
 			focus.sslprep.reset();
 		}
-		return line.trim();
+		return line;
 	}
 	
 	public void run() {
@@ -63,7 +63,7 @@ public class ThreadWorkerSMTP extends Thread implements ITerminatable {
 						}
 						focus.sslprep.write(sp);
 					}catch (SocketTimeoutException e) {
-						
+					
 					}finally {
 						focus.s.setSoTimeout(1000);
 					}

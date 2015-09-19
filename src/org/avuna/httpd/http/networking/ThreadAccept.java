@@ -59,7 +59,7 @@ public class ThreadAccept extends Thread {
 					s.close();
 					continue;
 				}
-				host.addWork(s, in, out, server instanceof SSLServerSocket);
+				host.addWork(s, in, out, server instanceof SSLServerSocket || (s instanceof UNIOSocket && ((UNIOSocket) s).isSecure()));
 			}catch (SocketException e) {
 				if (!server.isClosed()) host.logger.logError(e);
 			}catch (Exception e) {

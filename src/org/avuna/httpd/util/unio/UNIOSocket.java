@@ -32,6 +32,10 @@ public class UNIOSocket extends Socket {
 	protected boolean stlsi = false;
 	protected boolean to = false;
 	
+	public boolean isSecure() {
+		return session > 0L;
+	}
+	
 	/** Performs a blocking flush, with a timeout, returns true if fully flushed, false if not. */
 	public boolean flush(long timeout) throws IOException {
 		if (closed) throw new SocketException("Socket Closed!");
