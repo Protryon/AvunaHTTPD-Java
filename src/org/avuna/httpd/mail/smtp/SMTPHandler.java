@@ -85,6 +85,7 @@ public class SMTPHandler {
 					line = line.substring(6).trim();
 					if (line.length() > 0) {
 						String up = new String(DatatypeConverter.parseBase64Binary(line));
+						if (up.length() > 0 && up.charAt(0) == 0) up = up.substring(1);
 						String username = up.substring(0, up.indexOf(new String(new byte[] { 0 })));
 						String password = up.substring(username.length() + 1);
 						EmailAccount us = null;
