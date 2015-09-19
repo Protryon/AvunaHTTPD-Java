@@ -115,7 +115,7 @@ public class SMTPHandler {
 		
 		commands.add(new SMTPCommand("", 102, 102) {
 			public void run(SMTPWork focus, String lp) throws IOException {
-				focus.lu = new String(DatatypeConverter.parseBase64Binary(lp));
+				focus.lu = new String(DatatypeConverter.parseBase64Binary(lp.trim()));
 				focus.writeLine(334, "UGFzc3dvcmQ6");
 				focus.state = 103;
 			}
@@ -123,8 +123,8 @@ public class SMTPHandler {
 		
 		commands.add(new SMTPCommand("", 103, 103) {
 			public void run(SMTPWork focus, String lp) throws IOException {
-				String username = new String(DatatypeConverter.parseBase64Binary(focus.lu));
-				String password = new String(DatatypeConverter.parseBase64Binary(lp));
+				String username = focus.lu;
+				String password = new String(DatatypeConverter.parseBase64Binary(lp.trim()));
 				EmailAccount us = null;
 				for (EmailAccount e : host.accounts) {
 					if (e.email.equals(username) && e.password.equals(password)) {

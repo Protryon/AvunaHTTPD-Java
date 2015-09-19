@@ -58,7 +58,7 @@ public class SMTPWork {
 		String line = rline;
 		host.logger.log(hashCode() + ": " + line);
 		String cmd = "";
-		if (state != 101) {
+		if (state < 101) {
 			line = line.trim();
 			cmd = line.contains(" ") ? line.substring(0, line.indexOf(" ")) : line;
 			cmd = cmd.toLowerCase().trim();
