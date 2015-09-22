@@ -340,7 +340,7 @@ public abstract class CLib {
 	public static boolean failed = false;
 	
 	static {
-		if (AvunaHTTPD.windows) {
+		if (AvunaHTTPD.windows || AvunaHTTPD.legacy) {
 			failed = true;
 		}else {
 			String jvma = System.getProperty("sun.arch.data.model");

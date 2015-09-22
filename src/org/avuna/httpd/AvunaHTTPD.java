@@ -300,6 +300,7 @@ public class AvunaHTTPD {
 	
 	public static long lastbipc = 0L;
 	public static final boolean windows = System.getProperty("os.name").toLowerCase().contains("windows");
+	public static boolean legacy = false;
 	
 	/** This is the main method for running Avuna
 	 * <p>
@@ -414,12 +415,14 @@ public class AvunaHTTPD {
 					if (!map.containsNode("hosts")) map.insertNode("hosts", new File(dir, "hosts.cfg").toString(), "main hosts file");
 					if (!map.containsNode("logs")) map.insertNode("logs", new File(dir, "logs").toString(), "logs folder");
 					if (!map.containsNode("javac")) map.insertNode("javac", "javac", "command for javac for comp command.");
+					if (!map.containsNode("forceLegacy")) map.insertNode("forceLegacy", "false", "If true, will force use of no-jni mode. Useful for libc < 2.14");
 					if (!windows && !map.containsNode("uid")) map.insertNode("uid", unpack ? "6833" : "0", "uid to de-escalate to, must be ran as root");
 					if (!windows && !map.containsNode("gid")) map.insertNode("gid", unpack ? "6833" : "0", "gid to de-escalate to, must be ran as root");
 					if (!windows && !map.containsNode("safeMode")) map.insertNode("safeMode", "true", "if true, automatically enforces file permissions. generally reccomended to prevent critical misconfiguration.");
 				}
 			});
 			mainConfig.load();
+			legacy = mainConfig.getValue("forceLegacy").equals("true");
 			Logger.init(fileManager.getLogs());
 			logger = new Logger("");
 			unpack();
