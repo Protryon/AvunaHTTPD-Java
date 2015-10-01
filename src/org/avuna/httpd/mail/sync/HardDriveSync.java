@@ -8,7 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.List;
 import org.avuna.httpd.hosts.HostMail;
 import org.avuna.httpd.mail.mailbox.Email;
 import org.avuna.httpd.mail.mailbox.EmailAccount;
@@ -21,7 +21,7 @@ public class HardDriveSync extends Sync {
 	}
 	
 	@Override
-	public void save(ArrayList<EmailAccount> accts) throws IOException {
+	public void save(List<EmailAccount> accts) throws IOException {
 		File sync = new File(host.getConfig().getNode("folder").getValue());
 		File[] pf = sync.listFiles();
 		File[][] tf = new File[pf.length][];
@@ -107,7 +107,7 @@ public class HardDriveSync extends Sync {
 		}
 	}
 	
-	public void load(ArrayList<EmailAccount> accts) {
+	public void load(List<EmailAccount> accts) {
 		File sync = new File(host.getConfig().getNode("folder").getValue());
 		if (!sync.isDirectory()) return;
 		for (File domf : sync.listFiles()) {

@@ -135,7 +135,7 @@ public class HostMail extends Host {
 		AvunaHTTPD.fileManager.getBaseFile("mail").mkdirs();
 	}
 	
-	public final ArrayList<EmailAccount> accounts = new ArrayList<EmailAccount>();
+	public final List<EmailAccount> accounts = Collections.synchronizedList(new ArrayList<EmailAccount>());
 	
 	public void formatConfig(ConfigNode map) {
 		if (!map.containsNode("sync-interval")) map.insertNode("sync-interval", "60", "default is to sync to hard drive every 60 seconds");
@@ -170,6 +170,15 @@ public class HostMail extends Host {
 	
 	public void registerAccount(String email, String password) {
 		accounts.add(new EmailAccount(email, password));
+	}
+	
+	public void changePassword(String email, String newPassword) {
+		for (EmailAccount eml : accounts) {
+			if (eml.email.equalsIgnoreCase(email)) {
+				eml.password = newPassword;
+				break;
+			}
+		}
 	}
 	
 	public boolean enableUNIO() {

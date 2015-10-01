@@ -88,7 +88,7 @@ public class ThreadWorker extends Thread implements ITerminatable {
 						outgoingResponse.done = true;
 						outgoingResponse.bwt = System.nanoTime();
 					}else if (outgoingResponse.headers.hasHeader("Transfer-Encoding") && outgoingResponse.headers.getHeader("Transfer-Encoding").contains("chunked")) {
-						outgoingResponse.toStream = incomingRequest.work.fnin;
+						outgoingResponse.toStream = new DataInputStream(new ChunkedInputStream(incomingRequest.work.fnin, outgoingResponse.headers.hasHeader("Content-Encoding") && outgoingResponse.headers.getHeader("Content-Encoding").equals("gzip")));
 						outgoingResponse.done = true;
 						outgoingResponse.bwt = System.nanoTime();
 					}else {
