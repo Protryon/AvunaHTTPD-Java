@@ -17,7 +17,7 @@ public class IMAPCommandExpunge extends IMAPCommand {
 	public void run(IMAPWork focus, String letters, String[] args) throws IOException {
 		synchronized (focus.selectedMailbox.emails) {
 			for (int i = 0; i < focus.selectedMailbox.emails.length; i++) {
-				if (focus.selectedMailbox.emails[i].flags.contains("\\Deleted")) {
+				if (focus.selectedMailbox.emails[i] != null && focus.selectedMailbox.emails[i].flags.contains("\\Deleted")) {
 					focus.selectedMailbox.emails[i] = null;
 					focus.writeLine("*", (i + 1) + " EXPUNGE");
 					i--;

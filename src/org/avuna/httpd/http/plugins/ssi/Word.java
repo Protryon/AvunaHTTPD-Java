@@ -91,7 +91,7 @@ public class Word {
 			}
 		}
 		if (value == null) {
-			throw new IllegalArgumentException("Bad or unsupported IF word!");
+			throw new IllegalArgumentException("Bad or unsupported IF word! " + expr);
 		}
 	}
 	
