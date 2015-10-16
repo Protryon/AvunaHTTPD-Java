@@ -82,15 +82,25 @@ public class ThreadPassive extends Thread {
 				if (ftt == FTPTransferType.STOR || ftt == FTPTransferType.STOU || ftt == FTPTransferType.APPE) {
 					work.writeLine(150, (ftt == FTPTransferType.STOU ? "FILE: " + FTPHandler.chroot(work.root, f) : "Ok to send data."));
 					FileOutputStream fout = new FileOutputStream(f, ftt == FTPTransferType.APPE);
+					byte[] buf = new byte[4096];
+					int i;
 					while (!s.isClosed()) {
 						try {
 							holdTimeout = 0L;
-							int i = in.read();
-							if (i == -1) {
+							i = in.read(buf);
+							if (i < 0) {
 								s.close();
 								break;
+							}else if (i == 0) {
+								try {
+									Thread.sleep(10L);
+								}catch (InterruptedException e) {
+									host.logger.logError(e);
+								}
+								continue;
 							}
-							fout.write(i);
+							fout.write(buf, 0, i);
+							fout.flush();
 						}catch (SocketTimeoutException e) {
 							long now = System.currentTimeMillis();
 							if (holdTimeout == 0L) {
@@ -105,7 +115,6 @@ public class ThreadPassive extends Thread {
 							}
 						}
 					}
-					fout.flush();
 					fout.close();
 					work.writeLine(226, "Transfer complete.");
 				}else if (ftt == FTPTransferType.LIST || ftt == FTPTransferType.NLST) {
