@@ -275,7 +275,7 @@ public class HostMail extends Host {
 			});
 		}catch (Exception e) {
 			logger.logError(e);
-			logger.log("Closing " + name + "/" + protocol.name + " Server on " + getConfig().getNode("ip").getValue() + ":" + getConfig().getNode("port").getValue());
+			logger.log("Closing " + name + "/" + protocol.name + " Server on " + getConfig().getNode("ip").getValue());
 		}finally {
 			loaded = true;
 		}

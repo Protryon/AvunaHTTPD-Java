@@ -97,20 +97,15 @@ public class PluginAvunaAgent extends Plugin {
 		for (AvunaAgent jl : security) {
 			jl.destroy();
 		}
-		for (AvunaAgentSession session : sessions) {
-			if (session.getJLS() != null) for (AvunaAgent jl : session.getJLS().values()) {
-				jl.destroy();
-			}
-		}
 		for (AvunaAgentSession jls : sessions) {
 			jls.unloadJLCL();
 		}
 		security.clear();
 		secjlcl = null;
-		System.gc();
 		sessions.clear();
+		System.gc();
 		try {
-			Thread.sleep(1000L); // ensure the gc is over
+			Thread.sleep(100L); // ensure the gc is over
 		}catch (InterruptedException e) {
 			registry.host.logger.logError(e);
 		}
@@ -133,7 +128,7 @@ public class PluginAvunaAgent extends Plugin {
 			security.clear();
 			secjlcl = null;
 			System.gc();
-			Thread.sleep(1000L);
+			Thread.sleep(100L);
 			sessions.clear();
 			PluginSecurity sec = ((PluginSecurity) registry.getPatchForClass(PluginSecurity.class));
 			boolean sece = sec != null && sec.pcfg.getNode("enabled").getValue().equals("true");

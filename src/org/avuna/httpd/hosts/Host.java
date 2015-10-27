@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
@@ -135,14 +136,21 @@ public abstract class Host extends Thread implements ITerminatable, IEventReceiv
 				return null;
 			}
 		}else {
-			ServerSocket server = unio() ? new UNIOServerSocket(ip, port, new PacketReceiverFactory() {
-				
-				@Override
-				public PacketReceiver newCallback(UNIOServerSocket server) {
-					return makeReceiver(server);
-				}
-				
-			}, 1000) : new ServerSocket(port, 1000, InetAddress.getByName(ip));
+			ServerSocket server;
+			if (unio()) {
+				server = new UNIOServerSocket(ip, port, new PacketReceiverFactory() {
+					
+					@Override
+					public PacketReceiver newCallback(UNIOServerSocket server) {
+						return makeReceiver(server);
+					}
+					
+				}, 1000);
+			}else {
+				server = new ServerSocket();
+				server.setReuseAddress(true);
+				server.bind(new InetSocketAddress(InetAddress.getByName(ip), port), 1000);
+			}
 			if (server instanceof UNIOServerSocket) ((UNIOServerSocket) server).bind();
 			servers.add(server);
 			return server;
