@@ -3,6 +3,9 @@ A HTTP/1.1 Webserver made in Java.
 
 Main Website: http://www.avuna.org/
 
+# This is now outdated, please look at the new versions written in C in several other repos on this GitHub account.
+
+
 Avuna HTTPD - General Server Applications<br>
 Copyright (C) 2015 Maxwell Bruce<br>
 This program is free software: you can redistribute it and/or modify<br>
